@@ -14,11 +14,15 @@ int main(){
         {5,"kbm","fast",minSize,maxSize}
     };
     Simulation* sim = sim_new(&sConf,scenario,vConf,2);
+    if(sim==NULL){
+        std::cerr << "Could not create new simulation" << std::endl;
+        return -1;
+    }
     // Get scenario info:
     const Scenario* sc = sim_getScenario(sim);
     unsigned int numRoads = sc_numRoads(sc);
     for(unsigned int R=0;R<numRoads;R++){
-        std::cout << "Length of road " << R << ": " << sc_roadLength(sc,R) << std::endl;
+        std::cout << "Length of road " << R << ": " << road_length(sc,R) << std::endl;
     }
     // Get vehicle info:
     const Vehicle* veh = sim_getVehicle(sim,0);

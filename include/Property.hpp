@@ -1,6 +1,7 @@
 #ifndef SIM_PROPERTY
 #define SIM_PROPERTY
 
+#include "Utils.hpp"
 #include "Transition.hpp"
 #include <vector>
 #include <utility>

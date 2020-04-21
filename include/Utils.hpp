@@ -5,9 +5,20 @@
 #include <array>
 #include <vector>
 #include <cassert>
+#include <algorithm>
+
+#ifndef COMPAT
+#define STATIC_INLINE static inline
+#else
+#define STATIC_INLINE static
+#endif
 
 struct Utils{
+    #ifdef COMPAT
+    static std::mt19937 rng;
+    #else
     static inline std::mt19937 rng{std::random_device{}()};
+    #endif
     static constexpr double PI = 3.14159265358979323846;
 
     template<class Scalar>
@@ -48,5 +59,9 @@ struct Utils{
         return result;
     }
 };
+
+#ifdef COMPAT
+std::mt19937 Utils::rng = std::mt19937(std::random_device{}());
+#endif
 
 #endif

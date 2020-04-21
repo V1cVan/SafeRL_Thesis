@@ -3,11 +3,11 @@
 
 #include "Utils.hpp"
 #include <functional>
-#include <math.h>
+#include <cmath>
 
 class Transition {
     private:
-        std::function<void(double&,double&)> smoother;
+        std::function<void(double&,double&)> smoother;// TODO: use templated Transitions instead?
         int type;
 
     public:
@@ -34,10 +34,20 @@ class Transition {
             // Outputs:
             //  v:  Transition value for the given x
             //  dv: Derivative of the transition value for the given x
-            if (x<=from){
+            if (x<from){
                 v += before;
             }else if(x>to){
                 v += after;
+            }else if(from==to){
+                // Fall back to heaviside smoothing:
+                double u = 0.5;
+                double du;
+                Transition::smooth_heaviside(u,du);
+                if(after==before){
+                    du = 0;
+                }
+                v += before + u*(after-before);
+                dv += du*(after-before);
             }else{
                 double u = (x-from)/(to-from);// x_rel
                 double du = 1/(to-from);// dx_rel
@@ -72,8 +82,16 @@ class Transition {
         }
 
         static inline void smooth_heaviside(double& u, double& du){
-            du = 0;
-            u = (u<=0.5) ? 0 : 1;
+            if(u<0.5){
+                du = 0;
+                u = 0;
+            }else if(u>0.5){
+                du = 0;
+                u = 1;
+            }else{
+                du = INFINITY;
+                u = 0.5;
+            }
         }
 
         static inline void smooth_linear(double& u,double& du){}

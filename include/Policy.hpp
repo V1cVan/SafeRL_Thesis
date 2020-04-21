@@ -10,8 +10,8 @@
 
 class Policy{
     public:
-        static inline unsigned int N_OV; // Number of other vehicles in the augmented state vector
-        static inline double D_MAX; // Radius of the detection horizon. The augmented state vector will only contain vehicles within this radius
+        STATIC_INLINE unsigned int N_OV; // Number of other vehicles in the augmented state vector
+        STATIC_INLINE double D_MAX; // Radius of the detection horizon. The augmented state vector will only contain vehicles within this radius
         static unsigned int STATE_SIZE(){
             return 8+4*N_OV;
         }
@@ -107,6 +107,11 @@ class Policy{
         // Set new driving actions based on the current augmented state vector
         virtual void updateAction() = 0;
 };
+
+#ifdef COMPAT
+unsigned int Policy::N_OV;
+double Policy::D_MAX;
+#endif
 
 class StepPolicy : public Policy{
     // Stepping driving policy, used to examine the step response of the dynamical systems
@@ -273,5 +278,11 @@ class BasicPolicy : public Policy{
         //     return r;
         // }
 };
+
+#ifdef COMPAT
+constexpr double BasicPolicy::DEFAULT_MIN_VEL[];
+constexpr double BasicPolicy::DEFAULT_MAX_VEL[];
+constexpr double BasicPolicy::DEFAULT_OVERTAKE_GAP[];
+#endif
 
 #endif

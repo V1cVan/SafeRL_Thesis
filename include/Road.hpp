@@ -5,15 +5,23 @@
 #define NOMINMAX // Prevent interference of windows min & max macros with std::min and std::max functions
 #endif
 
-#include "ClothoidList.hh"
 #include "Utils.hpp"
+#include "ClothoidList.hh"
 #include "Property.hpp"
 #include <array>
 #include <vector>
+#include <set>
 #include <utility>
-#include <optional>
 #include <algorithm>
 #include <cmath>
+
+#ifndef COMPAT
+#include <optional>
+#else
+#include <experimental/optional>
+#define optional experimental::optional
+#define nullopt experimental::nullopt
+#endif
 
 class Road{
     private:
@@ -46,12 +54,16 @@ class Road{
             std::optional<std::pair<id_t,id_t>> to;// Only set if there is a connection to another lane. (Road id, lane id)
             std::optional<id_t> merge;// Only set if this lane merges with another lane. (Lane id)
 
+            inline bool isValid(const double s) const{
+                return validity[0]<=s && s<=validity[1];
+            }
+
             inline void offset(const double s, double& c, double& dc) const{
-                if(validity[0]>s || validity[1]<s){
+                if(isValid(s)){
+                    offsetProp.evaluate(s,c,dc);
+                }else{
                     c = std::nan("");
                     dc = std::nan("");
-                }else{
-                    offsetProp.evaluate(s,c,dc);
                 }
             }
 
@@ -62,11 +74,11 @@ class Road{
             }
 
             inline void width(const double s, double& w, double& dw) const{
-                if(validity[0]>s || validity[1]<s){
+                if(isValid(s)){
+                    widthProp.evaluate(s,w,dw);
+                }else{
                     w = std::nan("");
                     dw = std::nan("");
-                }else{
-                    widthProp.evaluate(s,w,dw);
                 }
             }
 
@@ -77,11 +89,11 @@ class Road{
             }
 
             inline void height(const double s, double& h, double& dh) const{
-                if(validity[0]>s || validity[1]<s){
+                if(isValid(s)){
+                    heightProp.evaluate(s,h,dh);
+                }else{
                     h = std::nan("");
                     dh = std::nan("");
-                }else{
-                    heightProp.evaluate(s,h,dh);
                 }
             }
 
@@ -92,11 +104,11 @@ class Road{
             }
 
             inline void superElevation(const double s, double& e, double& de) const{
-                if(validity[0]>s || validity[1]<s){
+                if(isValid(s)){
+                    superelevationProp.evaluate(s,e,de);
+                }else{
                     e = std::nan("");
                     de = std::nan("");
-                }else{
-                    superelevationProp.evaluate(s,e,de);
                 }
             }
 
@@ -107,11 +119,11 @@ class Road{
             }
 
             inline void speed(const double s, double& v, double& dv) const{
-                if(validity[0]>s || validity[1]<s){
+                if(isValid(s)){
+                    speedProp.evaluate(s,v,dv);
+                }else{
                     v = std::nan("");
                     dv = std::nan("");
-                }else{
-                    speedProp.evaluate(s,v,dv);
                 }
             }
 
@@ -122,30 +134,34 @@ class Road{
             }
 
             inline void left(const double s, double& l, double& dl) const{
-                if(validity[0]>s || validity[1]<s){
+                if(isValid(s)){
+                    leftProp.evaluate(s,l,dl);
+                }else{
                     l = std::nan("");
                     dl = std::nan("");
-                }else{
-                    leftProp.evaluate(s,l,dl);
                 }
             }
 
             inline void right(const double s, double& r, double& dr) const{
-                if(validity[0]>s || validity[1]<s){
+                if(isValid(s)){
+                    rightProp.evaluate(s,r,dr);
+                }else{
                     r = std::nan("");
                     dr = std::nan("");
-                }else{
-                    rightProp.evaluate(s,r,dr);
                 }
             }
 
-            inline double availability(const double s, const Side d) const{
-                double a,da;
+            inline void availability(const double s, const Side d, double& a, double& da) const{
                 if(d==Side::LEFT){
                     left(s,a,da);
                 }else{
                     right(s,a,da);
                 }
+            }
+
+            inline double availability(const double s, const Side d) const{
+                double a,da;
+                availability(s,d,a,da);
                 return a;
             }
 
@@ -172,9 +188,28 @@ class Road{
         double length;
 
         Road(const G2lib::ClothoidList& outline_, const std::vector<Lane>& lanes_)
-        : outline(outline_), lanes(lanes_), length(outline_.length()){}
+        : outline(outline_), lanes(lanes_), length(outline_.length()){
+            #ifndef NDEBUG
+            std::cout << "Created road with outline through points: [" << std::endl;
+            int N = outline.numSegment();
+            std::vector<double> X(N+1),Y(N+1);
+            outline.getXY(X.data(),Y.data());
+            for(int i=0;i<=N;i++){
+                std::cout << "[" << X[i] << "," << Y[i] << "]" << std::endl;
+            }
+            std::cout << "]" << std::endl;
+            std::cout << "and lane offset properties: [" << std::endl;
+            for(const Lane& lane : lanes){
+                std::cout << "[";
+                lane.offsetProp.dump();
+                std::cout << "]" << std::endl;
+            }
+            #endif
+        }
 
-        inline std::optional<id_t> laneId(const double s, const double l) const{
+        inline std::optional<id_t> laneId(const double s, const double l, const bool exact = true) const{
+            // Possibly returns std::nullopt in case there is no exact lane match and exact==true.
+            // Otherwise always returns the closest matching lane.
             double c, w;
             double opt_cost = -1, cost;
             int id = -1;
@@ -182,7 +217,7 @@ class Road{
                 c = lanes[L].offset(s);// nan if lane is invalid at s
                 w = lanes[L].width(s);
                 cost = std::abs(c-l);// Might add a cost to prefer lanes that are longer valid
-                if((c+w/2>=l && c-w/2<=l) && (cost<opt_cost || opt_cost<0)){
+                if(lanes[L].isValid(s) && (std::abs(c-l)<=w/2 || !exact) && (cost<opt_cost || opt_cost<0)){
                     opt_cost = cost;
                     id = L;
                 }
@@ -217,15 +252,17 @@ class Road{
 
         inline std::optional<id_t> laneNeighbour(const double s, const id_t L, const Side d) const{
             // Get the first valid lane towards the left/right of the given lane. This method
-            // takes the lane direction into account.
-            if(s<lanes[L].validity[0] || s>lanes[L].validity[1]){
+            // takes the lane direction into account. At a point s' where the neighbour changes,
+            // the NEW neighbour is returned (in the direction of the lane).
+            if(!lanes[L].isValid(s)){
                 return std::nullopt;
             }
             bool hasNeighbour = false;
-            const int delta = static_cast<int>(d)*static_cast<int>(lanes[L].direction);
+            const int dir = static_cast<int>(lanes[L].direction);
+            const int delta = static_cast<int>(d)*dir;
             int N = L+delta;
             while(!hasNeighbour && N>=0 && N<lanes.size()){
-                hasNeighbour = s>=lanes[N].validity[0] && s<=lanes[N].validity[1];
+                hasNeighbour = lanes[N].isValid(s) && s!=lanes[N].validity[(1+dir)/2];// TODO: maybe include lane end if it coincides with road end?
                 N += delta;
             }
             if(hasNeighbour){
@@ -237,8 +274,10 @@ class Road{
 
         inline std::pair<std::optional<BoundaryCrossability>,std::optional<id_t>> laneBoundary(const double s, const id_t L, const Side d) const{
             // Get the boundary crossability with the first valid lane towards the left/right
-            // of the given lane. This method takes the lane direction into account.
-            if(s<lanes[L].validity[0] || s>lanes[L].validity[1]){
+            // of the given lane. This method takes the lane direction into account. At a point
+            // s' where the crossability changes, the NEW crossability is returned (in the
+            // direction of the lane).
+            if(!lanes[L].isValid(s)){
                 return {std::nullopt,std::nullopt};// Lane is invalid for the given s => no boundary
             }
             std::optional<id_t> neighbour = laneNeighbour(s,L,d);
@@ -246,12 +285,32 @@ class Road{
                 return {BoundaryCrossability::NONE,std::nullopt};// No neighbour, so uncrossable
             }
             const id_t N = *neighbour;
-            const int delta = static_cast<int>(d)*static_cast<int>(lanes[L].direction);
-            double gap = (delta*lanes[N].offset(s)-lanes[N].width(s)/2) - (delta*lanes[L].offset(s)+lanes[L].width(s)/2);
-            if(std::abs(lanes[L].height(s)-lanes[N].height(s))>Road::EPS || lanes[L].direction!=lanes[N].direction || gap>EPS){
-                return {BoundaryCrossability::NONE,N};// Physically impossible to cross towards the neighbouring lane or traffic in opposite direction on neighbouring lane
+            if(lanes[L].direction!=lanes[N].direction){
+                return {BoundaryCrossability::NONE,N};// Traffic in opposite direction on neighbouring lane
             }
-            int cross = static_cast<int>(lanes[L].availability(s,static_cast<Side>(delta))) + 2*static_cast<int>(lanes[N].availability(s,static_cast<Side>(-delta)));// Determine crossability based on left and right availability properties
+            const int dir = static_cast<int>(lanes[L].direction);
+            const int delta = static_cast<int>(d)*dir;
+            double cN,cL,dcN,dcL,wN,wL,dwN,dwL,hN,hL,dhN,dhL;
+            lanes[N].offset(s,cN,dcN); lanes[N].width(s,wN,dwN); lanes[N].height(s,hN,dhN);
+            lanes[L].offset(s,cL,dcL); lanes[L].width(s,wL,dwL); lanes[L].height(s,hL,dhL);
+            // Calculate total (squared) gap as the sum of the squared lateral gap and the squared height gap
+            const double latGap = std::max(0.0,(delta*cN-wN/2)-(delta*cL+wL/2));
+            const double vertGap = hN-hL;
+            const double gap = latGap*latGap + vertGap*vertGap;
+            const double dgap = 2*latGap*(delta*dcN-dwN/2-delta*dcL-dwL/2) + 2*vertGap*(dhN-dhL);
+            if(gap>EPS*EPS || dgap*dir>EPS){// There is a gap OR the gap is increasing in forward direction of the lane
+                return {BoundaryCrossability::NONE,N};// Physically impossible to cross towards the neighbouring lane
+            }
+            double aN,aL,daN,daL;
+            lanes[L].availability(s,static_cast<Side>(delta),aL,daL);
+            lanes[N].availability(s,static_cast<Side>(-delta),aN,daN);
+            if(daN!=0){// If we are at a position where the availability changes,
+                aN = (dir*daN>0) ? 1 : 0;// put it equal to the value right after the change (in direction of the lane)
+            }
+            if(daL!=0){// If we are at a position where the availability changes,
+                aL = (dir*daL>0) ? 1 : 0;// put it equal to the value right after the change (in direction of the lane)
+            }
+            int cross = static_cast<int>(aL) + 2*static_cast<int>(aN);// Determine crossability based on left and right availability properties
             return {static_cast<BoundaryCrossability>(cross),N};
         }
 
@@ -279,15 +338,13 @@ class Road{
             pos[0] += -roadPose[1]*std::sin(psi);
             pos[1] += roadPose[1]*std::cos(psi);
             ang[0] = heading(roadPose[0],roadPose[1])+roadPose[2];
-            std::optional<id_t> L = laneId(roadPose[0],roadPose[1]);
-            if(!L){
-                throw std::invalid_argument("Road.globalPose: invalid roadPose, no valid lane at this position.");
-            }
+            id_t L = *laneId(roadPose[0],roadPose[1],false);
             double h,dh,e;
-            lanes[*L].height(roadPose[0],h,dh);
-            e = lanes[*L].superElevation(roadPose[0]);
-            pos[2] = h+(roadPose[1]-lanes[*L].offset(roadPose[0]))*e;
+            lanes[L].height(roadPose[0],h,dh);
+            e = lanes[L].superElevation(roadPose[0]);
+            pos[2] = h+(roadPose[1]-lanes[L].offset(roadPose[0]))*e;
             // TODO: below are approximations, not exact when psi_{\rho,L} significantly differs from psi_\rho
+            // TODO: also not taking gamma into account
             ang[1] = std::atan(dh);
             ang[2] = std::atan(e);
         }
@@ -356,6 +413,34 @@ class Road{
             ML.push_back(Transition(0,d,d,0,-static_cast<double>(lanes.size())));// Step back to zero (-1)
             Ms.push_back(Transition(0,d,d,0,-prev_s));// Step back to zero
             return std::tuple<Property,Property,double>(Property(ML,-1),Property(Ms),d);
+        }
+
+        inline std::set<double> principalCA() const{
+            // Get the principal curvilinear abscissa of this road. These are the abscissa
+            // for which the road layout might change. I.e. the begin and end of lanes and
+            // the begin and end of layout property transitions.
+            std::set<double> pa;
+            for(const Lane& lane : lanes){
+                pa.insert(lane.validity[0]);
+                pa.insert(lane.validity[1]);
+                auto insertProperty = [&pa,vF=lane.validity[0],vT=lane.validity[1]](const Property& prop){
+                    for(const Transition& trans : prop.transitions){
+                        if(trans.from>vF && trans.from<vT){
+                            pa.insert(trans.from);
+                        }
+                        if(trans.to>vF && trans.to<vT){
+                            pa.insert(trans.to);
+                        }
+                    }
+                };
+                insertProperty(lane.offsetProp);
+                insertProperty(lane.widthProp);
+                insertProperty(lane.heightProp);
+                insertProperty(lane.leftProp);
+                insertProperty(lane.rightProp);
+                insertProperty(lane.superelevationProp);
+            }
+            return pa;
         }
 
 };

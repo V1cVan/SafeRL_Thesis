@@ -15,8 +15,8 @@
 #include "mat.h"
 #endif
 
-#include "Road.hpp"
 #include "Utils.hpp"
+#include "Road.hpp"
 #include <vector>
 #include <stdexcept>
 #include <random>
@@ -243,7 +243,7 @@ struct H5ResourceManager : public fixedBase{
 
 class Scenario{
     public:
-        static inline std::string scenarios_path;
+        STATIC_INLINE std::string scenarios_path;
         std::vector<Road> roads;
         
         Scenario(const std::vector<Road>& roads_)
@@ -294,7 +294,7 @@ class Scenario{
             // Initialize a resource manager who will take care of file and dataset
             // closing in case of exceptions. It will also initialize the defined
             // datatypes and properly close them in case of exceptions.
-            H5ResourceManager rm = H5ResourceManager();
+            H5ResourceManager rm;
             // Open dataset file and read out the roads of the given scenario:
             herr_t status;
             hid_t file = H5Fopen(scenarios_path.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
@@ -563,7 +563,7 @@ class Scenario{
             hsize_t dims[2];
             H5Sget_simple_extent_dims(spCp,dims,NULL);
             H5Sclose(spCp);
-            if(dims[0]!=6){
+            if(dims[1]!=6){
                 throw std::invalid_argument("[/scenario/road] The given scenario is not properly saved (invalid 'cp' dimensions).");
             }
             std::vector<double> dCp = std::vector<double>(dims[0]*dims[1]);
@@ -573,8 +573,8 @@ class Scenario{
             }
 
             G2lib::ClothoidList cl = G2lib::ClothoidList();
-            cl.reserve(static_cast<int>(dims[1]));
-            for(int i=0;i<dims[1];i++){
+            cl.reserve(static_cast<int>(dims[0]));
+            for(int i=0;i<dims[0];i++){
                 cl.push_back(dCp[6*i],dCp[6*i+1],dCp[6*i+2],dCp[6*i+3],dCp[6*i+4],dCp[6*i+5]);
             }
 
@@ -684,5 +684,9 @@ class Scenario{
         #endif
 
 };
+
+#ifdef COMPAT
+std::string Scenario::scenarios_path;
+#endif
 
 #endif

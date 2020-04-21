@@ -1,4 +1,4 @@
-classdef DynamicBicycleModel < models.Model
+classdef DynamicBicycleModel < hwsim.models.Model
     %DBM Dynamic bicycle model
     
     properties
@@ -27,7 +27,7 @@ classdef DynamicBicycleModel < models.Model
                 base_props.?Model
             end
             base_props = namedargs2cell(base_props);
-            M@models.Model(base_props{:});
+            M@hwsim.models.Model(base_props{:});
             M.m = own_props.m;
             M.Izz = own_props.Izz;
             M.Fn = own_props.Fn;

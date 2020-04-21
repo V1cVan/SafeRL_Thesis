@@ -35,6 +35,7 @@ else()
   set(CLOTHOIDS_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/Clothoids/install)
 endif()
 message(STATUS "Looking for ${CLOTHOIDS_LIB} in ${CLOTHOIDS_INSTALL_DIR}/lib")
+unset(ClothoidsLib CACHE) # Force find_library every time (otherwise cached library is used)
 find_library(ClothoidsLib NAMES ${CLOTHOIDS_LIB} PATHS ${CLOTHOIDS_INSTALL_DIR}/lib NO_DEFAULT_PATH)
 if(NOT ClothoidsLib)
   message(STATUS "Clothoids library not found, building from source...")
@@ -69,6 +70,48 @@ target_include_directories(Clothoids
     $<BUILD_INTERFACE:${CLOTHOIDS_INSTALL_DIR}/include>
 )
 target_link_libraries(Clothoids INTERFACE ${ClothoidsLib})
+# If the Matlab wrapper for the hwsim library is required, install
+# extra mex targets for the Clothoids library:
+if(HWSIM_INSTALL_MATLAB)
+  # Find Matlab package:
+  find_package(Matlab)
+  # Add mex targets for Clothoids library:
+  set(CLOTHOIDS_MEX_SRC ${CLOTHOIDS_SOURCE_DIR}/src_mex)
+  add_library(ClothoidsMex INTERFACE)
+  target_include_directories(ClothoidsMex INTERFACE ${CLOTHOIDS_MEX_SRC})
+  matlab_add_mex(
+    NAME ClothoidCurveMexWrapper MODULE
+    SRC ${CLOTHOIDS_MEX_SRC}/mex_ClothoidCurveMexWrapper.cc
+    LINK_TO Clothoids ClothoidsMex
+    R2017b
+  )
+  matlab_add_mex(
+    NAME ClothoidListMexWrapper MODULE
+    SRC ${CLOTHOIDS_MEX_SRC}/mex_ClothoidListMexWrapper.cc
+    LINK_TO Clothoids ClothoidsMex
+    R2017b
+  )
+  matlab_add_mex(
+    NAME ClothoidSplineG2MexWrapper MODULE
+    SRC ${CLOTHOIDS_MEX_SRC}/mex_ClothoidSplineG2MexWrapper.cc
+    LINK_TO Clothoids ClothoidsMex
+    R2017b
+  )
+
+  # Install Clothoids mex targets:
+  install(
+    TARGETS ClothoidCurveMexWrapper ClothoidListMexWrapper ClothoidSplineG2MexWrapper
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/dependencies/Clothoids/matlab
+  )
+  install(
+    FILES
+      ${CLOTHOIDS_SOURCE_DIR}/matlab/ClothoidCurve.m
+      ${CLOTHOIDS_SOURCE_DIR}/matlab/ClothoidList.m
+      ${CLOTHOIDS_SOURCE_DIR}/matlab/ClothoidSplineG2.m
+      ${CLOTHOIDS_SOURCE_DIR}/matlab/CurveBase.m
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/dependencies/Clothoids/matlab
+  )
+endif()
 # Install Clothoids library in dependencies folder:
 install(DIRECTORY ${CLOTHOIDS_INSTALL_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/dependencies/Clothoids)
 
@@ -98,7 +141,10 @@ else()
   set(HDF5_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/hdf5/install)
 endif()
 message(STATUS "Looking for hdf5 in ${HDF5_INSTALL_DIR}/cmake/hdf5 and ${HDF5_INSTALL_DIR}/share/cmake/hdf5")
-# TODO: maybe allow to use system installation instead as well?
+unset(HDF5Package CACHE) # Force find_package every time (otherwise cached package is used)
+unset(HDF5Package_FOUND CACHE)
+unset(HDF5Package_DIR CACHE)
+find_package(HDF5Package NAMES hdf5 COMPONENTS C HL static NO_PACKAGE_ROOT_PATH NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH) # First look if a system-wide hdf5 package is available
 find_package(HDF5Package NAMES hdf5 COMPONENTS C HL static PATHS ${HDF5_INSTALL_DIR}/cmake/hdf5 ${HDF5_INSTALL_DIR}/share/cmake/hdf5 NO_DEFAULT_PATH)
 if(NOT HDF5Package_FOUND)
   message(STATUS "HDF5 library not found, building from source...")
@@ -125,11 +171,5 @@ message(STATUS "Using HDF5 package: ${HDF5Package_DIR}")
 # (other targets can be found in the targets cmake file located in HDF5_DIR).
 # Add an interface library to the HDF5 library:
 add_library(HDF5 INTERFACE)
-target_include_directories(HDF5
-  INTERFACE
-    $<INSTALL_INTERFACE:dependencies/hdf5/include>
-    $<BUILD_INTERFACE:${HDF5_INSTALL_DIR}/include>
-)
+target_include_directories(HDF5 INTERFACE ${HDF5_INCLUDE_DIR})
 target_link_libraries(HDF5 INTERFACE hdf5-static debug hdf5_hl-static)
-# Install HDF5 library in dependencies folder:
-install(DIRECTORY ${HDF5_INSTALL_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/dependencies/hdf5)

@@ -13,9 +13,9 @@ classdef Scenario
                 scenarios = load('scenarios/scenarios.mat');
                 scenario = scenarios.(scenario);
             end
-            S.roads = Road.empty();
+            S.roads = hwsim.Road.empty();
             for r=1:numel(scenario.roads)
-                S.roads(r) = Road(scenario.roads(r));
+                S.roads(r) = hwsim.Road(scenario.roads(r));
             end
         end
         
@@ -67,8 +67,8 @@ classdef Scenario
                 lanes = 1:numel(S.roads(R_ref).lane_props);
                 val = S.roads(R_ref).getValidity(lanes);
                 dir = S.roads(R_ref).getDirection(lanes)';
-                Is = val(:,1+(1-dir_ref)/2)>=pos_ref(1)-Vehicle.D_max & val(:,1+(1-dir_ref)/2)<=pos_ref(1)+Vehicle.D_max & dir==dir_ref;% Lanes that start within the vehicle's detection horizon
-                Ie = val(:,1+(1+dir_ref)/2)>=pos_ref(1)-Vehicle.D_max & val(:,1+(1+dir_ref)/2)<=pos_ref(1)+Vehicle.D_max & dir==dir_ref;% Lanes that end within the vehicle's detection horizon
+                Is = val(:,1+(1-dir_ref)/2)>=pos_ref(1)-hwsim.Vehicle.D_max & val(:,1+(1-dir_ref)/2)<=pos_ref(1)+hwsim.Vehicle.D_max & dir==dir_ref;% Lanes that start within the vehicle's detection horizon
+                Ie = val(:,1+(1+dir_ref)/2)>=pos_ref(1)-hwsim.Vehicle.D_max & val(:,1+(1+dir_ref)/2)<=pos_ref(1)+hwsim.Vehicle.D_max & dir==dir_ref;% Lanes that end within the vehicle's detection horizon
                 Ls = lanes(Is);
                 Le = lanes(Ie);
                 [cF,~] = S.roads(R_ref).getConnections(Ls);
@@ -91,7 +91,7 @@ classdef Scenario
                         % Only select vehicles on road R_F(i) that are within
                         % the detection horizon in the region BEFORE the
                         % connection (otherwise issues with cyclic connections)
-                        I = R==R_F(i) & dir_F*pos(1,:)<=dir_F*s_F & dir_F*pos(1,:)>=dir_F*s_F-(Vehicle.D_max-dir_ref*(pos_ref(1)-s_r));
+                        I = R==R_F(i) & dir_F*pos(1,:)<=dir_F*s_F & dir_F*pos(1,:)>=dir_F*s_F-(hwsim.Vehicle.D_max-dir_ref*(pos_ref(1)-s_r));
                         offsets(1,I) = pos_ref(1)-(s_r+dir_F*dir_ref*(pos(1,I)-s_F));
                         offsets(2,I) = pos_ref(2)-(dl+dir_F*dir_ref*pos(2,I));
                     end
@@ -112,7 +112,7 @@ classdef Scenario
                         % Only select vehicles on road R_T(i) that are within
                         % the detection horizon in the region AFTER the
                         % connection (otherwise issues with cyclic connections)
-                        I = R==R_T(i) & dir_T*pos(1,:)>=dir_T*s_T & dir_T*pos(1,:)<=dir_T*s_T+(Vehicle.D_max+dir_ref*(pos_ref(1)-s_r));
+                        I = R==R_T(i) & dir_T*pos(1,:)>=dir_T*s_T & dir_T*pos(1,:)<=dir_T*s_T+(hwsim.Vehicle.D_max+dir_ref*(pos_ref(1)-s_r));
                         offsets(1,I) = pos_ref(1)-(s_r+dir_T*dir_ref*(pos(1,I)-s_T));
                         offsets(2,I) = pos_ref(2)-(dl+dir_T*dir_ref*pos(2,I));
                     end
@@ -141,6 +141,7 @@ classdef Scenario
             ML = [];
             Ms = [];
             MR(1,:) = [0,0,0,0,1];
+            import('hwsim.Property')
             for r=1:numel(S.roads)
                 [MLr,Msr] = S.roads(r).getLaneMapping();
                 ML = Property.combine(ML,Property.translate(MLr,MR(r,1)),1,1);

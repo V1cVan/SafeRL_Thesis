@@ -1,9 +1,9 @@
 #ifndef SIM_SIMULATION
 #define SIM_SIMULATION
 
+#include "Utils.hpp"
 #include "Vehicle.hpp"
 #include "Scenario.hpp"
-#include "Utils.hpp"
 #include <vector>
 #include <array>
 #include <set>
@@ -30,7 +30,7 @@ class Simulation{
     private:
         std::vector<Vehicle> vehicles;
         unsigned int k = 0;
-        static inline double dt;
+        STATIC_INLINE double dt;
 
         struct NeighbourInfo{
             vId omega;// Vehicle id of other vehicle
@@ -53,6 +53,8 @@ class Simulation{
         }
 
         // TODO: constructor to resume from previous simulation
+        // TODO: parameter to write all simulation data to a log file
+        // TODO: constructor (or separate class) to replay a logged simulation
 
         // Disable copying of simulations:
         Simulation(const Simulation&) = delete;
@@ -73,7 +75,7 @@ class Simulation{
                 return false;
             }
             k += 1;
-            return !updateStates();// Update vehicle augmented states and driving actions
+            return updateStates();// Update vehicle augmented states and driving actions
         }
 
         inline const Vehicle& getVehicle(const vId V) const{
@@ -86,6 +88,7 @@ class Simulation{
 
         static inline void configure(const sConfig& config = {0.1,10,50}){
             // TODO: change these static properties to member properties
+            // and check that each vehicle in this simulation has the same values
             Simulation::dt = config.dt;
             Policy::N_OV = config.N_OV;
             Policy::D_MAX = config.D_MAX;
@@ -277,5 +280,9 @@ class Simulation{
             return vehicles;
         }
 };
+
+#ifdef COMPAT
+double Simulation::dt;
+#endif
 
 #endif

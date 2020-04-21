@@ -9,10 +9,17 @@ enable_testing()
 # PUBLIC = both required to build current target AND link against it
 
 # Options:
+option(HWSIM_COMPAT "Build with compatibility mode." OFF)
 option(HWSIM_INSTALL_LIB "Install the C library." ON)
 option(HWSIM_INSTALL_PYTHON "Install the python wrapper." ON)
-option(HWSIM_INSTALL_MATLAB "Install the MATLAB wrapper." ON)
+option(HWSIM_INSTALL_MATLAB "Install the MATLAB wrapper." OFF)
 option(HWSIM_INSTALL_TESTS "Install the test executables." OFF)
+
+message(STATUS "Building in compatibility mode? ${HWSIM_COMPAT}")
+message(STATUS "Installing C library? ${HWSIM_INSTALL_LIB}")
+message(STATUS "Installing python wrapper? ${HWSIM_INSTALL_PYTHON}")
+message(STATUS "Installing MATLAB wrapper? ${HWSIM_INSTALL_MATLAB}")
+message(STATUS "Installing test executables? ${HWSIM_INSTALL_TESTS}")
 
 # Display all warnings if in debug mode:
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -42,6 +49,10 @@ target_link_libraries(hwsim
     HDF5
 )
 target_compile_features(hwsim INTERFACE cxx_std_17)
+if(HWSIM_COMPAT)
+  target_compile_definitions(hwsim INTERFACE COMPAT)
+endif()
+
 
 # Add C library wrapper:
 add_library(libhwsim SHARED C/hwsim.cpp)
@@ -59,11 +70,19 @@ target_include_directories(libhwsim-static
 )
 target_link_libraries(libhwsim PRIVATE hwsim)
 target_link_libraries(libhwsim-static PRIVATE hwsim)
+set_target_properties(libhwsim PROPERTIES PREFIX "lib" LIBRARY_OUTPUT_NAME "hwsim" RUNTIME_OUTPUT_NAME "hwsim")
+set_target_properties(libhwsim-static PROPERTIES PREFIX "lib" ARCHIVE_OUTPUT_NAME "hwsim-static")
 
 # Add and install Matlab mex wrappers:
 if(HWSIM_INSTALL_MATLAB)
   add_subdirectory(matlab)
 endif()
+
+# Configure python wrapper:
+file(GENERATE
+  OUTPUT python/hwsim/hwsim/_wrapper.py
+  INPUT python/hwsim/hwsim/_wrapper.py.in
+)
 
 # Tests:
 add_subdirectory(tests)
@@ -78,12 +97,18 @@ if(HWSIM_INSTALL_LIB)
   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/C/hwsim.hpp DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 endif()
 if(HWSIM_INSTALL_PYTHON)
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/python/ DESTINATION ${CMAKE_INSTALL_PREFIX}/python)
+  # Install static files
+  install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/python/
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/python
+    FILES_MATCHING
+    PATTERN "*"
+    PATTERN "*.in" EXCLUDE
+  )
+  # Install generated files
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python/ DESTINATION ${CMAKE_INSTALL_PREFIX}/python)
+  # Install shared library
   install(TARGETS libhwsim DESTINATION ${CMAKE_INSTALL_PREFIX}/python/hwsim/hwsim)
-endif()
-if(HWSIM_INSTALL_MATLAB)
-  #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/matlab/ DESTINATION ${CMAKE_INSTALL_PREFIX}/matlab)
-  # TODO: configure & execute build.m from CMake
 endif()
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

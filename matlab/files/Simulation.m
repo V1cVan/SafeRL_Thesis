@@ -27,10 +27,11 @@ classdef Simulation < handle
             if nargin>3
                 S.useMEX = useMEX;
             end
+            import('hwsim.drivers.*','hwsim.models.*')
             
             S.dt = config.dt;% Note: other configuration options are not supported in pure Matlab version
-            S.Sc = Scenario(scenarioName);
-            S.Cars = Vehicle.empty();
+            S.Sc = hwsim.Scenario(scenarioName);
+            S.Cars = hwsim.Vehicle.empty();
             nbCars = sum([vehicleTypes.amount]);
             S.colors = zeros(nbCars,3);
             if S.useMEX
@@ -46,18 +47,18 @@ classdef Simulation < handle
                     else
                         switch(vehicleTypes(t).policy)
                             case "slow"
-                                S.colors(ids+1,:) = drivers.ManualDriver(struct('driver_type',drivers.ManualDriver.SLOW)).color;
+                                S.colors(ids+1,:) = ManualDriver(struct('driver_type',ManualDriver.SLOW)).color;
                             case "normal"
-                                S.colors(ids+1,:) = drivers.ManualDriver(struct('driver_type',drivers.ManualDriver.DEFENSIVE)).color;
+                                S.colors(ids+1,:) = ManualDriver(struct('driver_type',ManualDriver.DEFENSIVE)).color;
                             case "fast"
-                                S.colors(ids+1,:) = drivers.ManualDriver(struct('driver_type',drivers.ManualDriver.AGGRESSIVE)).color;
+                                S.colors(ids+1,:) = ManualDriver(struct('driver_type',ManualDriver.AGGRESSIVE)).color;
                         end
                     end
 %                     for i=ids
-%                         S.Cars(end+1) = Vehicle(struct(),[],models.KinematicBicycleModel(
+%                         S.Cars(end+1) = hwsim.Vehicle(struct(),[],KinematicBicycleModel(
                     id = id+vehicleTypes(t).amount;
                 end
-                S.mexHandle = mexSim('new',config,scenarioName,vehicleTypes);
+                S.mexHandle = hwsim.mexSim('new',config,scenarioName,vehicleTypes);
             else
                 % Initialize new cars randomly based on the given
                 % parameters
@@ -73,9 +74,9 @@ classdef Simulation < handle
                         % Use road and lane mappings to determine the
                         % locations of the vehicles along the road:
                         p = (cPerm(c)-0.5+rand()/2-0.25)*length/nbCars;% Equally spaced position variable (randomly perturbated), used to evaluate MR, ML and Ms
-                        R = Property.evaluate(MR,p);
-                        L = Property.evaluate(ML,p);
-                        s = Property.evaluate(Ms,p);
+                        R = hwsim.Property.evaluate(MR,p);
+                        L = hwsim.Property.evaluate(ML,p);
+                        s = hwsim.Property.evaluate(Ms,p);
                         l = S.Sc.roads(R).evalProp('offset',s,L);
                         %TODO: create separate lateral controller for trucks (with larger
                         %lengths)
@@ -87,19 +88,19 @@ classdef Simulation < handle
                         vehicle_props = struct('road',R,'pos',[s;l],'vel',[v0;0;0],'heading',0);
                         switch(vehicleTypes(t).policy)
                             case "step"
-                                driver = drivers.StepDriver();
+                                driver = StepDriver();
                             case "slow"
-                                driver = drivers.ManualDriver(struct('driver_type',drivers.ManualDriver.SLOW));
+                                driver = ManualDriver(struct('driver_type',ManualDriver.SLOW));
                             case "normal"
-                                driver = drivers.ManualDriver(struct('driver_type',drivers.ManualDriver.DEFENSIVE));
+                                driver = ManualDriver(struct('driver_type',ManualDriver.DEFENSIVE));
                             case "fast"
-                                driver = drivers.ManualDriver(struct('driver_type',drivers.ManualDriver.AGGRESSIVE));
+                                driver = ManualDriver(struct('driver_type',ManualDriver.AGGRESSIVE));
                             otherwise
                                 driver = vehicleTypes(t).policy;
                         end
                         S.colors(c,:) = driver.color;
-                        model = models.KinematicBicycleModel('Size',v_size,'RelCG',[cgr;0]);
-                        S.Cars(c) = Vehicle(vehicle_props,model,driver,S.Sc);
+                        model = KinematicBicycleModel('Size',v_size,'RelCG',[cgr;0]);
+                        S.Cars(c) = hwsim.Vehicle(vehicle_props,model,driver,S.Sc);
                         c = c+1;
                     end
                 end
@@ -130,11 +131,11 @@ classdef Simulation < handle
                 % before taking the step
                 for c=1:numel(S.customDrivers)
                     for id=S.customDrivers(c).ids
-                        state = mexSim('getVehicle',S.mexHandle,'policy',id);
-                        mexSim('setActions',S.mexHandle,id,S.customDrivers(c).policy.drive(state));
+                        state = hwsim.mexSim('getVehicle',S.mexHandle,'policy',id);
+                        hwsim.mexSim('setActions',S.mexHandle,id,S.customDrivers(c).policy.drive(state));
                     end
                 end
-                stop = mexSim('step',S.mexHandle);
+                stop = hwsim.mexSim('step',S.mexHandle);
             else
                 % Advance time for each vehicle:
                 for v=1:numel(S.Cars)
@@ -150,7 +151,7 @@ classdef Simulation < handle
         
         function [state,input] = getVehicleInfo(S,V,info)
             if ~isempty(S.mexHandle)
-                [state,input] = mexSim(S.mexHandle,"getVehicle",V,info);
+                [state,input] = hwsim.mexSim(S.mexHandle,"getVehicle",V,info);
             else
                 switch(info)
                     case "model"
@@ -191,7 +192,7 @@ classdef Simulation < handle
                 end
                 S.Cars(v).plot(S.UI.dAxes,fc,ec);
             end
-            S.UI.dPatch.Vertices = utils.getCuboidPatch(S.Cars(S.UI.V).pos(1:2),ones(2,2)*S.UI.detail.W/2,S.Cars(S.UI.V).ang(1));
+            S.UI.dPatch.Vertices = hwsim.utils.getCuboidPatch(S.Cars(S.UI.V).pos(1:2),ones(2,2)*S.UI.detail.W/2,S.Cars(S.UI.V).ang(1));
             camup(S.UI.dAxes,[cos(S.Cars(S.UI.V).ang(1)),sin(S.Cars(S.UI.V).ang(1)),1]);
             xlim(S.UI.dAxes,S.Cars(S.UI.V).pos(1)+[-1,1]*S.UI.detail.W/2);
             ylim(S.UI.dAxes,S.Cars(S.UI.V).pos(2)+[-1,1]*S.UI.detail.W/2);
@@ -225,6 +226,7 @@ classdef Simulation < handle
     
     methods (Access=private)
         function col = updateStates(S)
+            import('hwsim.Vehicle')
             col = false;
             % First calculate relative distances between all vehicles:
             positions = [S.Cars.pos];
@@ -270,7 +272,7 @@ classdef Simulation < handle
             % add a scenario plot 
             S.UI.scAxes = subplot(4,2,[1,3]);
             S.Sc.plot(S.UI.scAxes,"Lanes","off","Flatten","on","OutlineColor",[0.6,0.6,0.6]);% Plot the road
-            [dpV,dpF] = utils.getCuboidPatch([0;0],ones(2,2)*S.UI.detail.W/2,0);
+            [dpV,dpF] = hwsim.utils.getCuboidPatch([0;0],ones(2,2)*S.UI.detail.W/2,0);
             % Plot the detail patch
             S.UI.dPatch = patch(S.UI.scAxes,"Vertices",dpV,"Faces",dpF,"FaceColor","none","EdgeColor",[0.635,0.078,0.184],"LineWidth",2);
             daspect(S.UI.scAxes,[1,1,1]);

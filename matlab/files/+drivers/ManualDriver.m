@@ -1,11 +1,11 @@
-classdef ManualDriver < drivers.Driver
+classdef ManualDriver < hwsim.drivers.Driver
     %MANUALDRIVER Class representing a basic manual driving policy
     
     properties (GetAccess=public,SetAccess=protected)
         state;
         des_vel_diff; % Desired velocity of this driver w.r.t. the maximum allowed speed (in m/s)
         overtake_gap = 15; % when gap between successive vehicles becomes smaller than this value, we will try to overtake
-        type = drivers.ManualDriver.DEFENSIVE;
+        type = hwsim.drivers.ManualDriver.DEFENSIVE;
         color;
     end
     
@@ -30,7 +30,7 @@ classdef ManualDriver < drivers.Driver
     methods
         function D = ManualDriver(props)
             %MANUALDRIVER Construct an instance of this class.
-            D@drivers.Driver();
+            D@hwsim.drivers.Driver();
             if nargin > 0 && isfield(props,'driver_type')
                 D.type = props.driver_type;
             end
@@ -48,7 +48,7 @@ classdef ManualDriver < drivers.Driver
             elseif D.type==D.AGGRESSIVE
                 min_vel=1;
                 max_vel=4;
-                D.overtake_gap=0.8*Vehicle.D_max; % Aggressive vehicles will try to overtake very fast
+                D.overtake_gap=0.8*hwsim.Vehicle.D_max; % Aggressive vehicles will try to overtake very fast
                 D.color = [0.85,0.325,0.098];% Orange
             end
             D.des_vel_diff = rand()*(max_vel-min_vel)+min_vel;
@@ -75,7 +75,7 @@ classdef ManualDriver < drivers.Driver
             % Note that the current lane is defined as the lane in which
             % the vehicle's center of gravity lies (i.e. the lane for which
             % the center offset is calculated).
-            front_d = Vehicle.D_max; front_v = D.FRONT_VEL_SCALE*des_vel; % Default is: car in front far ahead and at our desired speed
+            front_d = hwsim.Vehicle.D_max; front_v = D.FRONT_VEL_SCALE*des_vel; % Default is: car in front far ahead and at our desired speed
             lw = abs(dlat_neighb-dlat_center);% Estimates of the lane width of the right and left lane
             right_free = lw(1)>D.EPS;% Default is: we can move right if there is a lane available to the right
             left_free = lw(2)>D.EPS;% Default is: we can move left if there is a lane available to the left
@@ -162,10 +162,10 @@ classdef ManualDriver < drivers.Driver
             
             % Now decide which actions we will take based on our driving
             % type:
-            if front_d < Vehicle.D_max
+            if front_d < hwsim.Vehicle.D_max
                 % If there is a vehicle in front of us, linearly
                 % adapt speed to match front_v.
-                alpha = (front_d-D.SAFETY_GAP)/(Vehicle.D_max-D.SAFETY_GAP);
+                alpha = (front_d-D.SAFETY_GAP)/(hwsim.Vehicle.D_max-D.SAFETY_GAP);
                 actions(1) = min(des_vel,(1-alpha)*front_v+alpha*des_vel);
             end
             should_overtake = (front_d < D.overtake_gap && front_v < 0.9*des_vel);

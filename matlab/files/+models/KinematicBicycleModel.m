@@ -1,4 +1,4 @@
-classdef KinematicBicycleModel < models.Model
+classdef KinematicBicycleModel < hwsim.models.Model
     %KBM Kinematic bicycle model
     
     methods

@@ -38,7 +38,7 @@ classdef Road < handle
             
             % Calculate the piecewise clothoid specification
             ROOT = fileparts(mfilename('fullpath'));% Path to folder containing this source file
-            addpath(fullfile(ROOT,'../../Clothoids/matlab'));% TODO: remove this dependency
+            addpath(fullfile(ROOT,'../../dependencies/Clothoids/matlab'));
             S = ClothoidSplineG2();
             S.verbose(false);
             if R.cyclic
@@ -74,14 +74,14 @@ classdef Road < handle
                 if isempty(R.lane_props) % Empty lane props are given by the scenario designer to create a connection road
                     R.lane_props = struct([]);
                 end
-                R.mexHandle = mexRoad('new',data.cp,R.lane_props);
+                R.mexHandle = hwsim.mexRoad('new',data.cp,R.lane_props);
             end
         end
         
         function delete(R)
             % Destroy C++ object:
             if ~isempty(R.mexHandle)
-                mexRoad('delete',R.mexHandle);
+                hwsim.mexRoad('delete',R.mexHandle);
             end
             R.mexHandle = [];
         end
@@ -94,7 +94,7 @@ classdef Road < handle
             end
             
             if R.useMEX
-                [p,dp] = mexRoad(prop,R.mexHandle,s,lanes);
+                [p,dp] = hwsim.mexRoad(prop,R.mexHandle,s,lanes);
             else
                 p = nan(numel(s),numel(lanes));
                 dp = nan(numel(s),numel(lanes));
@@ -102,7 +102,7 @@ classdef Road < handle
                 for i=1:numel(lanes)
                     L = lanes(i);
                     v_range = s>=R.lane_props(L).validity(1) & s<=R.lane_props(L).validity(2);
-                    [p(v_range,i),dp(v_range,i)] = Property.evaluate(R.lane_props(L).(prop),s(v_range));
+                    [p(v_range,i),dp(v_range,i)] = hwsim.Property.evaluate(R.lane_props(L).(prop),s(v_range));
                 end
             end
         end
@@ -113,7 +113,7 @@ classdef Road < handle
         
         function psi = heading(R,s,l)
             if R.useMEX
-                psi = mexRoad('heading',R.mexHandle,s,l);
+                psi = hwsim.mexRoad('heading',R.mexHandle,s,l);
             else
                 [~,~,psi] = R.SPL.evaluate(s);
                 if ~isempty(l)
@@ -128,7 +128,7 @@ classdef Road < handle
         
         function kappa = curvature(R,s,l)
             if R.useMEX
-                kappa = mexRoad('curvature',R.mexHandle,s,l);
+                kappa = hwsim.mexRoad('curvature',R.mexHandle,s,l);
             else
                 kappa = R.SPL.kappa(s);
                 kappa = kappa./(1-l.*kappa);
@@ -148,7 +148,7 @@ classdef Road < handle
         
         function L = getLaneId(R,s,l)
             if R.useMEX
-                L = mexRoad('laneId',R.mexHandle,s,l);
+                L = hwsim.mexRoad('laneId',R.mexHandle,s,l);
             else
                 lc = R.evalProp('offset',s);
                 D = abs(lc-l);
@@ -180,7 +180,7 @@ classdef Road < handle
             % Returns for each entry in s the lane id of the first valid
             % lane directly to the right and left of each lane.
             if R.useMEX
-                ln = mexRoad('neighbours',R.mexHandle,s,lanes);
+                ln = hwsim.mexRoad('neighbours',R.mexHandle,s,lanes);
             else
                 ln = nan(numel(s),numel(lanes),2);
                 for i=1:numel(lanes)
@@ -200,7 +200,7 @@ classdef Road < handle
             % crossed from both the respective lane and its neighbour. If
             % the lane is not valid for a given s, the boundary type is NaN
             if R.useMEX
-                [lb,ln] = mexRoad('boundaries',R.mexHandle,s,1:numel(R.lane_props));
+                [lb,ln] = hwsim.mexRoad('boundaries',R.mexHandle,s,1:numel(R.lane_props));
             else
                 ld = [R.lane_props.direction];
                 lh = R.evalProp('height',s);
@@ -220,9 +220,9 @@ classdef Road < handle
                         I = ~isnan(ln(:,L,e));% Indices for which we have a neighbour
                         N = ln(I,L,e);% Lane id of our neighbour(s)
                         if ~isempty(N)
-                            A = abs(lh(I,L)-lh(sub2ind(size(lh),S(I),N)))<Road.EPS;% Mask for I denoting for which indices the neighbour is at the same height,
+                            A = abs(lh(I,L)-lh(sub2ind(size(lh),S(I),N)))<hwsim.Road.EPS;% Mask for I denoting for which indices the neighbour is at the same height,
                             A = A & (ld(L)==ld(N))';% has the same direction and
-                            A = A & (3-2*d)*(le(I,L,e)-le(sub2ind(size(le),S(I),N,(3-e)*ones(nnz(I),1))))<Road.EPS;% for which indices there is no gap between this lane and its neighbour
+                            A = A & (3-2*d)*(le(I,L,e)-le(sub2ind(size(le),S(I),N,(3-e)*ones(nnz(I),1))))<hwsim.Road.EPS;% for which indices there is no gap between this lane and its neighbour
                             I(I) = A;% Apply availability mask
                             lb(I,L,e) = la(I,L,d)+2*la(sub2ind(size(la),S(I,1),ln(I,L,e),3-d*ones(nnz(I),1)));% +1 if we can cross towards the neighbour ; +2 if we can cross towards this lane from the neighbour
                         end
@@ -250,7 +250,7 @@ classdef Road < handle
         
         function plot(R,ax,s,opts)
             arguments
-                R (1,1) Road
+                R (1,1) hwsim.Road
                 ax = gca
                 s (1,:) double = []
                 opts.Lanes (1,:) char {mustBeMember(opts.Lanes,{'on','off'})} = 'on'

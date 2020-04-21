@@ -62,7 +62,7 @@ classdef Vehicle < handle
 
                 % Manually tuned PID controllers for longitudinal and lateral
                 % actions:
-                import('controllers.*');
+                import('hwsim.controllers.*');
                 V.vel_ctrl = PID_controller(struct('K_p',3.5)); % Proportional velocity controller
 %                 V.lat_ctrl = PID_controller(struct('K_p',0.08,'K_i',0.001,'K_d',0.05)); % PID controller for lateral action
                 V.lat_ctrl = PID_controller(struct('K_p',0.08)); % PID controller for lateral action
@@ -141,7 +141,7 @@ classdef Vehicle < handle
             inputs(2) = inputs(2)+V.lat_ctrl(dt,V.actions(2)); % Get steering angle input from lateral offset error
             % Update state of the model based on the current actions and
             % resulting inputs:
-            next_state = utils.integrateRK4(@(rs) V.getRoadDerivatives(rs,inputs),[V.roadInfo.pos;V.pos;V.ang;V.vel;V.ang_vel],dt);
+            next_state = hwsim.utils.integrateRK4(@(rs) V.getRoadDerivatives(rs,inputs),[V.roadInfo.pos;V.pos;V.ang;V.vel;V.ang_vel],dt);
             [V.roadInfo.id,V.roadInfo.pos(1),V.roadInfo.pos(2)] = V.updateRoadState(next_state(1),next_state(2));
             [V.pos(1),V.pos(2)] = V.scenario.roads(V.roadInfo.id).getGlobalPose(V.roadInfo.pos(1),V.roadInfo.pos(2),0);
             %V.pos(1:2) = next_state(3:4);% Gets inaccurate for large simulation times
@@ -156,7 +156,7 @@ classdef Vehicle < handle
             D = [V.model.Lf,V.model.Lr;
                  V.model.Size(2)/2,V.model.Size(2)/2;
                  V.model.Hcg,V.model.Size(3)-V.model.Hcg];
-            [Vertices,Faces] = utils.getCuboidPatch(V.pos,D,V.ang(1));
+            [Vertices,Faces] = hwsim.utils.getCuboidPatch(V.pos,D,V.ang(1));
             if ishghandle(V.p)
                 % Update existing patch
                 V.p.Vertices = Vertices;
@@ -184,7 +184,7 @@ classdef Vehicle < handle
     methods(Static)
         function V = loadobj(s)
             if isstruct(s)
-                V = Vehicle(s.props,s.model,s.driver,[]);
+                V = hwsim.Vehicle(s.props,s.model,s.driver,[]);
             else
                 V = s;
             end
@@ -213,13 +213,13 @@ classdef Vehicle < handle
             [lb,ln] = V.scenario.roads(R).getBoundaries(s);
             [le,lc,lw] = V.scenario.roads(R).getLaneEdges(s,1:size(lb,2));
             L = V.scenario.roads(R).getLaneId(s,l);% Current lane id
-            G = Road.getContiguousGroup(lb,ln,L);
+            G = hwsim.Road.getContiguousGroup(lb,ln,L);
             dir = V.scenario.roads(R).getDirection(L);
             
             boundaryOffset = dir*[l-le(1,G(1),1);le(1,G(end),2)-l];% W.r.t. right and left boundary
             laneWidth = lw(L);
             centerOffset = dir*(l-lc(L));
-            la = Road.getAvailability(lb,L);
+            la = hwsim.Road.getAvailability(lb,L);
             neighbourOffset = [centerOffset;centerOffset];% W.r.t. right and left neighbouring lane
             neighbourOffset(la) = dir*(l-lc(ln(1,L,la)));
             gamma = V.ang(1)-V.scenario.roads(R).heading(s,l);% NOTE: this incorporates the angle offset of the lane w.r.t. the road outline's heading!!

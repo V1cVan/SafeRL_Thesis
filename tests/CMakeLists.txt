@@ -3,6 +3,10 @@ cmake_minimum_required(VERSION 3.14)
 include(CTest)
 enable_testing()
 
+# Add Clothoids test:
+add_executable(Clothoids-test Clothoids-test.cpp)
+target_link_libraries(Clothoids-test PRIVATE hwsim)
+
 # Add C++ test target:
 add_executable(hwsim-test hwsim-test.cpp)
 message(STATUS "hwsim_SOURCE_DIR=${hwsim_SOURCE_DIR}")

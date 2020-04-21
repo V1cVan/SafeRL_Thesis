@@ -1,4 +1,4 @@
-classdef StepDriver < drivers.Driver
+classdef StepDriver < hwsim.drivers.Driver
     %STEPDRIVER Class representing a stepping driving policy, used to
     %examine the step response of the dynamical systems.
     
@@ -17,7 +17,7 @@ classdef StepDriver < drivers.Driver
     methods
         function D = StepDriver(props)
             %BASICDRIVER Construct an instance of this class.
-            D@drivers.Driver();
+            D@hwsim.drivers.Driver();
             if nargin>0
                 if isfield(props,'min_vel')
                     D.vel_range(1) = props.min_vel;

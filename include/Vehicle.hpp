@@ -1,11 +1,11 @@
 #ifndef SIM_VEHICLE
 #define SIM_VEHICLE
 
+#include "Utils.hpp"
 #include "Scenario.hpp"
 #include "Model.hpp"
 #include "Policy.hpp"
 #include "Controllers.hpp"
-#include "Utils.hpp"
 #include <array>
 #include <random>
 
@@ -70,15 +70,15 @@ class Vehicle{
         RoadInfo roadInfo;// Augmented state information of the vehicle w.r.t. the road
         int colStatus;// Collision status
 
-        Vehicle(const Scenario& vSc, const InitialState& vState, std::unique_ptr<Model> vModel, std::unique_ptr<Policy> vPolicy)
-        : sc(vSc), model(std::move(vModel)), policy(std::move(vPolicy)), longCtrl(3.5), latCtrl(0.08), roadInfo(), colStatus(COL_NONE){// Proportional longitudinal and lateral controllers
-            sc.roads[vState.R].globalPose({vState.pos[0],vState.pos[1],vState.gamma},model->state.pos,model->state.ang);
-            model->state.vel = {vState.vel,0,0};
-            model->state.ang_vel = {0,0,0};
-            roadInfo.R = vState.R;
-            roadInfo.pos = vState.pos;
-            updateRoadInfo();
-        }
+        // Vehicle(const Scenario& vSc, const InitialState& vState, std::unique_ptr<Model> vModel, std::unique_ptr<Policy> vPolicy)
+        // : sc(vSc), model(std::move(vModel)), policy(std::move(vPolicy)), longCtrl(3.5), latCtrl(0.08), roadInfo(), colStatus(COL_NONE){// Proportional longitudinal and lateral controllers
+        //     sc.roads[vState.R].globalPose({vState.pos[0],vState.pos[1],vState.gamma},model->state.pos,model->state.ang);
+        //     model->state.vel = {vState.vel,0,0};
+        //     model->state.ang_vel = {0,0,0};
+        //     roadInfo.R = vState.R;
+        //     roadInfo.pos = vState.pos;
+        //     updateRoadInfo();
+        // }
 
         Vehicle(const Scenario& vSc, const BluePrint& vBp, const InitialState& vIs)
         : sc(vSc), model(createModel(vSc,vBp,vIs)), policy(createPolicy(vBp)), longCtrl(3.5), latCtrl(0.08), roadInfo(), colStatus(COL_NONE){
@@ -103,19 +103,18 @@ class Vehicle{
             RoadState rs = {roadInfo.pos,model->state};
             auto sys = [this](const RoadState& x){return roadDerivatives(x);};
             rs = Utils::integrateRK4(sys,rs,dt);
-            std::cout << "New road pos: " << rs.roadPos[0] << "," << rs.roadPos[1] << std::endl;
-            std::cout << "New model pos: " << rs.modelState.pos[0] << "," << rs.modelState.pos[1] << std::endl;
             // Wrap integrated road state to a valid new road id and road position:
             sc.updateRoadState(roadInfo.R,roadInfo.pos[0],roadInfo.pos[1],rs.roadPos[0]-roadInfo.pos[0],rs.roadPos[1]-roadInfo.pos[1]);
             // Note that from here on we have an updated AND VALID new road state
             // as otherwise an out_of_range exception would have been thrown.
             // Calculate new global position from the updated road position:
-            //model.state.pos = rs.modelState.pos;// Gets inaccurate for large simulation times
             std::array<double,3> ang = std::array<double,3>();
             sc.roads[roadInfo.R].globalPose({roadInfo.pos[0],roadInfo.pos[1],0},model->state.pos,ang);
             // Extract new model states:
+            //model->state.pos = rs.modelState.pos;// Gets inaccurate for large simulation times
+            model->state.pos[2] += model->cgLoc[2];// Follow road geometry
             model->state.vel = rs.modelState.vel;
-            model->state.ang = rs.modelState.ang;
+            model->state.ang = rs.modelState.ang;// TODO: follow road geometry
             model->state.ang_vel = rs.modelState.ang_vel;
             // Update roadInfo based on the updated road position
             updateRoadInfo();

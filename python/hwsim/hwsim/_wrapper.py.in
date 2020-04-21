@@ -1,0 +1,100 @@
+import pathlib
+from ctypes import *
+
+# Load library and specify input and output types
+LIB_PATH = pathlib.Path(__file__).parent.absolute().joinpath("$<TARGET_FILE_NAME:libhwsim>")
+simLib = cdll.LoadLibrary(str(LIB_PATH))
+
+class SimConfig(Structure):
+    _fields_ = [("dt",c_double),
+                ("N_OV",c_uint),
+                ("D_MAX",c_double),
+                ("scenarios_path",c_char_p)]
+
+class VehConfig(Structure):
+    _fields_ = [("amount",c_uint),
+                ("model",c_char_p),
+                ("policy",c_char_p),
+                ("minSize",POINTER(c_double)),
+                ("maxSize",POINTER(c_double))]
+
+# Simulation methods:
+simLib.sim_new.argtypes = [POINTER(SimConfig),c_char_p,POINTER(VehConfig),c_uint]
+simLib.sim_new.restype = c_void_p
+
+simLib.sim_del.argtypes = [c_void_p]
+simLib.sim_del.restype = None
+
+simLib.sim_step.argtypes = [c_void_p]
+simLib.sim_step.restype = c_bool
+
+simLib.sim_getScenario.argtypes = [c_void_p]
+simLib.sim_getScenario.restype = c_void_p
+
+simLib.sim_getVehicle.argtypes = [c_void_p,c_uint]
+simLib.sim_getVehicle.restype = c_void_p
+
+# Scenario methods:
+simLib.sc_numRoads.argtypes = [c_void_p]
+simLib.sc_numRoads.restype = c_uint
+
+simLib.road_numLanes.argtypes = [c_void_p,c_uint]
+simLib.road_numLanes.restype = c_uint
+
+simLib.road_length.argtypes = [c_void_p,c_uint]
+simLib.road_length.restype = c_double
+
+simLib.road_CAGrid.argtypes = [c_void_p,c_uint,c_double,POINTER(c_double)]
+simLib.road_CAGrid.restype = c_uint
+
+simLib.lane_validity.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),POINTER(c_double)]
+simLib.lane_validity.restype = None
+
+simLib.lane_direction.argtypes = [c_void_p,c_uint,c_uint]
+simLib.lane_direction.restype = c_int
+
+simLib.lane_offset.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),c_uint,POINTER(c_double)]
+simLib.lane_offset.restype = None
+
+simLib.lane_width.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),c_uint,POINTER(c_double)]
+simLib.lane_width.restype = None
+
+simLib.lane_height.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),c_uint,POINTER(c_double)]
+simLib.lane_height.restype = None
+
+simLib.lane_edge_offset.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),c_uint,POINTER(c_double),POINTER(c_double)]
+simLib.lane_edge_offset.restype = None
+
+simLib.lane_edge_type.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),c_uint,POINTER(c_int),POINTER(c_int)]
+simLib.lane_edge_type.restype = None
+
+simLib.lane_neighbours.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),c_uint,POINTER(c_int),POINTER(c_int)]
+simLib.lane_neighbours.restype = None
+
+simLib.lane_merge.argtypes = [c_void_p,c_uint,c_uint]
+simLib.lane_merge.restype = c_int
+
+simLib.sc_road2glob.argtypes = [c_void_p,c_uint,POINTER(c_double),POINTER(c_double),c_uint,POINTER(c_double)]
+simLib.sc_road2glob.restype = None
+
+# Vehicle methods:
+simLib.veh_size.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_size.restype = None
+
+simLib.veh_cg.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_cg.restype = None
+
+simLib.veh_getModelState.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_getModelState.restype = None
+
+simLib.veh_getModelInput.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_getModelInput.restype = None
+
+simLib.veh_getPolicyState.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_getPolicyState.restype = None
+
+simLib.veh_getPolicyAction.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_getPolicyAction.restype = None
+
+simLib.veh_setPolicyAction.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_setPolicyAction.restype = None
