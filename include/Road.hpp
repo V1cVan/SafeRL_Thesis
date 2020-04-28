@@ -15,14 +15,6 @@
 #include <algorithm>
 #include <cmath>
 
-#ifndef COMPAT
-#include <optional>
-#else
-#include <experimental/optional>
-#define optional experimental::optional
-#define nullopt experimental::nullopt
-#endif
-
 class Road{
     private:
         static constexpr double EPS = 1e-6;
@@ -404,11 +396,17 @@ class Road{
                         val[0] = std::max(newVal,val[0]);
                     }
                 }
+                // Add extra validity offset (to account for vehicle dimensions and prevent
+                // collisions at lane connection points)
+                val[0] += 5;
+                val[1] -= 5;
                 ML.push_back(Transition(0,d,d,0,1));// Step to next lane number
-                Ms.push_back(Transition(0,d,d,0,val[0]-prev_s));// Step to valid from s-value
-                Ms.push_back(Transition(1,d,d+val[1]-val[0],0,val[1]-val[0]));// Linearly go to valid to s-value
-                prev_s = val[1];
-                d += val[1]-val[0];
+                if(val[1]>val[0]){
+                    Ms.push_back(Transition(0,d,d,0,val[0]-prev_s));// Step to valid from s-value
+                    Ms.push_back(Transition(1,d,d+val[1]-val[0],0,val[1]-val[0]));// Linearly go to valid to s-value
+                    prev_s = val[1];
+                    d += val[1]-val[0];
+                }
             }
             ML.push_back(Transition(0,d,d,0,-static_cast<double>(lanes.size())));// Step back to zero (-1)
             Ms.push_back(Transition(0,d,d,0,-prev_s));// Step back to zero

@@ -102,14 +102,14 @@ class Simulation{
             // First determine neighbouring vehicles:
             for(vId i=0;i<vehicles.size()-1;i++){
                 for(vId j=i+1;j<vehicles.size();j++){
-                    double d = std::pow(vehicles[i].model->state.pos[0]-vehicles[j].model->state.pos[0],2)+std::pow(vehicles[i].model->state.pos[1]-vehicles[j].model->state.pos[1],2);
+                    double d = std::sqrt(std::pow(vehicles[i].model->state.pos[0]-vehicles[j].model->state.pos[0],2)+std::pow(vehicles[i].model->state.pos[1]-vehicles[j].model->state.pos[1],2));
                     if(d<Policy::D_MAX){
                         // Vehicles are within the detection horizon
-                        std::pair<bool,std::array<double,2>> off = getRoadOffsets(i,j);
-                        if(off.first){
+                        std::optional<std::array<double,2>> off = getRoadOffsets(i,j);
+                        if(off){
                             // And are travelling in the same direction
-                            neighbours[i].insert({j,d,off.second});
-                            neighbours[j].insert({i,d,Utils::euop(off.second,std::negate<double>())});
+                            neighbours[i].insert({j,d,*off});
+                            neighbours[j].insert({i,d,Utils::euop(*off,std::negate<double>())});
                         }
                     }
                 }
@@ -120,7 +120,7 @@ class Simulation{
                 Vehicle& v = vehicles[Vr];
                 std::vector<Policy::relState> rel = std::vector<Policy::relState>(Policy::N_OV,{{Policy::D_MAX,0},{0,0}});// Start with all dummy relative states
                 auto rIt = rel.begin();
-                for(auto nIt = (*nsIt).begin(); nIt!=(*nsIt).end() && rel.size()<Policy::N_OV; ++nIt,++rIt){// Loop over all neighbours in the set in increasing order of relative distance and only keep N_OV closest ones
+                for(auto nIt = (*nsIt).begin(); nIt!=(*nsIt).end() && rIt!=rel.end(); ++nIt,++rIt){// Loop over all neighbours in the set in increasing order of relative distance and only keep N_OV closest ones
                     vId Vo = (*nIt).omega;
                     double dlat = (*nIt).off[1];
                     dlat = Utils::sign(dlat)*std::max(0.0,std::abs(dlat)-v.roadInfo.size[1]/2-vehicles[Vo].roadInfo.size[1]/2);// Take vehicle dimensions into account
@@ -158,7 +158,7 @@ class Simulation{
             return collision;
         }
 
-        inline std::pair<bool,std::array<double,2>> getRoadOffsets(const vId Vr, const vId Vo) const{
+        inline std::optional<std::array<double,2>> getRoadOffsets(const vId Vr, const vId Vo) const{
             Road::id_t Rr = vehicles[Vr].roadInfo.R;
             Road::id_t Ro = vehicles[Vo].roadInfo.R;
             Road::id_t Lr = vehicles[Vr].roadInfo.L;
@@ -221,9 +221,9 @@ class Simulation{
                 dl = static_cast<int>(rDir)*(rPos[1]-oPos[1]);
             }else{
                 // Vehicles are on different (unconnected) roads or travelling in opposite direction
-                return {false,{0,0}};
+                return std::nullopt;
             }
-            return {true,{ds,dl}};
+            return std::array<double,2>({ds,dl});
         }
 
         static inline std::vector<Vehicle> createVehicles(const Scenario& sc, const vConfig& vTypes){
@@ -269,7 +269,7 @@ class Simulation{
                     Ms.evaluate(d,s,l);
                     l = sc.roads[R].lanes[L].offset(s);
                     #ifndef NDEBUG
-                    std::cout << "Creating vehicle with d=" << d << " => ";
+                    std::cout << "Creating vehicle " << vehicles.size() << " with d=" << d << " => ";
                     std::cout << "R=" << R << " ; L=" << L << " ; s=" << s << " ; l=" << l << std::endl;
                     #endif
                     double v = sc.roads[R].lanes[L].speed(s);

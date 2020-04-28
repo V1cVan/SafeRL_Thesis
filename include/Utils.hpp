@@ -8,8 +8,12 @@
 #include <algorithm>
 
 #ifndef COMPAT
+#include <optional>
 #define STATIC_INLINE static inline
 #else
+#include <experimental/optional>
+#define optional experimental::optional
+#define nullopt experimental::nullopt
 #define STATIC_INLINE static
 #endif
 

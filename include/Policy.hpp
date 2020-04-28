@@ -72,9 +72,9 @@ class Policy{
                             // And it is to the right and closer than the current rightOff
                             rightOff = ov.off[1];
                         }
-                        if(latSgn<0 && -ov.off[2]<leftOff){
+                        if(latSgn<0 && -ov.off[1]<leftOff){
                             // And it is to the left and closer than the current leftOff
-                            leftOff = -ov.off[2];
+                            leftOff = -ov.off[1];
                         }
                     }
                     if((ov.off[1]<LAT_OFF[0] && -ov.off[1]<LAT_OFF[1]) || std::abs(ov.off[1])<-latSgn*ov.vel[1]*LAT_TTC){
@@ -193,8 +193,8 @@ class BasicPolicy : public Policy{
             }
             const double rightLW = std::abs(state.offN[0]-state.offC);// Estimates of the lane width to the right and left
             const double leftLW = std::abs(state.offN[1]-state.offC);
-            const bool rightFree = rightLW>EPS && rs.rightOff+state.offC>rightLW-EPS;// Right lane is free if there is a lane and the right offset is larger than the estimated lane width
-            const bool leftFree = leftLW>EPS && rs.leftOff-state.offC>leftLW-EPS;// Left lane is free if there is a lane and the left offset is larger than the estimated lane width
+            const bool rightFree = rightLW>EPS && rs.rightOff-state.offC>rightLW-EPS;// Right lane is free if there is a lane and the right offset is larger than the estimated lane width
+            const bool leftFree = leftLW>EPS && rs.leftOff+state.offC>leftLW-EPS;// Left lane is free if there is a lane and the left offset is larger than the estimated lane width
             const bool shouldOvertake = leftFree && rs.frontOff<overtakeGap && rs.frontVel<0.9*desVel;// Overtaking condition
             if(shouldOvertake && !overtaking){
                 overtaking = true;// Start overtaking if it is not already the case
