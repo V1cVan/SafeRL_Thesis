@@ -96,6 +96,14 @@ class _Model(object):
         # u = np.empty(1,self._input_dt)
         # simLib.veh_getModelInput(self._veh._h, u.ctypes.data_as(POINTER(c_double)))
         return self.raw_input.view(self._input_dt)[0]
+    
+    @property
+    def bounds(self):
+        """
+        Bounds on this model's input. Note that overriding this property will NOT enforce
+        the new set bounds. This property is only used for visualization purposes.
+        """
+        return np.array([(-5,-0.1),(5,0.1)],self._input_dt) # Input bounds are fixed for now
 
 
 @basemodel("kbm")

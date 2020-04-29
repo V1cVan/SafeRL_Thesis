@@ -11,14 +11,13 @@ class Scenario(object):
         self._h = c_void_p(simLib.sim_getScenario(sim._h))
         numRoads = simLib.sc_numRoads(self._h)
         self.roads = [Road(self,R) for R in range(numRoads)]
-    
-    def plot(self,p):
-        # Plot this scenario (using the given Plotter)
-        for road in self.roads:
-            road.plot(p)
 
 
 class Road(object):
+
+    _GRID_SIZE = 1.0
+    _LANE_MARKING_SIZE = [3,0.1] # Longitudinal and lateral size in meters
+    _LANE_MARKING_SKIP = 4.5 # Distance in meters between two consecutive lane markings
 
     def __init__(self,sc,R):
         self._sc = sc
@@ -30,9 +29,6 @@ class Road(object):
             if self.lanes[L].merge>=0:
                 # For each lane, store which other lanes merge with it (needed for plotting priorities)
                 self._merges[self.lanes[L].merge].append(L)
-        self._GRID_SIZE = 1.0
-        self._LANE_MARKING_SIZE = [3,0.1] # Longitudinal and lateral size in meters
-        self._LANE_MARKING_SKIP = 4.5 # Distance in meters between two consecutive lane markings
     
     def length(self):
         return simLib.road_length(self._sc._h,self.R)
@@ -46,104 +42,12 @@ class Road(object):
             C.ctypes.data_as(POINTER(c_double)))
         return C
     
-    def plot(self,p):
-        # Plot this road (using the given plotter)
+    @property
+    def _CA_grid(self):
         N = simLib.road_CAGrid(self._sc._h,self.R,self._GRID_SIZE,None)
         s = np.zeros((N,),np.float64)
         simLib.road_CAGrid(self._sc._h,self.R,self._GRID_SIZE,s.ctypes.data_as(POINTER(c_double)))
-
-        for lane in self.lanes:
-            right,left = lane.edges(s)
-            # Plot lane bodies
-            body = self._polygonalMesh(
-                self._road2glob(left["pos"][0],left["pos"][1]),
-                self._road2glob(right["pos"][0],right["pos"][1])
-            )
-            p.add_mesh(body,color=[0.3,0.3,0.3])
-
-            # Plot lane edges
-            for (d,edge) in ((-1,right),(1,left)): # For each edge of the lane,
-                for i in range(edge["spans"].shape[0]): # iterate over all edge spans
-                    bType = edge["spans"][i,0]
-                    N = edge["spans"][i,1]
-                    f = edge["spans"][i,2]
-                    t = edge["spans"][i,3]+1 # +1 because end of range f:t is otherwise not included
-
-                    span_s = edge["pos"][0][f:t]
-                    span_l = edge["pos"][1][f:t]
-                    draw_shared = (N<0 or N!=lane.merge) and (N<lane.L or N in self._merges[lane.L])
-                    # Only draw shared edge span if it is not an edge shared with a lane we merge with AND
-                    # it is an edge shared with a lane with lower id (or -1 for an edge without a neighbour)
-                    # or (in case it is an edge shared with a lane with higher id) if the neighbouring lane
-                    # will merge with us.
-                    if bType==0:
-                        # Full line
-                        self._drawLaneMarking(p,span_s,span_l)
-                    elif draw_shared:
-                        if bType==1:
-                            # Dashed line, in combination with a full line
-                            off = d*lane.dir*self._LANE_MARKING_SIZE[1]*2/3
-                            self._drawLaneMarking(p,span_s,span_l+off)
-                            self._drawLaneMarking(p,span_s,span_l-off,stippled=True)
-                        elif bType==2:
-                            # Full line, in combination with a dashed line
-                            off = d*lane.dir*self._LANE_MARKING_SIZE[1]*2/3
-                            self._drawLaneMarking(p,span_s,span_l-off)
-                            self._drawLaneMarking(p,span_s,span_l+off,stippled=True)
-                        elif bType==3:
-                            # Shared dashed line
-                            self._drawLaneMarking(p,span_s,span_l,stippled=True)
-
-    def _polygonalMesh(self,left,right):
-        """
-        Returns a polygonal mesh bounded to the left and right by the given points. The
-        returned mesh consists of tetragons (right[i],right[i+1],left[i+1],left[i]) for
-        i=0..N-2 where right and left are Nx3 ndarrays consisting of the coordinates of
-        the points through which the mesh should be fitted.
-        """
-        assert(left.shape[0]==right.shape[0] and left.shape[1]==3 and right.shape[1]==3)
-
-        N = left.shape[0]
-        points = np.concatenate((right,left),axis=0)
-        faces = np.empty((N-1,5),np.int64)
-        faces[:,0] = 4 # Lane mesh is split into tetragons
-        faces[:,1] = np.arange(N-1)
-        faces[:,2] = 1+np.arange(N-1)
-        faces[:,3] = N+1+np.arange(N-1)
-        faces[:,4] = N+np.arange(N-1)
-        mesh = pv.PolyData(points,faces)
-        #mesh = pv.PolyData(points).delaunay_2d()
-        return mesh
-    
-    def _drawLaneMarking(self,p,s,l,stippled=False):
-        """
-        Draw the lane marking centered around the polyline defined through road coordinates
-        (s,l) on the given pv plot.
-        """
-        assert(s.size==l.size)
-        ELEVATION = 0 #0.001
-        # points = self._road2glob(s,l)
-        # points[:,2] += ELEVATION
-        # p.add_lines(points,width=4) # Automatically adjusts line width based on zoom level, causes clipping issues and not wanted
-        
-        pts_left = self._road2glob(s,l+self._LANE_MARKING_SIZE[1]/2)
-        pts_right = self._road2glob(s,l-self._LANE_MARKING_SIZE[1]/2)
-        pts_left[:,2] += ELEVATION
-        pts_right[:,2] += ELEVATION
-        line = self._polygonalMesh(pts_left,pts_right)
-        
-        # Create texture:
-        tx,ty = np.meshgrid((s-s[0])/(self._LANE_MARKING_SIZE[0]+self._LANE_MARKING_SKIP),np.array([0,1]))
-        line.t_coords = np.stack((tx.ravel(),ty.ravel()),axis=1)
-        if stippled:
-            # Note that the below texture is only accurate up to 0.01 meters
-            texture = 255*np.ones((2,int(100*(self._LANE_MARKING_SIZE[0]+self._LANE_MARKING_SKIP)),4),np.uint8) # Full line texture
-            texture[:,int(100*self._LANE_MARKING_SIZE[0]):,3] = 0
-        else:
-            texture = 255*np.ones((2,2,4),np.uint8) # Full line texture
-        p.add_mesh(line,texture=pv.numpy_to_texture(texture))
-
-
+        return s
 
 
 

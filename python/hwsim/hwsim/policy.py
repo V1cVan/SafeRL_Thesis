@@ -65,6 +65,16 @@ class _Policy(object):
         # action = np.empty(1,self._action_dt)
         # simLib.veh_getPolicyAction(self._veh._h, action.ctypes.data_as(POINTER(c_double)))
         return self.raw_action.view(self._action_dt)[0]
+    
+    @property
+    def bounds(self):
+        """
+        Bounds on this policy's action. Note that overriding this property will NOT enforce
+        the new set bounds. This property is only used for visualization purposes.
+        """
+        max_vel = self.state["dv"]+self.state["vel"][0]
+        # Default bounds are [0,max_vel] for velocity and offset towards road boundaries for offset
+        return np.array([(0,-self.state["offB"][0]),(max_vel,self.state["offB"][1])],self._action_dt)
 
 
 @basepolicy("step")

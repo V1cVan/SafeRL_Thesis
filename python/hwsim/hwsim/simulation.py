@@ -44,19 +44,12 @@ class Simulation(object):
         # Create vehicle instances:
         self.vehicles = [Vehicle(self,v_id,bp["model"],bp["policy"]) for (v_id,bp) in enumerate(self.vehicles)]
         self._collision = False
-        self.hooks = {}
 
     def __del__(self):
         # Properly release simulation from memory
         if self._h is not None:
             simLib.sim_del(self._h)
         print("Simulation deleted") # TODO: not called. Use as a context manager and construct in __enter__ and destruct in __exit__ instead?
-
-    def attach_step_callback(self,name,callback):
-        self.hooks[name] = callback
-
-    def detach_step_callback(self,name):
-        self.hooks.pop(name)
 
     def step(self):
         """
@@ -74,9 +67,6 @@ class Simulation(object):
         self._collision = simLib.sim_step(self._h)
         self.k += 1
         # TODO: similarly to the custom policies, allow custom models
-        # Call step callbacks:
-        for callback in self.hooks.values():
-            callback()
         return self._collision
     
     @property
