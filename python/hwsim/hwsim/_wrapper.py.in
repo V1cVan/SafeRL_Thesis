@@ -15,6 +15,7 @@ class VehConfig(Structure):
     _fields_ = [("amount",c_uint),
                 ("model",c_char_p),
                 ("policy",c_char_p),
+                ("policyArgs",c_void_p),
                 ("minSize",POINTER(c_double)),
                 ("maxSize",POINTER(c_double))]
 
@@ -98,3 +99,9 @@ simLib.veh_getPolicyAction.restype = None
 
 simLib.veh_setPolicyAction.argtypes = [c_void_p,POINTER(c_double)]
 simLib.veh_setPolicyAction.restype = None
+
+simLib.veh_getReducedState.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_getReducedState.restype = None
+
+simLib.veh_getSafetyBounds.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_getSafetyBounds.restype = None

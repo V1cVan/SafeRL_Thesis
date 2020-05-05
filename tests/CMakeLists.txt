@@ -18,9 +18,9 @@ add_executable(libhwsim-test libhwsim-test.cpp)
 target_link_libraries(libhwsim-test PRIVATE libhwsim)
 target_compile_features(libhwsim-test PRIVATE cxx_std_17)
 
-if(HWSIM_INSTALL_TESTS)
+if(HWSIM_INSTALL_TESTS OR DEBUG_CONFIG)
     # Install copy of hwsim library:
-    install(TARGETS libhwsim DESTINATION ${CMAKE_INSTALL_PREFIX}/tests/bin)
+    install(TARGETS libhwsim DESTINATION ${CMAKE_INSTALL_PREFIX}/tests)
     # Install tests:
     install(
         TARGETS hwsim-test libhwsim-test

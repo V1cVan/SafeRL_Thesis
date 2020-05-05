@@ -4,14 +4,14 @@
 
 int main(){
     std::cout << "Start of main" << std::endl;
-    char* path = "C:/Users/bdecooma/Documents/PhD/FordProject/python_simulation/scenarios.h5";
+    char* path = "../scenarios/scenarios.h5";
     char* scenario = "CLOVERLEAF_RAW";
     sConfig sConf = {0.1,10,50.0,path};
     double minSize[3] = {3,2,3};
     double maxSize[3] = {6,3.4,4};
     vConfig vConf[2] = {
-        {5,"kbm","normal",minSize,maxSize},
-        {5,"kbm","fast",minSize,maxSize}
+        {5,"kbm","basic",static_cast<void*>("normal"),minSize,maxSize},
+        {5,"kbm","basic",static_cast<void*>("fast"),minSize,maxSize}
     };
     Simulation* sim = sim_new(&sConf,scenario,vConf,2);
     if(sim==NULL){

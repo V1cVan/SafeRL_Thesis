@@ -8,8 +8,8 @@ class Vehicle(object):
         self._sim = sim
         self.id = id
         self._h = c_void_p(simLib.sim_getVehicle(sim._h,id))
-        self.model = model(self)
-        self.policy = policy(self)
+        self.model = model(self) # Create _Model instance from _ModelBluePrint
+        self.policy = policy(self) # Create _Policy instance from _PolicyBluePrint
         # Save some constant vehicle properties:
         self.size = np.empty(3,np.float64)
         simLib.veh_size(self._h,self.size.ctypes.data_as(POINTER(c_double)))

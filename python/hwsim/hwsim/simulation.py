@@ -1,9 +1,9 @@
-from ctypes import c_void_p, POINTER, c_double
+from ctypes import c_void_p, POINTER, c_double, cast
 from hwsim._wrapper import simLib, SimConfig, VehConfig
 from hwsim.scenario import Scenario
 from hwsim.vehicle import Vehicle
-from hwsim.policy import BasicPolicy
-from hwsim.model import KBModel
+from hwsim.policy import _PolicyBluePrint, BasicPolicy
+from hwsim.model import _ModelBluePrint, KBModel
 
 class Simulation(object):
 
@@ -25,10 +25,14 @@ class Simulation(object):
         for vType in vTypes:
             vehType = VehConfig()
             vehType.amount = vType.get("amount")
-            model = vType.get("model",KBModel)
-            vehType.model = model.baseModel.encode("utf8")
+            model = vType.get("model",KBModel())
+            assert(isinstance(model,_ModelBluePrint))
+            vehType.model = model.name
+            #vehType.modelArgs = cast(model.args,c_void_p)
             policy = vType.get("policy",BasicPolicy(BasicPolicy.Type.NORMAL))
-            vehType.policy = policy.basePolicy.encode("utf8")
+            assert(isinstance(policy,_PolicyBluePrint))
+            vehType.policy = policy.name
+            vehType.policyArgs = cast(policy.args,c_void_p)
             vehType.minSize = (c_double * 3)(*vType.get("minSize",[4,1.5,1.5]))
             vehType.maxSize = (c_double * 3)(*vType.get("maxSize",[6.5,3,2]))
             vehTypesList.append(vehType)

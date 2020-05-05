@@ -9,26 +9,11 @@
 #include <array>
 #include <random>
 
-class Vehicle{
+class Vehicle : public VehicleModelBase, public VehiclePolicyBase{
     public:
         struct BluePrint{
-            // List of available vehicle models
-            enum class ModelType{
-                KBM,
-                DBM
-            };
-
-            // List of available vehicle policies
-            enum class PolicyType{
-                Step,
-                BasicSlow,
-                BasicNormal,
-                BasicFast,
-                Custom
-            };
-
-            ModelType model;
-            PolicyType policy;
+            std::shared_ptr<Model> model;// TODO: maybe remove model and policy from blueprint?
+            std::shared_ptr<Policy> policy;
             std::array<double,3> minSize;
             std::array<double,3> maxSize;
             double minRelVel;
@@ -64,8 +49,8 @@ class Vehicle{
         static constexpr int COL_RIGHT = -2;// Collision with right road boundary
 
         const Scenario& sc;// Scenario in which the vehicle lives
-        std::unique_ptr<Model> model;// Dynamical model of the vehicle's movement in the global coordinate system
-        std::unique_ptr<Policy> policy;// The driving policy that is being used to make the steering decisions for this vehicle
+        std::shared_ptr<Model> model;// Dynamical model of the vehicle's movement in the global coordinate system
+        std::shared_ptr<Policy> policy;// The driving policy that is being used to make the steering decisions for this vehicle
         PID longCtrl, latCtrl;// Controllers for longitudinal and lateral actions
         RoadInfo roadInfo;// Augmented state information of the vehicle w.r.t. the road
         int colStatus;// Collision status
@@ -81,7 +66,13 @@ class Vehicle{
         // }
 
         Vehicle(const Scenario& vSc, const BluePrint& vBp, const InitialState& vIs)
-        : sc(vSc), model(createModel(vSc,vBp,vIs)), policy(createPolicy(vBp)), longCtrl(3.5), latCtrl(0.08), roadInfo(), colStatus(COL_NONE){
+        : VehicleModelBase(createVehicleModelBase(vBp)), VehiclePolicyBase()
+        , sc(vSc), model(vBp.model), policy(vBp.policy), longCtrl(3.5), latCtrl(0.08), roadInfo(), colStatus(COL_NONE){
+            // Create full model state from the initialState
+            sc.roads[vIs.R].globalPose({vIs.pos[0],vIs.pos[1],vIs.gamma},x.pos,x.ang);
+            x.vel = {vIs.vel,0,0};
+            x.ang_vel = {0,0,0};
+            // Calculate road info
             roadInfo.R = vIs.R;
             roadInfo.pos = vIs.pos;
             updateRoadInfo();// TODO: static getRoadInfo and move to initializer list?
@@ -100,8 +91,8 @@ class Vehicle{
         inline void modelUpdate(const double dt){// throws std::out_of_range
             // Based on current model inputs, perform 1 simulation step to retrieve
             // new local states
-            RoadState rs = {roadInfo.pos,model->state};
-            auto sys = [this](const RoadState& x){return roadDerivatives(x);};
+            RoadState rs = {roadInfo.pos,x};
+            auto sys = [this](const RoadState& xr){return roadDerivatives(xr);};
             rs = Utils::integrateRK4(sys,rs,dt);
             // Wrap integrated road state to a valid new road id and road position:
             sc.updateRoadState(roadInfo.R,roadInfo.pos[0],roadInfo.pos[1],rs.roadPos[0]-roadInfo.pos[0],rs.roadPos[1]-roadInfo.pos[1]);
@@ -109,13 +100,13 @@ class Vehicle{
             // as otherwise an out_of_range exception would have been thrown.
             // Calculate new global position from the updated road position:
             std::array<double,3> ang = std::array<double,3>();
-            sc.roads[roadInfo.R].globalPose({roadInfo.pos[0],roadInfo.pos[1],0},model->state.pos,ang);
+            sc.roads[roadInfo.R].globalPose({roadInfo.pos[0],roadInfo.pos[1],0},x.pos,ang);
             // Extract new model states:
             //model->state.pos = rs.modelState.pos;// Gets inaccurate for large simulation times
-            model->state.pos[2] += model->cgLoc[2];// Follow road geometry
-            model->state.vel = rs.modelState.vel;
-            model->state.ang = rs.modelState.ang;// TODO: follow road geometry
-            model->state.ang_vel = rs.modelState.ang_vel;
+            x.pos[2] += cgLoc[2];// Follow road geometry
+            x.vel = rs.modelState.vel;
+            x.ang = rs.modelState.ang;// TODO: follow road geometry
+            x.ang_vel = rs.modelState.ang_vel;
             // Update roadInfo based on the updated road position
             updateRoadInfo();
         }
@@ -126,7 +117,9 @@ class Vehicle{
         // available for the next simulation step.
         inline void driverUpdate(const Policy::augState& newState){
             // Update driver state and actions based on updated augmented states of neighbouring vehicles
-            policy->update(newState);
+            s = newState;
+            updateSafetyBounds();
+            a = policy->getAction(*this);
         }
 
         // Finally, in a last step the new model inputs are calculated from the updated reference
@@ -134,10 +127,10 @@ class Vehicle{
         // reference actions of certain vehicles).
         inline void controllerUpdate(const double dt){
             // Get nominal inputs
-            Model::Input nom = model->nominalInputs(model->state, roadInfo.gamma);
+            Model::Input nom = model->nominalInputs(*this, x, roadInfo.gamma);
             // Update model inputs based on updated reference actions (from the driver)
-            model->input.longAcc = nom.longAcc+longCtrl.step(dt,policy->action.velRef-model->state.vel[0]);// Get acceleration input from longitudinal velocity error
-            model->input.delta = nom.delta+latCtrl.step(dt,policy->action.latOff);// Get steering angle from lateral offset error
+            u.longAcc = nom.longAcc+longCtrl.step(dt,a.velRef-x.vel[0]);// Get acceleration input from longitudinal velocity error
+            u.delta = nom.delta+latCtrl.step(dt,a.latOff);// Get steering angle from lateral offset error
         }
 
     private:
@@ -146,12 +139,12 @@ class Vehicle{
             roadInfo.L = *(sc.roads[roadInfo.R].laneId(roadInfo.pos[0],roadInfo.pos[1]));
             int dir = static_cast<int>(sc.roads[roadInfo.R].lanes[roadInfo.L].direction);
             // Calculate gamma and projected size and velocities
-            roadInfo.gamma = model->state.ang[0]-sc.roads[roadInfo.R].heading(roadInfo.pos[0],roadInfo.pos[1]);
+            roadInfo.gamma = x.ang[0]-sc.roads[roadInfo.R].heading(roadInfo.pos[0],roadInfo.pos[1]);
             int gammaSign = std::signbit(roadInfo.gamma) ? -1 : 1;
-            roadInfo.size[0] = std::cos(roadInfo.gamma)*model->size[0]+gammaSign*std::sin(roadInfo.gamma)*model->size[1];
-            roadInfo.size[1] = gammaSign*std::sin(roadInfo.gamma)*model->size[0]+std::cos(roadInfo.gamma)*model->size[1];
-            roadInfo.vel[0] = std::cos(roadInfo.gamma)*model->state.vel[0]+std::sin(roadInfo.gamma)*model->state.vel[1];
-            roadInfo.vel[1] = -std::sin(roadInfo.gamma)*model->state.vel[0]+std::cos(roadInfo.gamma)*model->state.vel[1];
+            roadInfo.size[0] = std::cos(roadInfo.gamma)*size[0]+gammaSign*std::sin(roadInfo.gamma)*size[1];
+            roadInfo.size[1] = gammaSign*std::sin(roadInfo.gamma)*size[0]+std::cos(roadInfo.gamma)*size[1];
+            roadInfo.vel[0] = std::cos(roadInfo.gamma)*x.vel[0]+std::sin(roadInfo.gamma)*x.vel[1];
+            roadInfo.vel[1] = -std::sin(roadInfo.gamma)*x.vel[0]+std::cos(roadInfo.gamma)*x.vel[1];
             // Get lane ids of the right and left boundary lanes and neighbouring lanes
             const Road::id_t Br = *(sc.roads[roadInfo.R].roadBoundary(roadInfo.pos[0],roadInfo.L,Road::Side::RIGHT));
             const Road::id_t Bl = *(sc.roads[roadInfo.R].roadBoundary(roadInfo.pos[0],roadInfo.L,Road::Side::LEFT));
@@ -174,9 +167,32 @@ class Vehicle{
             }
         }
 
-        inline RoadState roadDerivatives(const RoadState& rs) const{
+        inline void updateSafetyBounds(){
+            const double maxBrakeAcc = -model->inputBounds[0].longAcc;
+            // Calculate the minimum distance we have to ensure between us and the vehicle
+            // in front such that we can always fully brake from our current velocity to 0.
+            double minBrakeDist = s.vel[0]*s.vel[0]/maxBrakeAcc/2;// Travelled distance to fully brake
+            // Default is a vehicle in front at the minimum brake distance driving
+            // at the same speed as us. And the right and left road boundaries.
+            Policy::redState def = {minBrakeDist,s.vel[0],s.offB[0],s.offB[1]};
+            r = safetyROI.getReducedState(s, def);
+            // Update minBrakeDist to incorporate current speed of vehicle in front:
+            //double brakeGap = r.frontOff+r.frontVel*r.frontVel/maxBrakeAcc/2-minBrakeDist;
+            double maxRoadVel = s.vel[0]+s.dv;
+            // Linearly adapt maximum speed based on distance to vehicle in front (ensuring a minimal SAFETY_GAP)
+            // double alpha = (r.frontOff-SAFETY_GAP)/(minBrakeDist-SAFETY_GAP);
+            // double maxVel = (1-alpha)*r.frontVel+alpha*maxRoadVel;
+            // Maximum allowed velocity if both vehicles start max braking:
+            double maxVel = std::sqrt(std::max(0.0,2*maxBrakeAcc*(r.frontOff-SAFETY_GAP)+r.frontVel*r.frontVel));
+            maxVel = std::max(0.0,std::min(maxRoadVel,maxVel));// And clip between [0;maxRoadVel]
+
+            safetyBounds[0] = {0.0,-r.rightOff};
+            safetyBounds[1] = {maxVel,r.leftOff};
+        }
+
+        inline RoadState roadDerivatives(const RoadState& rs){
             // Get derivatives from the underlying dynamical model
-            Model::State dModel = model->derivatives(rs.modelState,model->input);
+            Model::State dModel = model->derivatives(*this,rs.modelState,u);
             // Extract old road id and road position from roadInfo
             Road::id_t R = roadInfo.R;
             double s = roadInfo.pos[0];
@@ -191,57 +207,13 @@ class Vehicle{
             return {{ds,dl},dModel};
         }
 
-        static inline std::unique_ptr<Model> createModel(const Scenario& sc, const BluePrint& bp, const InitialState& is){
-            std::unique_ptr<Model> newModel;
-            // Create full model state from the initialState
-            Model::State state;
-            sc.roads[is.R].globalPose({is.pos[0],is.pos[1],is.gamma},state.pos,state.ang);
-            state.vel = {is.vel,0,0};
-            state.ang_vel = {0,0,0};
+        static inline VehicleModelBase createVehicleModelBase(const BluePrint& bp){
             // Define random vehicle size within the given bounds
             std::uniform_real_distribution<double> dis(0.0,1.0);
             std::array<double,3> size;
             Utils::transform([dis](double sMin, double sMax)mutable{return sMin+dis(Utils::rng)*(sMax-sMin);},size.begin(),size.end(),bp.minSize.begin(),bp.maxSize.begin());
             std::array<double,3> relCgLoc = {0.45,0.5,0.3};
-            // Create shared model pointer:
-            switch(bp.model){
-                case BluePrint::ModelType::KBM:
-                    newModel = std::make_unique<KinematicBicycleModel>(size,relCgLoc);
-                    break;
-                case BluePrint::ModelType::DBM:
-                    newModel = std::make_unique<DynamicBicycleModel>(size,relCgLoc,DynamicBicycleModel::Props());// TODO: supply props through blueprint
-                    break;
-                default:
-                    throw std::invalid_argument("Vehicle::createModel encountered an unhandled model type.");
-                    break;
-            }
-            newModel->state = state;
-            return newModel;
-        }
-
-        static inline std::unique_ptr<Policy> createPolicy(const BluePrint& bp){
-            std::unique_ptr<Policy> newPolicy;
-            switch(bp.policy){
-                case BluePrint::PolicyType::Step:
-                    newPolicy = std::make_unique<StepPolicy>();
-                    break;
-                case BluePrint::PolicyType::Custom:
-                    newPolicy = std::make_unique<CustomPolicy>();
-                    break;
-                case BluePrint::PolicyType::BasicSlow:
-                    newPolicy = std::make_unique<BasicPolicy>(BasicPolicy::Type::SLOW);
-                    break;
-                case BluePrint::PolicyType::BasicNormal:
-                    newPolicy = std::make_unique<BasicPolicy>(BasicPolicy::Type::NORMAL);
-                    break;
-                case BluePrint::PolicyType::BasicFast:
-                    newPolicy = std::make_unique<BasicPolicy>(BasicPolicy::Type::FAST);
-                    break;
-                default:
-                    throw std::invalid_argument("Vehicle::createPolicy encountered an unhandled policy type.");
-                    break;
-            }
-            return newPolicy;
+            return VehicleModelBase(size,VehicleModelBase::calcCg(size,relCgLoc));
         }
 };
 

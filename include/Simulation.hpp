@@ -22,15 +22,16 @@ class Simulation{
             double dt;
             unsigned int N_OV;
             double D_MAX;
-            std::string scenarios_path;
         };
 
-        const Scenario scenario;// TODO: shared_ptr or let createVehicles reference this one somehow
+        const double dt;
+        const unsigned int N_OV; // Number of other vehicles in the augmented state vector
+        const double D_MAX; // Radius of the detection horizon. The augmented state vector will only contain vehicles within this radius
+        const Scenario scenario;
 
     private:
         std::vector<Vehicle> vehicles;
         unsigned int k = 0;
-        STATIC_INLINE double dt;
 
         struct NeighbourInfo{
             vId omega;// Vehicle id of other vehicle
@@ -43,8 +44,8 @@ class Simulation{
         };
 
     public:
-        Simulation(const Scenario& sc, const vConfig& vehicleTypes)
-        : scenario(sc), vehicles(std::move(createVehicles(scenario,vehicleTypes))){
+        Simulation(const sConfig& config, const Scenario& sc, const vConfig& vehicleTypes)
+        : scenario(sc), N_OV(config.N_OV), D_MAX(config.D_MAX), dt(config.dt), vehicles(std::move(createVehicles(scenario,vehicleTypes))){
             // Simulation creates a copy of the scenario and all created vehicles get
             // a reference to this simulation's scenario.
             if(updateStates()){
@@ -78,21 +79,8 @@ class Simulation{
             return updateStates();// Update vehicle augmented states and driving actions
         }
 
-        inline const Vehicle& getVehicle(const vId V) const{
-            if(V<vehicles.size()){
-                return vehicles[V];
-            }else{
-                throw std::invalid_argument("Invalid vehicle id");
-            }
-        }
-
-        static inline void configure(const sConfig& config = {0.1,10,50}){
-            // TODO: change these static properties to member properties
-            // and check that each vehicle in this simulation has the same values
-            Simulation::dt = config.dt;
-            Policy::N_OV = config.N_OV;
-            Policy::D_MAX = config.D_MAX;
-            Scenario::scenarios_path = config.scenarios_path;
+        inline Vehicle& getVehicle(const vId V){
+            return vehicles.at(V);// throws out_of_range
         }
 
     private:
@@ -102,8 +90,8 @@ class Simulation{
             // First determine neighbouring vehicles:
             for(vId i=0;i<vehicles.size()-1;i++){
                 for(vId j=i+1;j<vehicles.size();j++){
-                    double d = std::sqrt(std::pow(vehicles[i].model->state.pos[0]-vehicles[j].model->state.pos[0],2)+std::pow(vehicles[i].model->state.pos[1]-vehicles[j].model->state.pos[1],2));
-                    if(d<Policy::D_MAX){
+                    double d = std::sqrt(std::pow(vehicles[i].x.pos[0]-vehicles[j].x.pos[0],2)+std::pow(vehicles[i].x.pos[1]-vehicles[j].x.pos[1],2));
+                    if(d<D_MAX){
                         // Vehicles are within the detection horizon
                         std::optional<std::array<double,2>> off = getRoadOffsets(i,j);
                         if(off){
@@ -118,7 +106,7 @@ class Simulation{
             auto nsIt = neighbours.begin();
             for(vId Vr = 0; Vr<vehicles.size(); ++Vr,++nsIt){
                 Vehicle& v = vehicles[Vr];
-                std::vector<Policy::relState> rel = std::vector<Policy::relState>(Policy::N_OV,{{Policy::D_MAX,0},{0,0}});// Start with all dummy relative states
+                std::vector<Policy::relState> rel = std::vector<Policy::relState>(N_OV,{{D_MAX,0},{0,0}});// Start with all dummy relative states
                 auto rIt = rel.begin();
                 for(auto nIt = (*nsIt).begin(); nIt!=(*nsIt).end() && rIt!=rel.end(); ++nIt,++rIt){// Loop over all neighbours in the set in increasing order of relative distance and only keep N_OV closest ones
                     vId Vo = (*nIt).omega;
@@ -171,7 +159,7 @@ class Simulation{
             // Check whether there is a connection between (Rr,Lc) and (Ro,Lo):
             std::vector<Road::id_t> rLanes = std::vector<Road::id_t>(scenario.roads[Rr].lanes.size());
             std::iota(rLanes.begin(),rLanes.end(),0);// Vector with all lane ids of road Rr
-            auto itLt = std::find_if(std::begin(rLanes),std::end(rLanes),[Rr,rRoad=scenario.roads[Rr],rDir,sr=rPos[0],Ro,oRoad=scenario.roads[Ro],oDir,so=oPos[0]](Road::id_t Lt){
+            auto itLt = std::find_if(std::begin(rLanes),std::end(rLanes),[Rr,rRoad=scenario.roads[Rr],rDir,sr=rPos[0],Ro,oRoad=scenario.roads[Ro],oDir,so=oPos[0],D_MAX=D_MAX](Road::id_t Lt){
                 // Returns the first lane Lt of road Rr that has a connection from lane Lf of road Ro satisfying:
                 //  * Lt has the same direction as Lr
                 //  * Lf has the same direction as Lo
@@ -182,10 +170,10 @@ class Simulation{
                 }
                 Road::id_t Lf = rRoad.lanes[Lt].from->second;
                 return rRoad.lanes[Lt].from->first==Ro && rRoad.lanes[Lt].direction==rDir && oRoad.lanes[Lf].direction==oDir &&
-                        std::abs(sr-rRoad.lanes[Lt].start())<Policy::D_MAX && (static_cast<int>(rDir)*(sr-rRoad.lanes[Lt].start())>=0 || Rr!=Ro) &&
-                        static_cast<int>(oDir)*(oRoad.lanes[Lf].end()-so)<Policy::D_MAX && static_cast<int>(oDir)*(oRoad.lanes[Lf].end()-so)>=0;
+                        std::abs(sr-rRoad.lanes[Lt].start())<D_MAX && (static_cast<int>(rDir)*(sr-rRoad.lanes[Lt].start())>=0 || Rr!=Ro) &&
+                        static_cast<int>(oDir)*(oRoad.lanes[Lf].end()-so)<D_MAX && static_cast<int>(oDir)*(oRoad.lanes[Lf].end()-so)>=0;
             });
-            auto itLf = std::find_if(std::begin(rLanes),std::end(rLanes),[Rr,rRoad=scenario.roads[Rr],rDir,sr=rPos[0],Ro,oRoad=scenario.roads[Ro],oDir,so=oPos[0]](Road::id_t Lf){
+            auto itLf = std::find_if(std::begin(rLanes),std::end(rLanes),[Rr,rRoad=scenario.roads[Rr],rDir,sr=rPos[0],Ro,oRoad=scenario.roads[Ro],oDir,so=oPos[0],D_MAX=D_MAX](Road::id_t Lf){
                 // Returns the first lane Lf of road Rr that has a connection towards lane Lt of road Ro satisfying:
                 //  * Lf has the same direction as Lr
                 //  * Lt has the same direction as Lo
@@ -196,8 +184,8 @@ class Simulation{
                 }
                 Road::id_t Lt = rRoad.lanes[Lf].to->second;
                 return rRoad.lanes[Lf].to->first==Ro && rRoad.lanes[Lf].direction==rDir && oRoad.lanes[Lt].direction==oDir &&
-                        static_cast<int>(rDir)*(rRoad.lanes[Lf].end()-sr)<Policy::D_MAX && static_cast<int>(rDir)*(rRoad.lanes[Lf].end()-sr)>=0 &&
-                        std::abs(so-oRoad.lanes[Lt].start())<Policy::D_MAX && (static_cast<int>(oDir)*(so-oRoad.lanes[Lt].start())>=0 || Rr!=Ro);
+                        static_cast<int>(rDir)*(rRoad.lanes[Lf].end()-sr)<D_MAX && static_cast<int>(rDir)*(rRoad.lanes[Lf].end()-sr)>=0 &&
+                        std::abs(so-oRoad.lanes[Lt].start())<D_MAX && (static_cast<int>(oDir)*(so-oRoad.lanes[Lt].start())>=0 || Rr!=Ro);
             });
 
             double ds,dl;

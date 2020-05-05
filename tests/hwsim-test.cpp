@@ -3,7 +3,7 @@
 
 int main(){
     // Create scenario:
-    const std::string path = "C:/Users/bdecooma/Documents/PhD/FordProject/python_simulation/scenarios.h5";
+    const std::string path = "../scenarios/scenarios.h5";
     const std::string scenario = "CLOVERLEAF_RAW";
     Scenario::scenarios_path = path;
     try{
@@ -16,15 +16,13 @@ int main(){
     // Create vehicle types:
     std::array<double,3> minSize = {3,2,3};
     std::array<double,3> maxSize = {6,3.4,4};
-    using BPM = Vehicle::BluePrint::ModelType;
-    using BPP = Vehicle::BluePrint::PolicyType;
     Simulation::vConfig vTypes = {
-        {5,{BPM::KBM,BPP::BasicNormal,minSize,maxSize,0.7,1}},
-        {5,{BPM::KBM,BPP::BasicFast,minSize,maxSize,0.7,1}}
+        {5,{std::make_shared<KinematicBicycleModel>(),std::make_shared<BasicPolicy>(BasicPolicy::Type::NORMAL),minSize,maxSize,0.7,1}},
+        {5,{std::make_shared<KinematicBicycleModel>(),std::make_shared<BasicPolicy>(BasicPolicy::Type::FAST),minSize,maxSize,0.7,1}}
     };
     // Create simulation:
-    Simulation::configure();
-    Simulation sim = Simulation(sc,vTypes);
+    Simulation::sConfig simConfig = {0.1,10,50};
+    Simulation sim = Simulation(simConfig,sc,vTypes);
     // Get scenario info:
     for(Road::id_t R=0;R<sim.scenario.roads.size();R++){
         std::cout << "Length of road " << R << ": " << sim.scenario.roads[R].length << std::endl;

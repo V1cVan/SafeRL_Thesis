@@ -89,6 +89,7 @@ add_subdirectory(tests)
 
 # Install targets:
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include) # C++ headers
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scenarios/ DESTINATION ${CMAKE_INSTALL_PREFIX}/scenarios) # Default scenarios
 if(HWSIM_INSTALL_LIB)
   install(
     TARGETS libhwsim libhwsim-static

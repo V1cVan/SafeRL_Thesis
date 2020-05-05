@@ -164,6 +164,7 @@ class SimulationPlot(_PlotterView):
         if vehicle_type=="car":
             obj_file = pathlib.Path(__file__).parent.absolute().joinpath("car_low.obj")
             self._vehicle_base = pv.read(obj_file)
+            # TODO: color based on materialIds (in original obj file)
             _normalizeMesh(self._vehicle_base)
 
         # Plot the scenario:
@@ -208,15 +209,8 @@ class SimulationPlot(_PlotterView):
 
     @staticmethod
     def _policyColoring():
-        colors = {
-            "step": [0.2,0.9,0.2], # Green
-            "slow": [0.5,0.2,0.6], # Purple
-            "normal": [0.0,0.45,0.75], # Dark blue
-            "fast": [0.85,0.3,0.0], # Orange
-            "custom": [1.0,0.85,0.0] # Yellow
-        }
         def coloring(veh):
-            return colors.get(veh.policy.basePolicy,colors["custom"])
+            return veh.policy.color
         return coloring
     
     def plot(self):
@@ -502,7 +496,7 @@ class TimeChartPlot(_PlotterView):
             points[:,1] = self._memory[self.V]["lines"][field]["data"]
             line["mesh"].points = points # Using a full assignment calls the setter, which forces the updated data to be redrawn
             t_coords = line["mesh"].t_coords
-            t_coords[:,0] = self._memory[self.V]["lines"][field]["length"]
+            t_coords[:,0] = self._memory[self.V]["lines"][field]["length"] # TODO: incorporate screen size
             line["mesh"].t_coords = t_coords # Force update
         for field, patch in self._patches.items():
             # Lower points are in first half, upper points in second half:

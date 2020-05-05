@@ -11,22 +11,57 @@
 #include <iostream>
 #endif
 
-// Map string to a ModelType
-const std::map<std::string, Vehicle::BluePrint::ModelType> modelTypeMap =
+// Map string to a basic policy type
+const std::map<std::string, BasicPolicy::Type> basicPolicyTypeMap =
 {
-    { "kbm",        Vehicle::BluePrint::ModelType::KBM},
-    { "dbm",        Vehicle::BluePrint::ModelType::DBM}
+    { "slow",   BasicPolicy::Type::SLOW},
+    { "normal", BasicPolicy::Type::NORMAL},
+    { "fast",   BasicPolicy::Type::FAST}
 };
 
-// Map string to a PolicyType
-const std::map<std::string, Vehicle::BluePrint::PolicyType> policyTypeMap =
-{
-    { "step",       Vehicle::BluePrint::PolicyType::Step},
-    { "slow",       Vehicle::BluePrint::PolicyType::BasicSlow},
-    { "normal",     Vehicle::BluePrint::PolicyType::BasicNormal},
-    { "fast",       Vehicle::BluePrint::PolicyType::BasicFast},
-    { "custom",     Vehicle::BluePrint::PolicyType::Custom}
-};
+std::shared_ptr<Model> createModel(const std::string& model){
+    std::shared_ptr<Model> newModel;
+    if(model=="kbm"){
+        newModel = std::make_shared<KinematicBicycleModel>();
+    }else if(model=="dbm"){
+        newModel = std::make_shared<DynamicBicycleModel>();
+    }else{
+        std::cerr << "Unknown model type: " << model << std::endl;
+        std::cerr << "Allowed model types: kbm, dbm" << std::endl;
+        throw std::invalid_argument("Unknown model type: " + model);
+    }
+    return newModel;
+}
+
+std::shared_ptr<Policy> createPolicy(const std::string& policy, const void* policyArgs){
+    std::shared_ptr<Policy> newPolicy;
+    if(policy=="step"){
+        newPolicy = std::make_shared<StepPolicy>();
+    }else if(policy=="basic"){
+        BasicPolicy::Type bType = BasicPolicy::Type::NORMAL;
+        if(policyArgs!=NULL){
+            std::string bTypeStr = std::string(static_cast<const char*>(policyArgs));
+            if(basicPolicyTypeMap.count(bTypeStr)==0){
+                std::cerr << "Unrecognized basic policy type: " << bTypeStr << std::endl;
+                std::cerr << "Allowed basic policy types: ";
+                for(const auto& pair : basicPolicyTypeMap){
+                    std::cerr << pair.first << ",";
+                }
+                std::cerr << std::endl;
+                throw std::invalid_argument("Unrecognized basic policy type: " + bTypeStr);
+            }
+            bType = basicPolicyTypeMap.at(bTypeStr);
+        }
+        newPolicy = std::make_shared<BasicPolicy>(bType);
+    }else if(policy=="custom"){
+        newPolicy = std::make_shared<CustomPolicy>();
+    }else{
+        std::cerr << "Unknown policy type: " << policy << std::endl;
+        std::cerr << "Allowed policy types: step, basic, custom" << std::endl;
+        throw std::invalid_argument("Unknown policy type: " + policy);
+    }
+    return newPolicy;
+}
 
 extern "C"{
     LIB_PUBLIC
@@ -39,7 +74,8 @@ extern "C"{
         std::cout << "Scenario name:\t" << scenarioName << std::endl;
         std::cout << "Vehicle types: [" << std::endl;
         #endif
-        Simulation::configure({config->dt,config->N_OV,config->D_MAX,std::string(config->scenarios_path)});
+        Simulation::sConfig simConfig = {config->dt,config->N_OV,config->D_MAX};
+        Scenario::scenarios_path = std::string(config->scenarios_path);
         Simulation::vConfig vehicleTypes = Simulation::vConfig();
         vehicleTypes.reserve(numTypes);
         std::array<double,3> minSize{},maxSize{};
@@ -54,26 +90,19 @@ extern "C"{
             #endif
             std::copy(vTypesArr[t].minSize,vTypesArr[t].minSize+3,minSize.begin());
             std::copy(vTypesArr[t].maxSize,vTypesArr[t].maxSize+3,maxSize.begin());
-            std::string model = std::string(vTypesArr[t].model);
-            if(modelTypeMap.count(model)==0){
-                std::cerr << "Unrecognized model type: " << model << std::endl;
-                std::cerr << "Allowed model types: ";
-                for(const auto& pair : modelTypeMap){
-                    std::cerr << pair.first << ",";
-                }
+            std::shared_ptr<Model> model;
+            try{
+                model = createModel(std::string(vTypesArr[t].model));
+            }catch(std::invalid_argument&){
                 return NULL;
             }
-            std::string policy = std::string(vTypesArr[t].policy);
-            if(policyTypeMap.count(policy)==0){
-                std::cerr << "Unrecognized policy type: " << policy << std::endl;
-                std::cerr << "Allowed policy types: ";
-                for(const auto& pair : policyTypeMap){
-                    std::cerr << pair.first << ",";
-                }
+            std::shared_ptr<Policy> policy;
+            try{
+                policy = createPolicy(std::string(vTypesArr[t].policy),vTypesArr[t].policyArgs);
+            }catch(std::invalid_argument&){
                 return NULL;
             }
-            Vehicle::BluePrint bp = {modelTypeMap.at(std::string(vTypesArr[t].model)),
-                                     policyTypeMap.at(std::string(vTypesArr[t].policy)),
+            Vehicle::BluePrint bp = {model,policy,
                                      minSize, maxSize,
                                      0.7,1};
             vehicleTypes.push_back({vTypesArr[t].amount,bp});
@@ -84,7 +113,7 @@ extern "C"{
         // Create scenario and simulation:
         try{
             Scenario sc = Scenario(std::string(scenarioName));
-            return new Simulation(sc,vehicleTypes);
+            return new Simulation(simConfig,sc,vehicleTypes);
         }catch(std::invalid_argument& e){
             std::cerr << e.what() << std::endl;
             return NULL;
@@ -107,7 +136,7 @@ extern "C"{
     }
 
     LIB_PUBLIC
-    const Vehicle* sim_getVehicle(const Simulation* sim, const unsigned int V){
+    Vehicle* sim_getVehicle(Simulation* sim, const unsigned int V){
         return &(sim->getVehicle(V));
     }
 
@@ -264,43 +293,43 @@ extern "C"{
     // --- Vehicle ---
     LIB_PUBLIC
     void veh_size(const Vehicle* veh, double* size){
-        std::copy(veh->model->size.begin(),veh->model->size.end(),size);
+        std::copy(veh->size.begin(),veh->size.end(),size);
     }
     
     LIB_PUBLIC
     void veh_cg(const Vehicle* veh, double* cg){
-        std::copy(veh->model->cgLoc.begin(),veh->model->cgLoc.end(),cg);
+        std::copy(veh->cgLoc.begin(),veh->cgLoc.end(),cg);
     }
 
     LIB_PUBLIC
     void veh_getModelState(const Vehicle* veh, double* state){
         #ifndef NDEBUG
-        std::cout << "Model pos: " << veh->model->state.pos[0] << "," << veh->model->state.pos[1] << "," << veh->model->state.pos[2] << std::endl;
-        std::cout << "Model ang: " << veh->model->state.ang[0] << "," << veh->model->state.ang[1] << "," << veh->model->state.ang[2] << std::endl;
-        std::cout << "Model vel: " << veh->model->state.vel[0] << "," << veh->model->state.vel[1] << "," << veh->model->state.vel[2] << std::endl;
-        std::cout << "Model ang_vel: " << veh->model->state.ang_vel[0] << "," << veh->model->state.ang_vel[1] << "," << veh->model->state.ang_vel[2] << std::endl;
+        std::cout << "Model pos: " << veh->x.pos[0] << "," << veh->x.pos[1] << "," << veh->x.pos[2] << std::endl;
+        std::cout << "Model ang: " << veh->x.ang[0] << "," << veh->x.ang[1] << "," << veh->x.ang[2] << std::endl;
+        std::cout << "Model vel: " << veh->x.vel[0] << "," << veh->x.vel[1] << "," << veh->x.vel[2] << std::endl;
+        std::cout << "Model ang_vel: " << veh->x.ang_vel[0] << "," << veh->x.ang_vel[1] << "," << veh->x.ang_vel[2] << std::endl;
         #endif
-        std::copy(veh->model->state.pos.begin(),veh->model->state.pos.end(),state);
-        std::copy(veh->model->state.ang.begin(),veh->model->state.ang.end(),state+3);
-        std::copy(veh->model->state.vel.begin(),veh->model->state.vel.end(),state+6);
-        std::copy(veh->model->state.ang_vel.begin(),veh->model->state.ang_vel.end(),state+9);
+        std::copy(veh->x.pos.begin(),veh->x.pos.end(),state);
+        std::copy(veh->x.ang.begin(),veh->x.ang.end(),state+3);
+        std::copy(veh->x.vel.begin(),veh->x.vel.end(),state+6);
+        std::copy(veh->x.ang_vel.begin(),veh->x.ang_vel.end(),state+9);
     }
  
     LIB_PUBLIC
     void veh_getModelInput(const Vehicle* veh, double* input){
-        input[0] = veh->model->input.longAcc;
-        input[1] = veh->model->input.delta;
+        input[0] = veh->u.longAcc;
+        input[1] = veh->u.delta;
     }
  
     LIB_PUBLIC
     void veh_getPolicyState(const Vehicle* veh, double* state){
-        std::copy(veh->policy->state.offB.begin(),veh->policy->state.offB.end(),state);
-        state[2] = veh->policy->state.offC;
-        std::copy(veh->policy->state.offN.begin(),veh->policy->state.offN.end(),state+3);
-        state[5] = veh->policy->state.dv;
-        std::copy(veh->policy->state.vel.begin(),veh->policy->state.vel.end(),state+6);
+        std::copy(veh->s.offB.begin(),veh->s.offB.end(),state);
+        state[2] = veh->s.offC;
+        std::copy(veh->s.offN.begin(),veh->s.offN.end(),state+3);
+        state[5] = veh->s.dv;
+        std::copy(veh->s.vel.begin(),veh->s.vel.end(),state+6);
         unsigned int off = 8;
-        for(const auto& relState : veh->policy->state.rel){
+        for(const auto& relState : veh->s.rel){
             std::copy(relState.off.begin(),relState.off.end(),state+off);
             std::copy(relState.vel.begin(),relState.vel.end(),state+off+2);
             off += 4;
@@ -309,13 +338,29 @@ extern "C"{
     
     LIB_PUBLIC
     void veh_getPolicyAction(const Vehicle* veh, double* action){
-        action[0] = veh->policy->action.velRef;
-        action[1] = veh->policy->action.latOff;
+        action[0] = veh->a.velRef;
+        action[1] = veh->a.latOff;
     }
 
     LIB_PUBLIC
-    void veh_setPolicyAction(const Vehicle* veh, const double* action){
-        veh->policy->action.velRef = action[0];
-        veh->policy->action.latOff = action[1];
+    void veh_setPolicyAction(Vehicle* veh, const double* action){
+        veh->a.velRef = action[0];
+        veh->a.latOff = action[1];
+    }
+
+    LIB_PUBLIC
+    void veh_getReducedState(const Vehicle* veh, double* state){
+        state[0] = veh->r.frontOff;
+        state[1] = veh->r.frontVel;
+        state[2] = veh->r.rightOff;
+        state[3] = veh->r.leftOff;
+    }
+
+    LIB_PUBLIC
+    void veh_getSafetyBounds(const Vehicle* veh, double* bounds){
+        bounds[0] = veh->safetyBounds[0].velRef;
+        bounds[1] = veh->safetyBounds[0].latOff;
+        bounds[2] = veh->safetyBounds[1].velRef;
+        bounds[3] = veh->safetyBounds[1].latOff;
     }
 }

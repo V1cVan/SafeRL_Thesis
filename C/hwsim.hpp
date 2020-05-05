@@ -44,6 +44,7 @@ extern "C"{
         unsigned int amount;// Amount of vehicles to create using this configuration
         char* model;// Model type
         char* policy;// Policy type
+        void* policyArgs;// Arguments to pass to policy constructor
         double* minSize;// Minimum size
         double* maxSize;// Maximum size
     };
@@ -67,7 +68,7 @@ extern "C"{
 
     // Retrieve a vehicle from the given simulation
     LIB_PUBLIC
-    const Vehicle* sim_getVehicle(const Simulation* sim, const unsigned int V);
+    Vehicle* sim_getVehicle(Simulation* sim, const unsigned int V);
 
     // --- Scenario ---
     // Get the total number of roads in the given scenario
@@ -153,6 +154,14 @@ extern "C"{
 
     // Set the policy action vector for the given vehicle
     LIB_PUBLIC
-    void veh_setPolicyAction(const Vehicle* veh, const double* action);
+    void veh_setPolicyAction(Vehicle* veh, const double* action);
+
+    // Get the reduced state vector of the given vehicle
+    LIB_PUBLIC
+    void veh_getReducedState(const Vehicle* veh, double* state);
+
+    // Get the safety bounds for the given vehicle
+    LIB_PUBLIC
+    void veh_getSafetyBounds(const Vehicle* veh, double* bounds);
 }
 #endif

@@ -1,24 +1,11 @@
 from ctypes import POINTER, c_double
 import numpy as np
-from enum import Flag, auto
 from hwsim._wrapper import simLib
-from hwsim._utils import attr
 
-def basemodel(name):
-    """
-    Decorator that can be used by subclasses of _Model, to denote which base model type
-    of the hwsim C-library has to be used. Defaults to 'custom'.
-    """
-    def decorator(cls):
-        setattr(cls, "baseModel", name)
-        return cls
-    
-    return decorator
-
-@basemodel("custom")
 class _Model(object):
 
-    def __init__(self, veh):
+    def __init__(self, blueprint, veh):
+        self._base = blueprint
         self._veh = veh
         self._state_dt = np.dtype([
                             ("pos",np.float64,3),
@@ -106,29 +93,35 @@ class _Model(object):
         return np.array([(-5,-0.1),(5,0.1)],self._input_dt) # Input bounds are fixed for now
 
 
-@basemodel("kbm")
-class KBModel(_Model):
+class _ModelBluePrint(object):
+
+    def __init__(self,baseName,baseArgs=None):
+        self.name = baseName.encode("utf8")
+        self.args = baseArgs
+
+    def __call__(self, veh):
+        # Return new model instance for this vehicle
+        return _Model(self, veh)
+        
+class KBModel(_ModelBluePrint):
     """
     Kinematic bicycle model
     """
 
-    def __init__(self, veh):
-        super().__init__(veh)
+    def __init__(self):
+        super().__init__("kbm")
 
 
-# TODO: create method such as BasicPolicy to supply the model with its properties (m,Izz,Fn,...)
-@basemodel("dbm")
-class DBModel(_Model):
+class DBModel(_ModelBluePrint):
     """
     Dynamic bicycle model
     """
 
-    def __init__(self, veh):
-        super().__init__(veh)
+    def __init__(self):
+        super().__init__("dbm")
 
 
-@basemodel("custom")
-class CustomModel(_Model):
+class CustomModel(_ModelBluePrint):
 
-    def __init__(self, veh):
-        super().__init__(veh)
+    def __init__(self):
+        super().__init__("custom")
