@@ -6,9 +6,6 @@ import pathlib
 from enum import Enum, Flag, auto
 from tkinter import Tk, Label, Entry, Button
 from hwsim.simulation import Simulation
-from hwsim.policy import StepPolicy, BasicPolicy, CustomPolicy
-
-#TODO: grouped shape, plots not showing in previous subplots?
 
 #region: Helper functions
 def _cuboidMesh(S):
@@ -158,20 +155,21 @@ class SimulationPlot(_PlotterView):
         super().__init__(p)
         # Create the base mesh for all vehicles, having its center at the origin and
         # having size 1 in each dimension
-        self._vehicle_base = None
+        vehicle_base = None
         if vehicle_type=="box":
-            self._vehicle_base = _cuboidMesh(np.full((3,2),0.5))
+            vehicle_base = _cuboidMesh(np.full((3,2),0.5))
         if vehicle_type=="car":
             obj_file = pathlib.Path(__file__).parent.absolute().joinpath("car_low.obj")
-            self._vehicle_base = pv.read(obj_file)
+            vehicle_base = pv.read(obj_file)
             # TODO: color based on materialIds (in original obj file)
-            _normalizeMesh(self._vehicle_base)
+            _normalizeMesh(vehicle_base)
 
         # Plot the scenario:
         for road in self._sim.sc.roads:
             self._plotRoad(p,road,scale_markings)
         # Plot the vehicles:
-        if self._vehicle_base is not None:
+        self._vehicles = None
+        if vehicle_base is not None:
             # Coloring scheme for vehicles:
             if isinstance(coloring,list):
                 self._vehicleColoring = SimulationPlot._fixedColoring(coloring)
@@ -181,19 +179,21 @@ class SimulationPlot(_PlotterView):
                 self._vehicleColoring = SimulationPlot._policyColoring()
 
             # Initialize the plot:
-            self._vMeshes = []
-            self._vActors = []
+            self._vehicles = []
             for veh in self._sim.vehicles:
-                mesh = self._vehicle_base.copy()
-                self._vMeshes.append(mesh)
+                # Calculate the base points form the vehicle_base mesh i.e.
+                # scale to match vehicle's size and translate such that the
+                # vehicle's CG is at the origin:
+                base = _transformPoints(vehicle_base.points,C=veh.size/2-veh.cg,S=veh.size)
+                mesh = vehicle_base.copy()
                 ec = [0.7,0.7,0.7] # Edge colors for active vehicle
                 actor = p.add_mesh(mesh,color=self._vehicleColoring(veh),edge_color=ec,show_edges=(veh.id==self.V))
-                self._vActors.append(actor)
+                self._vehicles.append({"base": base, "mesh": mesh, "actor": actor})
         self._marker = None
-        self._MARKER_PADDING = self._sim.D_MAX
         if show_marker:
-            S = np.full((2,2),self._MARKER_PADDING)
-            self._marker = {"mesh": _cuboidMesh(S), "base": _cuboidMesh(S)}
+            S = np.ones((2,2))
+            mesh = _cuboidMesh(S)
+            self._marker = {"mesh": mesh, "base": mesh.points}
             p.add_mesh(self._marker["mesh"],style="wireframe",color=[0.8,0.2,0.0],line_width=6)
         p.view_xy()
         pos = np.array(self._r.camera_position.position)
@@ -214,27 +214,23 @@ class SimulationPlot(_PlotterView):
         return coloring
     
     def plot(self):
-        if self._vehicle_base is not None:
+        if self._vehicles is not None:
             # Update vehicle meshes:
             for veh in self._sim.vehicles:
                 # TODO: update colors (in case of custom coloring method)
-                # First calculate the base points form the vehicle_base mesh
-                # i.e. scale to match vehicle's size and translate such that
-                # the vehicle's CG is at the origin:
-                base = _transformPoints(self._vehicle_base.points,C=veh.size/2-veh.cg,S=veh.size)
-                # Next, rotate the base around its CG and translate it towards
-                # its actual position to match the simulation state.
-                self._vMeshes[veh.id].points = _transformPoints(base,C=veh.model.state["pos"],
-                                                    A=veh.model.state["ang"])
+                # Rotate the base around the vehicle's CG and translate it towards
+                # the vehicle's actual position to match the simulation state.
+                self._vehicles[veh.id]["mesh"].points = _transformPoints(self._vehicles[veh.id]["base"],
+                                                            C=veh.x["pos"], A=veh.x["ang"])
         if self._marker is not None:
             veh = self._sim.vehicles[self.V]
-            self._marker["mesh"].points = _transformPoints(self._marker["base"].points,
-                                                C=veh.model.state["pos"],A=veh.model.state["ang"])
+            self._marker["mesh"].points = _transformPoints(self._marker["base"],C=veh.x["pos"],
+                                                S=np.full(3,veh.D_MAX),A=veh.x["ang"])
 
     def _handle_V_change(self,oldV):
-        if self._vehicle_base is not None:
-            self._vActors[oldV].GetProperty().EdgeVisibilityOff()
-            self._vActors[self.V].GetProperty().EdgeVisibilityOn()
+        if self._vehicles is not None:
+            self._vehicles[oldV]["actor"].GetProperty().EdgeVisibilityOff()
+            self._vehicles[self.V]["actor"].GetProperty().EdgeVisibilityOn()
     
     @staticmethod
     def _plotRoad(p,road,scale_markings=False):
@@ -325,21 +321,26 @@ class DetailPlot(SimulationPlot):
     Create a detail plot for the given simulation using the active renderer of the given plotter.
     """
 
-    def __init__(self,p,coloring=None):
+    def __init__(self,p,D=None,coloring=None):
         super().__init__(p,scale_markings=True,vehicle_type="box",coloring=coloring)
+        self.D = D
+        self._calc_camera_cfg()
+    
+    def _calc_camera_cfg(self):
         # We will position the camera right above the currently active vehicle.
         # When the camera is positioned at height H above the object in focus
         # and has viewing angle A, we can see up to D meters around the object:
         # D = H*tan(A/2)
-        # For our use case D=sim.D_MAX and we keep the default viewing angle.
+        # For our use case D=veh.D_MAX and we keep the default viewing angle.
         # Hence we set the camera's height as follows:
-        self._H = self._sim.D_MAX/np.tan(np.deg2rad(self._r.camera.GetViewAngle())/2)
-    
+        D = self._sim.vehicles[self.V].D_MAX if self.D is None else self.D
+        self._H = D/np.tan(np.deg2rad(self._r.camera.GetViewAngle())/2)
+
     def plot(self):
         super().plot()
         # Update camera:
-        pos = self._sim.vehicles[self.V].model.state["pos"]
-        yaw = self._sim.vehicles[self.V].model.state["ang"][0]
+        pos = self._sim.vehicles[self.V].x["pos"]
+        yaw = self._sim.vehicles[self.V].x["ang"][0]
         # To prevent obstruction of the view from higher roads, the front clipping
         # plane distance will be set equal to the distance to the focus point minus
         # 10.
@@ -353,6 +354,11 @@ class DetailPlot(SimulationPlot):
         # self._r.set_position(np.array([pos[0],pos[1],pos[2]+self._H]))
         # self._r.set_focus(pos)
         # self._r.set_viewup(np.array([np.cos(yaw),np.sin(yaw),0]))
+    
+    def _handle_V_change(self,oldV):
+        super()._handle_V_change(oldV)
+        # Calculate new camera position based on the active vehicle's D_MAX
+        self._calc_camera_cfg()
 
 
 class BirdsEyePlot(SimulationPlot):
@@ -387,8 +393,8 @@ class BirdsEyePlot(SimulationPlot):
     def plot(self):
         super().plot()
         # Update camera:
-        pos = self._sim.vehicles[self.V].model.state["pos"]
-        ang = self._sim.vehicles[self.V].model.state["ang"]
+        pos = self._sim.vehicles[self.V].x["pos"]
+        ang = self._sim.vehicles[self.V].x["ang"]
         points = _transformPoints(self._camera_cfg,A=ang) # Convert camera configuration to real coordinates
         self._r.camera_position = (pos+points[0,:],pos+points[1,:],points[2,:]) # Set position, focus and viewup
     
@@ -402,11 +408,12 @@ class TimeChartPlot(_PlotterView):
     Base class for all 2D time chart plots.
     """
 
-    def __init__(self,p,lines=None,patches=None,ylabel=""):
+    def __init__(self,p,lines=None,patches=None,ylabel="",cached_vehicles=None):
         super().__init__(p)
         # This view will keep track of the last data for all vehicles in the simulation
         # such that we can switch the active vehicle at a later point without information
         # loss.
+        # TODO: now that we have replays, the buffering is no longer really necessary? Maybe add a toggle and default off
         self._MEMORY_SIZE = 1000
         if lines is None:
             lines = {}
@@ -414,6 +421,9 @@ class TimeChartPlot(_PlotterView):
         if patches is None:
             patches = {}
         self._patches = patches
+        if cached_vehicles is None:
+            cached_vehicles = [i for i in range(len(self._sim.vehicles))]
+        self._cvIds = cached_vehicles
         
         self._memory = []
         for i in range(len(self._sim.vehicles)):
@@ -434,7 +444,7 @@ class TimeChartPlot(_PlotterView):
             self._memory.append(veh_memory)
         self._time = np.full(self._MEMORY_SIZE,np.nan)
         self._updateMemory()
-        for i in range(len(self._sim.vehicles)):
+        for i in self._cvIds:
             for field in self._lines.keys():
                 # Fix nan length after first update:
                 self._memory[i]["lines"][field]["length"][-1] = 0
@@ -472,8 +482,8 @@ class TimeChartPlot(_PlotterView):
         dt = self._sim.k*self._sim.dt-self._time[-1]
         self._time[:-1] = self._time[1:]
         self._time[-1] = self._sim.k*self._sim.dt # Current simulation time
-        for veh in self._sim.vehicles:
-            V = veh.id
+        for V in self._cvIds:
+            veh = self._sim.vehicles[V]
             for field, line in self._lines.items():
                 self._memory[V]["lines"][field]["data"][:-1] = self._memory[V]["lines"][field]["data"][1:]
                 self._memory[V]["lines"][field]["length"][:-1] = self._memory[V]["lines"][field]["length"][1:]
@@ -507,6 +517,8 @@ class TimeChartPlot(_PlotterView):
             points[self._MEMORY_SIZE:,1] = self._memory[self.V]["patches"][field]["upper"]
             patch["mesh"].points = points
         data_bounds = np.array(self._r.bounds) # x_min,x_max,y_min,y_max,z_min,z_max
+        # TODO: x_min is always 0 instead of the minimum value in memory?
+        data_bounds[0] = np.nanmin(self._time)
         render_width, render_height = self._r.GetSize()
         self._r.set_scale(xscale=render_width/(data_bounds[1]-data_bounds[0]),
                           yscale=render_height/(data_bounds[3]-data_bounds[2]),
@@ -521,10 +533,15 @@ class TimeChartPlot(_PlotterView):
         self._r.ResetCamera() # Zooms out to see all actors, but too much, so zoom back in a little
         self._r.camera.Zoom(1.9)
 
+    def _handle_V_change(self,oldV):
+        super()._handle_V_change(oldV)
+        if not self.V in self._cvIds:
+            self._cvIds.append(self.V)
+
 
 class ActionsPlot(TimeChartPlot):
 
-    def __init__(self,p,actions=None,show_bounds=True):
+    def __init__(self,p,actions=None,show_bounds=True,**kwargs):
         if actions is None:
             actions = ["vel","off"]
         lines = {}
@@ -533,41 +550,41 @@ class ActionsPlot(TimeChartPlot):
         if "vel" in actions:
             lines["vel"] = {
                 "color": [0,0,1],
-                "getValue": lambda veh: veh.model.state["vel"][0]
+                "getValue": lambda veh: veh.x["vel"][0]
             }
             lines["vel_ref"] = {
                 "color": [1,0,0],
                 "stippled": True,
-                "getValue": lambda veh: veh.policy.action["vel"]
+                "getValue": lambda veh: veh.a["vel"]
             }
             if show_bounds:
                 patches["vel"] = {
                     "color": [0.2,0.9,0.2,0.5],
-                    "getBounds": lambda veh: veh.policy.bounds["vel"]
+                    "getBounds": lambda veh: veh.a_bounds["vel"]
                 }
             labels.append("velocity (m/s)")
         if "off" in actions:
             lines["off"] = {
                 "color": [0,0,1],
-                "getValue": lambda veh: veh.policy.state["offB"][0]
+                "getValue": lambda veh: veh.s["offB"][0]
             }
             lines["off_ref"] = {
                 "color": [1,0,0],
                 "stippled": True,
-                "getValue": lambda veh: veh.policy.state["offB"][0]+veh.policy.action["off"]
+                "getValue": lambda veh: veh.s["offB"][0]+veh.a["off"]
             }
             if show_bounds:
                 patches["off"] = {
                     "color": [0.2,0.9,0.2,0.5],
-                    "getBounds": lambda veh: veh.policy.state["offB"][0]+veh.policy.bounds["off"]
+                    "getBounds": lambda veh: veh.s["offB"][0]+veh.a_bounds["off"]
                 }
             labels.append("offset (m)")
-        super().__init__(p,lines=lines,patches=patches,ylabel=" ; ".join(labels))
+        super().__init__(p,lines=lines,patches=patches,ylabel=" ; ".join(labels),**kwargs)
 
 
 class InputsPlot(TimeChartPlot):
 
-    def __init__(self,p,inputs=None,show_bounds=True):
+    def __init__(self,p,inputs=None,show_bounds=True,**kwargs):
         if inputs is None:
             inputs = ["acc","delta"]
         lines = {}
@@ -575,38 +592,38 @@ class InputsPlot(TimeChartPlot):
         if "acc" in inputs:
             lines["acc"] = {
                 "color": [0,0,1],
-                "getValue": lambda veh: veh.model.input["acc"]
+                "getValue": lambda veh: veh.u["acc"]
             }
             if show_bounds:
                 lines["acc_lower"] = {
                     "color": [0,0,0],
                     "stippled": True,
-                    "getValue": lambda veh: veh.model.bounds["acc"][0]
+                    "getValue": lambda veh: veh.u_bounds["acc"][0]
                 }
                 lines["acc_upper"] = {
                     "color": [0,0,0],
                     "stippled": True,
-                    "getValue": lambda veh: veh.model.bounds["acc"][1]
+                    "getValue": lambda veh: veh.u_bounds["acc"][1]
                 }
             labels.append("acceleration (m/s^2)")
         if "delta" in inputs:
             lines["delta"] = {
                 "color": [0,0,1],
-                "getValue": lambda veh: veh.model.input["delta"]
+                "getValue": lambda veh: veh.u["delta"]
             }
             if show_bounds:
                 lines["delta_lower"] = {
                     "color": [0,0,0],
                     "stippled": True,
-                    "getValue": lambda veh: veh.model.bounds["delta"][0]
+                    "getValue": lambda veh: veh.u_bounds["delta"][0]
                 }
                 lines["delta_upper"] = {
                     "color": [0,0,0],
                     "stippled": True,
-                    "getValue": lambda veh: veh.model.bounds["delta"][1]
+                    "getValue": lambda veh: veh.u_bounds["delta"][1]
                 }
             labels.append("steering angle (rad)")
-        super().__init__(p,lines=lines,ylabel=" ; ".join(labels))
+        super().__init__(p,lines=lines,ylabel=" ; ".join(labels),**kwargs)
 
 #endregion
 
@@ -628,10 +645,10 @@ class Plotter(pv.Plotter):
     
     RECORDINGS_DIR = "recordings"
 
-    def __init__(self,sim,title,name=None,mode=Mode.LIVE,state=State.PLAY,*args,**kwargs):
+    def __init__(self,sim,title,name=None,mode=Mode.LIVE,state=State.PLAY,V=0,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self._sim = sim
-        self._V = 0
+        self._V = V
         self._title = title
         self._name = title if name is None else name
         self._mode = mode
@@ -770,8 +787,8 @@ class Plotter(pv.Plotter):
                 self.close()
             else:
                 # Determine show kwargs:
-                update = self._state==Plotter.State.PLAY # interactive update only in play state
                 close = self._sim.stopped # Only close when simulation is stopped
+                update = not close and self._state==Plotter.State.PLAY # interactive update only in play state
                 if not update or self._first_time or close:
                     # Simulation is stepped or stopped on its own -> show one more frame
                     self.show(self._title,auto_close=close,interactive_update=update)

@@ -1,6 +1,9 @@
 #ifndef HWSIM
 #define HWSIM
 
+#include <cstddef>
+#include <cstdint>
+
 #if defined(_MSC_VER)
     // Microsoft
     #define DLL_EXPORT __declspec(dllexport)
@@ -34,37 +37,109 @@ extern "C"{
     struct sConfig{
         // Simulation configuration
         double dt;// Sample time
-        unsigned int N_OV;
-        double D_MAX;
-        char* scenarios_path;
+        char* output_log;
     };
 
     struct vConfig{
-        // Vehicle configuration
+        // Vehicle type configuration
         unsigned int amount;// Amount of vehicles to create using this configuration
-        char* model;// Model type
-        char* policy;// Policy type
-        void* policyArgs;// Arguments to pass to policy constructor
+        unsigned int model;// Model type
+        unsigned char* modelArgs;// Serialized arguments to pass to model constructor
+        unsigned int policy;// Policy type
+        unsigned char* policyArgs;// Serialized arguments to pass to policy constructor
+        unsigned int N_OV;
+        double D_MAX;
         double* minSize;// Minimum size
         double* maxSize;// Maximum size
     };
 
+    // --- Configuration ---
+    // Get the seed of the random number generator
+    LIB_PUBLIC
+    unsigned int cfg_getSeed();
+
+    // Set the seed of the random number generator (shared between all simulations)
+    LIB_PUBLIC
+    void cfg_setSeed(const unsigned int seed);
+
+    // Set the path to the scenarios datafile (shared between all simulations)
+    LIB_PUBLIC
+    void cfg_scenariosPath(const char* path);
+
+    // --- Simulation ---
+    // Create BluePrint for the KBModel ; args should be a byte array of size 0
+    LIB_PUBLIC
+    void mbp_kbm(unsigned char* args);
+
+    // Create BluePrint for the CustomPolicy ; args should be a byte array of size 0
+    LIB_PUBLIC
+    void pbp_custom(unsigned char* args);
+
+    // Create BluePrint for the StepPolicy ; args should be a byte array of size 0
+    LIB_PUBLIC
+    void pbp_step(unsigned char* args);
+
+    // Create BluePrint for the BasicPolicy ; args should be a byte array of size 1
+    // type (0 => SLOW ; 1 => NORMAL ; 2 => FAST)
+    LIB_PUBLIC
+    void pbp_basic(unsigned char* args, const uint8_t type);
+
     // Create a new simulation with the given configuration
     LIB_PUBLIC
     Simulation* sim_new(const sConfig* config, const char* scenarioName, const vConfig* vTypesArr, const unsigned int numTypes);
+
+    // Create a new simulation from the given input log
+    LIB_PUBLIC
+    Simulation* sim_load(const sConfig* config, const char* input_log, const unsigned int k0, const bool replay);
 
     // Delete an existing simulation. Note that all pointers returned by any of the other functions
     // with argument sim, will become invalid after this call.
     LIB_PUBLIC
     void sim_del(Simulation* sim);
 
-    // Perform one simulation step
+    // Perform part a of the next simulation step
+    LIB_PUBLIC
+    bool sim_stepA(Simulation* sim);
+
+    // Perform part b of the next simulation step
+    LIB_PUBLIC
+    bool sim_stepB(Simulation* sim);
+
+    // Perform part c of the next simulation step
+    LIB_PUBLIC
+    bool sim_stepC(Simulation* sim);
+
+    // Perform part d of the next simulation step
+    LIB_PUBLIC
+    bool sim_stepD(Simulation* sim);
+
+    // Perform one full simulation step
     LIB_PUBLIC
     bool sim_step(Simulation* sim);
+
+    // Get the current simulation step
+    LIB_PUBLIC
+    unsigned int sim_getStep(const Simulation* sim);
+
+    // Set the current simulation step
+    LIB_PUBLIC
+    void sim_setStep(Simulation* sim, const unsigned int k);
+
+    // Get the current simulation mode
+    LIB_PUBLIC
+    uint8_t sim_getMode(Simulation* sim);
+
+    // Set the current simulation mode
+    LIB_PUBLIC
+    void sim_setMode(Simulation* sim, const uint8_t mode, const unsigned int k);
 
     // Retrieve the scenario of the given simulation
     LIB_PUBLIC
     const Scenario* sim_getScenario(const Simulation* sim);
+
+    // Get the number of vehicles in the given simulation
+    LIB_PUBLIC
+    unsigned int sim_getNbVehicles(const Simulation* sim);
 
     // Retrieve a vehicle from the given simulation
     LIB_PUBLIC

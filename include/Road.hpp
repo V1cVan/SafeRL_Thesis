@@ -182,20 +182,20 @@ class Road{
         Road(const G2lib::ClothoidList& outline_, const std::vector<Lane>& lanes_)
         : outline(outline_), lanes(lanes_), length(outline_.length()){
             #ifndef NDEBUG
-            std::cout << "Created road with outline through points: [" << std::endl;
-            int N = outline.numSegment();
-            std::vector<double> X(N+1),Y(N+1);
-            outline.getXY(X.data(),Y.data());
-            for(int i=0;i<=N;i++){
-                std::cout << "[" << X[i] << "," << Y[i] << "]" << std::endl;
-            }
-            std::cout << "]" << std::endl;
-            std::cout << "and lane offset properties: [" << std::endl;
-            for(const Lane& lane : lanes){
-                std::cout << "[";
-                lane.offsetProp.dump();
-                std::cout << "]" << std::endl;
-            }
+            // std::cout << "Created road with outline through points: [" << std::endl;
+            // int N = outline.numSegment();
+            // std::vector<double> X(N+1),Y(N+1);
+            // outline.getXY(X.data(),Y.data());
+            // for(int i=0;i<=N;i++){
+            //     std::cout << "[" << X[i] << "," << Y[i] << "]" << std::endl;
+            // }
+            // std::cout << "]" << std::endl;
+            // std::cout << "and lane offset properties: [" << std::endl;
+            // for(const Lane& lane : lanes){
+            //     std::cout << "[";
+            //     lane.offsetProp.dump();
+            //     std::cout << "]" << std::endl;
+            // }
             #endif
         }
 

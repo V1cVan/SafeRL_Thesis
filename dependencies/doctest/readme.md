@@ -1,0 +1,1 @@
+Latest version of doctest can be downloaded from [here](https://github.com/onqtam/doctest).

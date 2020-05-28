@@ -173,3 +173,8 @@ message(STATUS "Using HDF5 package: ${HDF5Package_DIR}")
 add_library(HDF5 INTERFACE)
 target_include_directories(HDF5 INTERFACE ${HDF5_INCLUDE_DIR})
 target_link_libraries(HDF5 INTERFACE hdf5-static debug hdf5_hl-static)
+
+
+# ----- Doctest library -----
+add_library(doctest IMPORTED INTERFACE GLOBAL)
+target_include_directories(doctest INTERFACE doctest)

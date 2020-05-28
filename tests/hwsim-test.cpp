@@ -1,39 +1,78 @@
 #include "Simulation.hpp"
-#include <iostream>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
 
-int main(){
-    // Create scenario:
+TEST_CASE("Scenario creation"){
+    const std::string path = "../scenarios/scenarios.h5";
+    const std::string scenario = "CLOVERLEAF_RAW";
+    // No scenarios_path set
+    CHECK_THROWS(Scenario sc(scenario));
+    Scenario::scenarios_path = path;
+    // Non-existing scenario
+    CHECK_THROWS_AS(Scenario sc("foo"),std::invalid_argument);
+}
+TEST_CASE("Blueprints"){
+    SUBCASE("Check default blueprint"){
+        BaseFactory::BluePrint kbm = KinematicBicycleModel().blueprint();
+        CHECK(kbm.id == KinematicBicycleModel::ID);
+        CHECK(kbm.args.empty());
+    }
+    SUBCASE("Check custom blueprint args"){
+        BasicPolicy::Type bpt = BasicPolicy::Type::FAST;
+        BaseFactory::BluePrint bp = BasicPolicy(bpt).blueprint();
+        CHECK(bp.id == BasicPolicy::ID);
+        CHECK(BasicPolicy(bp.args).type == bpt);
+    }
+    SUBCASE("Check factory registration"){
+        // Check if registration also occurs without any code calling blueprint()
+        BaseFactory::BluePrint bp = {1,BaseFactory::data_t()};
+        CHECK_NOTHROW(Policy::factory.create(bp));
+        // Check invalid id
+        bp = {99,BaseFactory::data_t()};
+        CHECK_THROWS_AS(Policy::factory.create(bp),std::invalid_argument);
+    }
+    SUBCASE("Check factory creation"){
+        BaseFactory::BluePrint bp = BasicPolicy(BasicPolicy::Type::FAST).blueprint();
+        std::unique_ptr<Policy> p = Policy::factory.create(bp);
+        BaseFactory::BluePrint bp2 = p->blueprint();
+        CHECK(bp.id == bp2.id);
+        REQUIRE(bp.args.size() == bp2.args.size());
+        for(int i=0;i<bp.args.size();i++){
+            CHECK(bp.args[i] == bp2.args[i]);
+        }
+    }
+}
+TEST_CASE("Simulation creation"){
     const std::string path = "../scenarios/scenarios.h5";
     const std::string scenario = "CLOVERLEAF_RAW";
     Scenario::scenarios_path = path;
-    try{
-        Scenario sc(scenario);
-    }catch(std::invalid_argument& e){
-        std::cerr << e.what() << "\n";
-        return -1;
-    }
     Scenario sc(scenario);
-    // Create vehicle types:
     std::array<double,3> minSize = {3,2,3};
     std::array<double,3> maxSize = {6,3.4,4};
-    Simulation::vConfig vTypes = {
-        {5,{std::make_shared<KinematicBicycleModel>(),std::make_shared<BasicPolicy>(BasicPolicy::Type::NORMAL),minSize,maxSize,0.7,1}},
-        {5,{std::make_shared<KinematicBicycleModel>(),std::make_shared<BasicPolicy>(BasicPolicy::Type::FAST),minSize,maxSize,0.7,1}}
-    };
-    // Create simulation:
-    Simulation::sConfig simConfig = {0.1,10,50};
-    Simulation sim = Simulation(simConfig,sc,vTypes);
-    // Get scenario info:
-    for(Road::id_t R=0;R<sim.scenario.roads.size();R++){
-        std::cout << "Length of road " << R << ": " << sim.scenario.roads[R].length << std::endl;
+    SUBCASE("Simulation creation"){
+        BaseFactory::BluePrint kbm = KinematicBicycleModel().blueprint();
+        Simulation::vTypes_t vTypes = {
+            {5,{kbm,BasicPolicy(BasicPolicy::Type::NORMAL).blueprint(),10,50,minSize,maxSize,0.7,1}},
+            {5,{kbm,BasicPolicy(BasicPolicy::Type::FAST).blueprint(),10,50,minSize,maxSize,0.7,1}}
+        };
+        // Create simulation:
+        Simulation::sConfig simConfig = {0.1,""};
+        CHECK_NOTHROW(Simulation sim(simConfig,sc,vTypes));
     }
-    // Get vehicle info:
-    const Vehicle& veh = sim.getVehicle(0);
-    std::cout << "Vehicle road position: R=" << veh.roadInfo.R << " ; L=" << veh.roadInfo.L;
-    std::cout << " ; (s,l) = (" << veh.roadInfo.pos[0] << "," << veh.roadInfo.pos[1] << ")" << std::endl;
-    // Perform a simulation step and query vehicle info again:
-    sim.step();
-    std::cout << "Vehicle road position: R=" << veh.roadInfo.R << " ; L=" << veh.roadInfo.L;
-    std::cout << " ; (s,l) = (" << veh.roadInfo.pos[0] << "," << veh.roadInfo.pos[1] << ")" << std::endl;
-    return 0;
+    Simulation::sConfig simConfig = {0.1,""};
+    BaseFactory::BluePrint kbm = KinematicBicycleModel().blueprint();
+    BaseFactory::BluePrint basic = BasicPolicy(BasicPolicy::Type::NORMAL).blueprint();
+    Simulation::vTypes_t vTypes = {
+        {10,{kbm,basic,10,50,minSize,maxSize,0.7,1}}
+    };
+    SUBCASE("Random seed"){
+        unsigned int s = 1234;
+        Utils::rng.seed(s);
+        Simulation sim(simConfig,sc,vTypes);
+        double posX = sim.getVehicle(0).x.pos[0];
+        Utils::rng.seed(s);
+        Simulation sim2(simConfig,sc,vTypes);
+        CHECK(sim2.getVehicle(0).x.pos[0] == doctest::Approx(posX));
+    }
 }
+// TODO: test case for logs

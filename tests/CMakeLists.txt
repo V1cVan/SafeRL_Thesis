@@ -9,24 +9,14 @@ target_link_libraries(Clothoids-test PRIVATE hwsim)
 
 # Add C++ test target:
 add_executable(hwsim-test hwsim-test.cpp)
-message(STATUS "hwsim_SOURCE_DIR=${hwsim_SOURCE_DIR}")
-target_link_libraries(hwsim-test PRIVATE hwsim)
+target_link_libraries(hwsim-test PRIVATE hwsim doctest)
 target_compile_features(hwsim-test PRIVATE cxx_std_17)
 
 # C wrapper test:
 add_executable(libhwsim-test libhwsim-test.cpp)
-target_link_libraries(libhwsim-test PRIVATE libhwsim)
+target_link_libraries(libhwsim-test PRIVATE libhwsim doctest)
 target_compile_features(libhwsim-test PRIVATE cxx_std_17)
 
-if(HWSIM_INSTALL_TESTS OR DEBUG_CONFIG)
-    # Install copy of hwsim library:
-    install(TARGETS libhwsim DESTINATION ${CMAKE_INSTALL_PREFIX}/tests)
-    # Install tests:
-    install(
-        TARGETS hwsim-test libhwsim-test
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/tests
-    )
-endif()
-
 # Add tests to the cmake unit tests:
-#add_test(NAME hwsim-lib-test COMMAND hwsim-test)
+add_test(NAME hwsimTest COMMAND hwsim-test WORKING_DIRECTORY ${hwsim_BINARY_DIR})
+add_test(NAME libhwsimTest COMMAND libhwsim-test WORKING_DIRECTORY ${hwsim_BINARY_DIR})

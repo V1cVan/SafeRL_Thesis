@@ -4,116 +4,120 @@
 
 #define SC_TYPE_HDF5
 #include "Simulation.hpp"
-#include <map>
 #include <string>
-
-#ifndef NDEBUG
 #include <iostream>
-#endif
 
-// Map string to a basic policy type
-const std::map<std::string, BasicPolicy::Type> basicPolicyTypeMap =
-{
-    { "slow",   BasicPolicy::Type::SLOW},
-    { "normal", BasicPolicy::Type::NORMAL},
-    { "fast",   BasicPolicy::Type::FAST}
-};
-
-std::shared_ptr<Model> createModel(const std::string& model){
-    std::shared_ptr<Model> newModel;
-    if(model=="kbm"){
-        newModel = std::make_shared<KinematicBicycleModel>();
-    }else if(model=="dbm"){
-        newModel = std::make_shared<DynamicBicycleModel>();
-    }else{
-        std::cerr << "Unknown model type: " << model << std::endl;
-        std::cerr << "Allowed model types: kbm, dbm" << std::endl;
-        throw std::invalid_argument("Unknown model type: " + model);
-    }
-    return newModel;
-}
-
-std::shared_ptr<Policy> createPolicy(const std::string& policy, const void* policyArgs){
-    std::shared_ptr<Policy> newPolicy;
-    if(policy=="step"){
-        newPolicy = std::make_shared<StepPolicy>();
-    }else if(policy=="basic"){
-        BasicPolicy::Type bType = BasicPolicy::Type::NORMAL;
-        if(policyArgs!=NULL){
-            std::string bTypeStr = std::string(static_cast<const char*>(policyArgs));
-            if(basicPolicyTypeMap.count(bTypeStr)==0){
-                std::cerr << "Unrecognized basic policy type: " << bTypeStr << std::endl;
-                std::cerr << "Allowed basic policy types: ";
-                for(const auto& pair : basicPolicyTypeMap){
-                    std::cerr << pair.first << ",";
-                }
-                std::cerr << std::endl;
-                throw std::invalid_argument("Unrecognized basic policy type: " + bTypeStr);
-            }
-            bType = basicPolicyTypeMap.at(bTypeStr);
-        }
-        newPolicy = std::make_shared<BasicPolicy>(bType);
-    }else if(policy=="custom"){
-        newPolicy = std::make_shared<CustomPolicy>();
-    }else{
-        std::cerr << "Unknown policy type: " << policy << std::endl;
-        std::cerr << "Allowed policy types: step, basic, custom" << std::endl;
-        throw std::invalid_argument("Unknown policy type: " + policy);
-    }
-    return newPolicy;
+inline Simulation::sConfig convertSimConfig(const sConfig* cfg){
+    std::string output_log = (cfg->output_log==NULL) ? "" : cfg->output_log;
+    return {cfg->dt,output_log};
 }
 
 extern "C"{
     LIB_PUBLIC
+    unsigned int cfg_getSeed(){
+        return Utils::rng.getSeed();
+    }
+
+    LIB_PUBLIC
+    void cfg_setSeed(const unsigned int seed){
+        Utils::rng.seed(seed);
+    }
+
+    LIB_PUBLIC
+    void cfg_scenariosPath(const char* path){
+        Scenario::scenarios_path = std::string(path);
+    }
+
+    LIB_PUBLIC
+    void mbp_kbm(unsigned char* args){
+        BaseFactory::BluePrint bp = KinematicBicycleModel().blueprint();
+        std::byte* bytes = reinterpret_cast<std::byte*>(args);
+        std::copy(bp.args.begin(),bp.args.end(),bytes);
+    }
+
+    LIB_PUBLIC
+    void pbp_custom(unsigned char* args){
+        BaseFactory::BluePrint bp = CustomPolicy().blueprint();
+        std::byte* bytes = reinterpret_cast<std::byte*>(args);
+        std::copy(bp.args.begin(),bp.args.end(),bytes);
+    }
+
+    LIB_PUBLIC
+    void pbp_step(unsigned char* args){
+        BaseFactory::BluePrint bp = StepPolicy().blueprint();
+        std::byte* bytes = reinterpret_cast<std::byte*>(args);
+        std::copy(bp.args.begin(),bp.args.end(),bytes);
+    }
+
+    LIB_PUBLIC
+    void pbp_basic(unsigned char* args, const uint8_t type){
+        BaseFactory::BluePrint bp = BasicPolicy(static_cast<BasicPolicy::Type>(type)).blueprint();
+        std::byte* bytes = reinterpret_cast<std::byte*>(args);
+        std::copy(bp.args.begin(),bp.args.end(),bytes);
+    }
+
+    LIB_PUBLIC
     Simulation* sim_new(const sConfig* config, const char* scenarioName, const vConfig* vTypesArr, const unsigned int numTypes){
         #ifndef NDEBUG
         std::cout << "Simulation config:\t";
-        std::cout << "dt = " << config->dt << " ; N_OV = " << config->N_OV;
-        std::cout << " ; D_MAX = " << config->D_MAX << std::endl;
-        std::cout << "Scenarios path:\t" << config->scenarios_path << std::endl;
+        std::cout << "dt = " << config->dt << " ; output_log = " << config->output_log << std::endl;
         std::cout << "Scenario name:\t" << scenarioName << std::endl;
         std::cout << "Vehicle types: [" << std::endl;
         #endif
-        Simulation::sConfig simConfig = {config->dt,config->N_OV,config->D_MAX};
-        Scenario::scenarios_path = std::string(config->scenarios_path);
-        Simulation::vConfig vehicleTypes = Simulation::vConfig();
+        Simulation::sConfig simConfig = convertSimConfig(config);
+        Simulation::vTypes_t vehicleTypes = Simulation::vTypes_t();
         vehicleTypes.reserve(numTypes);
         std::array<double,3> minSize{},maxSize{};
-        for(unsigned int t=0;t<numTypes;t++){
-            #ifndef NDEBUG
-            std::cout << "\t{\n\t\tAmount: " << vTypesArr[t].amount << std::endl;
-            std::cout << "\t\tModel: " << vTypesArr[t].model << std::endl;
-            std::cout << "\t\tPolicy: " << vTypesArr[t].policy << std::endl;
-            std::cout << "\t\tMinSize: [" << vTypesArr[t].minSize[0] << "," << vTypesArr[t].minSize[1] << "," << vTypesArr[t].minSize[2] << std::endl;
-            std::cout << "\t\tMaxSize: [" << vTypesArr[t].maxSize[0] << "," << vTypesArr[t].maxSize[1] << "," << vTypesArr[t].maxSize[2] << std::endl;
-            std::cout << "\t}," << std::endl;
-            #endif
-            std::copy(vTypesArr[t].minSize,vTypesArr[t].minSize+3,minSize.begin());
-            std::copy(vTypesArr[t].maxSize,vTypesArr[t].maxSize+3,maxSize.begin());
-            std::shared_ptr<Model> model;
-            try{
-                model = createModel(std::string(vTypesArr[t].model));
-            }catch(std::invalid_argument&){
-                return NULL;
-            }
-            std::shared_ptr<Policy> policy;
-            try{
-                policy = createPolicy(std::string(vTypesArr[t].policy),vTypesArr[t].policyArgs);
-            }catch(std::invalid_argument&){
-                return NULL;
-            }
-            Vehicle::BluePrint bp = {model,policy,
-                                     minSize, maxSize,
-                                     0.7,1};
-            vehicleTypes.push_back({vTypesArr[t].amount,bp});
-        }
-        #ifndef NDEBUG
-        std::cout << "] -> numTypes = " << numTypes << std::endl;
-        #endif
-        // Create scenario and simulation:
         try{
+            for(unsigned int t=0;t<numTypes;t++){
+                #ifndef NDEBUG
+                std::cout << "\t{\n\t\tAmount: " << vTypesArr[t].amount << std::endl;
+                std::cout << "\t\tModel: " << vTypesArr[t].model << std::endl;
+                std::cout << "\t\tPolicy: " << vTypesArr[t].policy << std::endl;
+                std::cout << "\t\tMinSize: [" << vTypesArr[t].minSize[0] << "," << vTypesArr[t].minSize[1] << "," << vTypesArr[t].minSize[2] << std::endl;
+                std::cout << "\t\tMaxSize: [" << vTypesArr[t].maxSize[0] << "," << vTypesArr[t].maxSize[1] << "," << vTypesArr[t].maxSize[2] << std::endl;
+                std::cout << "\t}," << std::endl;
+                #endif
+                // Create model blueprint:
+                size_t N = Model::factory.getSerializedLength(vTypesArr[t].model);
+                std::byte* bytes = reinterpret_cast<std::byte*>(vTypesArr[t].modelArgs);
+                BaseFactory::data_t modelArgs{bytes,bytes+N};
+                BaseFactory::BluePrint model = {vTypesArr[t].model,modelArgs};
+                // Create policy blueprint:
+                N = Policy::factory.getSerializedLength(vTypesArr[t].policy);
+                bytes = reinterpret_cast<std::byte*>(vTypesArr[t].policyArgs);
+                BaseFactory::data_t policyArgs{bytes,bytes+N};
+                BaseFactory::BluePrint policy = {vTypesArr[t].policy,policyArgs};
+                // Other vehicle properties:
+                std::copy(vTypesArr[t].minSize,vTypesArr[t].minSize+3,minSize.begin());
+                std::copy(vTypesArr[t].maxSize,vTypesArr[t].maxSize+3,maxSize.begin());
+                Simulation::VehicleType vType = {model, policy,
+                                                vTypesArr[t].N_OV, vTypesArr[t].D_MAX,
+                                                minSize, maxSize,
+                                                0.7,1};
+                vehicleTypes.push_back({vTypesArr[t].amount,vType});
+            }
+            #ifndef NDEBUG
+            std::cout << "] -> numTypes = " << numTypes << std::endl;
+            #endif
+            // Create scenario and simulation:
             Scenario sc = Scenario(std::string(scenarioName));
             return new Simulation(simConfig,sc,vehicleTypes);
+        }catch(std::invalid_argument& e){
+            std::cerr << e.what() << std::endl;
+            return NULL;
+        }
+    }
+
+    LIB_PUBLIC
+    Simulation* sim_load(const sConfig* config, const char* input_log, const unsigned int k0, const bool replay){
+        Simulation::sConfig simConfig = convertSimConfig(config);
+        if(input_log==NULL || input_log[0]==0){
+            std::cerr << "Invalid input log path." << std::endl;
+            return NULL;
+        }
+        try{
+            return new Simulation(simConfig,std::string(input_log),k0,replay);
         }catch(std::invalid_argument& e){
             std::cerr << e.what() << std::endl;
             return NULL;
@@ -126,13 +130,66 @@ extern "C"{
     }
 
     LIB_PUBLIC
+    bool sim_stepA(Simulation* sim){
+        return sim->step_a();
+    }
+
+    LIB_PUBLIC
+    bool sim_stepB(Simulation* sim){
+        return sim->step_b();
+    }
+
+    LIB_PUBLIC
+    bool sim_stepC(Simulation* sim){
+        return sim->step_c();
+    }
+
+    LIB_PUBLIC
+    bool sim_stepD(Simulation* sim){
+        return sim->step_d();
+    }
+
+    LIB_PUBLIC
     bool sim_step(Simulation* sim){
         return sim->step();
     }
 
     LIB_PUBLIC
+    unsigned int sim_getStep(const Simulation* sim){
+        return sim->getStep();
+    }
+
+    LIB_PUBLIC
+    void sim_setStep(Simulation* sim, const unsigned int k){
+        try{
+            sim->setStep(k);
+        }catch(hwsim::invalid_state& e){
+            std::cerr << e.what() << std::endl;
+        }
+    }
+
+    LIB_PUBLIC
+    uint8_t sim_getMode(Simulation* sim){
+        return static_cast<uint8_t>(sim->getMode());
+    }
+
+    LIB_PUBLIC
+    void sim_setMode(Simulation* sim, const uint8_t mode, const unsigned int k){
+        try{
+            sim->setMode(static_cast<Simulation::Mode>(mode),k);
+        }catch(std::invalid_argument& e){
+            std::cerr << e.what() << std::endl;
+        }
+    }
+
+    LIB_PUBLIC
     const Scenario* sim_getScenario(const Simulation* sim){
         return &(sim->scenario);
+    }
+
+    LIB_PUBLIC
+    unsigned int sim_getNbVehicles(const Simulation* sim){
+        return sim->nbVehicles();
     }
 
     LIB_PUBLIC
@@ -303,12 +360,6 @@ extern "C"{
 
     LIB_PUBLIC
     void veh_getModelState(const Vehicle* veh, double* state){
-        #ifndef NDEBUG
-        std::cout << "Model pos: " << veh->x.pos[0] << "," << veh->x.pos[1] << "," << veh->x.pos[2] << std::endl;
-        std::cout << "Model ang: " << veh->x.ang[0] << "," << veh->x.ang[1] << "," << veh->x.ang[2] << std::endl;
-        std::cout << "Model vel: " << veh->x.vel[0] << "," << veh->x.vel[1] << "," << veh->x.vel[2] << std::endl;
-        std::cout << "Model ang_vel: " << veh->x.ang_vel[0] << "," << veh->x.ang_vel[1] << "," << veh->x.ang_vel[2] << std::endl;
-        #endif
         std::copy(veh->x.pos.begin(),veh->x.pos.end(),state);
         std::copy(veh->x.ang.begin(),veh->x.ang.end(),state+3);
         std::copy(veh->x.vel.begin(),veh->x.vel.end(),state+6);

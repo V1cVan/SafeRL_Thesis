@@ -5,8 +5,11 @@
 #define SC_TYPE_HDF5
 #endif
 
+#include "Utils.hpp"
+#include "Road.hpp"
+
 #ifdef SC_TYPE_HDF5
-#include "hdf5.h"
+#include "hdf5Helper.hpp"
 #ifndef NDEBUG
 #include "hdf5_hl.h"
 #endif
@@ -15,242 +18,25 @@
 #include "mat.h"
 #endif
 
-#include "Utils.hpp"
-#include "Road.hpp"
 #include <vector>
 #include <stdexcept>
-#include <random>
 #include <numeric>
 #include <algorithm>
 #include <cmath>
 #include <string>
-#include <set>
-
-
 #include <iostream>
-
-#ifdef SC_TYPE_HDF5
-struct fixedBase{
-    fixedBase(){}
-    // Disable copying and moving:
-    fixedBase(const fixedBase&) = delete;
-    fixedBase(fixedBase&&) = delete;
-    fixedBase& operator=(const fixedBase&) = delete;
-    fixedBase& operator=(fixedBase&&) = delete;
-};
-struct dtypes : public fixedBase{
-    struct bc_type : public fixedBase{
-        enum C{// type definition used in C
-            CYCLIC,
-            AUTO,
-            FIXED
-        };
-        hid_t M;// type definition used to read elements in memory
-        static constexpr unsigned int N = 3;// Number of enum fields
-        static constexpr char* names[N] = {"CYCLIC","AUTO","FIXED"};// Enum names
-        bc_type(){// Initialize memory type
-            M = H5Tenum_create(H5T_NATIVE_UINT8);
-            for(int i=0;i<N;i++){
-                C val = static_cast<C>(i);
-                H5Tenum_insert(M,names[i],&val);
-            }
-        }
-        ~bc_type(){// Release memory type
-            H5Tclose(M);
-        }
-    };
-
-    struct road_bc : public fixedBase{
-        struct C{// type definition used in C
-            bc_type::C  type;
-            double      start;
-            double      end;
-        };
-        hid_t M;// type definition used to read elements in memory
-        const bc_type rType;// Reference to subtype used by the type field
-        road_bc() : rType(){// Initialize memory type
-            M = H5Tcreate(H5T_COMPOUND, sizeof(C));
-            H5Tinsert(M,"type",HOFFSET(C,type),rType.M);
-            H5Tinsert(M,"start",HOFFSET(C,start),H5T_NATIVE_DOUBLE);
-            H5Tinsert(M,"end",HOFFSET(C,end),H5T_NATIVE_DOUBLE);
-        }
-        ~road_bc(){// Release memory type
-            H5Tclose(M);
-        }
-    };
-
-    struct road : public fixedBase{
-        struct C{// type definition used in C
-            hobj_ref_t  outline;
-            road_bc::C  bc;
-            hobj_ref_t  cp;
-            hobj_ref_t  lanes;
-        };
-        hid_t M;// type definition used to read elements in memory
-        const road_bc rBc;// Reference to subtype used by the bc field
-        road() : rBc(){// Initialize memory type-
-            M = H5Tcreate(H5T_COMPOUND, sizeof(C));
-            H5Tinsert(M,"outline",HOFFSET(C,outline),H5T_STD_REF_OBJ);
-            H5Tinsert(M,"bc",HOFFSET(C,bc),rBc.M);
-            H5Tinsert(M,"cp",HOFFSET(C,cp),H5T_STD_REF_OBJ);
-            H5Tinsert(M,"lanes",HOFFSET(C,lanes),H5T_STD_REF_OBJ);
-        }
-        ~road(){// Release memory type
-            H5Tclose(M);
-        }
-    };
-
-    struct prop : public fixedBase{
-        struct C{// type definition used in C
-            double      constant;
-            hobj_ref_t  trans;
-        };
-        hid_t M;// type definition used to read elements in memory
-        prop(){// Initialize memory type
-            M = H5Tcreate(H5T_COMPOUND, sizeof(C));
-            H5Tinsert(M,"C",HOFFSET(C,constant),H5T_NATIVE_DOUBLE);
-            H5Tinsert(M,"trans",HOFFSET(C,trans),H5T_STD_REF_OBJ);
-        }
-        ~prop(){// Release memory type
-            H5Tclose(M);
-        }
-    };
-
-    struct conn : public fixedBase{
-        struct C{// type definition used in C
-            uint8_t         exists;
-            unsigned int    R;
-            unsigned int    L;
-        };
-        hid_t M;// type definition used to read elements in memory
-        conn(){// Initialize memory type
-            M = H5Tcreate(H5T_COMPOUND, sizeof(C));
-            H5Tinsert(M,"exists",HOFFSET(C,exists),H5T_NATIVE_UINT8);
-            H5Tinsert(M,"road",HOFFSET(C,R),H5T_NATIVE_UINT32);
-            H5Tinsert(M,"lane",HOFFSET(C,L),H5T_NATIVE_UINT32);
-        };
-        ~conn(){// Release memory type
-            H5Tclose(M);
-        }
-    };
-
-    struct lane : public fixedBase{
-        struct C{// type definition used in C
-            int8_t      dir;
-            conn::C     from;
-            prop::C     height;
-            prop::C     left;
-            conn::C     merge;
-            prop::C     offset;
-            prop::C     right;
-            prop::C     se;
-            prop::C     speed;
-            conn::C     to;
-            double      val[2];
-            prop::C     width;
-        };
-        hid_t M;// type definition used to read elements in memory
-        hid_t valM;// type definition of the validity field
-        const conn rConn;// Reference to subtype used by the from, to and merge fields
-        const prop rProp;// Reference to subtype used by all remaining lane properties (except direction)
-        lane() : rConn(), rProp(){// Initialize memory type
-            hsize_t val_dims[1] = {2};
-            valM = H5Tarray_create(H5T_NATIVE_DOUBLE,1,val_dims);
-            M = H5Tcreate(H5T_COMPOUND, sizeof(C));
-            H5Tinsert(M,"direction",HOFFSET(C,dir),H5T_NATIVE_INT8);
-            H5Tinsert(M,"from",HOFFSET(C,from),rConn.M);
-            H5Tinsert(M,"height",HOFFSET(C,height),rProp.M);
-            H5Tinsert(M,"left",HOFFSET(C,left),rProp.M);
-            H5Tinsert(M,"merge",HOFFSET(C,merge),rConn.M);
-            H5Tinsert(M,"offset",HOFFSET(C,offset),rProp.M);
-            H5Tinsert(M,"right",HOFFSET(C,right),rProp.M);
-            H5Tinsert(M,"se",HOFFSET(C,se),rProp.M);
-            H5Tinsert(M,"speed",HOFFSET(C,speed),rProp.M);
-            H5Tinsert(M,"to",HOFFSET(C,to),rConn.M);
-            H5Tinsert(M,"validity",HOFFSET(C,val),valM);
-            H5Tinsert(M,"width",HOFFSET(C,width),rProp.M);
-        }
-        ~lane(){// Release memory type
-            H5Tclose(M);
-            H5Tclose(valM);
-        }
-    };
-
-    struct transition : public fixedBase{
-        struct C{// type definition used in C
-            double          from;
-            double          to;
-            unsigned int    type;
-            double          before;
-            double          after;
-        };
-        hid_t M;// type definition used to read elements in memory
-        transition(){// Initialize memory type
-            M = H5Tcreate(H5T_COMPOUND, sizeof(C));
-            H5Tinsert(M,"from",HOFFSET(C,from),H5T_NATIVE_DOUBLE);
-            H5Tinsert(M,"to",HOFFSET(C,to),H5T_NATIVE_DOUBLE);
-            H5Tinsert(M,"type",HOFFSET(C,type),H5T_NATIVE_UINT32);
-            H5Tinsert(M,"before",HOFFSET(C,before),H5T_NATIVE_DOUBLE);
-            H5Tinsert(M,"after",HOFFSET(C,after),H5T_NATIVE_DOUBLE);
-        }
-        ~transition(){// Release memory type
-            H5Tclose(M);
-        }
-    };
-
-    road road;
-    lane lane;
-    transition transition;
-
-    dtypes() : road(), lane(), transition(){}
-    // Types will automatically be destructed and released
-};
-
-struct H5ResourceManager : public fixedBase{
-    std::set<hid_t> files;
-    std::set<hid_t> datasets;
-    const dtypes types;
-    
-    H5ResourceManager() : files(), datasets(), types(){}
-    ~H5ResourceManager(){
-        for(const hid_t& s : datasets){
-            H5Dclose(s);
-        }
-        for(const hid_t& f : files){
-            H5Fclose(f);
-        }
-    }
-
-    inline void addFile(const hid_t& f){
-        files.insert(f);
-    }
-
-    inline void addSet(const hid_t& s){
-        datasets.insert(s);
-    }
-
-    inline void closeFile(const hid_t& f){
-        files.erase(f);
-        H5Fclose(f);
-    }
-
-    inline void closeSet(const hid_t& s){
-        datasets.erase(s);
-        H5Dclose(s);
-    }
-};
-#endif
 
 class Scenario{
     public:
         STATIC_INLINE std::string scenarios_path;
+        const std::string name;
         std::vector<Road> roads;
         
-        Scenario(const std::vector<Road>& roads_)
-        : roads(roads_){}
+        // Scenario(const std::vector<Road>& roads_)
+        // : roads(roads_){}
 
         Scenario(const std::string& scenario)
-        : roads(){
+        : name(scenario), roads(){
             #ifdef SC_TYPE_MAT
             MATFile* pmat = matOpen(scenarios_path.c_str(),"r");
             mxArray* sc = matGetVariable(pmat,scenario.c_str());
@@ -292,8 +78,7 @@ class Scenario{
             }
             #else
             // Initialize a resource manager who will take care of file and dataset
-            // closing in case of exceptions. It will also initialize the defined
-            // datatypes and properly close them in case of exceptions.
+            // closing in case of exceptions.
             H5ResourceManager rm;
             // Open dataset file and read out the roads of the given scenario:
             herr_t status;
@@ -320,11 +105,11 @@ class Scenario{
             #ifndef NDEBUG
             hid_t roads_ft = H5Dget_type(dsRoads);
             hid_t roads_mt = H5Tget_native_type(roads_ft,H5T_DIR_DEFAULT);
-            std::cout << "Datatype equality: " << H5Tequal(roads_mt,rm.types.road.M) << "\n";
+            assert(H5Tequal(roads_mt,H5dtypes.road.M)); // Road dtype equality
             H5Tclose(roads_ft);
             H5Tclose(roads_mt);
             #endif
-            status = H5Dread(dsRoads,rm.types.road.M,H5S_ALL,H5S_ALL,H5P_DEFAULT,dRoads.data());
+            status = H5Dread(dsRoads,H5dtypes.road.M,H5S_ALL,H5S_ALL,H5P_DEFAULT,dRoads.data());
             if(status<0){
                 throw std::invalid_argument("[/scenario]\tUnable to read 'roads' dataset.");
             }
@@ -348,10 +133,6 @@ class Scenario{
         inline int updateRoadState(Road::id_t& R, double& s, double& l, const double ds, const double dl) const{
             // Update the given road state (R,s,l) to a new valid road state, given the updates ds and dl.
             // Note that (R,s,l) should be a VALID starting state!
-            #ifndef NDEBUG
-            std::cout << "Original state (R,s,l): " << R << "," << s << "," << l << std::endl;
-            std::cout << "Updates (ds,dl): " << ds << "," << dl << std::endl;
-            #endif
             Road::id_t L = *roads[R].laneId(s,l);
             std::optional<std::pair<Road::id_t,Road::id_t>> conn = roads[R].lanes[L].to;
             std::array<double,2> val = roads[R].lanes[L].validity;
@@ -383,10 +164,6 @@ class Scenario{
                 s = s+ds;
                 l = l+dl;
             }
-            #ifndef NDEBUG
-            std::cout << "Wrapped state (R,s,l): " << R << "," << s << "," << l << std::endl;
-            std::cout << "Direction shift = " << dirShift << std::endl;
-            #endif
             return dirShift;
         }
 
@@ -588,15 +365,15 @@ class Scenario{
             #ifndef NDEBUG
             hid_t lanes_ft = H5Dget_type(dsLanes);
             hid_t lanes_mt = H5Tget_native_type(lanes_ft,H5T_DIR_DEFAULT);
-            std::cout << "Datatype equality: " << H5Tequal(lanes_mt,rm.types.lane.M) << "\n";
-            std::cout << "Derived lane dtype:\n";
-            printH5dtype(lanes_mt);
+            assert(H5Tequal(lanes_mt,H5dtypes.lane.M));// Lane dtype equality
+            // std::cout << "Derived lane dtype:\n";
+            // printH5dtype(lanes_mt);
             H5Tclose(lanes_ft);
             H5Tclose(lanes_mt);
-            std::cout << "Created lane dtype:\n";
-            printH5dtype(rm.types.lane.M);
+            // std::cout << "Created lane dtype:\n";
+            // printH5dtype(H5dtypes.lane.M);
             #endif
-            status = H5Dread(dsLanes,rm.types.lane.M,H5S_ALL,H5S_ALL,H5P_DEFAULT,dLanes.data());
+            status = H5Dread(dsLanes,H5dtypes.lane.M,H5S_ALL,H5S_ALL,H5P_DEFAULT,dLanes.data());
             if(status<0){
                 throw std::invalid_argument("[/scenario/road]\tUnable to read 'lanes' dataset.");
             }
@@ -663,11 +440,11 @@ class Scenario{
             #ifndef NDEBUG
             hid_t trans_ft = H5Dget_type(dsTrans);
             hid_t trans_mt = H5Tget_native_type(trans_ft,H5T_DIR_DEFAULT);
-            std::cout << "Datatype equality: " << H5Tequal(trans_mt,rm.types.transition.M) << "\n";
+            assert(H5Tequal(trans_mt,H5dtypes.transition.M));// Transition dtype equality
             H5Tclose(trans_ft);
             H5Tclose(trans_mt);
             #endif
-            herr_t status = H5Dread(dsTrans,rm.types.transition.M,H5S_ALL,H5S_ALL,H5P_DEFAULT,dTrans.data());
+            herr_t status = H5Dread(dsTrans,H5dtypes.transition.M,H5S_ALL,H5S_ALL,H5P_DEFAULT,dTrans.data());
             if(status<0){
                 throw std::invalid_argument("[/scenario/road/lane]\tUnable to read 'transitions' dataset.");
             }

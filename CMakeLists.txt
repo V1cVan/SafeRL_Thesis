@@ -13,13 +13,13 @@ option(HWSIM_COMPAT "Build with compatibility mode." OFF)
 option(HWSIM_INSTALL_LIB "Install the C library." ON)
 option(HWSIM_INSTALL_PYTHON "Install the python wrapper." ON)
 option(HWSIM_INSTALL_MATLAB "Install the MATLAB wrapper." OFF)
-option(HWSIM_INSTALL_TESTS "Install the test executables." OFF)
+option(HWSIM_INSTALL_EXAMPLES "Install the example executables." ON)
 
 message(STATUS "Building in compatibility mode? ${HWSIM_COMPAT}")
 message(STATUS "Installing C library? ${HWSIM_INSTALL_LIB}")
 message(STATUS "Installing python wrapper? ${HWSIM_INSTALL_PYTHON}")
 message(STATUS "Installing MATLAB wrapper? ${HWSIM_INSTALL_MATLAB}")
-message(STATUS "Installing test executables? ${HWSIM_INSTALL_TESTS}")
+message(STATUS "Installing example executables? ${HWSIM_INSTALL_EXAMPLES}")
 
 # Display all warnings if in debug mode:
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -86,6 +86,9 @@ file(GENERATE
 
 # Tests:
 add_subdirectory(tests)
+
+# Examples:
+add_subdirectory(examples)
 
 # Install targets:
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include) # C++ headers

@@ -10,8 +10,19 @@
 struct VehicleModelBase;// Forward declaration
 
 // --- Base Model definition ---
-class Model{
+class Model : public ISerializable{
     public:
+        // Using this factory, we can create models through blueprints.
+        // This requires the derived model classes to inherit from
+        // Serializable<Model,Model::factory,DerivedModel,ID,N>
+        // and implement a DerivedModel(const sdata_t args) constructor to
+        // recreate the model from the given blueprint arguments.
+        #ifdef COMPAT
+        static Factory<Model> factory;
+        #else
+        static inline Factory<Model> factory{"model"};
+        #endif
+
         static constexpr unsigned int STATE_SIZE = 12;
         struct State{
             std::array<double,3> pos;// Global position (x,y and z) of the vehicle's CG
@@ -49,6 +60,9 @@ class Model{
 };
 
 constexpr std::array<Model::Input,2> Model::DEFAULT_INPUT_BOUNDS;
+#ifdef COMPAT
+Factory<Model> Model::factory("model");
+#endif
 
 // Minimal required operator overloads for use with Utils::integrateRK4
 // TODO: might improve this a lot by using expression templates!!
@@ -109,8 +123,29 @@ struct VehicleModelBase{
     }
 };
 
+// --- Custom model ---
+struct CustomModel : public Serializable<Model,Model::factory,CustomModel,0>{
+    
+    CustomModel(const sdata_t = sdata_t()){}
+
+    inline State derivatives_(const VehicleModelBase& vb, const State& x, const Input& u) const{
+        return {
+            {std::nan(""),std::nan(""),std::nan("")}, // pos
+            {std::nan(""),std::nan(""),std::nan("")}, // ang
+            {std::nan(""),std::nan(""),std::nan("")}, // vel
+            {std::nan(""),std::nan(""),std::nan("")} // ang_vel
+        };
+    }
+
+    inline Input nominalInputs(const VehicleModelBase& vb, const State& x, const double gamma) const{
+        return {std::nan(""),std::nan("")};
+    }
+};
+
 // --- Kinematic bicycle model ---
-struct KinematicBicycleModel : public Model{
+struct KinematicBicycleModel : public Serializable<Model,Model::factory,KinematicBicycleModel,1>{
+    
+    KinematicBicycleModel(const sdata_t = sdata_t()){}
 
     inline State derivatives_(const VehicleModelBase& vb, const State& x, const Input& u) const{
         // Calculate slip angle (beta) and total velocity
@@ -133,7 +168,9 @@ struct KinematicBicycleModel : public Model{
 };
 
 // --- Dynamic bicycle model ---
-struct DynamicBicycleModel : public Model{
+struct DynamicBicycleModel : public Serializable<Model,Model::factory,DynamicBicycleModel,2>{
+    
+    DynamicBicycleModel(const sdata_t = sdata_t()){}
 
     inline State derivatives_(const VehicleModelBase& vb, const State& x, const Input& u) const{
         // TODO

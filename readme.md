@@ -20,16 +20,17 @@ inside your project and include `add_subdirectory(<FOLDER_NAME>)` in your CMakeL
 
         mkdir build
         cd build
-2. Create CMake project directory and install:
+2. Create CMake project directory (, optionally perform the unit tests) and install:
 
         cmake -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> [options] ..
+        [ctest -C Release -T test]
         cmake --build . --target install --config Release
 
     Possible options:
 
     * -DHWSIM_COMPAT:BOOL=[ON/OFF]
 
-      Build with compatibility mode (to enable backward support for older compilers wrapping C++17 features inside an experimental module), default OFF (requires C++17 support of your compiler).
+      Build with compatibility mode (to enable backward support for older compilers without `static inline` variables and `std::byte` support), default OFF (requires C++17 support of your compiler).
 
     * -DHWSIM_INSTALL_LIB:BOOL=[ON/OFF]
       
@@ -40,9 +41,9 @@ inside your project and include `add_subdirectory(<FOLDER_NAME>)` in your CMakeL
     * -DHWSIM_INSTALL_PYTHON:BOOL=[ON/OFF]
 
       Installs the python wrappers, default ON.
-    * -DHWSIM_INSTALL_TESTS:BOOL=[ON/OFF]
+    * -DHWSIM_INSTALL_EXAMPLES:BOOL=[ON/OFF]
 
-      Installs the test executables, default OFF.
+      Installs the example executables, default ON.
 
 ## Usage:
 

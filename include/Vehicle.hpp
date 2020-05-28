@@ -6,25 +6,32 @@
 #include "Model.hpp"
 #include "Policy.hpp"
 #include "Controllers.hpp"
+#include "hdf5Helper.hpp"
 #include <array>
 #include <random>
 
 class Vehicle : public VehicleModelBase, public VehiclePolicyBase{
     public:
-        struct BluePrint{
-            std::shared_ptr<Model> model;// TODO: maybe remove model and policy from blueprint?
-            std::shared_ptr<Policy> policy;
-            std::array<double,3> minSize;
-            std::array<double,3> maxSize;
-            double minRelVel;
-            double maxRelVel;
+        struct Config{
+            BaseFactory::BluePrint model;
+            BaseFactory::BluePrint policy;
+            unsigned int N_OV;
+            double D_MAX;
+            std::array<double,3> size;
         };
 
         struct InitialState{
-            Road::id_t R;               // Road id
-            std::array<double,2> pos;   // Road coordinates (s,l)
-            double gamma;               // Heading angle of the vehicle w.r.t. heading angle of the lane
-            double vel;                 // Vehicle's longitudinal velocity
+            Road::id_t R;                   // Road id
+            std::array<double,2> pos;       // Road coordinates (s,l)
+            double gamma;                   // Heading angle of the vehicle w.r.t. heading angle of the lane
+            std::array<double,3> vel;       // Vehicle's velocity
+            std::array<double,3> ang_vel;   // Vehicle's angular velocity
+
+            InitialState(const Road::id_t R, const double s, const double l, const double gamma, const double long_vel)
+            : R(R), pos({s,l}), gamma(gamma), vel({long_vel,0,0}), ang_vel({0,0,0}){}
+
+            InitialState(const Road::id_t R, const double s, const double l, const double gamma, const std::array<double,3>& vel, const std::array<double,3>& ang_vel)
+            : R(R), pos({s,l}), gamma(gamma), vel(vel), ang_vel(ang_vel){}
         };
 
         struct RoadInfo{
@@ -33,7 +40,7 @@ class Vehicle : public VehicleModelBase, public VehiclePolicyBase{
             std::array<double,2> pos;// (s,l)
             std::array<double,2> vel;
             std::array<double,2> size;
-            double gamma;
+            double gamma;// Heading angle of the vehicle w.r.t. heading angle of the lane
             std::array<double,2> offB;// Offset towards right and left road boundary
             std::array<double,2> offN;// Offset towards right and left neighbouring lane's center
             double offC;// Offset towards the current lane's center
@@ -49,34 +56,29 @@ class Vehicle : public VehicleModelBase, public VehiclePolicyBase{
         static constexpr int COL_RIGHT = -2;// Collision with right road boundary
 
         const Scenario& sc;// Scenario in which the vehicle lives
-        std::shared_ptr<Model> model;// Dynamical model of the vehicle's movement in the global coordinate system
-        std::shared_ptr<Policy> policy;// The driving policy that is being used to make the steering decisions for this vehicle
+        std::unique_ptr<Model> model;// Dynamical model of the vehicle's movement in the global coordinate system
+        std::unique_ptr<Policy> policy;// The driving policy that is being used to make the steering decisions for this vehicle
         PID longCtrl, latCtrl;// Controllers for longitudinal and lateral actions
         RoadInfo roadInfo;// Augmented state information of the vehicle w.r.t. the road
         int colStatus;// Collision status
 
-        // Vehicle(const Scenario& vSc, const InitialState& vState, std::unique_ptr<Model> vModel, std::unique_ptr<Policy> vPolicy)
-        // : sc(vSc), model(std::move(vModel)), policy(std::move(vPolicy)), longCtrl(3.5), latCtrl(0.08), roadInfo(), colStatus(COL_NONE){// Proportional longitudinal and lateral controllers
-        //     sc.roads[vState.R].globalPose({vState.pos[0],vState.pos[1],vState.gamma},model->state.pos,model->state.ang);
-        //     model->state.vel = {vState.vel,0,0};
-        //     model->state.ang_vel = {0,0,0};
-        //     roadInfo.R = vState.R;
-        //     roadInfo.pos = vState.pos;
-        //     updateRoadInfo();
-        // }
-
-        Vehicle(const Scenario& vSc, const BluePrint& vBp, const InitialState& vIs)
-        : VehicleModelBase(createVehicleModelBase(vBp)), VehiclePolicyBase()
-        , sc(vSc), model(vBp.model), policy(vBp.policy), longCtrl(3.5), latCtrl(0.08), roadInfo(), colStatus(COL_NONE){
-            // Create full model state from the initialState
-            sc.roads[vIs.R].globalPose({vIs.pos[0],vIs.pos[1],vIs.gamma},x.pos,x.ang);
-            x.vel = {vIs.vel,0,0};
-            x.ang_vel = {0,0,0};
-            // Calculate road info
-            roadInfo.R = vIs.R;
-            roadInfo.pos = vIs.pos;
-            updateRoadInfo();// TODO: static getRoadInfo and move to initializer list?
+        Vehicle(const Scenario& vSc, const Config& vCfg, const InitialState& vIs)
+        : VehicleModelBase(createVehicleModelBase(vCfg)), VehiclePolicyBase(vCfg.N_OV,vCfg.D_MAX)
+        , sc(vSc), model(Model::factory.create(vCfg.model)), policy(Policy::factory.create(vCfg.policy))
+        , longCtrl(3.5), latCtrl(0.08), roadInfo(), colStatus(COL_NONE){
+            // TODO: below initializations can all be moved to initializer list or static initializer methods
+            // Create full model state from the initial state
+            updateState(vIs);
+            // sc.roads[vIs.R].globalPose({vIs.pos[0],vIs.pos[1],vIs.gamma},x.pos,x.ang);
+            // x.vel = vIs.vel;
+            // x.ang_vel = vIs.ang_vel;
+            // // Calculate road info
+            // roadInfo.R = vIs.R;
+            // roadInfo.pos = vIs.pos;
+            // updateRoadInfo(vIs);// TODO: static getRoadInfo and move to initializer list?
         }
+
+        Vehicle(const Scenario& vSc, const Config& vCfg) : Vehicle(vSc,vCfg,getDefaultInitialState(vSc)){}
 
         // Copy constructor and assignment is automatically deleted (because we have unique_ptr members)
         // Keep default move constructor and assignment:
@@ -95,20 +97,26 @@ class Vehicle : public VehicleModelBase, public VehiclePolicyBase{
             auto sys = [this](const RoadState& xr){return roadDerivatives(xr);};
             rs = Utils::integrateRK4(sys,rs,dt);
             // Wrap integrated road state to a valid new road id and road position:
-            sc.updateRoadState(roadInfo.R,roadInfo.pos[0],roadInfo.pos[1],rs.roadPos[0]-roadInfo.pos[0],rs.roadPos[1]-roadInfo.pos[1]);
+            Road::id_t R = roadInfo.R;
+            double s = roadInfo.pos[0];
+            double l = roadInfo.pos[1];
+            sc.updateRoadState(R,s,l,rs.roadPos[0]-s,rs.roadPos[1]-l);
             // Note that from here on we have an updated AND VALID new road state
             // as otherwise an out_of_range exception would have been thrown.
+            double gamma = rs.modelState.ang[0]-sc.roads[R].heading(s,l);
+            updateState({R,s,l,gamma,rs.modelState.vel,rs.modelState.ang_vel});
+            /* OLD CODE:
             // Calculate new global position from the updated road position:
             std::array<double,3> ang = std::array<double,3>();
             sc.roads[roadInfo.R].globalPose({roadInfo.pos[0],roadInfo.pos[1],0},x.pos,ang);
             // Extract new model states:
-            //model->state.pos = rs.modelState.pos;// Gets inaccurate for large simulation times
+            //x.pos = rs.modelState.pos;// Gets inaccurate for large simulation times
             x.pos[2] += cgLoc[2];// Follow road geometry
             x.vel = rs.modelState.vel;
             x.ang = rs.modelState.ang;// TODO: follow road geometry
             x.ang_vel = rs.modelState.ang_vel;
             // Update roadInfo based on the updated road position
-            updateRoadInfo();
+            updateRoadInfo();*/
         }
 
         // To get new driving actions based on the updated local states of all other vehicles in the 
@@ -133,31 +141,74 @@ class Vehicle : public VehicleModelBase, public VehiclePolicyBase{
             u.delta = nom.delta+latCtrl.step(dt,a.latOff);// Get steering angle from lateral offset error
         }
 
+        inline dtypes::vehicle_data::C saveState() const noexcept{
+            dtypes::vehicle_data::C data{
+                roadInfo.R,roadInfo.pos[0],roadInfo.pos[1],roadInfo.gamma,
+                {},{},{a.velRef,a.latOff},{},{longCtrl.ep,longCtrl.ei},{latCtrl.ep,latCtrl.ei}
+            };
+            std::copy(x.vel.begin(),x.vel.end(),data.vel);
+            std::copy(x.ang_vel.begin(),x.ang_vel.end(),data.ang_vel);
+            Utils::sdata_t ps = policy->saveState();
+            std::copy(ps.begin(),ps.end(),data.ps);
+            return data;
+        }
+
+        inline void loadState(const dtypes::vehicle_data::C& data) noexcept{
+            std::array<double,3> vel{data.vel[0],data.vel[1],data.vel[2]};
+            std::array<double,3> ang_vel{data.ang_vel[0],data.ang_vel[1],data.ang_vel[2]};
+            updateState({data.R,data.s,data.l,data.gamma,vel,ang_vel});
+            a.velRef = data.a[0];
+            a.latOff = data.a[1];
+            Utils::sdata_t ps(std::begin(data.ps),std::end(data.ps));
+            policy->loadState(ps);
+            longCtrl.ep = data.longCtrl[0];
+            longCtrl.ei = data.longCtrl[1];
+            latCtrl.ep = data.latCtrl[0];
+            latCtrl.ei = data.latCtrl[1];
+        }
+
+        static inline InitialState getDefaultInitialState(const Scenario& sc){
+            // Get the first valid lane (at s=0) that lies closest to l=0
+            Road::id_t L = *sc.roads[0].laneId(0,0,false);
+            // And determine its actual offset l
+            double l = sc.roads[0].lanes[L].offset(0);
+            return InitialState(0,0,l,0,0);
+        }
+
     private:
-        inline void updateRoadInfo(){
-            // Update the current roadInfo based on an updated road id R and road position (s,l) -> i.e. a VALID position
-            roadInfo.L = *(sc.roads[roadInfo.R].laneId(roadInfo.pos[0],roadInfo.pos[1]));
-            int dir = static_cast<int>(sc.roads[roadInfo.R].lanes[roadInfo.L].direction);
+        inline void updateState(const InitialState& is){
+            // Update the model state and roadInfo based on an updated initial state (denoting a VALID road position and velocities)
+            // Calculate full model state:
+            sc.roads[is.R].globalPose({is.pos[0],is.pos[1],is.gamma},x.pos,x.ang);
+            x.pos[2] += cgLoc[2];// Follow road geometry
+            x.vel = is.vel;
+            x.ang_vel = is.ang_vel;
+            // Calculate full road info:
+            roadInfo.R = is.R;
+            roadInfo.pos = is.pos;
+            roadInfo.gamma = is.gamma;
+            roadInfo.L = *(sc.roads[is.R].laneId(is.pos[0],is.pos[1]));
+            int dir = static_cast<int>(sc.roads[is.R].lanes[roadInfo.L].direction);
             // Calculate gamma and projected size and velocities
-            roadInfo.gamma = x.ang[0]-sc.roads[roadInfo.R].heading(roadInfo.pos[0],roadInfo.pos[1]);
-            int gammaSign = std::signbit(roadInfo.gamma) ? -1 : 1;
-            roadInfo.size[0] = std::cos(roadInfo.gamma)*size[0]+gammaSign*std::sin(roadInfo.gamma)*size[1];
-            roadInfo.size[1] = gammaSign*std::sin(roadInfo.gamma)*size[0]+std::cos(roadInfo.gamma)*size[1];
-            roadInfo.vel[0] = std::cos(roadInfo.gamma)*x.vel[0]+std::sin(roadInfo.gamma)*x.vel[1];
-            roadInfo.vel[1] = -std::sin(roadInfo.gamma)*x.vel[0]+std::cos(roadInfo.gamma)*x.vel[1];
+            //roadInfo.gamma = x.ang[0]-sc.roads[is.R].heading(is.pos[0],is.pos[1]);
+            int gammaSign = std::signbit(is.gamma) ? -1 : 1;
+            roadInfo.size[0] = std::cos(is.gamma)*size[0]+gammaSign*std::sin(is.gamma)*size[1];
+            roadInfo.size[1] = gammaSign*std::sin(is.gamma)*size[0]+std::cos(is.gamma)*size[1];
+            roadInfo.vel[0] = std::cos(is.gamma)*x.vel[0]+std::sin(is.gamma)*x.vel[1];
+            roadInfo.vel[1] = -std::sin(is.gamma)*x.vel[0]+std::cos(is.gamma)*x.vel[1];
             // Get lane ids of the right and left boundary lanes and neighbouring lanes
-            const Road::id_t Br = *(sc.roads[roadInfo.R].roadBoundary(roadInfo.pos[0],roadInfo.L,Road::Side::RIGHT));
-            const Road::id_t Bl = *(sc.roads[roadInfo.R].roadBoundary(roadInfo.pos[0],roadInfo.L,Road::Side::LEFT));
-            auto N = sc.roads[roadInfo.R].laneBoundary(roadInfo.pos[0],roadInfo.L,Road::Side::RIGHT);
+            const Road::id_t Br = *(sc.roads[is.R].roadBoundary(is.pos[0],roadInfo.L,Road::Side::RIGHT));
+            const Road::id_t Bl = *(sc.roads[is.R].roadBoundary(is.pos[0],roadInfo.L,Road::Side::LEFT));
+            auto N = sc.roads[is.R].laneBoundary(is.pos[0],roadInfo.L,Road::Side::RIGHT);
             const Road::id_t Nr = N.second ? *N.second : roadInfo.L;
-            N = sc.roads[roadInfo.R].laneBoundary(roadInfo.pos[0],roadInfo.L,Road::Side::LEFT);
+            N = sc.roads[is.R].laneBoundary(is.pos[0],roadInfo.L,Road::Side::LEFT);
             const Road::id_t Nl = N.second ? *N.second : roadInfo.L;
             // Calculate offsets
-            roadInfo.offC = dir*(roadInfo.pos[1]-sc.roads[roadInfo.R].lanes[roadInfo.L].offset(roadInfo.pos[0]));
-            roadInfo.offB[0] = dir*(roadInfo.pos[1]-sc.roads[roadInfo.R].lanes[Br].offset(roadInfo.pos[0]))+sc.roads[roadInfo.R].lanes[Br].width(roadInfo.pos[0])/2-roadInfo.size[1]/2;
-            roadInfo.offB[1] = -dir*(roadInfo.pos[1]-sc.roads[roadInfo.R].lanes[Bl].offset(roadInfo.pos[0]))+sc.roads[roadInfo.R].lanes[Bl].width(roadInfo.pos[0])/2-roadInfo.size[1]/2;
-            roadInfo.offN[0] = dir*(roadInfo.pos[1]-sc.roads[roadInfo.R].lanes[Nr].offset(roadInfo.pos[0]));
-            roadInfo.offN[1] = dir*(roadInfo.pos[1]-sc.roads[roadInfo.R].lanes[Nl].offset(roadInfo.pos[0]));
+            roadInfo.offC = dir*(is.pos[1]-sc.roads[is.R].lanes[roadInfo.L].offset(is.pos[0]));
+            roadInfo.offB[0] = dir*(is.pos[1]-sc.roads[is.R].lanes[Br].offset(is.pos[0]))+sc.roads[is.R].lanes[Br].width(is.pos[0])/2-roadInfo.size[1]/2;
+            roadInfo.offB[1] = -dir*(is.pos[1]-sc.roads[is.R].lanes[Bl].offset(is.pos[0]))+sc.roads[is.R].lanes[Bl].width(is.pos[0])/2-roadInfo.size[1]/2;
+            roadInfo.offN[0] = dir*(is.pos[1]-sc.roads[is.R].lanes[Nr].offset(is.pos[0]));
+            roadInfo.offN[1] = dir*(is.pos[1]-sc.roads[is.R].lanes[Nl].offset(is.pos[0]));
             // Update collision status:
             if(roadInfo.offB[0]<=0){
                 colStatus = COL_RIGHT;
@@ -171,14 +222,14 @@ class Vehicle : public VehicleModelBase, public VehiclePolicyBase{
             const double maxBrakeAcc = -model->inputBounds[0].longAcc;
             // Calculate the minimum distance we have to ensure between us and the vehicle
             // in front such that we can always fully brake from our current velocity to 0.
-            double minBrakeDist = s.vel[0]*s.vel[0]/maxBrakeAcc/2;// Travelled distance to fully brake
-            // Default is a vehicle in front at the minimum brake distance driving
-            // at the same speed as us. And the right and left road boundaries.
-            Policy::redState def = {minBrakeDist,s.vel[0],s.offB[0],s.offB[1]};
+            //double minBrakeDist = s.vel[0]*s.vel[0]/maxBrakeAcc/2;// Travelled distance to fully brake
+            double maxRoadVel = s.vel[0]+s.dv;
+            // Default is a vehicle in front far ahead and driving at the maximum
+            // allowed speed. And the right and left road boundaries.
+            Policy::redState def = {D_MAX,maxRoadVel,s.offB[0],s.offB[1]};
             r = safetyROI.getReducedState(s, def);
             // Update minBrakeDist to incorporate current speed of vehicle in front:
             //double brakeGap = r.frontOff+r.frontVel*r.frontVel/maxBrakeAcc/2-minBrakeDist;
-            double maxRoadVel = s.vel[0]+s.dv;
             // Linearly adapt maximum speed based on distance to vehicle in front (ensuring a minimal SAFETY_GAP)
             // double alpha = (r.frontOff-SAFETY_GAP)/(minBrakeDist-SAFETY_GAP);
             // double maxVel = (1-alpha)*r.frontVel+alpha*maxRoadVel;
@@ -207,13 +258,9 @@ class Vehicle : public VehicleModelBase, public VehiclePolicyBase{
             return {{ds,dl},dModel};
         }
 
-        static inline VehicleModelBase createVehicleModelBase(const BluePrint& bp){
-            // Define random vehicle size within the given bounds
-            std::uniform_real_distribution<double> dis(0.0,1.0);
-            std::array<double,3> size;
-            Utils::transform([dis](double sMin, double sMax)mutable{return sMin+dis(Utils::rng)*(sMax-sMin);},size.begin(),size.end(),bp.minSize.begin(),bp.maxSize.begin());
+        static inline VehicleModelBase createVehicleModelBase(const Config& cfg){
             std::array<double,3> relCgLoc = {0.45,0.5,0.3};
-            return VehicleModelBase(size,VehicleModelBase::calcCg(size,relCgLoc));
+            return VehicleModelBase(cfg.size,VehicleModelBase::calcCg(cfg.size,relCgLoc));
         }
 };
 

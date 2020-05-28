@@ -79,34 +79,30 @@ const std::map<std::string, VehicleInfoType> vehicleInfoTypeMap =
     { "road",       VehicleInfoType::Road}
 };
 
-std::shared_ptr<Model> createModel(const std::string& model){
-    std::shared_ptr<Model> newModel;
+BaseFactory::BluePrint createModel(const std::string& model){
     if(model=="kbm"){
-        newModel = std::make_shared<KinematicBicycleModel>();
+        return KinematicBicycleModel().blueprint();
     }else if(model=="dbm"){
-        newModel = std::make_shared<DynamicBicycleModel>();
+        return DynamicBicycleModel().blueprint();
     }else{
         throw std::invalid_argument("Unknown model type: " + model + "\n" + "Allowed model types: kbm, dbm");
     }
-    return newModel;
 }
 
-std::shared_ptr<Policy> createPolicy(const std::string& policy){
-    std::shared_ptr<Policy> newPolicy;
+BaseFactory::BluePrint createPolicy(const std::string& policy){
     if(policy=="step"){
-        newPolicy = std::make_shared<StepPolicy>();
+        return StepPolicy().blueprint();
     }else if(policy=="slow"){
-        newPolicy = std::make_shared<BasicPolicy>(BasicPolicy::Type::SLOW);
+        return BasicPolicy(BasicPolicy::Type::SLOW).blueprint();
     }else if(policy=="normal"){
-        newPolicy = std::make_shared<BasicPolicy>(BasicPolicy::Type::NORMAL);
+        return BasicPolicy(BasicPolicy::Type::NORMAL).blueprint();
     }else if(policy=="fast"){
-        newPolicy = std::make_shared<BasicPolicy>(BasicPolicy::Type::FAST);
+        return BasicPolicy(BasicPolicy::Type::FAST).blueprint();
     }else if(policy=="custom"){
-        newPolicy = std::make_shared<CustomPolicy>();
+        return CustomPolicy().blueprint();
     }else{
         throw std::invalid_argument("Unknown policy type: " + policy + "\n" + "Allowed policy types: step, slow, normal, fast, custom");
     }
-    return newPolicy;
 }
 
 typedef unsigned int handle_type;
@@ -203,11 +199,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             mexErrMsgIdAndTxt("mexSim:new","The 'scenarios_path' field of the simulation configuration should be a string.");
         }
         Scenario::scenarios_path = getString(arr);
-        Simulation::sConfig simConfig = {dt,N_OV,D_MAX};
+        Simulation::sConfig simConfig = {dt,""};
         
         // Create vehicle configurations:
         const int T = static_cast<int>(mxGetN(prhs[3]));// Number of vehicle type definitions
-        Simulation::vConfig config = Simulation::vConfig();
+        Simulation::vTypes_t config = Simulation::vTypes_t();
 
         mxDouble* data;// Temporary pointer to double array
         std::string type;// Temporary string holding type names
@@ -232,7 +228,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 mexErrMsgIdAndTxt("mexSim:new","The 'model' field of the vehicle type definitions should be a string.");
             }
             type = getString(arr);
-            std::shared_ptr<Model> model;
+            BaseFactory::BluePrint model;
             try{
                 model = createModel(type);
             }catch(std::invalid_argument& e){
@@ -246,7 +242,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 mexErrMsgIdAndTxt("mexSim:new","The 'policy' field of the vehicle type definitions should be a string.");
             }
             type = getString(arr);
-            std::shared_ptr<Policy> policy;
+            BaseFactory::BluePrint policy;
             try{
                 policy = createPolicy(type);
             }catch(std::invalid_argument& e){
@@ -261,7 +257,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             }
             unsigned int N = static_cast<unsigned int>(mxGetScalar(arr));
             // Add to vehicle configuration:
-            config.push_back({N,{model,policy,minSize,maxSize,0.7,1.0}});
+            config.push_back({N,{model,policy,N_OV,D_MAX,minSize,maxSize,0.7,1.0}});
         }
         // Create Scenario and simulation:
         try{
@@ -327,7 +323,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     std::copy(v.x.ang_vel.begin(),v.x.ang_vel.end(),result+9);
                     break;
                 case VehicleInfoType::Policy:
-                    plhs[0] = mxCreateDoubleMatrix(8+4*instance->N_OV,1,mxREAL);
+                    plhs[0] = mxCreateDoubleMatrix(8+4*v.N_OV,1,mxREAL);
                     result = mxGetDoubles(plhs[0]);
                     std::copy(v.s.offB.begin(),v.s.offB.end(),result);
                     result[2] = v.s.offC;
