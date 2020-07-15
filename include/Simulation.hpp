@@ -20,6 +20,7 @@ class Simulation{
         struct VehicleType{
             BaseFactory::BluePrint model;
             BaseFactory::BluePrint policy;
+            unsigned int L;
             unsigned int N_OV;
             double D_MAX;
             // Random properties:
@@ -146,6 +147,7 @@ class Simulation{
                         std::copy(model.args.begin(),model.args.end(),dConfig[V].modelArgs);
                         dConfig[V].policy = policy.id;
                         std::copy(policy.args.begin(),policy.args.end(),dConfig[V].policyArgs);
+                        dConfig[V].L = sim.vehicles[V].L;
                         dConfig[V].N_OV = sim.vehicles[V].N_OV;
                         dConfig[V].D_MAX = sim.vehicles[V].D_MAX;
                         std::copy(sim.vehicles[V].size.begin(),sim.vehicles[V].size.end(),dConfig[V].size);
@@ -204,13 +206,13 @@ class Simulation{
                     vConfigs_t vConfigs;
                     vConfigs.reserve(dim[0]);
                     for(const auto& data : dataCfg){
-                        size_t N = Model::factory.getSerializedLength(data.model);
+                        size_t N = Model::ModelBase::factory.getSerializedLength(data.model);
                         std::vector<std::byte> modelArgs(std::begin(data.modelArgs),std::next(std::begin(data.modelArgs),N));
-                        N = Policy::factory.getSerializedLength(data.policy);
+                        N = Policy::PolicyBase::factory.getSerializedLength(data.policy);
                         std::vector<std::byte> policyArgs(std::begin(data.policyArgs),std::next(std::begin(data.policyArgs),N));
                         std::array<double,3> size;
                         std::copy(std::begin(data.size),std::begin(data.size)+3,size.begin());
-                        Vehicle::Config cfg = {{data.model,modelArgs},{data.policy,policyArgs},data.N_OV,data.D_MAX,size};
+                        Vehicle::Config cfg = {{data.model,modelArgs},{data.policy,policyArgs},data.L,data.N_OV,data.D_MAX,size};
                         Vehicle::InitialState is = Vehicle::getDefaultInitialState(sc);
                         vConfigs.push_back({cfg,is});
                     }
@@ -275,6 +277,7 @@ class Simulation{
             vId omega;// Vehicle id of other vehicle
             double dist;// Euclidean distance in the global coordinate frame between both vehicles
             std::array<double,2> off;// Longitudinal (s) and lateral (l) offset along the lane between both vehicles
+            int dL;// Lane offset
 
             bool operator<(const NeighbourInfo& other) const{// Overloaded std::less operator used by the sorted neighbours set
                 return dist<other.dist;
@@ -366,6 +369,7 @@ class Simulation{
             part = 2;
             if(mode==Mode::SIMULATE){
                 for(Vehicle& v : vehicles){
+                    assert(!std::isnan(v.a.latOff) && !std::isnan(v.a.velRef));// Invalid actions, possibly caused by custom policies
                     v.controllerUpdate(dt);
                 }
             }
@@ -486,14 +490,14 @@ class Simulation{
                         double d = std::sqrt(std::pow(vehicles[i].x.pos[0]-vehicles[j].x.pos[0],2)+std::pow(vehicles[i].x.pos[1]-vehicles[j].x.pos[1],2));
                         if(d<std::max(vehicles[i].D_MAX,vehicles[j].D_MAX)){
                             // Vehicles are within the detection horizon
-                            std::optional<std::array<double,2>> off = getRoadOffsets(i,j);
+                            std::optional<std::tuple<double,double,int>> off = getRoadOffsets(i,j);
                             if(off){
                                 // And are travelling in the same direction
                                 if(d<vehicles[i].D_MAX){
-                                    neighbours[i].insert({j,d,*off});
+                                    neighbours[i].insert({j,d,{std::get<0>(*off),std::get<1>(*off)},std::get<2>(*off)});
                                 }
                                 if(d<vehicles[j].D_MAX){
-                                    neighbours[j].insert({i,d,Utils::euop(*off,std::negate<double>())});
+                                    neighbours[j].insert({i,d,{-std::get<0>(*off),-std::get<1>(*off)},-std::get<2>(*off)});
                                 }
                             }
                         }
@@ -504,26 +508,47 @@ class Simulation{
             auto nsIt = neighbours.begin();
             for(vId Vr = 0; Vr<vehicles.size(); ++Vr,++nsIt){
                 Vehicle& v = vehicles[Vr];
-                std::vector<Policy::relState> rel = std::vector<Policy::relState>(v.N_OV,{{v.D_MAX,0},{0,0}});// Start with all dummy relative states
-                auto rIt = rel.begin();
-                for(auto nIt = (*nsIt).begin(); nIt!=(*nsIt).end() && rIt!=rel.end(); ++nIt,++rIt){// Loop over all neighbours in the set in increasing order of relative distance and only keep N_OV closest ones
+                Policy::augState s = v.getDefaultAugmentedState();
+                // Store iterators/indices to last 'real' vehicle in each lane's front and back buffer
+                std::vector<std::array<unsigned int,2>> laneIts;// Stores index to next available vehicle in front/behind buffers. Lanes are in the order: 0,-1,1,-2,2,...
+                laneIts.push_back({0,0});
+                for(Road::id_t i=0;i<v.L;i++){
+                    laneIts.push_back({0,0});
+                    laneIts.push_back({0,0});
+                }
+                for(auto nIt = (*nsIt).begin(); nIt!=(*nsIt).end(); ++nIt){// Loop over all neighbours in the set in increasing order of relative distance and only keep N_OV closest ones
                     vId Vo = (*nIt).omega;
-                    double dlat = (*nIt).off[1];
-                    dlat = Utils::sign(dlat)*std::max(0.0,std::abs(dlat)-v.roadInfo.size[1]/2-vehicles[Vo].roadInfo.size[1]/2);// Take vehicle dimensions into account
-                    double dlong = (*nIt).off[0];
+                    double offLat = (*nIt).off[1];
+                    double gapLat = std::abs(offLat)-v.roadInfo.size[1]/2-vehicles[Vo].roadInfo.size[1]/2;// Take vehicle dimensions into account
+                    double offLong = (*nIt).off[0];
                     // dlong = Utils::sign(dlong)*std::max(0.0,std::abs(dlong)-v.roadInfo.size[0]/2-vehicles[Vo].roadInfo.size[0]/2);// Take vehicle dimensions into account
-                    double dlong_est = std::sqrt(std::max(0.0,std::pow((*nIt).dist,2)-std::pow((*nIt).off[1],2)));// Calculate estimate of longitudinal offset
-                    dlong = Utils::sign(dlong)*std::max(0.0,dlong_est-v.roadInfo.size[0]/2-vehicles[Vo].roadInfo.size[0]/2);// Take vehicle dimensions into account
-                    double dvlong = v.roadInfo.vel[0]-vehicles[Vo].roadInfo.vel[0];
-                    (*rIt).off = {dlong,dlat};
-                    (*rIt).vel = Utils::ebop(v.roadInfo.vel,vehicles[Vo].roadInfo.vel,std::minus<double>());// rVel-oVel
-                    if(dlat==0 && dlong==0){
+                    double offLong_est = std::sqrt(std::max(0.0,std::pow((*nIt).dist,2)-std::pow((*nIt).off[1],2)));// Calculate estimate of longitudinal offset
+                    double gapLong = offLong_est-v.roadInfo.size[0]/2-vehicles[Vo].roadInfo.size[0]/2;// Take vehicle dimensions into account
+                    double velLong = v.roadInfo.vel[0]-vehicles[Vo].roadInfo.vel[0];
+                    double velLat = v.roadInfo.vel[1]-vehicles[Vo].roadInfo.vel[1];
+                    Policy::relState rs{{Utils::sign(offLong)*offLong_est,offLat},{gapLong,gapLat},{velLong,velLat}};
+                    // Assign rs to correct lanes:
+                    std::vector<int> relLanes;
+                    if(static_cast<unsigned int>(std::abs(-nIt->dL))<=v.L){
+                        relLanes.push_back(-nIt->dL);
+                    }
+                    if(vehicles[Vo].roadInfo.laneChange!=0 && static_cast<unsigned int>(std::abs(-nIt->dL+vehicles[Vo].roadInfo.laneChange))<=v.L){
+                        relLanes.push_back(-nIt->dL+vehicles[Vo].roadInfo.laneChange);
+                    }
+                    for(int lane : relLanes){
+                        // To convert the relative lane to a correct index in the laneIts vector we use:
+                        unsigned int laneIdx = 2*std::abs(lane)+(Utils::sign<double>(lane)-1)/2;
+                        int side = offLong==0 ? 1 : -Utils::sign(offLong);
+                        if(laneIts[laneIdx][(1+side)/2]<v.N_OV){
+                            s.lane(lane).rel(side)[laneIts[laneIdx][(1+side)/2]++] = rs;
+                        }
+                    }
+                    if(gapLat<=0 && gapLong<=0){
                         v.colStatus = Vo;
                         vehicles[Vo].colStatus = Vr;
                     }
                 }
-                double dv = scenario.roads[v.roadInfo.R].lanes[v.roadInfo.L].speed(v.roadInfo.pos[0])-v.roadInfo.vel[0];
-                v.driverUpdate({v.roadInfo.offB,v.roadInfo.offC,v.roadInfo.offN,dv,v.roadInfo.vel,rel});// Provide driver with updated augmented state
+                v.driverUpdate(s);// Provide driver with updated augmented state
                 if(v.colStatus!=Vehicle::COL_NONE){
                     collision = true;
                     std::cout << "Vehicle " << Vr << " collided with ";
@@ -545,7 +570,10 @@ class Simulation{
             return collision;
         }
 
-        inline std::optional<std::array<double,2>> getRoadOffsets(const vId Vr, const vId Vo) const{
+        inline std::optional<std::tuple<double,double,int>> getRoadOffsets(const vId Vr, const vId Vo) const{
+            // TODO: this method will fail for more complex road layouts. Although when this
+            // becomes a problem we will probably need a decent way to encode the road and lane
+            // geometry and changes in the state vector anyway.
             Road::id_t Rr = vehicles[Vr].roadInfo.R;
             Road::id_t Ro = vehicles[Vo].roadInfo.R;
             Road::id_t Lr = vehicles[Vr].roadInfo.L;
@@ -589,6 +617,7 @@ class Simulation{
             });
 
             double ds,dl;
+            int dL;
             if(itLt!=std::end(rLanes)){
                 Road::id_t Lt = *itLt;
                 Road::id_t Lf = scenario.roads[Rr].lanes[Lt].from->second;
@@ -596,22 +625,25 @@ class Simulation{
                 double sEnd = scenario.roads[Ro].lanes[Lf].end();
                 ds = static_cast<int>(rDir)*(rPos[0]-sStart) + static_cast<int>(oDir)*(sEnd-oPos[0]);
                 dl = static_cast<int>(rDir)*(rPos[1]-scenario.roads[Rr].lanes[Lt].offset(sStart)) + static_cast<int>(oDir)*(scenario.roads[Ro].lanes[Lf].offset(sEnd)-oPos[1]);
+                dL = *scenario.roads[Rr].laneOffset(sStart,Lr,Lt) + *scenario.roads[Ro].laneOffset(sEnd,Lf,Lo);
             }else if(itLf!=std::end(rLanes)){
                 Road::id_t Lf = *itLf;
                 Road::id_t Lt = scenario.roads[Rr].lanes[Lf].to->second;
-                double sStart = scenario.roads[Ro].lanes[Lf].start();
-                double sEnd = scenario.roads[Rr].lanes[Lt].end();
+                double sStart = scenario.roads[Ro].lanes[Lt].start();
+                double sEnd = scenario.roads[Rr].lanes[Lf].end();
                 ds = static_cast<int>(rDir)*(rPos[0]-sEnd) + static_cast<int>(oDir)*(sStart-oPos[0]);
-                dl = static_cast<int>(rDir)*(rPos[1]-scenario.roads[Rr].lanes[Lt].offset(sEnd)) + static_cast<int>(oDir)*(scenario.roads[Ro].lanes[Lf].offset(sStart)-oPos[1]);
+                dl = static_cast<int>(rDir)*(rPos[1]-scenario.roads[Rr].lanes[Lf].offset(sEnd)) + static_cast<int>(oDir)*(scenario.roads[Ro].lanes[Lt].offset(sStart)-oPos[1]);
+                dL = *scenario.roads[Rr].laneOffset(sEnd,Lr,Lf) + *scenario.roads[Ro].laneOffset(sStart,Lt,Lo);
             }else if(Rr==Ro && rDir==oDir){
                 // There are no connections, but both vehicles are on the same road and travelling in the same direction
                 ds = static_cast<int>(rDir)*(rPos[0]-oPos[0]);
                 dl = static_cast<int>(rDir)*(rPos[1]-oPos[1]);
+                dL = *scenario.roads[Rr].laneOffset(rPos[0],Lr,Lo);
             }else{
                 // Vehicles are on different (unconnected) roads or travelling in opposite direction
                 return std::nullopt;
             }
-            return std::array<double,2>({ds,dl});
+            return std::make_tuple(ds,dl,dL);
         }
 
         static inline std::vector<Vehicle> createVehicles(const Scenario& sc, const vConfigs_t& vConfigs){
@@ -675,7 +707,7 @@ class Simulation{
                     std::array<double,3> size;
                     Utils::transform([sDis](double sMin, double sMax)mutable{return sMin+sDis(Utils::rng)*(sMax-sMin);},size.begin(),size.end(),vType.second.minSize.begin(),vType.second.maxSize.begin());
                     Vehicle::Config vCfg{vType.second.model,vType.second.policy,
-                                            vType.second.N_OV,vType.second.D_MAX,size};
+                                            vType.second.L,vType.second.N_OV,vType.second.D_MAX,size};
                     Vehicle::InitialState vIs(R,s,l,0,vDis(Utils::rng)*v);
                     vConfigs.push_back({vCfg,vIs});
                 }

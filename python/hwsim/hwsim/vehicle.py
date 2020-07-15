@@ -1,18 +1,19 @@
 from ctypes import c_void_p, c_double, POINTER
 import numpy as np
 from hwsim._wrapper import simLib
+from hwsim._utils import hybridmethod
 
 class Vehicle(object):
 
-    def __init__(self,sim,id,model,policy,N_OV,D_MAX):
+    def __init__(self,sim,id,model,policy,L,N_OV,D_MAX):
         self._sim = sim
         self.id = id
         self._h = c_void_p(simLib.sim_getVehicle(sim._h,id))
+        self.L = L
         self.N_OV = N_OV
         self.D_MAX = D_MAX
         self.model = model
         self.policy = policy
-        self.policy.init_vehicle(self)
         # Save some constant vehicle properties:
         self.size = np.empty(3,np.float64)
         simLib.veh_size(self._h,self.size.ctypes.data_as(POINTER(c_double)))
@@ -26,14 +27,24 @@ class Vehicle(object):
             ("ang_vel",np.float64,3)
         ])
         self.u_dt = np.dtype([("acc",np.float64),("delta",np.float64)])
-        rel_s_dt = np.dtype([("off",np.float64,2),("vel",np.float64,2)])
+        rel_s_dt = np.dtype([
+            ("off",np.float64,2),
+            ("gap",np.float64,2),
+            ("vel",np.float64,2)
+        ])
+        lane_info_dt = np.dtype([
+            ("off",np.float64),
+            ("width",np.float64),
+            ("relF",rel_s_dt,self.N_OV),
+            ("relB",rel_s_dt,self.N_OV)
+        ])
         self.s_dt = np.dtype([
             ("offB",np.float64,2),
-            ("offC",np.float64),
-            ("offN",np.float64,2),
-            ("dv",np.float64),
+            ("maxVel",np.float64),
             ("vel",np.float64,2),
-            ("rel",rel_s_dt,self.N_OV)
+            ("laneC",lane_info_dt),
+            ("laneR",lane_info_dt,self.L),
+            ("laneL",lane_info_dt,self.L)
         ])
         self.a_dt = np.dtype([("vel",np.float64),("off",np.float64)])
         self._rs_dt = np.dtype([
@@ -42,11 +53,16 @@ class Vehicle(object):
             ("rightOff",np.float64),
             ("leftOff",np.float64)
         ])
+        # Call initialization code of custom policies:
+        self.policy.init_vehicle(self)
     
     # Model specific properties
+    X_DIM = 12
+    U_DIM = 2
+
     @property
     def x_raw(self):
-        state = np.empty(12,np.float64)
+        state = np.empty(self.X_DIM,np.float64)
         simLib.veh_getModelState(self._h, state.ctypes.data_as(POINTER(c_double)))
         return state
 
@@ -56,7 +72,7 @@ class Vehicle(object):
     
     @property
     def u_raw(self):
-        u = np.empty(2,np.float64)
+        u = np.empty(self.U_DIM,np.float64)
         simLib.veh_getModelInput(self._h, u.ctypes.data_as(POINTER(c_double)))
         return u
     
@@ -75,7 +91,7 @@ class Vehicle(object):
         raise NotImplementedError("Currently not supported")
 
     def dx(self,x,u):
-        return self.dx_raw(x,u).view(self.s_dt)[0]
+        return self.dx_raw(x,u).view(self.x_dt)[0]
     
     def u_nom_raw(self,x,gamma):
         raise NotImplementedError("Currently not supported")
@@ -84,9 +100,19 @@ class Vehicle(object):
         return self.u_nom_raw(x,gamma).view(self.u_dt)[0]
 
     # Policy specific properties
+    @hybridmethod
+    def S_DIM(L,N_OV):
+        return 5+(2*L+1)*(2+2*N_OV*6)
+    
+    @S_DIM.instancegetter
+    def S_DIM(self):
+        return Vehicle.S_DIM(self.L,self.N_OV)
+    
+    A_DIM = 2
+
     @property
     def s_raw(self):
-        state = np.empty(8+4*self.N_OV,np.float64)
+        state = np.empty(self.S_DIM,np.float64)
         simLib.veh_getPolicyState(self._h, state.ctypes.data_as(POINTER(c_double)))
         return state
 
@@ -96,7 +122,7 @@ class Vehicle(object):
     
     @property
     def a_raw(self):
-        action = np.empty(2,np.float64)
+        action = np.empty(self.A_DIM,np.float64)
         simLib.veh_getPolicyAction(self._h, action.ctypes.data_as(POINTER(c_double)))
         return action
     
@@ -109,7 +135,7 @@ class Vehicle(object):
         """
         Bounds on the policy actions.
         """
-        bounds = np.empty(4,np.float64)
+        bounds = np.empty(2*self.A_DIM,np.float64)
         simLib.veh_getSafetyBounds(self._h, bounds.ctypes.data_as(POINTER(c_double)))
         return bounds.view(self.a_dt)
     

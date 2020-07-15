@@ -64,11 +64,11 @@ const std::map<std::string, Action> actionTypeMap =
 };
 
 // Map string to a basic policy type
-const std::map<std::string, BasicPolicy::Type> basicPolicyTypeMap =
+const std::map<std::string, Policy::BasicPolicy::Type> basicPolicyTypeMap =
 {
-    { "slow",   BasicPolicy::Type::SLOW},
-    { "normal", BasicPolicy::Type::NORMAL},
-    { "fast",   BasicPolicy::Type::FAST}
+    { "slow",   Policy::BasicPolicy::Type::SLOW},
+    { "normal", Policy::BasicPolicy::Type::NORMAL},
+    { "fast",   Policy::BasicPolicy::Type::FAST}
 };
 
 // Map string to a VehicleInfoType
@@ -81,9 +81,9 @@ const std::map<std::string, VehicleInfoType> vehicleInfoTypeMap =
 
 BaseFactory::BluePrint createModel(const std::string& model){
     if(model=="kbm"){
-        return KinematicBicycleModel().blueprint();
+        return Model::KinematicBicycleModel().blueprint();
     }else if(model=="dbm"){
-        return DynamicBicycleModel().blueprint();
+        return Model::DynamicBicycleModel().blueprint();
     }else{
         throw std::invalid_argument("Unknown model type: " + model + "\n" + "Allowed model types: kbm, dbm");
     }
@@ -91,15 +91,15 @@ BaseFactory::BluePrint createModel(const std::string& model){
 
 BaseFactory::BluePrint createPolicy(const std::string& policy){
     if(policy=="step"){
-        return StepPolicy().blueprint();
+        return Policy::StepPolicy().blueprint();
     }else if(policy=="slow"){
-        return BasicPolicy(BasicPolicy::Type::SLOW).blueprint();
+        return Policy::BasicPolicy(Policy::BasicPolicy::Type::SLOW).blueprint();
     }else if(policy=="normal"){
-        return BasicPolicy(BasicPolicy::Type::NORMAL).blueprint();
+        return Policy::BasicPolicy(Policy::BasicPolicy::Type::NORMAL).blueprint();
     }else if(policy=="fast"){
-        return BasicPolicy(BasicPolicy::Type::FAST).blueprint();
+        return Policy::BasicPolicy(Policy::BasicPolicy::Type::FAST).blueprint();
     }else if(policy=="custom"){
-        return CustomPolicy().blueprint();
+        return Policy::CustomPolicy().blueprint();
     }else{
         throw std::invalid_argument("Unknown policy type: " + policy + "\n" + "Allowed policy types: step, slow, normal, fast, custom");
     }
@@ -208,7 +208,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         mxDouble* data;// Temporary pointer to double array
         std::string type;// Temporary string holding type names
         std::array<double,3> minSize, maxSize;
-        std::shared_ptr<Model> pModel;// Pointer to newly created models
         for(int t=0;t<T;t++){
             // Extract size bounds:
             arr = mxGetField(prhs[3],t,"sizeBounds");
@@ -257,7 +256,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             }
             unsigned int N = static_cast<unsigned int>(mxGetScalar(arr));
             // Add to vehicle configuration:
-            config.push_back({N,{model,policy,N_OV,D_MAX,minSize,maxSize,0.7,1.0}});
+            config.push_back({N,{model,policy,1,N_OV,D_MAX,minSize,maxSize,0.7,1.0}});
         }
         // Create Scenario and simulation:
         try{
@@ -317,24 +316,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 case VehicleInfoType::Model:
                     plhs[0] = mxCreateDoubleMatrix(12,1,mxREAL);
                     result = mxGetDoubles(plhs[0]);
-                    std::copy(v.x.pos.begin(),v.x.pos.end(),result);
-                    std::copy(v.x.ang.begin(),v.x.ang.end(),result+3);
-                    std::copy(v.x.vel.begin(),v.x.vel.end(),result+6);
-                    std::copy(v.x.ang_vel.begin(),v.x.ang_vel.end(),result+9);
+                    Model::State::Base::Map(result) = v.x;
                     break;
                 case VehicleInfoType::Policy:
                     plhs[0] = mxCreateDoubleMatrix(8+4*v.N_OV,1,mxREAL);
                     result = mxGetDoubles(plhs[0]);
-                    std::copy(v.s.offB.begin(),v.s.offB.end(),result);
-                    result[2] = v.s.offC;
-                    std::copy(v.s.offN.begin(),v.s.offN.end(),result+3);
-                    result[5] = v.s.dv;
-                    std::copy(v.s.vel.begin(),v.s.vel.end(),result+6);
-                    for(const Policy::relState& rel : v.s.rel){
-                        std::copy(rel.off.begin(),rel.off.end(),result+off);
-                        std::copy(rel.vel.begin(),rel.vel.end(),result+off+2);
-                        off += 4;
-                    }
+                    // TODO: fix this once we are using Eigen vectors/arrays
+                    // there should be one method that writes to a C double array
+                    // that can be referenced both from here and hwsim.cpp
+                    
+                    // std::copy(v.s.offB.begin(),v.s.offB.end(),result);
+                    // result[2] = v.s.offC;
+                    // std::copy(v.s.offN.begin(),v.s.offN.end(),result+3);
+                    // result[5] = v.s.dv;
+                    // std::copy(v.s.vel.begin(),v.s.vel.end(),result+6);
+                    // for(const Policy::relState& rel : v.s.rel){
+                    //     std::copy(rel.off.begin(),rel.off.end(),result+off);
+                    //     std::copy(rel.vel.begin(),rel.vel.end(),result+off+2);
+                    //     off += 4;
+                    // }
                     break;
                 case VehicleInfoType::Road:
                     plhs[0] = mxCreateDoubleMatrix(8,1,mxREAL);

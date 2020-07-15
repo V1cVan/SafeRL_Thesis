@@ -47,6 +47,7 @@ extern "C"{
         unsigned char* modelArgs;// Serialized arguments to pass to model constructor
         unsigned int policy;// Policy type
         unsigned char* policyArgs;// Serialized arguments to pass to policy constructor
+        unsigned int L;
         unsigned int N_OV;
         double D_MAX;
         double* minSize;// Minimum size

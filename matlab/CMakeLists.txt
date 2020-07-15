@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.16)
-# Actually version 3.16.3 is required to fix these issues on Windows: https://gitlab.kitware.com/cmake/cmake/issues/19382
+cmake_minimum_required(VERSION 3.16.3)
+# Version 3.16.3 is required to fix these issues on Windows: https://gitlab.kitware.com/cmake/cmake/issues/19382
 
 # Find Matlab package:
 find_package(Matlab REQUIRED COMPONENTS MAT_LIBRARY)

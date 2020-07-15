@@ -41,6 +41,12 @@ namespace std{
     // Define byte
     using byte = unsigned char;
     //enum class byte : unsigned char{};
+    // Define as_const (taken from recent GCC source):
+    template<typename _Tp>
+    constexpr add_const_t<_Tp>& as_const(_Tp& __t) noexcept { return __t; }
+
+    template<typename _Tp>
+    void as_const(const _Tp&&) = delete;
 }
 #define STATIC_INLINE static
 #endif
@@ -85,6 +91,11 @@ struct Utils{
         }else{
             return std::signbit(d) ? -1 : 1;
         }
+    }
+
+    static inline double wrapAngle(double alpha){
+        // Wraps any given angle (in radians) to the interval [-PI,PI]
+        return std::remainder(alpha,2*PI);
     }
 
     template<class State, class Sys>

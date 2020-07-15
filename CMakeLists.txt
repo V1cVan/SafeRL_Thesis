@@ -46,6 +46,7 @@ target_include_directories(hwsim
 target_link_libraries(hwsim
   INTERFACE
     Clothoids
+    Eigen
     HDF5
 )
 target_compile_features(hwsim INTERFACE cxx_std_17)

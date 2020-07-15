@@ -264,6 +264,33 @@ class Road{
             }
         }
 
+        inline std::optional<int> laneOffset(const double s, const id_t Lr, const id_t Lo) const{
+            // Calculates the offset between Lr and Lo (positive if Lr is to the left, negative if
+            // it is to the right of Lo). Only takes valid lanes into account. Does not take lane
+            // boundary types into account.
+            if(!lanes[Lr].isValid(s) || !lanes[Lo].isValid(s)){
+                return std::nullopt;// One of the lanes is invalid for the given s
+            }
+            int off = 0;
+            const int delta = Utils::sign(static_cast<double>(Lo)-static_cast<double>(Lr));
+            id_t L = Lr;
+            while(delta*static_cast<int>(L)<delta*static_cast<int>(Lo)){
+                Side d = static_cast<Side>(delta*static_cast<int>(lanes[L].direction));
+                std::optional<id_t> N = laneNeighbour(s,L,d);
+                if(N){
+                    L = *N;
+                    off++;
+                }else{
+                    break;
+                }
+            }
+            if(L==Lo){
+                return -delta*static_cast<int>(lanes[Lr].direction)*off;
+            }else{
+                return std::nullopt;
+            }
+        }
+
         inline std::pair<std::optional<BoundaryCrossability>,std::optional<id_t>> laneBoundary(const double s, const id_t L, const Side d) const{
             // Get the boundary crossability with the first valid lane towards the left/right
             // of the given lane. This method takes the lane direction into account. At a point

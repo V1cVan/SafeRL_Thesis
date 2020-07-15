@@ -16,10 +16,12 @@ int main(){
     // Create vehicle types:
     std::array<double,3> minSize = {3,2,3};
     std::array<double,3> maxSize = {6,3.4,4};
-    BaseFactory::BluePrint kbm = KinematicBicycleModel().blueprint();
+    BaseFactory::BluePrint kbm = Model::KinematicBicycleModel().blueprint();
+    BaseFactory::BluePrint basicN = Policy::BasicPolicy(Policy::BasicPolicy::Type::NORMAL).blueprint();
+    BaseFactory::BluePrint basicF = Policy::BasicPolicy(Policy::BasicPolicy::Type::FAST).blueprint();
     Simulation::vTypes_t vTypes = {
-        {5,{kbm,BasicPolicy(BasicPolicy::Type::NORMAL).blueprint(),10,50,minSize,maxSize,0.7,1}},
-        {5,{kbm,BasicPolicy(BasicPolicy::Type::FAST).blueprint(),10,50,minSize,maxSize,0.7,1}}
+        {5,{kbm,basicN,1,1,50,minSize,maxSize,0.7,1}},
+        {5,{kbm,basicF,1,1,50,minSize,maxSize,0.7,1}}
     };
     // Create simulation:
     Simulation::sConfig simConfig = {0.1,""};

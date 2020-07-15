@@ -151,7 +151,7 @@ class SimulationPlot(_PlotterView):
     all vehicles in the simulation from a fixed camera position.
     """
 
-    def __init__(self,p,scale_markings=False,vehicle_type="box",show_marker=False,coloring=None):
+    def __init__(self,p,scale_markings=False,vehicle_type="box",show_marker=False,show_ids=False,coloring=None):
         super().__init__(p)
         # Create the base mesh for all vehicles, having its center at the origin and
         # having size 1 in each dimension
@@ -188,7 +188,17 @@ class SimulationPlot(_PlotterView):
                 mesh = vehicle_base.copy()
                 ec = [0.7,0.7,0.7] # Edge colors for active vehicle
                 actor = p.add_mesh(mesh,color=self._vehicleColoring(veh),edge_color=ec,show_edges=(veh.id==self.V))
-                self._vehicles.append({"base": base, "mesh": mesh, "actor": actor})
+                idFollower = None
+                if show_ids:
+                    idText = vtk.vtkVectorText()
+                    idText.SetText(f"{veh.id}")
+                    mapper = vtk.vtkPolyDataMapper()
+                    mapper.SetInputConnection(idText.GetOutputPort())
+                    idFollower = vtk.vtkFollower()
+                    idFollower.SetMapper(mapper)
+                    idFollower.GetProperty().SetColor((1,1,1))
+                    p.add_actor(idFollower)
+                self._vehicles.append({"base": base, "mesh": mesh, "actor": actor, "id": idFollower})
         self._marker = None
         if show_marker:
             S = np.ones((2,2))
@@ -222,6 +232,10 @@ class SimulationPlot(_PlotterView):
                 # the vehicle's actual position to match the simulation state.
                 self._vehicles[veh.id]["mesh"].points = _transformPoints(self._vehicles[veh.id]["base"],
                                                             C=veh.x["pos"], A=veh.x["ang"])
+                if self._vehicles[veh.id]["id"] is not None:
+                    pos = veh.x["pos"]
+                    pos[2] += veh.size[2]-veh.cg[2]
+                    self._vehicles[veh.id]["id"].SetPosition(pos)
         if self._marker is not None:
             veh = self._sim.vehicles[self.V]
             self._marker["mesh"].points = _transformPoints(self._marker["base"],C=veh.x["pos"],
@@ -321,8 +335,8 @@ class DetailPlot(SimulationPlot):
     Create a detail plot for the given simulation using the active renderer of the given plotter.
     """
 
-    def __init__(self,p,D=None,coloring=None):
-        super().__init__(p,scale_markings=True,vehicle_type="box",coloring=coloring)
+    def __init__(self,p,D=None,coloring=None,show_ids=False):
+        super().__init__(p,scale_markings=True,vehicle_type="box",coloring=coloring,show_ids=show_ids)
         self.D = D
         self._calc_camera_cfg()
     

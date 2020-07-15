@@ -15,6 +15,7 @@ class VehConfig(Structure):
                 ("modelArgs",POINTER(c_ubyte)),
                 ("policy",c_uint),
                 ("policyArgs",POINTER(c_ubyte)),
+                ("L",c_uint),
                 ("N_OV",c_uint),
                 ("D_MAX",c_double),
                 ("minSize",POINTER(c_double)),

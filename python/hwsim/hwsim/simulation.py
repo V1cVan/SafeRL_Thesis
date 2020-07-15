@@ -11,9 +11,9 @@ import timeit
 class Simulation(object):
 
     class Mode(Enum):
-        SIMULATE = auto()
-        REPLAY_INPUT = auto()
-        REPLAY_OUTPUT = auto()
+        SIMULATE = 0
+        REPLAY_INPUT = 1
+        REPLAY_OUTPUT = 2
 
     #TODO: maybe create dataclass for sConfig and vTypes instead of passing dicts
 
@@ -22,7 +22,8 @@ class Simulation(object):
         simConfig = SimConfig()
         simConfig.dt = sConfig.get("dt",0.1)
         simConfig.output_log = sConfig.get("output_log","").encode("utf8")
-        N_OV = sConfig.get("N_OV",10)
+        L = sConfig.get("L",1)
+        N_OV = sConfig.get("N_OV",1)
         D_MAX = sConfig.get("D_MAX",150.0)
         input_log = sConfig.get("input_log","").encode("utf8")
         k0 = sConfig.get("k0",0)
@@ -48,6 +49,7 @@ class Simulation(object):
                 assert(isinstance(policy,_Policy))
                 vehType.policy = policy.id
                 vehType.policyArgs = policy.args
+                vehType.L = L
                 vehType.N_OV = N_OV
                 vehType.D_MAX = D_MAX
                 vehType.minSize = (c_double * 3)(*vType.get("minSize",[4,1.6,1.5]))
@@ -72,7 +74,7 @@ class Simulation(object):
             # In case there are no vTypes given (only useful for a replay),
             # create dummy vehicles with custom models and policies
             self.vehicles = [{"model":CustomModel(),"policy":CustomPolicy()} for i in range(V)]
-        self.vehicles = [Vehicle(self,v_id,bp["model"],bp["policy"],N_OV,D_MAX) for (v_id,bp) in enumerate(self.vehicles[:V])]
+        self.vehicles = [Vehicle(self,v_id,bp["model"],bp["policy"],L,N_OV,D_MAX) for (v_id,bp) in enumerate(self.vehicles[:V])]
         self._collision = False
         self._mode = simLib.sim_getMode(self._h)
         self._k = simLib.sim_getStep(self._h)
@@ -142,14 +144,14 @@ class Simulation(object):
 
     @mode.setter
     def mode(self,val):
-        if len(val)==2:
-            newMode, k_new = val
-        else:
+        if isinstance(val, Simulation.Mode):
             newMode = val
             k_new = self._k
-        simLib.sim_setMode(self._h,newMode,k_new)
-        self._mode = simLib.sim_getMode(self._h)
-        if self._mode==0:
+        else:
+            newMode, k_new = val
+        simLib.sim_setMode(self._h,newMode.value,k_new)
+        self._mode = Simulation.Mode(simLib.sim_getMode(self._h))
+        if self._mode==Simulation.Mode.SIMULATE:
             self._stepFromB()
     
     @property

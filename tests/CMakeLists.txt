@@ -7,6 +7,10 @@ enable_testing()
 add_executable(Clothoids-test Clothoids-test.cpp)
 target_link_libraries(Clothoids-test PRIVATE hwsim)
 
+# Add Eigen test:
+add_executable(Eigen-test Eigen-test.cpp)
+target_link_libraries(Eigen-test PRIVATE Eigen)
+
 # Add C++ test target:
 add_executable(hwsim-test hwsim-test.cpp)
 target_link_libraries(hwsim-test PRIVATE hwsim doctest)

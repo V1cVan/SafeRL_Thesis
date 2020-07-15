@@ -7,6 +7,8 @@
 
 1. [Clothoids](https://www.github.com/ebertolazzi/Clothoids)
 2. [HDF5](https://www.hdfgroup.org/downloads/hdf5/source-code/)
+3. [Eigen](http://eigen.tuxfamily.org)
+4. [doctest](https://github.com/onqtam/doctest)
 
 CMake will automatically extract the archives included in the dependencies folder, compile the sources and link with them.
 

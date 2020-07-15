@@ -116,6 +116,34 @@ endif()
 install(DIRECTORY ${CLOTHOIDS_INSTALL_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/dependencies/Clothoids)
 
 
+# ----- Eigen library -----
+# Include Eigen library and extract source if not found
+set(EIGEN_ARCHIVE ${CMAKE_CURRENT_SOURCE_DIR}/eigen-3.3.7.tar.gz)
+set(EIGEN_SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/eigen/source)
+if(NOT EXISTS ${EIGEN_SOURCE_DIR})
+  message(STATUS "No source files for the Eigen library found. Extracting archive ${EIGEN_ARCHIVE}")
+  execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/eigen)
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} -E tar xzf ${EIGEN_ARCHIVE}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/eigen
+  )
+  execute_process(COMMAND ${CMAKE_COMMAND} -E rename ${CMAKE_CURRENT_BINARY_DIR}/eigen/eigen-3.3.7 ${EIGEN_SOURCE_DIR})
+  if(NOT EXISTS ${EIGEN_SOURCE_DIR})
+    message(FATAL_ERROR "Error while extracting source files for the Eigen library :(")
+  endif()
+endif()
+# The Eigen library is header only, so we can just add an imported interface
+# library and set the include directory appropriately.
+add_library(Eigen IMPORTED INTERFACE GLOBAL)
+target_include_directories(Eigen
+  INTERFACE
+    $<INSTALL_INTERFACE:dependencies/Eigen>
+    $<BUILD_INTERFACE:${EIGEN_SOURCE_DIR}>
+)
+# Install Eigen library in dependencies folder:
+#install(DIRECTORY ${EIGEN_SOURCE_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/dependencies/Eigen)
+
+
 # ----- HDF5 library -----
 # Find HDF5 library and build from source if not found
 set(HDF5_ARCHIVE ${CMAKE_CURRENT_SOURCE_DIR}/hdf5-1.12.0.tar.gz)

@@ -16,8 +16,8 @@ int main(){
     pbp_basic(normalBasicType,1);
     pbp_basic(fastBasicType,2);
     vConfig vConf[2] = {
-        {5,kbmType,NULL,basicPolicyType,normalBasicType,10,50.0,minSize,maxSize},
-        {5,kbmType,NULL,basicPolicyType,fastBasicType,10,50.0,minSize,maxSize}
+        {5,kbmType,NULL,basicPolicyType,normalBasicType,1,1,50.0,minSize,maxSize},
+        {5,kbmType,NULL,basicPolicyType,fastBasicType,1,1,50.0,minSize,maxSize}
     };
     Simulation* sim = sim_new(&sConf,scenario,vConf,2);
     if(sim==NULL){

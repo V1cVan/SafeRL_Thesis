@@ -4,12 +4,30 @@
 
 #define SC_TYPE_HDF5
 #include "Simulation.hpp"
+#include "Eigen/Core"
 #include <string>
 #include <iostream>
 
 inline Simulation::sConfig convertSimConfig(const sConfig* cfg){
     std::string output_log = (cfg->output_log==NULL) ? "" : cfg->output_log;
     return {cfg->dt,output_log};
+}
+
+inline void copyLaneInfo(const Policy::laneInfo& lane, double* state, unsigned int& off){
+    state[off++] = lane.off;
+    state[off++] = lane.width;
+    for(const auto& relState : lane.relB){
+        std::copy(relState.off.begin(),relState.off.end(),state+off);
+        std::copy(relState.gap.begin(),relState.gap.end(),state+off+2);
+        std::copy(relState.vel.begin(),relState.vel.end(),state+off+4);
+        off += 6;
+    }
+    for(const auto& relState : lane.relF){
+        std::copy(relState.off.begin(),relState.off.end(),state+off);
+        std::copy(relState.gap.begin(),relState.gap.end(),state+off+2);
+        std::copy(relState.vel.begin(),relState.vel.end(),state+off+4);
+        off += 6;
+    }
 }
 
 extern "C"{
@@ -30,41 +48,41 @@ extern "C"{
 
     LIB_PUBLIC
     void mbp_kbm(unsigned char* args){
-        BaseFactory::BluePrint bp = KinematicBicycleModel().blueprint();
+        BaseFactory::BluePrint bp = Model::KinematicBicycleModel().blueprint();
         std::byte* bytes = reinterpret_cast<std::byte*>(args);
         std::copy(bp.args.begin(),bp.args.end(),bytes);
     }
 
     LIB_PUBLIC
     void pbp_custom(unsigned char* args){
-        BaseFactory::BluePrint bp = CustomPolicy().blueprint();
+        BaseFactory::BluePrint bp = Policy::CustomPolicy().blueprint();
         std::byte* bytes = reinterpret_cast<std::byte*>(args);
         std::copy(bp.args.begin(),bp.args.end(),bytes);
     }
 
     LIB_PUBLIC
     void pbp_step(unsigned char* args){
-        BaseFactory::BluePrint bp = StepPolicy().blueprint();
+        BaseFactory::BluePrint bp = Policy::StepPolicy().blueprint();
         std::byte* bytes = reinterpret_cast<std::byte*>(args);
         std::copy(bp.args.begin(),bp.args.end(),bytes);
     }
 
     LIB_PUBLIC
     void pbp_basic(unsigned char* args, const uint8_t type){
-        BaseFactory::BluePrint bp = BasicPolicy(static_cast<BasicPolicy::Type>(type)).blueprint();
+        BaseFactory::BluePrint bp = Policy::BasicPolicy(static_cast<Policy::BasicPolicy::Type>(type)).blueprint();
         std::byte* bytes = reinterpret_cast<std::byte*>(args);
         std::copy(bp.args.begin(),bp.args.end(),bytes);
     }
 
     LIB_PUBLIC
     Simulation* sim_new(const sConfig* config, const char* scenarioName, const vConfig* vTypesArr, const unsigned int numTypes){
+        Simulation::sConfig simConfig = convertSimConfig(config);
         #ifndef NDEBUG
         std::cout << "Simulation config:\t";
-        std::cout << "dt = " << config->dt << " ; output_log = " << config->output_log << std::endl;
+        std::cout << "dt = " << simConfig.dt << " ; output_log = " << simConfig.log_path << std::endl;
         std::cout << "Scenario name:\t" << scenarioName << std::endl;
         std::cout << "Vehicle types: [" << std::endl;
         #endif
-        Simulation::sConfig simConfig = convertSimConfig(config);
         Simulation::vTypes_t vehicleTypes = Simulation::vTypes_t();
         vehicleTypes.reserve(numTypes);
         std::array<double,3> minSize{},maxSize{};
@@ -79,12 +97,12 @@ extern "C"{
                 std::cout << "\t}," << std::endl;
                 #endif
                 // Create model blueprint:
-                size_t N = Model::factory.getSerializedLength(vTypesArr[t].model);
+                size_t N = Model::ModelBase::factory.getSerializedLength(vTypesArr[t].model);
                 std::byte* bytes = reinterpret_cast<std::byte*>(vTypesArr[t].modelArgs);
                 BaseFactory::data_t modelArgs{bytes,bytes+N};
                 BaseFactory::BluePrint model = {vTypesArr[t].model,modelArgs};
                 // Create policy blueprint:
-                N = Policy::factory.getSerializedLength(vTypesArr[t].policy);
+                N = Policy::PolicyBase::factory.getSerializedLength(vTypesArr[t].policy);
                 bytes = reinterpret_cast<std::byte*>(vTypesArr[t].policyArgs);
                 BaseFactory::data_t policyArgs{bytes,bytes+N};
                 BaseFactory::BluePrint policy = {vTypesArr[t].policy,policyArgs};
@@ -92,7 +110,7 @@ extern "C"{
                 std::copy(vTypesArr[t].minSize,vTypesArr[t].minSize+3,minSize.begin());
                 std::copy(vTypesArr[t].maxSize,vTypesArr[t].maxSize+3,maxSize.begin());
                 Simulation::VehicleType vType = {model, policy,
-                                                vTypesArr[t].N_OV, vTypesArr[t].D_MAX,
+                                                vTypesArr[t].L, vTypesArr[t].N_OV, vTypesArr[t].D_MAX,
                                                 minSize, maxSize,
                                                 0.7,1};
                 vehicleTypes.push_back({vTypesArr[t].amount,vType});
@@ -360,10 +378,7 @@ extern "C"{
 
     LIB_PUBLIC
     void veh_getModelState(const Vehicle* veh, double* state){
-        std::copy(veh->x.pos.begin(),veh->x.pos.end(),state);
-        std::copy(veh->x.ang.begin(),veh->x.ang.end(),state+3);
-        std::copy(veh->x.vel.begin(),veh->x.vel.end(),state+6);
-        std::copy(veh->x.ang_vel.begin(),veh->x.ang_vel.end(),state+9);
+        Model::State::Base::Map(state) = veh->x;
     }
  
     LIB_PUBLIC
@@ -375,16 +390,23 @@ extern "C"{
     LIB_PUBLIC
     void veh_getPolicyState(const Vehicle* veh, double* state){
         std::copy(veh->s.offB.begin(),veh->s.offB.end(),state);
-        state[2] = veh->s.offC;
-        std::copy(veh->s.offN.begin(),veh->s.offN.end(),state+3);
-        state[5] = veh->s.dv;
-        std::copy(veh->s.vel.begin(),veh->s.vel.end(),state+6);
-        unsigned int off = 8;
-        for(const auto& relState : veh->s.rel){
-            std::copy(relState.off.begin(),relState.off.end(),state+off);
-            std::copy(relState.vel.begin(),relState.vel.end(),state+off+2);
-            off += 4;
+        state[2] = veh->s.maxVel;
+        std::copy(veh->s.vel.begin(),veh->s.vel.end(),state+3);
+        unsigned int off = 5;
+        copyLaneInfo(veh->s.laneC,state,off);
+        for(const auto& laneInfo : veh->s.laneR){
+            copyLaneInfo(laneInfo,state,off);
         }
+        for(const auto& laneInfo : veh->s.laneL){
+            copyLaneInfo(laneInfo,state,off);
+        }
+        // off = 11;
+        // for(const auto& relState : veh->s.rel){
+        //     std::copy(relState.off.begin(),relState.off.end(),state+off);
+        //     std::copy(relState.gap.begin(),relState.gap.end(),state+off+2);
+        //     std::copy(relState.vel.begin(),relState.vel.end(),state+off+4);
+        //     off += 6;
+        // }
     }
     
     LIB_PUBLIC

@@ -176,6 +176,7 @@ struct dtypes : public fixedBase{
             unsigned int policy;
             std::byte policyArgs[HWSIM_MAX_SERIALIZED_LENGTH];
             // TODO: controller types and args
+            unsigned int L;
             unsigned int N_OV;
             double D_MAX;
             double size[3];
@@ -193,6 +194,7 @@ struct dtypes : public fixedBase{
             H5Tinsert(M,"modelArgs",HOFFSET(C,modelArgs),bM);
             H5Tinsert(M,"policy",HOFFSET(C,policy),H5T_NATIVE_UINT32);
             H5Tinsert(M,"policyArgs",HOFFSET(C,policyArgs),bM);
+            H5Tinsert(M,"L",HOFFSET(C,L),H5T_NATIVE_UINT32);
             H5Tinsert(M,"N_OV",HOFFSET(C,N_OV),H5T_NATIVE_UINT32);
             H5Tinsert(M,"D_MAX",HOFFSET(C,D_MAX),H5T_NATIVE_DOUBLE);
             H5Tinsert(M,"size",HOFFSET(C,size),sM);

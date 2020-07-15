@@ -27,7 +27,7 @@ TEST_CASE("Checking the hwsim wrapper library"){
         unsigned char bpt[1];
         pbp_basic(bpt,2);
         vConfig vConf[1] = {
-            {1,1,NULL,2,bpt,10,50.0,minSize,maxSize},
+            {1,1,NULL,2,bpt,1,1,50.0,minSize,maxSize},
         };
         Simulation* sim = sim_new(&sConf,scenario,vConf,1);
         CHECK(sim != null_sim);
@@ -57,8 +57,8 @@ TEST_CASE("Checking the hwsim wrapper library"){
     }
     SUBCASE("Size"){
         vConfig vConf[2] = {
-            {1,1,NULL,1,NULL,10,50.0,minSize,minSize},
-            {1,1,NULL,1,NULL,10,50.0,maxSize,maxSize}
+            {1,1,NULL,1,NULL,1,1,50.0,minSize,minSize},
+            {1,1,NULL,1,NULL,1,1,50.0,maxSize,maxSize}
         };
         Simulation* sim = sim_new(&sConf,scenario,vConf,2);
         Vehicle* veh0 = sim_getVehicle(sim,0);
