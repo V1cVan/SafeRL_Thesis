@@ -22,13 +22,6 @@ namespace std{
     template<typename T>
     using optional = experimental::optional<T>;
     constexpr experimental::nullopt_t nullopt = experimental::nullopt;
-    // Add clamp function (taken from cppreference.com):
-    template<class T>
-    constexpr const T& clamp( const T& v, const T& lo, const T& hi )
-    {
-        assert( !(hi < lo) );
-        return (v < lo) ? lo : (hi < v) ? hi : v;
-    }
 }
 #else
 #error The hwsim library requires the optional type, either from <optional> or from <experimental/optional>.
@@ -41,6 +34,13 @@ namespace std{
     // Define byte
     using byte = unsigned char;
     //enum class byte : unsigned char{};
+    // Add clamp function (taken from cppreference.com):
+    template<class T>
+    constexpr const T& clamp( const T& v, const T& lo, const T& hi )
+    {
+        assert( !(hi < lo) );
+        return (v < lo) ? lo : (hi < v) ? hi : v;
+    }
     // Define as_const (taken from recent GCC source):
     template<typename _Tp>
     constexpr add_const_t<_Tp>& as_const(_Tp& __t) noexcept { return __t; }

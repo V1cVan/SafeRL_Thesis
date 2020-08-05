@@ -53,9 +53,9 @@ TEST_CASE("Simulation creation"){
         BaseFactory::BluePrint kbm = Model::KinematicBicycleModel().blueprint();
         BaseFactory::BluePrint basicN = Policy::BasicPolicy(Policy::BasicPolicy::Type::NORMAL).blueprint();
         BaseFactory::BluePrint basicF = Policy::BasicPolicy(Policy::BasicPolicy::Type::FAST).blueprint();
-        Simulation::vTypes_t vTypes = {
-            {5,{kbm,basicN,1,1,50,minSize,maxSize,0.7,1}},
-            {5,{kbm,basicF,1,1,50,minSize,maxSize,0.7,1}}
+        std::vector<Simulation::VehicleType> vTypes = {
+            {5,{kbm,basicN,1,1,50},{{{minSize,1500},{maxSize,3000}}},{0.7,1}},
+            {5,{kbm,basicF,1,1,50},{{{minSize,1500},{maxSize,3000}}},{0.7,1}}
         };
         // Create simulation:
         Simulation::sConfig simConfig = {0.1,""};
@@ -64,8 +64,8 @@ TEST_CASE("Simulation creation"){
     Simulation::sConfig simConfig = {0.1,""};
     BaseFactory::BluePrint kbm = Model::KinematicBicycleModel().blueprint();
     BaseFactory::BluePrint basic = Policy::BasicPolicy(Policy::BasicPolicy::Type::NORMAL).blueprint();
-    Simulation::vTypes_t vTypes = {
-        {10,{kbm,basic,1,1,50,minSize,maxSize,0.7,1}}
+    std::vector<Simulation::VehicleType> vTypes = {
+        {10,{kbm,basic,1,1,50},{{{minSize,1500},{maxSize,3000}}},{0.7,1}}
     };
     SUBCASE("Random seed"){
         unsigned int s = 1234;

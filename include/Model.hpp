@@ -114,8 +114,8 @@ namespace Model{
         State x;// Current model state of the vehicle
         Input u;// Last inputs of the vehicle
 
-        VehicleBase(const std::array<double,3>& size, const std::array<double,3>& cgLoc)
-        : size(size), cgLoc(cgLoc), m(2000), Izz(4000), w({1.9,1.9}), Cy({1e4,1e4}), mu({0.5,0.5}){}
+        VehicleBase(const std::array<double,3>& size, const std::array<double,3>& cgLoc, double mass)
+        : size(size), cgLoc(cgLoc), m(mass), Izz(4000), w({1.9,1.9}), Cy({1e4,1e4}), mu({0.5,0.5}){}
 
         static inline std::array<double,3> calcCg(const std::array<double,3>& vSize, const std::array<double,3>& relCgLoc){
             // relCgLoc: relative location of the vehicle's CG w.r.t. the vehicle's longitudinal, lateral and vertical size
@@ -228,12 +228,6 @@ namespace Model{
             const double beta = std::atan(t);
             const double v = std::sqrt(x.vel[0]*x.vel[0]+x.vel[1]*x.vel[1]);
             // Calculate state derivatives:
-            // State dx(
-            //     {v*std::cos(x.ang[0]+beta),v*std::sin(x.ang[0]+beta),std::nan("")}, // pos
-            //     {v*std::sin(beta)/vb.cgLoc[0],std::nan(""),std::nan("")}, // ang
-            //     {u.longAcc,u.longAcc*t,std::nan("")}, // vel
-            //     {std::nan(""),std::nan(""),std::nan("")} // ang_vel
-            // );
             State dx;
             dx.pos = Eigen::Vector3d(v*std::cos(x.ang[0]+beta),v*std::sin(x.ang[0]+beta),std::nan(""));
             dx.ang = Eigen::Vector3d(v*std::sin(beta)/vb.cgLoc[0],std::nan(""),std::nan(""));

@@ -2,6 +2,7 @@ import numpy as np
 import pyvista as pv
 import vtk
 import time
+import timeit
 import pathlib
 from enum import Enum, Flag, auto
 from tkinter import Tk, Label, Entry, Button
@@ -556,6 +557,11 @@ class TimeChartPlot(_PlotterView):
 class ActionsPlot(TimeChartPlot):
 
     def __init__(self,p,actions=None,show_bounds=True,**kwargs):
+        lines, patches, labels = self.get_config(actions, show_bounds)
+        super().__init__(p,lines=lines,patches=patches,ylabel=" ; ".join(labels),**kwargs)
+    
+    @staticmethod
+    def get_config(actions=None, show_bounds=True):
         if actions is None:
             actions = ["vel","off"]
         lines = {}
@@ -580,25 +586,29 @@ class ActionsPlot(TimeChartPlot):
         if "off" in actions:
             lines["off"] = {
                 "color": [0,0,1],
-                "getValue": lambda veh: veh.s["offB"][0]
+                "getValue": lambda veh: veh.s["gapB"][0]
             }
             lines["off_ref"] = {
                 "color": [1,0,0],
                 "stippled": True,
-                "getValue": lambda veh: veh.s["offB"][0]+veh.a["off"]
+                "getValue": lambda veh: veh.s["gapB"][0]+veh.a["off"]
             }
             if show_bounds:
                 patches["off"] = {
                     "color": [0.2,0.9,0.2,0.5],
-                    "getBounds": lambda veh: veh.s["offB"][0]+veh.a_bounds["off"]
+                    "getBounds": lambda veh: veh.s["gapB"][0]+veh.a_bounds["off"]
                 }
             labels.append("offset (m)")
-        super().__init__(p,lines=lines,patches=patches,ylabel=" ; ".join(labels),**kwargs)
-
+        return lines, patches, labels
 
 class InputsPlot(TimeChartPlot):
 
     def __init__(self,p,inputs=None,show_bounds=True,**kwargs):
+        lines, labels = self.get_config(inputs, show_bounds)
+        super().__init__(p,lines=lines,ylabel=" ; ".join(labels),**kwargs)
+    
+    @staticmethod
+    def get_config(inputs=None,show_bounds=True):
         if inputs is None:
             inputs = ["acc","delta"]
         lines = {}
@@ -637,7 +647,7 @@ class InputsPlot(TimeChartPlot):
                     "getValue": lambda veh: veh.u_bounds["delta"][1]
                 }
             labels.append("steering angle (rad)")
-        super().__init__(p,lines=lines,ylabel=" ; ".join(labels),**kwargs)
+        return lines, labels
 
 #endregion
 
@@ -784,8 +794,15 @@ class Plotter(pv.Plotter):
     
     def plot(self):
         # Update views
+        t_update = 0
         for view in self._views:
+            dt = timeit.default_timer()
             view.plot()
+            dt = timeit.default_timer()-dt
+            print(f"Update of {view} took {dt*1000}ms")
+            t_update += dt
+        print(f"Updating views took {t_update*1000}ms")
+        t_draw = timeit.default_timer()
 
         if self._first_time and self._mode==Plotter.Mode.MP4:
             # Make sure show is called before the first write_frame in MP4 only mode
@@ -811,6 +828,8 @@ class Plotter(pv.Plotter):
         
         if self._mode & Plotter.Mode.MP4: # MP4 mode enabled
             self.write_frame()
+        t_draw = timeit.default_timer()-t_draw
+        print(f"Redrawing took {t_draw*1000}ms")
     
     def close(self):
         if not self._closed:

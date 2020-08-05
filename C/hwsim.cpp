@@ -13,6 +13,20 @@ inline Simulation::sConfig convertSimConfig(const sConfig* cfg){
     return {cfg->dt,output_log};
 }
 
+inline std::tuple<BaseFactory::BluePrint,BaseFactory::BluePrint> convertBluePrints(const vConfig& cfg){
+    // Create model blueprint:
+    size_t N = Model::ModelBase::factory.getSerializedLength(cfg.model);
+    std::byte* bytes = reinterpret_cast<std::byte*>(cfg.modelArgs);
+    BaseFactory::data_t modelArgs{bytes,bytes+N};
+    BaseFactory::BluePrint model{cfg.model,modelArgs};
+    // Create policy blueprint:
+    N = Policy::PolicyBase::factory.getSerializedLength(cfg.policy);
+    bytes = reinterpret_cast<std::byte*>(cfg.policyArgs);
+    BaseFactory::data_t policyArgs{bytes,bytes+N};
+    BaseFactory::BluePrint policy{cfg.policy,policyArgs};
+    return {model,policy};
+}
+
 inline void copyLaneInfo(const Policy::laneInfo& lane, double* state, unsigned int& off){
     state[off++] = lane.off;
     state[off++] = lane.width;
@@ -75,7 +89,7 @@ extern "C"{
     }
 
     LIB_PUBLIC
-    Simulation* sim_new(const sConfig* config, const char* scenarioName, const vConfig* vTypesArr, const unsigned int numTypes){
+    Simulation* sim_from_types(const sConfig* config, const char* scenarioName, const vType* vTypesArr, const unsigned int numTypes){
         Simulation::sConfig simConfig = convertSimConfig(config);
         #ifndef NDEBUG
         std::cout << "Simulation config:\t";
@@ -83,37 +97,30 @@ extern "C"{
         std::cout << "Scenario name:\t" << scenarioName << std::endl;
         std::cout << "Vehicle types: [" << std::endl;
         #endif
-        Simulation::vTypes_t vehicleTypes = Simulation::vTypes_t();
+        std::vector<Simulation::VehicleType> vehicleTypes;
         vehicleTypes.reserve(numTypes);
-        std::array<double,3> minSize{},maxSize{};
+        std::array<double,3> minSize, maxSize;
         try{
             for(unsigned int t=0;t<numTypes;t++){
                 #ifndef NDEBUG
                 std::cout << "\t{\n\t\tAmount: " << vTypesArr[t].amount << std::endl;
-                std::cout << "\t\tModel: " << vTypesArr[t].model << std::endl;
-                std::cout << "\t\tPolicy: " << vTypesArr[t].policy << std::endl;
-                std::cout << "\t\tMinSize: [" << vTypesArr[t].minSize[0] << "," << vTypesArr[t].minSize[1] << "," << vTypesArr[t].minSize[2] << std::endl;
-                std::cout << "\t\tMaxSize: [" << vTypesArr[t].maxSize[0] << "," << vTypesArr[t].maxSize[1] << "," << vTypesArr[t].maxSize[2] << std::endl;
+                std::cout << "\t\tModel: " << vTypesArr[t].cfg.model << std::endl;
+                std::cout << "\t\tPolicy: " << vTypesArr[t].cfg.policy << std::endl;
+                std::cout << "\t\tMinSize: [" << vTypesArr[t].pBounds[0].size[0] << "," << vTypesArr[t].pBounds[0].size[1] << "," << vTypesArr[t].pBounds[0].size[2] << std::endl;
+                std::cout << "\t\tMaxSize: [" << vTypesArr[t].pBounds[1].size[0] << "," << vTypesArr[t].pBounds[1].size[1] << "," << vTypesArr[t].pBounds[1].size[2] << std::endl;
                 std::cout << "\t}," << std::endl;
                 #endif
-                // Create model blueprint:
-                size_t N = Model::ModelBase::factory.getSerializedLength(vTypesArr[t].model);
-                std::byte* bytes = reinterpret_cast<std::byte*>(vTypesArr[t].modelArgs);
-                BaseFactory::data_t modelArgs{bytes,bytes+N};
-                BaseFactory::BluePrint model = {vTypesArr[t].model,modelArgs};
-                // Create policy blueprint:
-                N = Policy::PolicyBase::factory.getSerializedLength(vTypesArr[t].policy);
-                bytes = reinterpret_cast<std::byte*>(vTypesArr[t].policyArgs);
-                BaseFactory::data_t policyArgs{bytes,bytes+N};
-                BaseFactory::BluePrint policy = {vTypesArr[t].policy,policyArgs};
+                // Create model and policy blueprints:
+                BaseFactory::BluePrint model, policy;
+                std::tie(model, policy) = convertBluePrints(vTypesArr[t].cfg);
                 // Other vehicle properties:
-                std::copy(vTypesArr[t].minSize,vTypesArr[t].minSize+3,minSize.begin());
-                std::copy(vTypesArr[t].maxSize,vTypesArr[t].maxSize+3,maxSize.begin());
-                Simulation::VehicleType vType = {model, policy,
-                                                vTypesArr[t].L, vTypesArr[t].N_OV, vTypesArr[t].D_MAX,
-                                                minSize, maxSize,
-                                                0.7,1};
-                vehicleTypes.push_back({vTypesArr[t].amount,vType});
+                
+                std::copy(vTypesArr[t].pBounds[0].size,vTypesArr[t].pBounds[0].size+3,minSize.begin());
+                std::copy(vTypesArr[t].pBounds[1].size,vTypesArr[t].pBounds[1].size+3,maxSize.begin());
+                Simulation::VehicleType vType{vTypesArr[t].amount,
+                                                {model, policy, vTypesArr[t].cfg.L, vTypesArr[t].cfg.N_OV, vTypesArr[t].cfg.D_MAX},
+                                                {{{minSize, vTypesArr[t].pBounds[0].mass},{maxSize, vTypesArr[t].pBounds[1].mass}}}, {0.7, 1}};
+                vehicleTypes.push_back(vType);
             }
             #ifndef NDEBUG
             std::cout << "] -> numTypes = " << numTypes << std::endl;
@@ -128,7 +135,34 @@ extern "C"{
     }
 
     LIB_PUBLIC
-    Simulation* sim_load(const sConfig* config, const char* input_log, const unsigned int k0, const bool replay){
+    Simulation* sim_from_defs(const sConfig* config, const char* scenarioName, const vDef* vDefsArr, const unsigned int numDefs){
+        Simulation::sConfig simConfig = convertSimConfig(config);
+        std::vector<Simulation::VehicleDef> vehicleDefs;
+        vehicleDefs.reserve(numDefs);
+        try{
+            for(unsigned int d=0;d<numDefs;d++){
+                // Create model and policy blueprints:
+                BaseFactory::BluePrint model, policy;
+                std::tie(model, policy) = convertBluePrints(vDefsArr[d].cfg);
+                // Create vehicle configuration, properties and initial state structures:
+                Vehicle::Config cfg{model, policy, vDefsArr[d].cfg.L, vDefsArr[d].cfg.N_OV, vDefsArr[d].cfg.D_MAX};
+                std::array<double,3> size;
+                std::copy(vDefsArr[d].props.size,vDefsArr[d].props.size+3,size.begin());
+                Vehicle::Props props{size, vDefsArr[d].props.mass};
+                Vehicle::InitialState is{vDefsArr[d].is.R, vDefsArr[d].is.s, vDefsArr[d].is.l, vDefsArr[d].is.gamma, vDefsArr[d].is.v};
+                vehicleDefs.push_back({cfg,props,is});
+            }
+            // Create scenario and simulation:
+            Scenario sc = Scenario(std::string(scenarioName));
+            return new Simulation(simConfig,sc,vehicleDefs);
+        }catch(std::invalid_argument& e){
+            std::cerr << e.what() << std::endl;
+            return NULL;
+        }
+    }
+
+    LIB_PUBLIC
+    Simulation* sim_from_log(const sConfig* config, const char* input_log, const unsigned int k0, const bool replay){
         Simulation::sConfig simConfig = convertSimConfig(config);
         if(input_log==NULL || input_log[0]==0){
             std::cerr << "Invalid input log path." << std::endl;
@@ -145,6 +179,7 @@ extern "C"{
     LIB_PUBLIC
     void sim_del(Simulation* sim){
         delete sim;
+        sim = NULL;
     }
 
     LIB_PUBLIC
@@ -216,6 +251,17 @@ extern "C"{
     }
 
     // --- Scenario ---
+    LIB_PUBLIC
+    const Scenario* sc_new(const char* scenarioName){
+        return new Scenario(std::string(scenarioName));
+    }
+
+    LIB_PUBLIC
+    void sc_del(const Scenario* sc){
+        delete sc;
+        sc = NULL;
+    }
+
     LIB_PUBLIC
     unsigned int sc_numRoads(const Scenario* sc){
         return static_cast<unsigned int>(sc->roads.size());
@@ -295,6 +341,14 @@ extern "C"{
     }
 
     LIB_PUBLIC
+    void lane_speed(const Scenario* sc, const unsigned int R, const unsigned int L, const double* s, const unsigned int N, double* v){
+        auto& lane = sc->roads[R].lanes[L];// To prevent stupid GCC bug (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66735)
+        std::transform(s,s+N,v,[&lane](double s){
+            return lane.speed(s);
+        });
+    }
+
+    LIB_PUBLIC
     void lane_edge_offset(const Scenario* sc, const unsigned int R, const unsigned int L, const double* s, const unsigned int N, double* right, double* left){
         auto& lane = sc->roads[R].lanes[L];// To prevent stupid GCC bug (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66735)
         std::transform(s,s+N,left,[&lane](double s){
@@ -367,6 +421,19 @@ extern "C"{
 
     // --- Vehicle ---
     LIB_PUBLIC
+    void veh_config(const Vehicle* veh, vConfig* cfg){
+        BaseFactory::BluePrint model = veh->model->blueprint();
+        BaseFactory::BluePrint policy = veh->policy->blueprint();
+        cfg->model = model.id;
+        std::copy(model.args.begin(),model.args.end(),reinterpret_cast<std::byte*>(cfg->modelArgs));
+        cfg->policy = policy.id;
+        std::copy(policy.args.begin(),policy.args.end(),reinterpret_cast<std::byte*>(cfg->policyArgs));
+        cfg->L = veh->L;
+        cfg->N_OV = veh->N_OV;
+        cfg->D_MAX = veh->D_MAX;
+    }
+
+    LIB_PUBLIC
     void veh_size(const Vehicle* veh, double* size){
         std::copy(veh->size.begin(),veh->size.end(),size);
     }
@@ -389,7 +456,7 @@ extern "C"{
  
     LIB_PUBLIC
     void veh_getPolicyState(const Vehicle* veh, double* state){
-        std::copy(veh->s.offB.begin(),veh->s.offB.end(),state);
+        std::copy(veh->s.gapB.begin(),veh->s.gapB.end(),state);
         state[2] = veh->s.maxVel;
         std::copy(veh->s.vel.begin(),veh->s.vel.end(),state+3);
         unsigned int off = 5;
@@ -411,14 +478,14 @@ extern "C"{
     
     LIB_PUBLIC
     void veh_getPolicyAction(const Vehicle* veh, double* action){
-        action[0] = veh->a.velRef;
-        action[1] = veh->a.latOff;
+        action[0] = veh->a.vel;
+        action[1] = veh->a.off;
     }
 
     LIB_PUBLIC
     void veh_setPolicyAction(Vehicle* veh, const double* action){
-        veh->a.velRef = action[0];
-        veh->a.latOff = action[1];
+        veh->a.vel = action[0];
+        veh->a.off = action[1];
     }
 
     LIB_PUBLIC
@@ -431,9 +498,9 @@ extern "C"{
 
     LIB_PUBLIC
     void veh_getSafetyBounds(const Vehicle* veh, double* bounds){
-        bounds[0] = veh->safetyBounds[0].velRef;
-        bounds[1] = veh->safetyBounds[0].latOff;
-        bounds[2] = veh->safetyBounds[1].velRef;
-        bounds[3] = veh->safetyBounds[1].latOff;
+        bounds[0] = veh->safetyBounds[0].vel;
+        bounds[1] = veh->safetyBounds[0].off;
+        bounds[2] = veh->safetyBounds[1].vel;
+        bounds[3] = veh->safetyBounds[1].off;
     }
 }

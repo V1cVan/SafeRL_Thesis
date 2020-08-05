@@ -17,20 +17,22 @@
 class Simulation{
     public:
         using vId = unsigned int;
+
         struct VehicleType{
-            BaseFactory::BluePrint model;
-            BaseFactory::BluePrint policy;
-            unsigned int L;
-            unsigned int N_OV;
-            double D_MAX;
-            // Random properties:
-            std::array<double,3> minSize;
-            std::array<double,3> maxSize;
-            double minRelVel;
-            double maxRelVel;
+            // Structure used to describe a group of vehicle types
+            unsigned int amount;
+            Vehicle::Config cfg;
+            // Randomly initialized properties between bounds:
+            std::array<Vehicle::Props,2> propsBounds;
+            std::array<double,2> relVelBounds;
         };
-        using vTypes_t = std::vector<std::pair<unsigned int,VehicleType>>;
-        using vConfigs_t = std::vector<std::pair<Vehicle::Config,Vehicle::InitialState>>;
+
+        struct VehicleDef{
+            // Structure used to describe an individual vehicle definition
+            Vehicle::Config cfg;
+            Vehicle::Props props;
+            Vehicle::InitialState is;
+        };
 
         struct sConfig{
             // This simulation's configuration:
@@ -89,7 +91,7 @@ class Simulation{
                 unsigned int k_end;
             
             public:
-                using loadedSim_t = std::tuple<Scenario,Simulation::vConfigs_t,std::unique_ptr<Log>>;
+                using loadedSim_t = std::tuple<Scenario,std::vector<VehicleDef>,std::unique_ptr<Log>>;
 
             private:
                 Log(H5ResourceManager rm, const hid_t& dsVehicles, const hsize_t& nbSteps, const hsize_t& nbVehicles)
@@ -151,6 +153,7 @@ class Simulation{
                         dConfig[V].N_OV = sim.vehicles[V].N_OV;
                         dConfig[V].D_MAX = sim.vehicles[V].D_MAX;
                         std::copy(sim.vehicles[V].size.begin(),sim.vehicles[V].size.end(),dConfig[V].size);
+                        dConfig[V].mass = sim.vehicles[V].m;
                     }
                     H5Awrite(atConfig,H5dtypes.vehicle_config.M,dConfig.data());
                     H5Aclose(atConfig);
@@ -203,8 +206,8 @@ class Simulation{
                     H5Aread(atCfg,H5dtypes.vehicle_config.M,dataCfg.data());
                     H5Sclose(spCfg);
                     H5Aclose(atCfg);
-                    vConfigs_t vConfigs;
-                    vConfigs.reserve(dim[0]);
+                    std::vector<VehicleDef> vDefs;
+                    vDefs.reserve(dim[0]);
                     for(const auto& data : dataCfg){
                         size_t N = Model::ModelBase::factory.getSerializedLength(data.model);
                         std::vector<std::byte> modelArgs(std::begin(data.modelArgs),std::next(std::begin(data.modelArgs),N));
@@ -212,11 +215,12 @@ class Simulation{
                         std::vector<std::byte> policyArgs(std::begin(data.policyArgs),std::next(std::begin(data.policyArgs),N));
                         std::array<double,3> size;
                         std::copy(std::begin(data.size),std::begin(data.size)+3,size.begin());
-                        Vehicle::Config cfg = {{data.model,modelArgs},{data.policy,policyArgs},data.L,data.N_OV,data.D_MAX,size};
+                        Vehicle::Config cfg = {{data.model,modelArgs},{data.policy,policyArgs},data.L,data.N_OV,data.D_MAX};
+                        Vehicle::Props props{size,data.mass};
                         Vehicle::InitialState is = Vehicle::getDefaultInitialState(sc);
-                        vConfigs.push_back({cfg,is});
+                        vDefs.push_back({cfg,props,is});
                     }
-                    return std::make_tuple(sc,vConfigs,std::make_unique<Log>(Log(std::move(rm),dsVehicles,dims[0],dims[1])));
+                    return std::make_tuple(sc,vDefs,std::make_unique<Log>(Log(std::move(rm),dsVehicles,dims[0],dims[1])));
                 }
 
                 inline void readStep(const unsigned int k, std::vector<Vehicle>& vehicles){
@@ -285,8 +289,8 @@ class Simulation{
         };
 
         // Actual constructor setting up all simulation variables
-        Simulation(const sConfig& config, const Scenario& sc, const vConfigs_t& vConfigs, std::unique_ptr<Log> inputLog, const Mode mode, const unsigned int k0)
-        : dt(config.dt), scenario(sc), vehicles(std::move(createVehicles(scenario,vConfigs)))
+        Simulation(const sConfig& config, const Scenario& sc, const std::vector<VehicleDef>& vDefs, std::unique_ptr<Log> inputLog, const Mode mode, const unsigned int k0)
+        : dt(config.dt), scenario(sc), vehicles(std::move(createVehicles(scenario,vDefs)))
         , mode(mode), k(k0), part(1), inputLog(std::move(inputLog))
         , outputLog(config.log_path.empty() ? std::unique_ptr<Log>() : std::make_unique<Log>(*this,config.log_path)){
             // Simulation creates a copy of the scenario and all created vehicles get
@@ -307,12 +311,12 @@ class Simulation{
 
     public:
         // Create a simulation from the given vehicle configurations
-        Simulation(const sConfig& config, const Scenario& sc, const vConfigs_t& vConfigs)
-        : Simulation(config,sc,vConfigs,std::unique_ptr<Log>(),Mode::SIMULATE,0){}
+        Simulation(const sConfig& config, const Scenario& sc, const std::vector<VehicleDef>& vDefs)
+        : Simulation(config,sc,vDefs,std::unique_ptr<Log>(),Mode::SIMULATE,0){}
 
         // Create a simulation from the given vehicle types
-        Simulation(const sConfig& config, const Scenario& sc, const vTypes_t& vehicleTypes)
-        : Simulation(config,sc,createVehicleConfigs(sc,vehicleTypes)){}
+        Simulation(const sConfig& config, const Scenario& sc, const std::vector<VehicleType>& vehicleTypes)
+        : Simulation(config,sc,createVehicleDefs(sc,vehicleTypes)){}
 
         // Create a simulation from the given log file
         Simulation(const sConfig& config, const std::string& start_log, const unsigned int k0, const bool replay = false)
@@ -357,6 +361,12 @@ class Simulation{
                 // TODO: this is the most heavy step
                 return updateStates();
             }else{
+                // Set augmented state vectors of all vehicles equal to their defaults.
+                // This allows for a proper visualization without the overhead of calculating
+                // the full augmented state vector.
+                for(Vehicle& v : vehicles){
+                    v.s = v.getDefaultAugmentedState();
+                }
                 return false;
             }
         }
@@ -369,7 +379,7 @@ class Simulation{
             part = 2;
             if(mode==Mode::SIMULATE){
                 for(Vehicle& v : vehicles){
-                    assert(!std::isnan(v.a.latOff) && !std::isnan(v.a.velRef));// Invalid actions, possibly caused by custom policies
+                    assert(!std::isnan(v.a.off) && !std::isnan(v.a.vel));// Invalid actions, possibly caused by custom policies
                     v.controllerUpdate(dt);
                 }
             }
@@ -646,17 +656,17 @@ class Simulation{
             return std::make_tuple(ds,dl,dL);
         }
 
-        static inline std::vector<Vehicle> createVehicles(const Scenario& sc, const vConfigs_t& vConfigs){
+        static inline std::vector<Vehicle> createVehicles(const Scenario& sc, const std::vector<VehicleDef>& vDefs){
             std::vector<Vehicle> vehicles = std::vector<Vehicle>();
-            vehicles.reserve(vConfigs.size());
-            for(const auto& cfg : vConfigs){
-                vehicles.emplace_back(sc,cfg.first,cfg.second);
+            vehicles.reserve(vDefs.size());
+            for(const auto& def : vDefs){
+                vehicles.emplace_back(sc,def.cfg,def.props,def.is);
             }
             return vehicles;
         }
 
-        static inline vConfigs_t createVehicleConfigs(const Scenario& sc, const vTypes_t& vTypes){
-            // Creates vehicles in the given scenario with the given configurations. The vehicles will be
+        static inline std::vector<VehicleDef> createVehicleDefs(const Scenario& sc, const std::vector<VehicleType>& vTypes){
+            // Creates vehicles in the given scenario from the given types. The vehicles will be
             // spread equally spaced along all available lanes with random perturbations. All vehicles
             // will be centered in their lane and their heading will match the lane's heading (i.e.
             // gamma=0). They will get a random initial longitudinal velocity in the range vBounds*MV
@@ -665,7 +675,7 @@ class Simulation{
             // First calculate the total amount of vehicles we have to create:
             unsigned int V = 0;
             for(auto vType : vTypes){
-                V += vType.first;
+                V += vType.amount;
             }
             // Retrieve the linear road mappings for the given scenario and setup the randomized accessor:
             std::vector<int> perm = std::vector<int>(V);
@@ -678,8 +688,8 @@ class Simulation{
             auto itPerm = perm.begin();
             
             // Next, create vehicles from randomized initial states and the given vehicle types:
-            vConfigs_t vConfigs;
-            vConfigs.reserve(V);
+            std::vector<VehicleDef> vDefs;
+            vDefs.reserve(V);
             #ifndef NDEBUG
             std::cout << "Creating " << V << " randomly initialized vehicles for parameter d ranging from 0 to " << dMax << std::endl;
             // std::cout << "MR = "; MR.dump();
@@ -687,9 +697,9 @@ class Simulation{
             // std::cout << "Ms = "; Ms.dump();
             #endif
             for(const auto& vType : vTypes){
-                std::uniform_real_distribution<double> vDis(vType.second.minRelVel,vType.second.maxRelVel);
+                std::uniform_real_distribution<double> vDis(vType.relVelBounds[0],vType.relVelBounds[1]);
                 std::uniform_real_distribution<double> sDis(0.0,1.0);
-                for(unsigned int i=0;i<vType.first;++i){
+                for(unsigned int i=0;i<vType.amount;++i){
                     d = ((*itPerm++)-0.5+dDis(Utils::rng))*dMax/V;// Equally spaced position variable (randomly perturbated and shuffled), used to evaluate MR, ML and Ms
                     double s,l;
                     MR.evaluate(d,s,l);
@@ -699,20 +709,22 @@ class Simulation{
                     Ms.evaluate(d,s,l);
                     l = sc.roads[R].lanes[L].offset(s);
                     #ifndef NDEBUG
-                    std::cout << "Creating vehicle " << vConfigs.size() << " with d=" << d << " => ";
+                    std::cout << "Creating vehicle " << vDefs.size() << " with d=" << d << " => ";
                     std::cout << "R=" << R << " ; L=" << L << " ; s=" << s << " ; l=" << l << std::endl;
                     #endif
                     double v = sc.roads[R].lanes[L].speed(s);
                     // Define random vehicle size within the given bounds
                     std::array<double,3> size;
-                    Utils::transform([sDis](double sMin, double sMax)mutable{return sMin+sDis(Utils::rng)*(sMax-sMin);},size.begin(),size.end(),vType.second.minSize.begin(),vType.second.maxSize.begin());
-                    Vehicle::Config vCfg{vType.second.model,vType.second.policy,
-                                            vType.second.L,vType.second.N_OV,vType.second.D_MAX,size};
+                    Utils::transform([sDis](double sMin, double sMax)mutable{return sMin+sDis(Utils::rng)*(sMax-sMin);},size.begin(),size.end(),vType.propsBounds[0].size.begin(),vType.propsBounds[1].size.begin());
+                    double mass = vType.propsBounds[0].mass + sDis(Utils::rng)*(vType.propsBounds[1].mass-vType.propsBounds[0].mass);
+                    Vehicle::Config vCfg{vType.cfg.model,vType.cfg.policy,
+                                            vType.cfg.L,vType.cfg.N_OV,vType.cfg.D_MAX};
+                    Vehicle::Props vProps{size,mass};
                     Vehicle::InitialState vIs(R,s,l,0,vDis(Utils::rng)*v);
-                    vConfigs.push_back({vCfg,vIs});
+                    vDefs.push_back({vCfg,vProps,vIs});
                 }
             }
-            return vConfigs;
+            return vDefs;
         }
 };
 

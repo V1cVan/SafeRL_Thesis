@@ -14,6 +14,9 @@ option(HWSIM_INSTALL_LIB "Install the C library." ON)
 option(HWSIM_INSTALL_PYTHON "Install the python wrapper." ON)
 option(HWSIM_INSTALL_MATLAB "Install the MATLAB wrapper." OFF)
 option(HWSIM_INSTALL_EXAMPLES "Install the example executables." ON)
+if(NOT HWSIM_MAX_SERIALIZED_LENGTH)
+  set(HWSIM_MAX_SERIALIZED_LENGTH 100)
+endif()
 
 message(STATUS "Building in compatibility mode? ${HWSIM_COMPAT}")
 message(STATUS "Installing C library? ${HWSIM_INSTALL_LIB}")
@@ -53,6 +56,7 @@ target_compile_features(hwsim INTERFACE cxx_std_17)
 if(HWSIM_COMPAT)
   target_compile_definitions(hwsim INTERFACE COMPAT)
 endif()
+target_compile_definitions(hwsim INTERFACE HWSIM_MAX_SERIALIZED_LENGTH=${HWSIM_MAX_SERIALIZED_LENGTH})
 
 
 # Add C library wrapper:
@@ -80,10 +84,14 @@ if(HWSIM_INSTALL_MATLAB)
 endif()
 
 # Configure python wrapper:
+configure_file(
+  python/hwsim/hwsim/_wrapper.py.in
+  conf/_wrapper.py.mid
+) # Configure file replaces all ${VAR} occurences
 file(GENERATE
   OUTPUT python/hwsim/hwsim/_wrapper.py
-  INPUT python/hwsim/hwsim/_wrapper.py.in
-)
+  INPUT ${CMAKE_CURRENT_BINARY_DIR}/conf/_wrapper.py.mid
+) # File generate replaces all $<GENERATOR> expressions
 
 # Tests:
 add_subdirectory(tests)

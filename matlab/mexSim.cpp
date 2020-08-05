@@ -203,7 +203,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         
         // Create vehicle configurations:
         const int T = static_cast<int>(mxGetN(prhs[3]));// Number of vehicle type definitions
-        Simulation::vTypes_t config = Simulation::vTypes_t();
+        std::vector<Simulation::VehicleType> types;
 
         mxDouble* data;// Temporary pointer to double array
         std::string type;// Temporary string holding type names
@@ -256,12 +256,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             }
             unsigned int N = static_cast<unsigned int>(mxGetScalar(arr));
             // Add to vehicle configuration:
-            config.push_back({N,{model,policy,1,N_OV,D_MAX,minSize,maxSize,0.7,1.0}});
+            double mass = 2000;
+            types.push_back({N,{model,policy,1,N_OV,D_MAX},{{{minSize,mass},{maxSize,mass}}},{0.7,1.0}});
         }
         // Create Scenario and simulation:
         try{
             Scenario sc = Scenario(mxArrayToString(prhs[2]));
-            insResult = instanceTab.insert(indPtrPair_type(newHandle, std::make_shared<class_type>(simConfig,sc,config)));
+            insResult = instanceTab.insert(indPtrPair_type(newHandle, std::make_shared<class_type>(simConfig,sc,types)));
         }catch(std::invalid_argument& e){
             mexErrMsgIdAndTxt("mexSim:new",e.what());
         }

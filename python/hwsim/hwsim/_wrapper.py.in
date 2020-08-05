@@ -3,6 +3,7 @@ from ctypes import cdll, Structure, c_void_p, c_char_p, POINTER, c_bool, c_uint8
 
 # Load library and specify input and output types
 LIB_PATH = pathlib.Path(__file__).parent.absolute().joinpath("$<TARGET_FILE_NAME:libhwsim>")
+HWSIM_MAX_SERIALIZED_LENGTH = ${HWSIM_MAX_SERIALIZED_LENGTH}
 simLib = cdll.LoadLibrary(str(LIB_PATH))
 
 class SimConfig(Structure):
@@ -10,16 +11,51 @@ class SimConfig(Structure):
                 ("output_log",c_char_p)]
 
 class VehConfig(Structure):
-    _fields_ = [("amount",c_uint),
-                ("model",c_uint),
+    _fields_ = [("model",c_uint),
                 ("modelArgs",POINTER(c_ubyte)),
                 ("policy",c_uint),
                 ("policyArgs",POINTER(c_ubyte)),
                 ("L",c_uint),
                 ("N_OV",c_uint),
-                ("D_MAX",c_double),
-                ("minSize",POINTER(c_double)),
-                ("maxSize",POINTER(c_double))]
+                ("D_MAX",c_double)]
+    
+    def __init__(self,model=None,policy=None,L=0,N_OV=0,D_MAX=0):
+        if model is not None:
+            self.model = model.id
+            self.modelArgs = model.args
+        else:
+            self.model = 0
+            self.modelArgs = (c_ubyte * HWSIM_MAX_SERIALIZED_LENGTH)()
+        if policy is not None:
+            self.policy = policy.id
+            self.policyArgs = policy.args
+        else:
+            self.policy = 0
+            self.policyArgs = (c_ubyte * HWSIM_MAX_SERIALIZED_LENGTH)()
+        self.L = L
+        self.N_OV = N_OV
+        self.D_MAX = D_MAX
+
+class VehProps(Structure):
+    _fields_ = [("size",c_double * 3),
+                ("mass",c_double)]
+
+class VehInitialState(Structure):
+    _fields_ = [("R",c_uint),
+                ("s",c_double),
+                ("l",c_double),
+                ("gamma",c_double),
+                ("v",c_double)]
+
+class VehType(Structure):
+    _fields_ = [("amount",c_uint),
+                ("cfg",VehConfig),
+                ("pBounds",VehProps * 2)]
+
+class VehDef(Structure):
+    _fields_ = [("cfg",VehConfig),
+                ("props",VehProps),
+                ("init",VehInitialState)]
 
 class Blueprint(object):
 
@@ -51,11 +87,14 @@ simLib.pbp_basic.argtypes = [POINTER(c_ubyte),c_uint8]
 simLib.pbp_basic.restype = c_void_p
 
 # Simulation methods:
-simLib.sim_new.argtypes = [POINTER(SimConfig),c_char_p,POINTER(VehConfig),c_uint]
-simLib.sim_new.restype = c_void_p
+simLib.sim_from_types.argtypes = [POINTER(SimConfig),c_char_p,POINTER(VehType),c_uint]
+simLib.sim_from_types.restype = c_void_p
 
-simLib.sim_load.argtypes = [POINTER(SimConfig),c_char_p,c_uint,c_bool]
-simLib.sim_load.restype = c_void_p
+simLib.sim_from_defs.argtypes = [POINTER(SimConfig),c_char_p,POINTER(VehDef),c_uint]
+simLib.sim_from_defs.restype = c_void_p
+
+simLib.sim_from_log.argtypes = [POINTER(SimConfig),c_char_p,c_uint,c_bool]
+simLib.sim_from_log.restype = c_void_p
 
 simLib.sim_del.argtypes = [c_void_p]
 simLib.sim_del.restype = None
@@ -97,6 +136,12 @@ simLib.sim_getVehicle.argtypes = [c_void_p,c_uint]
 simLib.sim_getVehicle.restype = c_void_p
 
 # Scenario methods:
+simLib.sc_new.argtypes = [c_char_p]
+simLib.sc_new.restype = c_void_p
+
+simLib.sc_del.argtypes = [c_void_p]
+simLib.sc_del.restype = None
+
 simLib.sc_numRoads.argtypes = [c_void_p]
 simLib.sc_numRoads.restype = c_uint
 
@@ -124,6 +169,9 @@ simLib.lane_width.restype = None
 simLib.lane_height.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),c_uint,POINTER(c_double)]
 simLib.lane_height.restype = None
 
+simLib.lane_speed.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),c_uint,POINTER(c_double)]
+simLib.lane_speed.restype = None
+
 simLib.lane_edge_offset.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),c_uint,POINTER(c_double),POINTER(c_double)]
 simLib.lane_edge_offset.restype = None
 
@@ -140,6 +188,9 @@ simLib.sc_road2glob.argtypes = [c_void_p,c_uint,POINTER(c_double),POINTER(c_doub
 simLib.sc_road2glob.restype = None
 
 # Vehicle methods:
+simLib.veh_config.argtypes = [c_void_p,POINTER(VehConfig)]
+simLib.veh_config.restype = None
+
 simLib.veh_size.argtypes = [c_void_p,POINTER(c_double)]
 simLib.veh_size.restype = None
 

@@ -38,7 +38,7 @@ namespace Policy{
     };
     struct augState{
         // size = 5 + (2*L+1)*laneInfo::size
-        std::array<double,2> offB;// Offset towards right and left road boundary
+        std::array<double,2> gapB;// Gap w.r.t. right and left road boundary
         double maxVel;// Maximum allowed speed
         std::array<double,2> vel;// Vehicle's velocity in both longitudinal and lateral direction of the lane
         laneInfo laneC;// Lane information about the current lane (vehicle's CG within the lane bounds),
@@ -163,8 +163,8 @@ namespace Policy{
     // --- Action definition ---
     struct Action{
         // size = 2
-        double velRef;// Reference longitudinal velocity
-        double latOff;// Lateral offset w.r.t. current lateral position on the road
+        double vel;// Relative velocity w.r.t. current longitudinal velocity
+        double off;// Lateral offset w.r.t. current lateral position on the road
     };
 
 
@@ -204,10 +204,6 @@ namespace Policy{
             #else
             static inline Factory<PolicyBase> factory{"policy"};
             #endif
-
-            // struct State{
-            //     // Policy state for vehicle specific properties, defaults to empty structure
-            // };
 
             // Get new driving actions based on the current augmented state vector
             virtual Action getAction(const VehicleBase& vb) = 0;
@@ -261,9 +257,9 @@ namespace Policy{
                     ps.k = 0;
                     ps.curActions = {velDis(Utils::rng),offDis(Utils::rng)};
                 }
-                double velRef = ps.curActions.velRef*vb.safetyBounds[1].velRef;
-                double latOff = ps.curActions.latOff*(vb.s.offB[0]+vb.s.offB[1])-vb.s.offB[0];
-                return {velRef,latOff};
+                double vel = ps.curActions.vel*vb.safetyBounds[1].vel;
+                double off = ps.curActions.off*(vb.s.gapB[0]+vb.s.gapB[1]) - vb.s.gapB[0];
+                return {vel,off};
             }
 
             inline Utils::sdata_t saveState() const{
@@ -341,12 +337,12 @@ namespace Policy{
                 Action a = {desVel,-vb.s.laneC.off};// Default action is driving at desired velocity and going towards the middle of the lane
                 // Default reduced state is: a vehicle in front at the adapt distance and travelling at our own velocity.
                 // The right and left offsets are equal to the right and left boundary offsets.
-                redState def = {ADAPT_GAP,vb.s.vel[0],vb.s.offB[0],vb.s.offB[1]};
+                redState def = {ADAPT_GAP,vb.s.vel[0],vb.s.gapB[0],vb.s.gapB[1]};
                 redState rs = roi.getReducedState(vb.s, def);// TODO: maybe use v.r instead (from safetyBounds calculation)?
                 if(rs.frontOff < ADAPT_GAP){
                     // If there is a vehicle in front of us, linearly adapt speed to match frontVel
                     double alpha = (rs.frontOff-SAFETY_GAP)/(ADAPT_GAP-SAFETY_GAP);
-                    a.velRef = std::max(0.0,std::min(desVel,(1-alpha)*rs.frontVel+alpha*desVel));// And clip between [0;desVel]
+                    a.vel = std::max(0.0,std::min(desVel,(1-alpha)*rs.frontVel+alpha*desVel));// And clip between [0;desVel]
                 }
                 const bool rightFree = std::abs(vb.s.laneR[0].off-vb.s.laneC.off)>EPS && rs.rightOff-vb.s.laneC.off>vb.s.laneR[0].width-EPS;// Right lane is free if there is a lane and the right offset is larger than the lane width
                 const bool leftFree = std::abs(vb.s.laneL[0].off-vb.s.laneC.off)>EPS && rs.leftOff+vb.s.laneC.off>vb.s.laneL[0].width-EPS;// Left lane is free if there is a lane and the left offset is larger than the lane width
@@ -362,13 +358,13 @@ namespace Policy{
                         overtaking = false;
                     }else if(leftFree && vb.s.laneC.off>-EPS){
                         // If the left lane is still free while we are on the previous lane, go left.
-                        a.latOff = -vb.s.laneL[0].off;
+                        a.off = -vb.s.laneL[0].off;
                     }
                     // In the other case we are already on the next lane so we should first wait to get to the
                     // middle of the lane before deciding to overtake yet another lane.
                 }else if(rightFree){
                     // Otherwise if we are not overtaking and the right lane is free, go there
-                    a.latOff = -vb.s.laneR[0].off;
+                    a.off = -vb.s.laneR[0].off;
                 }
                 return a;
             }

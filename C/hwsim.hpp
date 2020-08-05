@@ -41,17 +41,43 @@ extern "C"{
     };
 
     struct vConfig{
-        // Vehicle type configuration
-        unsigned int amount;// Amount of vehicles to create using this configuration
+        // Vehicle configuration
         unsigned int model;// Model type
         unsigned char* modelArgs;// Serialized arguments to pass to model constructor
         unsigned int policy;// Policy type
         unsigned char* policyArgs;// Serialized arguments to pass to policy constructor
-        unsigned int L;
-        unsigned int N_OV;
-        double D_MAX;
-        double* minSize;// Minimum size
-        double* maxSize;// Maximum size
+        unsigned int L;// Number of lanes the vehicle 'can see' to the left and right
+        unsigned int N_OV;// Number of neighbouring vehicles the vehicle 'can detect' in front and behind in each visible lane
+        double D_MAX;// Maximum detection horizon
+    };
+
+    struct vProps{
+        // Vehicle properties
+        double size[3];
+        double mass;
+    };
+
+    struct vIs{
+        // Vehicle initial state
+        unsigned int R;// Road id
+        double s;// Longitudinal road coordinate
+        double l;// Lateral road coordinate
+        double gamma;// Orientation w.r.t. lane heading
+        double v;// Longitudinal velocity
+    };
+
+    struct vType{
+        // Vehicle type configuration
+        unsigned int amount;// Amount of vehicles to create using this configuration
+        vConfig cfg;// Common vehicle configuration to use
+        vProps pBounds[2];// Property bounds
+    };
+
+    struct vDef{
+        // Vehicle definition configuration
+        vConfig cfg;
+        vProps props;
+        vIs is;
     };
 
     // --- Configuration ---
@@ -85,13 +111,17 @@ extern "C"{
     LIB_PUBLIC
     void pbp_basic(unsigned char* args, const uint8_t type);
 
-    // Create a new simulation with the given configuration
+    // Create a new simulation with the given vehicle types configuration
     LIB_PUBLIC
-    Simulation* sim_new(const sConfig* config, const char* scenarioName, const vConfig* vTypesArr, const unsigned int numTypes);
+    Simulation* sim_from_types(const sConfig* config, const char* scenarioName, const vType* vTypesArr, const unsigned int numTypes);
+
+    // Create a new simulation with the given vehicle definitions
+    LIB_PUBLIC
+    Simulation* sim_from_defs(const sConfig* config, const char* scenarioName, const vDef* vDefsArr, const unsigned int numDefs);
 
     // Create a new simulation from the given input log
     LIB_PUBLIC
-    Simulation* sim_load(const sConfig* config, const char* input_log, const unsigned int k0, const bool replay);
+    Simulation* sim_from_log(const sConfig* config, const char* input_log, const unsigned int k0, const bool replay);
 
     // Delete an existing simulation. Note that all pointers returned by any of the other functions
     // with argument sim, will become invalid after this call.
@@ -147,6 +177,14 @@ extern "C"{
     Vehicle* sim_getVehicle(Simulation* sim, const unsigned int V);
 
     // --- Scenario ---
+    // Create a new scenario with the given name
+    LIB_PUBLIC
+    const Scenario* sc_new(const char* scenarioName);
+
+    // Delete a previously created scenario (only scenarios created using sc_new have to call this!)
+    LIB_PUBLIC
+    void sc_del(const Scenario* sc);
+
     // Get the total number of roads in the given scenario
     LIB_PUBLIC
     unsigned int sc_numRoads(const Scenario* sc);
@@ -183,6 +221,10 @@ extern "C"{
     LIB_PUBLIC
     void lane_height(const Scenario* sc, const unsigned int R, const unsigned int L, const double* s, const unsigned int N, double* h);
 
+    // Calculate the maximum allowed speed of the given lane for given values of s
+    LIB_PUBLIC
+    void lane_speed(const Scenario* sc, const unsigned int R, const unsigned int L, const double* s, const unsigned int N, double* v);
+
     // Calculate the lateral offset of both lane edges of the given lane w.r.t. the road's outline for given values of s
     LIB_PUBLIC
     void lane_edge_offset(const Scenario* sc, const unsigned int R, const unsigned int L, const double* s, const unsigned int N, double* right, double* left);
@@ -204,6 +246,10 @@ extern "C"{
     void sc_road2glob(const Scenario* sc, const unsigned int R, const double* s, const double* l, const unsigned int N, double* C);
 
     // --- Vehicle ---
+    // Get the configuration structure of the given vehicle. The passed char pointers should have size HWSIM_MAX_SERIALIZED_LENGTH.
+    LIB_PUBLIC
+    void veh_config(const Vehicle* veh, vConfig* cfg);
+
     // Get the size of the given vehicle
     LIB_PUBLIC
     void veh_size(const Vehicle* veh, double* size);

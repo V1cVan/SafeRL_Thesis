@@ -10,26 +10,32 @@ TEST_CASE("Checking the hwsim wrapper library"){
         sConfig sConf = {0.1,NULL};
         // Invalid scenarios_path set
         cfg_scenariosPath("");
-        CHECK(sim_new(&sConf,scenario,NULL,0) == null_sim);
+        CHECK(sim_from_types(&sConf,scenario,NULL,0) == null_sim);
         cfg_scenariosPath(path);
         // Non-existing scenario
-        CHECK(sim_new(&sConf,"foo",NULL,0) == null_sim);
+        CHECK(sim_from_types(&sConf,"foo",NULL,0) == null_sim);
         // Valid scenario
-        Simulation* sim = sim_new(&sConf,scenario,NULL,0);
+        Simulation* sim = sim_from_types(&sConf,scenario,NULL,0);
         CHECK(sim != null_sim);
         sim_del(sim);
     }
-    double minSize[3] = {3,2,3};
-    double maxSize[3] = {6,3.4,4};
+    vProps minProps = {
+        {3,2,3}, // size
+        1500 // mass
+    };
+    vProps maxProps = {
+        {6,3.4,4}, // size
+        3000 // mass
+    };
     cfg_scenariosPath(path);
     sConfig sConf = {0.1,NULL};
     SUBCASE("Blueprints"){
         unsigned char bpt[1];
         pbp_basic(bpt,2);
-        vConfig vConf[1] = {
-            {1,1,NULL,2,bpt,1,1,50.0,minSize,maxSize},
+        vType vTypes[1] = {
+            {1,{1,NULL,2,bpt,1,1,50.0},{minProps,maxProps}},
         };
-        Simulation* sim = sim_new(&sConf,scenario,vConf,1);
+        Simulation* sim = sim_from_types(&sConf,scenario,vTypes,1);
         CHECK(sim != null_sim);
     //     SUBCASE("Check default blueprint"){
     //         Model::BluePrint kbm = KinematicBicycleModel().blueprint();
@@ -51,26 +57,26 @@ TEST_CASE("Checking the hwsim wrapper library"){
     //         CHECK_THROWS_AS(Policy::create(bp),std::invalid_argument);
     //     }
         // Check invalid id
-        vConf[0].policy = 99;
-        sim = sim_new(&sConf,scenario,vConf,1);
+        vTypes[0].cfg.policy = 99;
+        sim = sim_from_types(&sConf,scenario,vTypes,1);
         CHECK(sim == null_sim);
     }
     SUBCASE("Size"){
-        vConfig vConf[2] = {
-            {1,1,NULL,1,NULL,1,1,50.0,minSize,minSize},
-            {1,1,NULL,1,NULL,1,1,50.0,maxSize,maxSize}
+        vType vTypes[2] = {
+            {1,{1,NULL,1,NULL,1,1,50.0},{minProps,minProps}},
+            {1,{1,NULL,1,NULL,1,1,50.0},{maxProps,maxProps}}
         };
-        Simulation* sim = sim_new(&sConf,scenario,vConf,2);
+        Simulation* sim = sim_from_types(&sConf,scenario,vTypes,2);
         Vehicle* veh0 = sim_getVehicle(sim,0);
         Vehicle* veh1 = sim_getVehicle(sim,1);
         double size[3];
         veh_size(veh0,size);
         for(int i=0;i<3;i++){
-            CHECK(size[i] == minSize[i]);
+            CHECK(size[i] == minProps.size[i]);
         }
         veh_size(veh1,size);
         for(int i=0;i<3;i++){
-            CHECK(size[i] == maxSize[i]);
+            CHECK(size[i] == maxProps.size[i]);
         }
     }
     // SUBCASE("Simulation creation"){

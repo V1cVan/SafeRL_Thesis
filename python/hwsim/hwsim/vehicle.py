@@ -1,17 +1,21 @@
-from ctypes import c_void_p, c_double, POINTER
+from ctypes import c_void_p, c_double, POINTER, byref
 import numpy as np
-from hwsim._wrapper import simLib
+from hwsim._wrapper import simLib, VehConfig
 from hwsim._utils import hybridmethod
 
 class Vehicle(object):
 
-    def __init__(self,sim,id,model,policy,L,N_OV,D_MAX):
+    def __init__(self,sim,id,model,policy):
         self._sim = sim
         self.id = id
         self._h = c_void_p(simLib.sim_getVehicle(sim._h,id))
-        self.L = L
-        self.N_OV = N_OV
-        self.D_MAX = D_MAX
+        cfg = VehConfig()
+        simLib.veh_config(self._h, byref(cfg))
+        self.L = cfg.L
+        self.N_OV = cfg.N_OV
+        self.D_MAX = cfg.D_MAX
+        # TODO: maybe extract base model and policy also from cfg?
+        #  custom ones will still have to be passed along though
         self.model = model
         self.policy = policy
         # Save some constant vehicle properties:
@@ -35,11 +39,11 @@ class Vehicle(object):
         lane_info_dt = np.dtype([
             ("off",np.float64),
             ("width",np.float64),
-            ("relF",rel_s_dt,self.N_OV),
-            ("relB",rel_s_dt,self.N_OV)
+            ("relB",rel_s_dt,self.N_OV),
+            ("relF",rel_s_dt,self.N_OV)
         ])
         self.s_dt = np.dtype([
-            ("offB",np.float64,2),
+            ("gapB",np.float64,2),
             ("maxVel",np.float64),
             ("vel",np.float64,2),
             ("laneC",lane_info_dt),
@@ -55,6 +59,8 @@ class Vehicle(object):
         ])
         # Call initialization code of custom policies:
         self.policy.init_vehicle(self)
+        # Cache manual overrides of next actions:
+        self._next_a = None
     
     # Model specific properties
     X_DIM = 12
@@ -129,6 +135,10 @@ class Vehicle(object):
     @property
     def a(self):
         return self.a_raw.view(self.a_dt)[0]
+    
+    @a.setter
+    def a(self,next_a):
+        self._next_a = next_a
     
     @property
     def a_bounds(self):

@@ -1,3 +1,5 @@
+import random
+import numpy as np
 from hwsim._wrapper import simLib
 
 
@@ -63,6 +65,7 @@ class Configuration(object):
 
     def __init__(self):
         self._seed = simLib.cfg_getSeed()
+        self.__set_python_seed(self._seed)
         self.scenarios_path = "scenarios.h5"
     
     @property
@@ -72,7 +75,13 @@ class Configuration(object):
     @seed.setter
     def seed(self,newSeed):
         self._seed = newSeed
+        self.__set_python_seed(self._seed)
         simLib.cfg_setSeed(newSeed)
+    
+    @staticmethod
+    def __set_python_seed(newSeed):
+        random.seed(newSeed)
+        # TODO: set numpy seed?
     
     @property
     def scenarios_path(self):

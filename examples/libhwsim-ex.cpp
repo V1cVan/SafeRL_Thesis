@@ -8,18 +8,18 @@ int main(){
     char* scenario = "CLOVERLEAF_RAW";
     cfg_scenariosPath(path);
     sConfig sConf = {0.1,NULL};
-    double minSize[3] = {3,2,3};
-    double maxSize[3] = {6,3.4,4};
+    vProps minProps = {{3,2,3}, 1500};// size, mass
+    vProps maxProps = {{6,3.4,4}, 3000};
     const unsigned int kbmType = 1;
     const unsigned int basicPolicyType = 2;
     unsigned char normalBasicType[1], fastBasicType[1];
     pbp_basic(normalBasicType,1);
     pbp_basic(fastBasicType,2);
-    vConfig vConf[2] = {
-        {5,kbmType,NULL,basicPolicyType,normalBasicType,1,1,50.0,minSize,maxSize},
-        {5,kbmType,NULL,basicPolicyType,fastBasicType,1,1,50.0,minSize,maxSize}
+    vType vTypes[2] = {
+        {5,{kbmType,NULL,basicPolicyType,normalBasicType,1,1,50.0},{minProps,maxProps}},
+        {5,{kbmType,NULL,basicPolicyType,fastBasicType,1,1,50.0},{minProps,maxProps}}
     };
-    Simulation* sim = sim_new(&sConf,scenario,vConf,2);
+    Simulation* sim = sim_from_types(&sConf,scenario,vTypes,2);
     if(sim==NULL){
         std::cerr << "Could not create new simulation" << std::endl;
         return -1;

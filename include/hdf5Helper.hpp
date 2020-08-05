@@ -18,7 +18,7 @@ struct dtypes : public fixedBase{
         };
         hid_t M;// type definition used to read elements in memory
         static constexpr unsigned int N = 3;// Number of enum fields
-        static constexpr char* names[N] = {"CYCLIC","AUTO","FIXED"};// Enum names
+        static constexpr const char* names[N] = {"CYCLIC","AUTO","FIXED"};// Enum names
         bc_type(){// Initialize memory type
             M = H5Tenum_create(H5T_NATIVE_UINT8);
             for(int i=0;i<N;i++){
@@ -180,6 +180,7 @@ struct dtypes : public fixedBase{
             unsigned int N_OV;
             double D_MAX;
             double size[3];
+            double mass;
         };
         hid_t M;// type definition used to read elements in memory
         hid_t bM;// type definition of the byte data
@@ -198,6 +199,7 @@ struct dtypes : public fixedBase{
             H5Tinsert(M,"N_OV",HOFFSET(C,N_OV),H5T_NATIVE_UINT32);
             H5Tinsert(M,"D_MAX",HOFFSET(C,D_MAX),H5T_NATIVE_DOUBLE);
             H5Tinsert(M,"size",HOFFSET(C,size),sM);
+            H5Tinsert(M,"mass",HOFFSET(C,mass),H5T_NATIVE_DOUBLE);
         }
         ~vehicle_config(){// Release memory type
             H5Tclose(M);
@@ -217,12 +219,15 @@ struct dtypes : public fixedBase{
             double ang_vel[3];
             // Policy actions
             double a[2];
+            double a_min[2];// Safety bounds imposed on actions (used
+            double a_max[2];// for post training visualizations)
             // Policy state
             std::byte ps[HWSIM_MAX_SERIALIZED_LENGTH];
-            // TODO: inputs have to be saved as well!
             // Controller states
             double longCtrl[2];
             double latCtrl[2];
+            // Model inputs
+            double u[2];
         };
         hid_t M;// type definition used to read elements in memory
         hid_t da2M;// type definition of the double arrays
@@ -243,9 +248,12 @@ struct dtypes : public fixedBase{
             H5Tinsert(M,"vel",HOFFSET(C,vel),da3M);
             H5Tinsert(M,"ang_vel",HOFFSET(C,ang_vel),da3M);
             H5Tinsert(M,"a",HOFFSET(C,a),da2M);
+            H5Tinsert(M,"a_min",HOFFSET(C,a_min),da2M);
+            H5Tinsert(M,"a_max",HOFFSET(C,a_max),da2M);
             H5Tinsert(M,"ps",HOFFSET(C,ps),bM);
             H5Tinsert(M,"longCtrl",HOFFSET(C,longCtrl),da2M);
             H5Tinsert(M,"latCtrl",HOFFSET(C,latCtrl),da2M);
+            H5Tinsert(M,"u",HOFFSET(C,u),da2M);
         }
         ~vehicle_data(){// Release memory type
             H5Tclose(M);
@@ -279,7 +287,7 @@ struct dtypes : public fixedBase{
 
 #ifdef COMPAT
 constexpr unsigned int dtypes::bc_type::N;
-constexpr char* dtypes::bc_type::names[dtypes::bc_type::N];
+constexpr const char* dtypes::bc_type::names[dtypes::bc_type::N];
 #endif
 dtypes H5dtypes;
 

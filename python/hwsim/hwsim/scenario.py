@@ -1,16 +1,53 @@
 from ctypes import c_void_p, POINTER, sizeof, cast, c_double, c_int
 import numpy as np
-from numpy.lib import recfunctions as rfn
-import pyvista as pv
 from hwsim._wrapper import simLib
 
 class Scenario(object):
 
-    def __init__(self,sim):
-        self._sim = sim
-        self._h = c_void_p(simLib.sim_getScenario(sim._h))
-        numRoads = simLib.sc_numRoads(self._h)
-        self.roads = [Road(self,R) for R in range(numRoads)]
+    def __init__(self,data):
+        if isinstance(data,str):
+            data = data.encode("utf8")
+        if isinstance(data,bytes):
+            self.name = data
+            self._sim = None
+        else:
+            self.name = None # TODO: get name from existing scenario if not constructed by name
+            self._sim = data
+
+        self._h = None
+        self.roads = []
+        if self._sim is not None:
+            # Link with Simulation's scenario object
+            self._h = c_void_p(simLib.sim_getScenario(self._sim._h))
+            self.__create_roads()
+
+    def __enter__(self):
+        # Create link to simLib object
+        if self._sim is None:
+            # Create new scenario object
+            self._h = simLib.sc_new(self.name)
+        
+            if self._h is None:
+                raise RuntimeError("Could not create a new simLib Scenario object.")
+            self._h = c_void_p(self._h) # Store as pointer
+            self.__create_roads()
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        # Destroy link with simLib object
+        if self._sim is None:
+            # Destroy created scenario object
+            simLib.sc_del(self._h)
+            self._h = None
+            self.roads.clear()
+        else:
+            # Nothing special, Simulation will clean up its own scenario
+            pass
+
+    def __create_roads(self):
+        # Create helper Road and Lane objects
+        for R in range(simLib.sc_numRoads(self._h)):
+            self.roads.append(Road(self,R))
 
 
 class Road(object):
@@ -64,11 +101,43 @@ class Lane(object):
         simLib.lane_validity(self._road._sc._h,self._road.R,self.L,cast(vF_ptr,POINTER(c_double)),cast(vT_ptr,POINTER(c_double)))
         self.merge = simLib.lane_merge(self._road._sc._h,self._road.R,self.L)
     
+    def __validate_s(self,s):
+        # Only return valid s values, i.e. for which this lane is valid
+        if not isinstance(s,np.ndarray):
+            s = np.array(s,np.float64)
+        return s[(s>=self.val[0]) & (s<=self.val[1])]
+
+    def __eval_prop(self,simLibMethod,s):
+        # Evaluate the given lane property
+        s = self.__validate_s(s)
+        prop = np.empty(s.shape)
+        simLibMethod(
+            self._road._sc._h,self._road.R,self.L,
+            s.ctypes.data_as(POINTER(c_double)),s.size,
+            prop.ctypes.data_as(POINTER(c_double))
+        )
+        return prop
+
+    def offset(self,s):
+        # Return the lateral offset of this lane's center
+        return self.__eval_prop(simLib.lane_offset,s)
+
+    def width(self,s):
+        # Return the lateral offset of this lane's center
+        return self.__eval_prop(simLib.lane_width,s)
+
+    def height(self,s):
+        # Return the lateral offset of this lane's center
+        return self.__eval_prop(simLib.lane_height,s)
+
+    def speed(self,s):
+        # Return the lateral offset of this lane's center
+        return self.__eval_prop(simLib.lane_speed,s)
+
     def edges(self,s):
         # Return the global (x,y,z) coordinates and boundary types of the lane's left and right edges
         
-        # Only evaluate lane edges for valid curvilinear abscissa:
-        s = s[(s>=self.val[0]) & (s<=self.val[1])]
+        s = self.__validate_s(s)
         # Call C-wrapper to retrieve all required data:
         s_ptr = s.ctypes.data_as(POINTER(c_double))
         # Get lateral offsets of lane edges

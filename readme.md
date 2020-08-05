@@ -1,7 +1,14 @@
 ## Requirements:
 
-* A compiler supporting C++17 static inline variables and `std::optional` features. Support for older compilers not supporting static inline variables, but supporting an experimental implementation of optionals through `std::experimental::optional` (e.g. GCC-6.0) can be enabled through the `COMPAT` flag.
-* CMake 3.14 or higher (3.16.3 or higher for installing the Matlab library).
+* A compiler supporting below C++17 features. Support for older compilers lacking any of these features can be enabled through the `COMPAT` flag.
+
+  * `static inline` variables
+  * `std::optional` or experimental support through `std::experimental::optional` (e.g. GCC-6.0).
+  * `std::byte`
+  * `std::clamp`
+  * `std::as_const`
+
+* CMake 3.16.3 or higher (required for installing the Matlab library).
 
 ## Dependencies:
 
@@ -32,7 +39,7 @@ inside your project and include `add_subdirectory(<FOLDER_NAME>)` in your CMakeL
 
     * -DHWSIM_COMPAT:BOOL=[ON/OFF]
 
-      Build with compatibility mode (to enable backward support for older compilers without `static inline` variables and `std::byte` support), default OFF (requires C++17 support of your compiler).
+      Build with compatibility mode (to enable backward support for older compilers without `static inline` variables or `std::byte` support, see full list above), default OFF (requires C++17 support of your compiler).
 
     * -DHWSIM_INSTALL_LIB:BOOL=[ON/OFF]
       
