@@ -1,11 +1,18 @@
-from ctypes import c_void_p, c_char_p, POINTER, c_double, cast
-from enum import Enum, auto
+from ctypes import c_void_p, POINTER, c_double
+from enum import Enum
+import typing
+import pathlib
 import random
-from hwsim._wrapper import simLib, SimConfig, VehConfig, VehType, VehDef
+import json
+import time
+from warnings import warn
+from hwsim._utils import conditional
+from hwsim._wrapper import simLib, SimConfig, VehConfig, VehProps, VehInitialState, VehType, VehDef
 from hwsim.scenario import Scenario
 from hwsim.vehicle import Vehicle
 from hwsim.policy import _Policy, BasicPolicy, CustomPolicy
 from hwsim.model import _Model, KBModel, CustomModel
+from hwsim.serialization import JSONDecoder, JSONEncoder
 
 import timeit
 
@@ -16,93 +23,271 @@ class Simulation(object):
         REPLAY_INPUT = 1
         REPLAY_OUTPUT = 2
 
-    #TODO: maybe create dataclass for sConfig and vTypes instead of passing dicts
-
-    def __init__(self,sConfig,vData=None):
-        # Create SimConfig structure from sConfig dict
-        simConfig = SimConfig()
-        simConfig.dt = sConfig.get("dt",0.1)
-        simConfig.output_log = sConfig.get("output_log","").encode("utf8")
-        L = sConfig.get("L",1)
-        N_OV = sConfig.get("N_OV",1)
-        D_MAX = sConfig.get("D_MAX",150.0)
-        input_log = sConfig.get("input_log","").encode("utf8")
-        k0 = sConfig.get("k0",0)
-        replay = sConfig.get("replay",False)
-
-        self.dt = simConfig.dt # TODO: create property and allow changing between different contexts
-        self.MAX_IT = sConfig.get("MAX_IT",1000)
+    # TODO: maybe create dataclass for sConfig and vTypes instead of passing dicts
+    # TODO: instead of sConfig, specify all fields as arguments. Caller can then use dict unpacking
+    def __init__(self, sConfig):
+        # Create simulation configuration and internal variables
+        self._simCfg = {
+            "dt": 0, # Time step
+            "output_dir": "", # Output log folder
+            "name": "", # Simulation name
+            "kM": 0, # Maximum value for k
+            # Simulation from previously saved log
+            "input_dir": "", # Input log folder
+            "k0": 0, # Initial value for k
+            "replay": False, # Replay simulation from input folder or load initial states and simulate from there
+            # Simulation from vehicle types or definitions
+            "scenario": "", # Scenario name
+            "types": [], # Types of vehicles that will be created
+            "defs": [], # Definitions of vehicles that will be created
+            "vehicles": [] # Configuration of vehicles that will be created (used for JSON serialization and python Vehicle object creation)
+        }
         self._h = None
         self.vehicles = []
-        isDef = True
-        # Create array of VehType or VehDef structures from vData list of dictionaries
-        if vData is not None:
-            # TODO: for non replay sims try to determine the original models and policies?
-            #  Still, the custom python models and policies will have to be passed along somehow
-            vehDataList = []
-            minSize = [4,1.6,1.5]
-            maxSize = [5,2.1,2]
-            minMass = 1500
-            maxMass = 3000
-            isDef = "R" in vData[0] # True if vData contains a list of VehDef dicts, False if it contains a list of VehType dicts
-            for vEntry in vData:
-                # Create common Vehicle configuration structure
-                model = vEntry.get("model",KBModel())
-                assert(isinstance(model,_Model))
-                policy = vEntry.get("policy",BasicPolicy(BasicPolicy.Type.NORMAL))
-                assert(isinstance(policy,_Policy))
-                vehConfig = VehConfig(model,policy,L,N_OV,D_MAX)
-                # Based on isDef, create a VehDef or VehType structure
-                N = vEntry.get("amount",1)
-                if isDef:
-                    vehDef = VehDef()
-                    vehDef.cfg = vehConfig
-                    # Properties
-                    size = [random.uniform(sMin,sMax) for (sMin,sMax) in zip(minSize,maxSize)]
-                    vehDef.props.size = (c_double * 3)(*vEntry.get("size",size))
-                    mass = random.uniform(minMass,maxMass)
-                    vehDef.props.mass = mass
-                    # Initial state
-                    vehDef.init.R = vEntry["R"]
-                    vehDef.init.s = vEntry["s"]
-                    vehDef.init.l = vEntry["l"]
-                    vehDef.init.gamma = vEntry.get("gamma",0)
-                    vehDef.init.v = vEntry.get("v",0)
-                    vehDataList.append(vehDef)
-                else:
-                    vehType = VehType()
-                    vehType.amount = N
-                    vehType.cfg = vehConfig
-                    vehType.pBounds[0].size = (c_double * 3)(*vEntry.get("minSize",minSize))
-                    vehType.pBounds[0].mass = vEntry.get("minMass",minMass)
-                    vehType.pBounds[1].size = (c_double * 3)(*vEntry.get("maxSize",maxSize))
-                    vehType.pBounds[1].mass = vEntry.get("maxMass",maxMass)
-                    vehDataList.append(vehType)                
-                # Create blueprints for vehicle instances in python:
-                for i in range(N):
-                    self.vehicles.append({"model": model, "policy": policy})
-        self._constructData = {}
-        if not input_log:
-            scenario = sConfig.get("scenario","CIRCULAR").encode("utf8")
-            N = len(vehDataList)
-            if isDef:
-                self._constructData["method"] = simLib.sim_from_defs
-                self._constructData["args"] = [simConfig,scenario,(VehDef*N)(*vehDataList),N]
-            else:
-                self._constructData["method"] = simLib.sim_from_types
-                self._constructData["args"] = [simConfig,scenario,(VehType*N)(*vehDataList),N]
-        else:
-            self._constructData["method"] = simLib.sim_from_log
-            self._constructData["args"] = [simConfig,input_log,k0,replay]
-        
         self.sc = None
         self._collision = False
         self._mode = None
         self._k = -1
+        # Initialize configuration based on passed configuration dict
+        self.dt = sConfig.get("dt",0.1)
+        self.output_dir = sConfig.get("output_dir","")
+        self.kM = sConfig.get("kM",1000)
+        self._vehCfgDefaults = {
+            "L": sConfig.get("L",1),
+            "N_OV": sConfig.get("N_OV",1),
+            "D_MAX": sConfig.get("D_MAX",150.0),
+            "minSize": [4,1.6,1.5],
+            "maxSize": [5,2.1,2],
+            "minMass": 1500,
+            "maxMass": 3000
+        }
+        input_dir = sConfig.get("input_dir","")
+        k0 = sConfig.get("k0",0)
+        replay = sConfig.get("replay",False)
+        vData = sConfig.get("vehicles",[])
+        # And load from log or from the given vehicle data
+        if input_dir:
+            self.load_log(input_dir,sConfig["name"],k0,replay,vData)
+        else:
+            self.name = sConfig.get("name",f"sim_{int(time.time())}")
+            self.scenario = sConfig.get("scenario","CIRCULAR")
+            self.add_vehicles(vData)
 
+    #region: Simulation configuration properties
+    def _inactive(self,*args,**kwargs):
+        return self._h is None
+
+    @property
+    def dt(self):
+        return self._simCfg["dt"]
+
+    @dt.setter
+    @conditional(_inactive)
+    def dt(self, val):
+        assert float(val)>0
+        self._simCfg["dt"] = float(val)
+
+    @property
+    def kM(self):
+        return self._simCfg["kM"]
+
+    @kM.setter
+    @conditional(_inactive)
+    def kM(self, val):
+        assert int(val)>=0
+        self._simCfg["kM"] = int(val)
+
+    @property
+    def output_dir(self):
+        return self._simCfg["output_dir"]
+
+    @output_dir.setter
+    @conditional(_inactive)
+    def output_dir(self, val):
+        self._simCfg["output_dir"] = str(val) if val else ""
+
+    @property
+    def name(self):
+        return self._simCfg["name"]
+
+    @name.setter
+    @conditional(_inactive)
+    def name(self, val):
+        self._simCfg["name"] = str(val)
+
+    @staticmethod
+    def _convert_path(path, dtype=None):
+        path_str = str(path) if path else ""
+        if dtype=="s":
+            return path_str
+        elif dtype=="b":
+            return path_str.encode("utf8")
+        else:
+            return path
+
+    def _sim_dir(self, dir=None, sim_name=None, dtype=None):
+        """ Returns the base path to the simulation's data folder. """
+        if sim_name is None:
+            sim_name = self.name
+        path = pathlib.Path(dir,sim_name) if dir else None
+        return self._convert_path(path,dtype)
+
+    def _sim_file(self, file, dir=None, sim_name=None, dtype=None):
+        if sim_name is None:
+            sim_name = self._simCfg["name"]
+        file_name = {
+            "log": "log.h5",
+            "cfg": "sim_cfg.jsonc"
+        }[file]
+        path = self._sim_dir(dir,sim_name).joinpath(file_name) if dir else None
+        return self._convert_path(path,dtype)
+
+    @conditional(_inactive)
+    def load_log(self, input_dir, name, k0=0, replay=False, config=None):
+        assert self._sim_file("log",input_dir,name).exists()
+        assert int(k0)>=0
+        self.name = name
+        if not config:
+            if self._sim_file("cfg",input_dir).exists():
+                with open(self._sim_file("cfg",input_dir),'rb') as f:
+                    config = json.load(f,cls=JSONDecoder)["vehicles"]
+            else:
+                config = []
+        self._simCfg["input_dir"] = str(input_dir)
+        self._simCfg["k0"] = int(k0)
+        self._simCfg["replay"] = bool(replay)
+        self.clear_vehicles()
+        self._extend_vehicles(config,[],[]) # Fills self._simCfg["vehicles"] with vehicle configurations extracted from config
+
+    @property
+    def scenario(self):
+        if self._inactive():
+            return self._simCfg["scenario"]
+        else:
+            return self.sc.name # TODO: fix this (see scenario.__init__)
+
+    @scenario.setter
+    @conditional(_inactive)
+    def scenario(self, val):
+        self._simCfg["scenario"] = str(val)
+
+    @conditional(_inactive)
+    def clear_vehicles(self):
+        self._simCfg["types"].clear()
+        self._simCfg["defs"].clear()
+
+    @conditional(_inactive)
+    def add_vehicles(self, data):
+        self._simCfg["input_dir"] = ""
+        if not isinstance(data, typing.List):
+            data = [data]
+        # Create array of VehType or VehDef structures from data list of dictionaries
+        self._extend_vehicles(data)
+
+    def _extend_vehicles(self, vData, defs=None, types=None, entries=None):
+        vehicles = {
+            "defs": defs or self._simCfg["defs"],
+            "types": types or self._simCfg["types"],
+            "entries": entries or self._simCfg["vehicles"]
+        }
+        for vEntry in vData:
+            vehCfg = self._fetch_entry(vEntry)
+            isDef = isinstance(vehCfg,VehDef)
+            vehicles["defs" if isDef else "types"].append(vehCfg)
+            if len(vehicles["types" if isDef else "defs"])>0:
+                # Currently only definitions OR types are allowed, not a combination
+                # of both. So clear the already existing/created defs OR types and entries
+                # if an entry of the other class is encountered.
+                vehicles["types" if isDef else "defs"].clear()
+                vehicles["entries"].clear()
+            vehicles["entries"].append(vEntry)
+
+    def _fetch_entry(self, vEntry):
+        # Create VehType or VehDef structure from entry dictionary. Omitted optional fields of vEntry will be set upon return.
+        isDef = "R" in vEntry # True if vEntry is a VehDef dict, False if it is a VehType dict
+        # Create common Vehicle configuration structure
+        model = vEntry.setdefault("model",KBModel()) # setdefault sets the key in vEntry to the provided value if it does not yet exist. In any case it returns the value corresonding to the key.
+        assert(isinstance(model,_Model))
+        policy = vEntry.setdefault("policy",BasicPolicy())
+        assert(isinstance(policy,_Policy))
+        L = vEntry.setdefault("L", self._vehCfgDefaults["L"])
+        N_OV = vEntry.setdefault("N_OV", self._vehCfgDefaults["N_OV"])
+        D_MAX = vEntry.setdefault("D_MAX", self._vehCfgDefaults["D_MAX"])
+        vehConfig = VehConfig(model,policy,L,N_OV,D_MAX)
+        # Based on isDef, create a VehDef or VehType structure
+        if isDef:
+            vehDef = VehDef()
+            vehDef.cfg = vehConfig
+            # Properties
+            size = [random.uniform(sMin,sMax) for (sMin,sMax) in zip(self._vehCfgDefaults["minSize"],self._vehCfgDefaults["maxSize"])]
+            mass = random.uniform(self._vehCfgDefaults["minMass"],self._vehCfgDefaults["maxMass"])
+            vehDef.props = VehProps(vEntry.get("size",size),vEntry.get("mass",mass))
+            # Initial state
+            vehDef.init = VehInitialState(
+                vEntry["R"],vEntry["s"],vEntry["l"],
+                vEntry.setdefault("gamma",0),vEntry.setdefault("v",0)
+            )
+            return vehDef
+        else:
+            N = vEntry.setdefault("amount",1)
+            assert N>=1
+            vehType = VehType()
+            vehType.amount = int(N)
+            vehType.cfg = vehConfig
+            minSize = vEntry.setdefault("minSize",self._vehCfgDefaults["minSize"])
+            maxSize = vEntry.setdefault("maxSize",self._vehCfgDefaults["maxSize"])
+            minMass = vEntry.setdefault("minMass",self._vehCfgDefaults["minMass"])
+            maxMass = vEntry.setdefault("maxMass",self._vehCfgDefaults["maxMass"])
+            vehType.pBounds[0] = VehProps(minSize,minMass)
+            vehType.pBounds[1] = VehProps(maxSize,maxMass)
+            return vehType
+
+    def _adjust_entries(self,V,entries=None):
+        """ Adjusts the vehicle entries such that the total amount of vehicles equals V. """
+        entries = entries or self._simCfg["vehicles"]
+        Ve = 0
+        for i,vEntry in enumerate(entries):
+            Ve += vEntry.get("amount",1)
+            if Ve>=V:
+                break
+        if Ve<V:
+            # In case there are not enough entries,
+            # append dummy vehicles with custom models and policies
+            warn("Insufficient vehicle configurations were provided for the given Simulation configuration. Remaining vehicles get dummy Models and Policies.")
+            entries.append({"amount": V-Ve,"model":CustomModel(),"policy":CustomPolicy()})
+        elif Ve>V or i<len(entries)-1:
+            warn("Too much vehicle configurations were provided for the given Simulation configuration. Additional vehicle configurations will be skipped.")
+            for _ in range(len(entries)-1-i):
+                entries.pop() # Remove last entries
+            entries[i]["amount"] -= Ve-V # And update amount of last entry
+        # Note that the resulting entries are not well-defined, their sole purpose is the correct initialization
+        # of python Vehicle objects. This only makes sense for replayin a simulation whose vData is deleted/overwritten.
+    #endregion
+
+    @conditional(_inactive)
     def __enter__(self):
+        assert self._simCfg["input_dir"] or len(self._simCfg["types"])>0 or len(self._simCfg["defs"])>0
+        # Make sure output directory exists:
+        if self._simCfg["output_dir"]:
+            self._sim_dir(self._simCfg["output_dir"]).mkdir(parents=True)
+            # Save simulation configuration in output dir for later use
+            cfg = {key: val for key,val in self._simCfg.items() if key not in ["types","defs"]}
+            with open(self._sim_file("cfg",self._simCfg["output_dir"]),'w') as f:
+                json.dump(cfg, f, cls=JSONEncoder, indent=2)
         # Create new simulation object
-        self._h = self._constructData["method"](*self._constructData["args"])
+        simCfg = SimConfig()
+        simCfg.dt = self._simCfg["dt"]
+        simCfg.output_log = self._sim_file("log",self._simCfg["output_dir"],dtype='b')
+        # Call proper constructor
+        if self._simCfg["input_dir"]:
+            input_log = self._sim_file("log",self._simCfg["input_dir"],dtype='b')
+            self._h = simLib.sim_from_log(simCfg,input_log,self._simCfg["k0"],self._simCfg["replay"])
+        elif len(self._simCfg["types"])>0:
+            N = len(self._simCfg["types"])
+            self._h = simLib.sim_from_types(simCfg,self._simCfg["scenario"].encode("utf8"),(VehType*N)(*self._simCfg["types"]),N)
+        else:
+            N = len(self._simCfg["defs"])
+            self._h = simLib.sim_from_defs(simCfg,self._simCfg["scenario"].encode("utf8"),(VehDef*N)(*self._simCfg["defs"]),N)
         if self._h is None:
             raise RuntimeError("Could not create the simLib simulation object. See above error messages from the hwsim C-library.")
         self._h = c_void_p(self._h) # Store as pointer
@@ -110,11 +295,9 @@ class Simulation(object):
         self.sc = Scenario(self)
         # Create vehicle instances:
         V = simLib.sim_getNbVehicles(self._h)
-        if len(self.vehicles)==0:
-            # In case there are no vData given (only useful for a replay),
-            # create dummy vehicles with custom models and policies
-            self.vehicles = [{"model":CustomModel(),"policy":CustomPolicy()} for i in range(V)]
-        self.vehicles = [Vehicle(self,v_id,bp["model"],bp["policy"]) for (v_id,bp) in enumerate(self.vehicles[:V])]
+        self._adjust_entries(V)
+        vGen = enumerate((vEntry["model"],vEntry["policy"]) for vEntry in self._simCfg["vehicles"] for _ in range(vEntry.get("amount",1)))
+        self.vehicles = [Vehicle(self,v_id,model,policy) for v_id,(model,policy) in vGen]
         # Initialize step and mode:
         self._mode = simLib.sim_getMode(self._h)
         self._k = simLib.sim_getStep(self._h)
@@ -130,9 +313,10 @@ class Simulation(object):
         self._collision = False
         self._mode = None
         self._k = -1
-    
+
+    #region: Active simulation methods and properties
     def _applyCustomModels(self):
-        #TODO: call custom models here
+        # TODO: call custom models here
         return False
 
     def _applyCustomPolicies(self):
@@ -144,9 +328,9 @@ class Simulation(object):
                 simLib.veh_setPolicyAction(veh._h,newAction.ctypes.data_as(POINTER(c_double)))
                 veh._next_a = None
         return False
-    
+
     def _applyCustomControllers(self):
-        #TODO: call custom controllers here
+        # TODO: call custom controllers here
         return False
 
     def _stepFromB(self):
@@ -178,10 +362,10 @@ class Simulation(object):
         self._collision = stop
         self._k += 1
         return self._collision
-    
+
     @property
     def stopped(self):
-        return self._collision or self._k>=self.MAX_IT
+        return self._collision or self._k>=self.kM
 
     @property
     def mode(self):
@@ -199,12 +383,13 @@ class Simulation(object):
         self._mode = Simulation.Mode(simLib.sim_getMode(self._h))
         if self._mode==Simulation.Mode.SIMULATE:
             self._stepFromB()
-    
+
     @property
     def k(self):
         return self._k
-    
+
     @k.setter
     def k(self,k_new):
         simLib.sim_setStep(self._h,k_new)
         self._k = simLib.sim_getStep(self._h)
+    #endregion

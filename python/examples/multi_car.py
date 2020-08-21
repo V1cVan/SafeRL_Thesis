@@ -5,35 +5,49 @@ from hwsim import Simulation, BasicPolicy, KBModel, config
 from hwsim.plotting import Plotter, SimulationPlot, DetailPlot, BirdsEyePlot, ActionsPlot
 
 if __name__=="__main__":
+    ID = -1 # ID of simulation to replay or -1 to create a new one
     PLOT_MODE = Plotter.Mode.LIVE
     OFF_SCREEN = False
     FANCY_CARS = True
-    ROOT = pathlib.Path(__file__).parent.absolute()
-    SC_PATH = ROOT.joinpath("scenarios.h5")
+    LOG_DIR = "logs"
+    ROOT = pathlib.Path(__file__).resolve().parents[2]
+    SC_PATH = ROOT.joinpath("scenarios/scenarios.h5")
 
     config.scenarios_path = str(SC_PATH)
-    #config.seed = 1249517370
+    # config.seed = 1249517370
     print(f"Using seed {config.seed}")
+    if ID<0:
+        ID = int(time.time())
+        print(f"Creating new multi car simulation with ID {ID}")
+        input_dir = ""
+        output_dir = LOG_DIR
+        vTypes = [
+            {"amount": 20, "model": KBModel(), "policy": BasicPolicy("slow")},
+            {"amount": 40, "model": KBModel(), "policy": BasicPolicy("normal")},
+            {"amount": 7, "model": KBModel(), "policy": BasicPolicy("fast")}
+        ]
+    else:
+        print(f"Replaying multi car simulation with ID {ID}")
+        input_dir = LOG_DIR
+        output_dir = ""
+        vTypes = []
     sConfig = {
+        "name": f"multi_car_{ID}",
         "scenario": "CIRCUIT",
-        "MAX_IT": 1000,
-        "input_log": "",
+        "kM": 1000,
+        "input_dir": input_dir,
         "k0": 0,
-        "replay": False,
-        "output_log": "" #f"logs/multi_car_{int(time.time())}.h5"
+        "replay": True,
+        "output_dir": output_dir,
+        "vehicles": vTypes
     }
-    vTypes = [
-        {"amount": 20, "model": KBModel(), "policy": BasicPolicy(BasicPolicy.Type.SLOW)},
-        {"amount": 40, "model": KBModel(), "policy": BasicPolicy(BasicPolicy.Type.NORMAL)},
-        {"amount": 7, "model": KBModel(), "policy": BasicPolicy(BasicPolicy.Type.FAST)}
-    ]
 
-    with Simulation(sConfig,vTypes) as sim:
+    with Simulation(sConfig) as sim:
         shape = (4,2)
         shape = (2,2)
         groups = [([0,1],0)]
         vehicle_type = "car" if FANCY_CARS else "box"
-        p = Plotter(sim,"Multi car simulation",name="multi_car",mode=PLOT_MODE,shape=shape,groups=groups,off_screen=OFF_SCREEN)
+        p = Plotter(sim,"Multi car simulation",mode=PLOT_MODE,shape=shape,groups=groups,off_screen=OFF_SCREEN)
         p.V = 64
         p.subplot(0,0)
         p.add_text("Detail view")
@@ -55,7 +69,6 @@ if __name__=="__main__":
         # p.subplot(3,1)
         p.plot() # Initial plot
 
-        #print(timeit.timeit(lambda: sim.step(),number=100))
         while not sim.stopped and not p.closed:
             start = timeit.default_timer()
             sim.step()

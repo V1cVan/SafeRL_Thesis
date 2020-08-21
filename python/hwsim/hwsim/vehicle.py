@@ -61,7 +61,7 @@ class Vehicle(object):
         self.policy.init_vehicle(self)
         # Cache manual overrides of next actions:
         self._next_a = None
-    
+
     # Model specific properties
     X_DIM = 12
     U_DIM = 2
@@ -75,13 +75,13 @@ class Vehicle(object):
     @property
     def x(self):
         return self.x_raw.view(self.x_dt)[0]
-    
+
     @property
     def u_raw(self):
         u = np.empty(self.U_DIM,np.float64)
         simLib.veh_getModelInput(self._h, u.ctypes.data_as(POINTER(c_double)))
         return u
-    
+
     @property
     def u(self):
         return self.u_raw.view(self.u_dt)[0]
@@ -92,13 +92,13 @@ class Vehicle(object):
         Bounds on the model inputs.
         """
         return np.array([(-5,-0.1),(5,0.1)],self.u_dt) # Input bounds are fixed for now
-    
+
     def dx_raw(self,x,u):
         raise NotImplementedError("Currently not supported")
 
     def dx(self,x,u):
         return self.dx_raw(x,u).view(self.x_dt)[0]
-    
+
     def u_nom_raw(self,x,gamma):
         raise NotImplementedError("Currently not supported")
 
@@ -109,11 +109,11 @@ class Vehicle(object):
     @hybridmethod
     def S_DIM(L,N_OV):
         return 5+(2*L+1)*(2+2*N_OV*6)
-    
+
     @S_DIM.instancegetter
     def S_DIM(self):
         return Vehicle.S_DIM(self.L,self.N_OV)
-    
+
     A_DIM = 2
 
     @property
@@ -125,21 +125,21 @@ class Vehicle(object):
     @property
     def s(self):
         return self.s_raw.view(self.s_dt)[0]
-    
+
     @property
     def a_raw(self):
         action = np.empty(self.A_DIM,np.float64)
         simLib.veh_getPolicyAction(self._h, action.ctypes.data_as(POINTER(c_double)))
         return action
-    
+
     @property
     def a(self):
         return self.a_raw.view(self.a_dt)[0]
-    
+
     @a.setter
     def a(self,next_a):
         self._next_a = next_a
-    
+
     @property
     def a_bounds(self):
         """
@@ -148,7 +148,7 @@ class Vehicle(object):
         bounds = np.empty(2*self.A_DIM,np.float64)
         simLib.veh_getSafetyBounds(self._h, bounds.ctypes.data_as(POINTER(c_double)))
         return bounds.view(self.a_dt)
-    
+
     @property
     def reduced_state(self):
         rs = np.empty(4,np.float64)

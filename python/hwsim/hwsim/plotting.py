@@ -6,7 +6,6 @@ import timeit
 import pathlib
 from enum import Enum, Flag, auto
 from tkinter import Tk, Label, Entry, Button
-from hwsim.simulation import Simulation
 
 #region: Helper functions
 def _cuboidMesh(S):
@@ -124,20 +123,20 @@ class _PlotterView(object):
         self._V = p._V
         self._r = p.renderer
         p._add_view(self)
-    
+
     def plot(self):
         pass
 
     def _handle_V_change(self,oldV):
         pass
-    
+
     @property
     def V(self):
         """
         The index of the currently focussed vehicle.
         """
         return self._V
-    
+
     @V.setter
     def V(self,newV):
         assert(newV>=0 and newV<len(self._sim.vehicles))
@@ -211,7 +210,7 @@ class SimulationPlot(_PlotterView):
         focus = np.array(self._r.camera_position.focal_point)
         viewup = self._r.camera_position.viewup
         self._r.camera_position = (focus+3*(pos-focus)/4,focus,viewup) # Zoom in slightly after view_xy
-    
+
     @staticmethod
     def _fixedColoring(color):
         def coloring(veh):
@@ -223,7 +222,7 @@ class SimulationPlot(_PlotterView):
         def coloring(veh):
             return veh.policy.color
         return coloring
-    
+
     def plot(self):
         if self._vehicles is not None:
             # Update vehicle meshes:
@@ -246,7 +245,7 @@ class SimulationPlot(_PlotterView):
         if self._vehicles is not None:
             self._vehicles[oldV]["actor"].GetProperty().EdgeVisibilityOff()
             self._vehicles[self.V]["actor"].GetProperty().EdgeVisibilityOn()
-    
+
     @staticmethod
     def _plotRoad(p,road,scale_markings=False):
         # Plot the given road on the given plotter
@@ -294,7 +293,7 @@ class SimulationPlot(_PlotterView):
                         elif bType==3:
                             # Shared dashed line
                             SimulationPlot._drawLaneMarking(p,road,span_s,span_l,width=width,stippled=True)
-    
+
     @staticmethod
     def _drawLaneMarking(p,road,s,l,width=None,stippled=False):
         """
@@ -302,8 +301,8 @@ class SimulationPlot(_PlotterView):
         (s,l) on the given pv plot.
         """
         assert(s.size==l.size)
-        ELEVATION = 0 #0.001
-        
+        ELEVATION = 0 # 0.001
+
         ts = (s-s[0])/(road._LANE_MARKING_SIZE[0]+road._LANE_MARKING_SKIP)
         if width is None:
             # Draw line as mesh with fixed real-world width
@@ -340,7 +339,7 @@ class DetailPlot(SimulationPlot):
         super().__init__(p,scale_markings=True,vehicle_type="box",coloring=coloring,show_ids=show_ids)
         self.D = D
         self._calc_camera_cfg()
-    
+
     def _calc_camera_cfg(self):
         # We will position the camera right above the currently active vehicle.
         # When the camera is positioned at height H above the object in focus
@@ -369,7 +368,7 @@ class DetailPlot(SimulationPlot):
         # self._r.set_position(np.array([pos[0],pos[1],pos[2]+self._H]))
         # self._r.set_focus(pos)
         # self._r.set_viewup(np.array([np.cos(yaw),np.sin(yaw),0]))
-    
+
     def _handle_V_change(self,oldV):
         super()._handle_V_change(oldV)
         # Calculate new camera position based on the active vehicle's D_MAX
@@ -389,7 +388,7 @@ class BirdsEyePlot(SimulationPlot):
         super().__init__(p,vehicle_type=vehicle_type,coloring=coloring)
         self._view = view
         self._calc_camera_cfg()
-    
+
     def _calc_camera_cfg(self):
         # Camera configuration is determined by the view and active vehicle:
         d = 1 if self._view==BirdsEyePlot.View.FRONT else -1
@@ -404,7 +403,7 @@ class BirdsEyePlot(SimulationPlot):
         dz = self._camera_cfg[1,2]-self._camera_cfg[0,2]
         A = np.array([np.arctan2(dy,d*dx),np.arctan2(-dz,d*dx),0]) # Rotations of camera for the given configuration
         self._camera_cfg[2,:] = _transformPoints(np.array([0,0,1]),A=A) # Rotate camera viewup from [0,0,1] to the configured viewup
-    
+
     def plot(self):
         super().plot()
         # Update camera:
@@ -412,7 +411,7 @@ class BirdsEyePlot(SimulationPlot):
         ang = self._sim.vehicles[self.V].x["ang"]
         points = _transformPoints(self._camera_cfg,A=ang) # Convert camera configuration to real coordinates
         self._r.camera_position = (pos+points[0,:],pos+points[1,:],points[2,:]) # Set position, focus and viewup
-    
+
     def _handle_V_change(self,oldV):
         super()._handle_V_change(oldV)
         self._calc_camera_cfg()
@@ -439,7 +438,7 @@ class TimeChartPlot(_PlotterView):
         if cached_vehicles is None:
             cached_vehicles = [i for i in range(len(self._sim.vehicles))]
         self._cvIds = cached_vehicles
-        
+
         self._memory = []
         for i in range(len(self._sim.vehicles)):
             veh_memory = {
@@ -512,7 +511,7 @@ class TimeChartPlot(_PlotterView):
                 lower, upper = patch["getBounds"](veh) # Current upper and lower bounds
                 self._memory[V]["patches"][field]["upper"][-1] = upper
                 self._memory[V]["patches"][field]["lower"][-1] = lower
-    
+
     def plot(self):
         self._updateMemory()
         for field, line in self._lines.items():
@@ -538,7 +537,7 @@ class TimeChartPlot(_PlotterView):
         self._r.set_scale(xscale=render_width/(data_bounds[1]-data_bounds[0]),
                           yscale=render_height/(data_bounds[3]-data_bounds[2]),
                           reset_camera=False)
-        #self._r.update_bounds_axes() # set_scale automatically calls update_bounds_axes
+        # self._r.update_bounds_axes() # set_scale automatically calls update_bounds_axes
         self._bounds.SetBounds(data_bounds)
         # Custom self._r.view_xy() that is more 'zoomed in' without flashes:
         focus = np.array(self._r.center)
@@ -550,7 +549,7 @@ class TimeChartPlot(_PlotterView):
 
     def _handle_V_change(self,oldV):
         super()._handle_V_change(oldV)
-        if not self.V in self._cvIds:
+        if self.V not in self._cvIds:
             self._cvIds.append(self.V)
 
 
@@ -559,7 +558,7 @@ class ActionsPlot(TimeChartPlot):
     def __init__(self,p,actions=None,show_bounds=True,**kwargs):
         lines, patches, labels = self.get_config(actions, show_bounds)
         super().__init__(p,lines=lines,patches=patches,ylabel=" ; ".join(labels),**kwargs)
-    
+
     @staticmethod
     def get_config(actions=None, show_bounds=True):
         if actions is None:
@@ -606,7 +605,7 @@ class InputsPlot(TimeChartPlot):
     def __init__(self,p,inputs=None,show_bounds=True,**kwargs):
         lines, labels = self.get_config(inputs, show_bounds)
         super().__init__(p,lines=lines,ylabel=" ; ".join(labels),**kwargs)
-    
+
     @staticmethod
     def get_config(inputs=None,show_bounds=True):
         if inputs is None:
@@ -661,27 +660,26 @@ class Plotter(pv.Plotter):
     class Mode(Flag):
         LIVE = auto()
         MP4 = auto()
-    
+
     class State(Enum):
         PAUSED = auto()
         PLAY = auto()
         STOPPED = auto()
-    
+
     RECORDINGS_DIR = "recordings"
 
-    def __init__(self,sim,title,name=None,mode=Mode.LIVE,state=State.PLAY,V=0,*args,**kwargs):
+    def __init__(self,sim,title=None,mode=Mode.LIVE,state=State.PLAY,V=0,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self._sim = sim
         self._V = V
-        self._title = title
-        self._name = title if name is None else name
+        self._title = title or sim.name
         self._mode = mode
         self._state = state
         self._views = []
         if self._mode & Plotter.Mode.MP4:
             rec_path = pathlib.Path(Plotter.RECORDINGS_DIR)
             rec_path.mkdir(parents=True, exist_ok=True)
-            self.open_movie(str(rec_path.joinpath(f"{self._name}_{int(time.time())}.mp4")))
+            self.open_movie(str(rec_path.joinpath(f"{sim.name}.mp4")))
         self.add_key_event("q",self._quit) # Stop simulation
         self.add_key_event("p",self._toggle_play) # Toggle play/paused
         self.add_key_event("s",self._step)
@@ -689,13 +687,13 @@ class Plotter(pv.Plotter):
         self.add_key_event("s",self._unblock) # Step
         self.add_key_event("v",self._change_vehicle)
         self._dialog = None
-    
+
     def _add_view(self,plotter_view,*args,**kwargs):
         assert(self._first_time) # Only allow adding views before first plot
         assert(isinstance(plotter_view,_PlotterView))
         # Append this view to our views list
         self._views.append(plotter_view)
-    
+
     def add_overlay(self,bounds=None):
         """
         Add an overlay to the current viewport.
@@ -718,17 +716,16 @@ class Plotter(pv.Plotter):
         self.renderers.append(renderer)
         self._background_renderers.append(None)
         self.ren_win.AddRenderer(renderer)
-        
-    
+
     @property
     def state(self):
         return self._state
-    
+
     @state.setter
     def state(self,newState):
         assert(isinstance(newState,Plotter.State))
         self._state = newState
-    
+
     def _step(self):
         if self._state==Plotter.State.PLAY:
             print("Pausing simulation")
@@ -741,35 +738,35 @@ class Plotter(pv.Plotter):
         else:
             print("Restarting simulation")
             self._state=Plotter.State.PLAY
-    
+
     def _unblock(self):
         # This will stop the blocking of the last 'show' call, enabling us to continue
         # with the simulation (either a full play or the drawing of the next frame)
         # ==> mimicks native 'q' button press
         self.iren.ExitCallback()
-    
+
     def _quit(self):
         print("Stopping simulation")
         self._state = Plotter.State.STOPPED
-    
+
     @property
     def mode(self):
         return self._mode
-    
+
     @property
     def V(self):
         """
         The index of the currently focussed vehicle.
         """
         return self._V
-    
+
     @V.setter
     def V(self,newV):
         assert(newV>=0 and newV<len(self._sim.vehicles))
         self._V = newV
         for view in self._views:
             view.V = newV
-    
+
     def _change_vehicle(self,newV=None):
         if self._state!=Plotter.State.PAUSED:
             # TODO: allow vehicle change while running and without needing to step one frame
@@ -791,18 +788,18 @@ class Plotter(pv.Plotter):
             self.V = newV
             print(f"Changed active vehicle to {self.V}")
             self._unblock() # Step once to update all views
-    
+
     def plot(self):
         # Update views
-        t_update = 0
+        # t_update = 0
         for view in self._views:
-            dt = timeit.default_timer()
+            # dt = timeit.default_timer()
             view.plot()
-            dt = timeit.default_timer()-dt
-            print(f"Update of {view} took {dt*1000}ms")
-            t_update += dt
-        print(f"Updating views took {t_update*1000}ms")
-        t_draw = timeit.default_timer()
+            # dt = timeit.default_timer()-dt
+            # print(f"Update of {view} took {dt*1000}ms")
+            # t_update += dt
+        # print(f"Updating views took {t_update*1000}ms")
+        # t_draw = timeit.default_timer()
 
         if self._first_time and self._mode==Plotter.Mode.MP4:
             # Make sure show is called before the first write_frame in MP4 only mode
@@ -828,13 +825,13 @@ class Plotter(pv.Plotter):
         
         if self._mode & Plotter.Mode.MP4: # MP4 mode enabled
             self.write_frame()
-        t_draw = timeit.default_timer()-t_draw
-        print(f"Redrawing took {t_draw*1000}ms")
-    
+        # t_draw = timeit.default_timer()-t_draw
+        # print(f"Redrawing took {t_draw*1000}ms")
+
     def close(self):
         if not self._closed:
             super().close()
-    
+
     @property
     def closed(self):
         return self._closed

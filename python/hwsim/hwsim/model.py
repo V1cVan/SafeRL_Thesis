@@ -1,12 +1,10 @@
-from ctypes import POINTER, c_double
-import numpy as np
-from hwsim._wrapper import simLib, Blueprint
+from hwsim._wrapper import Blueprint
 
 class _Model(Blueprint):
 
     def __init__(self, id, args=None):
         super().__init__(id,args)
-    
+
     def custom_state(self, veh):
         """
         Subclasses can implement this 'custom_state' method to provide a custom
@@ -18,7 +16,7 @@ class _Model(Blueprint):
         """
         # TODO: currently not implemented in Simulation
         return None
-    
+
     def custom_derivatives(self, veh, x, u):
         """
         Subclasses can implement this 'custom_derivatives' method to override the
@@ -30,7 +28,7 @@ class _Model(Blueprint):
         """
         # TODO: currently not implemented in Simulation and Vehicle
         return None
-    
+
     def custom_nominal_input(self, veh, x, gamma):
         """
         Subclasses can implement this 'custom_nominal_input' method to override
@@ -41,8 +39,8 @@ class _Model(Blueprint):
         # TODO: currently not implemented in Simulation and Vehicle
         return None
 
-        
-class KBModel(_Model):
+
+class KBModel(_Model,enc_name="kbm"):
     """
     Kinematic bicycle model
     """
@@ -51,7 +49,7 @@ class KBModel(_Model):
         super().__init__(1)
 
 
-class DBModel(_Model):
+class DBModel(_Model,enc_name="dbm"):
     """
     Dynamic bicycle model
     """

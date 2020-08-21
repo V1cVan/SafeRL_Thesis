@@ -1,6 +1,4 @@
-import random
-import numpy as np
-from hwsim._wrapper import simLib
+from functools import wraps
 
 
 class hybridmethod:
@@ -52,44 +50,43 @@ class hybridmethod:
                 return self.prop.__get__(instance, cls)
         # Otherwise call the static method:
         return self.fstatic
-    
+
     def __set__(self, instance, value):
         # TODO: if we ever need this, it might be easier to just inherit from property?
         self.prop.__set__(instance, value)
-    
+
     def __delete__(self, instance):
         self.prop.__delete__(self, instance)
 
 
-class Configuration(object):
+class conditional(object):
+    """
+    This decorator allows a method to be toggled depending on a certain condition
+    on its parameters. If the condition holds, the method is executed for the given
+    parameters. Otherwise a RuntimeError is thrown.
+    """
+    def __init__(self, cond):
+        # Creates the decorator
+        self.fcond = cond
 
-    def __init__(self):
-        self._seed = simLib.cfg_getSeed()
-        self.__set_python_seed(self._seed)
-        self.scenarios_path = "scenarios.h5"
-    
-    @property
-    def seed(self):
-        return self._seed
+    def __call__(self, func):
+        # Applies the decorator
+        @wraps(func)
+        def wrapper(*f_args,**f_kwargs):
+            if self.fcond(*f_args,**f_kwargs):
+                return func(*f_args,**f_kwargs)
+            else:
+                raise RuntimeError(f"Condition was not satisfied. {self.fcond} returned False for arguments {f_args},{f_kwargs}")
+        return wrapper
 
-    @seed.setter
-    def seed(self,newSeed):
-        self._seed = newSeed
-        self.__set_python_seed(self._seed)
-        simLib.cfg_setSeed(newSeed)
-    
     @staticmethod
-    def __set_python_seed(newSeed):
-        random.seed(newSeed)
-        # TODO: set numpy seed?
-    
-    @property
-    def scenarios_path(self):
-        return self._scenarios_path
+    def NOT(cond):
+        return lambda *f_args,**f_kwargs: not cond(*f_args,**f_kwargs)
 
-    @scenarios_path.setter
-    def scenarios_path(self,path):
-        self._scenarios_path = path
-        simLib.cfg_scenariosPath(path.encode("utf8"))
+    @staticmethod
+    def OR(cond1,cond2):
+        return lambda *f_args,**f_kwargs: cond1(*f_args,**f_kwargs) or cond2(*f_args,**f_kwargs)
 
-config = Configuration()
+    @staticmethod
+    def AND(cond1,cond2):
+        return lambda *f_args,**f_kwargs: cond1(*f_args,**f_kwargs) and cond2(*f_args,**f_kwargs)

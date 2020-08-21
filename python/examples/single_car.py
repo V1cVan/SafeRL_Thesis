@@ -6,25 +6,27 @@ from hwsim.plotting import Plotter, SimulationPlot, BirdsEyePlot, ActionsPlot, I
 if __name__=="__main__":
     PLOT_MODE = Plotter.Mode.LIVE
     OFF_SCREEN = False
-    ROOT = pathlib.Path(__file__).parent.absolute()
-    SC_PATH = ROOT.joinpath("scenarios.h5")
+    ROOT = pathlib.Path(__file__).resolve().parents[2]
+    SC_PATH = ROOT.joinpath("scenarios/scenarios.h5")
 
     config.scenarios_path = str(SC_PATH)
     print(f"Using seed {config.seed}")
     sConfig = {
+        "name": "single_car",
         "scenario": "CLOVERLEAF",
-        "MAX_IT": 1000
+        "kM": 1000
     }
-    #policy = BasicPolicy(BasicPolicy.Type.NORMAL)
+    # policy = BasicPolicy("normal")
     policy = StepPolicy()
     vTypes = [
         {"amount": 1, "model": KBModel(), "policy": policy}
     ]
+    sConfig["vehicles"] = vTypes
 
-    with Simulation(sConfig,vTypes) as sim:
+    with Simulation(sConfig) as sim:
         shape = (4,2)
         groups = [([0, 1], 0), ([0, 1], 1)]
-        p = Plotter(sim,"Single car simulation",name="single_car",mode=PLOT_MODE,shape=shape,groups=groups,off_screen=OFF_SCREEN)
+        p = Plotter(sim,"Single car simulation",mode=PLOT_MODE,shape=shape,groups=groups,off_screen=OFF_SCREEN)
         p.subplot(0,0)
         p.add_text("Scenario view")
         SimulationPlot(p,vehicle_type=None,show_marker=True)

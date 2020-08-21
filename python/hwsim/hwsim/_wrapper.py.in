@@ -1,8 +1,17 @@
 import pathlib
+import random
 from ctypes import cdll, Structure, c_void_p, c_char_p, POINTER, c_bool, c_uint8, c_ubyte, c_uint, c_int, c_double
+from hwsim.serialization import Serializable
+
+__all__ = [
+    "HWSIM_MAX_SERIALIZED_LENGTH",
+    "simLib","config",
+    "SimConfig","VehConfig","VehProps","VehInitialState","VehType","VehDef",
+    "Blueprint"
+]
 
 # Load library and specify input and output types
-LIB_PATH = pathlib.Path(__file__).parent.absolute().joinpath("$<TARGET_FILE_NAME:libhwsim>")
+LIB_PATH = pathlib.Path(__file__).resolve().parent.joinpath("$<TARGET_FILE_NAME:libhwsim>")
 HWSIM_MAX_SERIALIZED_LENGTH = ${HWSIM_MAX_SERIALIZED_LENGTH}
 simLib = cdll.LoadLibrary(str(LIB_PATH))
 
@@ -18,27 +27,39 @@ class VehConfig(Structure):
                 ("L",c_uint),
                 ("N_OV",c_uint),
                 ("D_MAX",c_double)]
-    
-    def __init__(self,model=None,policy=None,L=0,N_OV=0,D_MAX=0):
-        if model is not None:
-            self.model = model.id
-            self.modelArgs = model.args
+
+    def __init__(self,model=None,policy=None,L=1,N_OV=1,D_MAX=100):
+        self.model, self.modelArgs = self._fetch_blueprint(model)
+        self.policy, self.policyArgs = self._fetch_blueprint(policy)
+        self._model = model
+        self._policy = policy
+        assert L>0 and N_OV>0 and D_MAX>0
+        self.L = int(L)
+        self.N_OV = int(N_OV)
+        self.D_MAX = float(D_MAX)
+
+    @staticmethod
+    def _fetch_blueprint(bp=None):
+        if bp is None:
+            return 0, (c_ubyte * HWSIM_MAX_SERIALIZED_LENGTH)()
+        elif bp.args is None:
+            return bp.id, None
         else:
-            self.model = 0
-            self.modelArgs = (c_ubyte * HWSIM_MAX_SERIALIZED_LENGTH)()
-        if policy is not None:
-            self.policy = policy.id
-            self.policyArgs = policy.args
-        else:
-            self.policy = 0
-            self.policyArgs = (c_ubyte * HWSIM_MAX_SERIALIZED_LENGTH)()
-        self.L = L
-        self.N_OV = N_OV
-        self.D_MAX = D_MAX
+            return bp.id, (c_ubyte * len(bp.args))(*bp.args)
 
 class VehProps(Structure):
     _fields_ = [("size",c_double * 3),
                 ("mass",c_double)]
+
+    def __init__(self,size=None,mass=1000):
+        if size is None:
+            size = [2,4,2]
+        assert len(size)==3
+        for dim in size:
+            assert dim>0
+        assert mass>0
+        self.size = (c_double * 3)(*size)
+        self.mass = mass
 
 class VehInitialState(Structure):
     _fields_ = [("R",c_uint),
@@ -46,6 +67,14 @@ class VehInitialState(Structure):
                 ("l",c_double),
                 ("gamma",c_double),
                 ("v",c_double)]
+
+    def __init__(self,R=0,s=0,l=0,gamma=0,v=0):
+        assert R>=0 and v>=0
+        self.R = int(R)
+        self.s = float(s)
+        self.l = float(l)
+        self.gamma = float(gamma)
+        self.v = float(v)
 
 class VehType(Structure):
     _fields_ = [("amount",c_uint),
@@ -57,11 +86,45 @@ class VehDef(Structure):
                 ("props",VehProps),
                 ("init",VehInitialState)]
 
-class Blueprint(object):
+class Blueprint(Serializable):
 
     def __init__(self,id,args=None):
         self.id = id
         self.args = args
+
+class Configuration(object):
+
+    def __init__(self):
+        self._seed = simLib.cfg_getSeed()
+        self.__set_python_seed(self._seed)
+        self.scenarios_path = "scenarios.h5"
+
+    @property
+    def seed(self):
+        return self._seed
+
+    @seed.setter
+    def seed(self,newSeed):
+        self._seed = newSeed
+        self.__set_python_seed(self._seed)
+        simLib.cfg_setSeed(newSeed)
+
+    @staticmethod
+    def __set_python_seed(newSeed):
+        random.seed(newSeed)
+        # TODO: set numpy seed?
+
+    @property
+    def scenarios_path(self):
+        return self._scenarios_path
+
+    @scenarios_path.setter
+    def scenarios_path(self,path):
+        self._scenarios_path = path
+        simLib.cfg_scenariosPath(path.encode("utf8"))
+
+config = Configuration()
+
 
 # Configure methods:
 simLib.cfg_getSeed.argtypes = []
