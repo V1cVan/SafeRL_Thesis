@@ -279,7 +279,7 @@ struct Serializable : public T{// T inherits from ISerializable
     #ifdef COMPAT
     static const BaseFactory::id_t ID;
     #else
-    static inline const BaseFactory::id_t ID = F.record<S>(I,N);
+    static inline const BaseFactory::id_t ID = F.template record<S>(I,N);
     #endif
     using sid_t = BaseFactory::id_t;
     using sdata_t = BaseFactory::data_t;

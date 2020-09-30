@@ -1,15 +1,19 @@
 import typing
 import json
+import yaml
 # import re
 
 class Serializable(object):
     """ Base class for all Serializable classes. """
+    yaml_flow_style = None
 
     def __init_subclass__(cls, enc_name=None, **kwargs):
         """ Subclasses are automatically registered if they provide a unique enc_name. """
         if enc_name is not None:
             cls.enc_name = enc_name
-            BaseSerializer.register(enc_name,cls)
+            BaseSerializer.register(cls.enc_name,cls)
+            cls.yaml_tag = f"!{cls.enc_name}"
+            YAMLSerializer.register(cls)
         super().__init_subclass__(**kwargs)
 
     def encode(self):
@@ -29,6 +33,34 @@ class Serializable(object):
         serialized = BaseSerializer.encode(self)
         return BaseSerializer.decode(serialized)
 
+    @classmethod
+    def to_yaml(cls, dumper, obj):
+        data = obj.encode()
+        if data is None:
+            data = '~'
+        if isinstance(data, typing.Mapping):
+            node = dumper.represent_mapping(cls.yaml_tag, data, flow_style=cls.yaml_flow_style)
+        elif isinstance(data, typing.List):
+            node = dumper.represent_sequence(cls.yaml_tag, data, flow_style=cls.yaml_flow_style)
+        else:
+            node = dumper.represent_scalar(cls.yaml_tag, data)
+        return node
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        if isinstance(node, yaml.MappingNode):
+            data = loader.construct_mapping(node, deep=True)
+            return cls.decode(data) or cls(**data)
+        elif isinstance(node, yaml.SequenceNode):
+            data = loader.construct_sequence(node, deep=True)
+            return cls.decode(data) or cls(*data)
+        else:
+            data = loader.construct_scalar(node)
+            if data=="~":
+                return cls.decode() or cls()
+            else:
+                return cls.decode(data) or cls(data)
+
 
 class BaseSerializer(object):
     __classes = {}
@@ -41,9 +73,7 @@ class BaseSerializer(object):
     @classmethod
     def encode(cls, obj):
         if isinstance(obj,typing.Mapping):
-            for key,value in obj.items():
-                obj[key] = cls.encode(value)
-            return obj
+            return {key: cls.encode(value) for key,value in obj.items()}
         elif isinstance(obj,typing.List):
             return [cls.encode(el) for el in obj]
         elif isinstance(obj,Serializable):
@@ -66,12 +96,12 @@ class BaseSerializer(object):
         else:
             return data
 
-    @staticmethod
-    def encode_serializable(obj):
+    @classmethod
+    def encode_serializable(cls, obj):
         data = obj.encode()
         if data is None or (isinstance(data,typing.Sized) and len(data)==0):
             return obj.enc_name # Default serialization does not save extra data, just the enc_name
-        return {obj.enc_name: data} # Otherwise a dictionary containing the extra data is saved
+        return {obj.enc_name: cls.encode(data)} # Otherwise a dictionary containing the extra data is saved
 
     @classmethod
     def decode_serializable(cls, data):
@@ -95,6 +125,17 @@ class BaseSerializer(object):
                 else:
                     return obj
         return None
+
+
+class YAMLSerializer(object):
+
+    @classmethod
+    def register(cls, S):
+        # Same magic as in YAMLObjectMetaclass:
+        for loader in [yaml.Loader,yaml.SafeLoader,yaml.FullLoader]:
+            loader.add_constructor(S.yaml_tag, S.from_yaml)
+
+        yaml.Dumper.add_representer(S, S.to_yaml)
 
 
 class JSONEncoder(json.JSONEncoder):

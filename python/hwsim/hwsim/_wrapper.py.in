@@ -123,8 +123,6 @@ class Configuration(object):
         self._scenarios_path = path
         simLib.cfg_scenariosPath(path.encode("utf8"))
 
-config = Configuration()
-
 
 # Configure methods:
 simLib.cfg_getSeed.argtypes = []
@@ -280,3 +278,6 @@ simLib.veh_getReducedState.restype = None
 
 simLib.veh_getSafetyBounds.argtypes = [c_void_p,POINTER(c_double)]
 simLib.veh_getSafetyBounds.restype = None
+
+
+config = Configuration()

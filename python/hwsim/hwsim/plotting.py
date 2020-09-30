@@ -534,10 +534,18 @@ class TimeChartPlot(_PlotterView):
         # TODO: x_min is always 0 instead of the minimum value in memory?
         data_bounds[0] = np.nanmin(self._time)
         render_width, render_height = self._r.GetSize()
-        self._r.set_scale(xscale=render_width/(data_bounds[1]-data_bounds[0]),
-                          yscale=render_height/(data_bounds[3]-data_bounds[2]),
-                          reset_camera=False)
-        # self._r.update_bounds_axes() # set_scale automatically calls update_bounds_axes
+        # Below code is same as
+        # self._r.set_scale(xscale=render_width/(data_bounds[1]-data_bounds[0]),
+        #                   yscale=render_height/(data_bounds[3]-data_bounds[2]),
+        #                   reset_camera=False)
+        # but without the call to parent.render(), which causes a large slowdown
+        self._r.scale[0] = render_width/(data_bounds[1]-data_bounds[0])
+        self._r.scale[1] = render_height/(data_bounds[3]-data_bounds[2])
+        transform = vtk.vtkTransform()
+        transform.Scale(*self._r.scale)
+        self._r.camera.SetModelTransformMatrix(transform.GetMatrix())
+        self._r.Modified()
+        # self._r.update_bounds_axes() # set_scale automatically calls update_bounds_axes if reset_camera==True
         self._bounds.SetBounds(data_bounds)
         # Custom self._r.view_xy() that is more 'zoomed in' without flashes:
         focus = np.array(self._r.center)

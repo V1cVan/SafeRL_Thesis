@@ -74,6 +74,13 @@ class Vehicle(object):
 
     @property
     def x(self):
+        """
+        Vehicle state in global 3D-coordinate frame.
+        pos:        x, y, z position
+        ang:        roll, pitch, yaw angle (rotation about x-, y-, z-axis)
+        vel:        x, y, z velocity (time derivative of pos)
+        ang_vel:    roll, pitch, yaw angular velocity (time derivative of ang)
+        """
         return self.x_raw.view(self.x_dt)[0]
 
     @property
@@ -84,6 +91,11 @@ class Vehicle(object):
 
     @property
     def u(self):
+        """
+        Last inputs to the dynamical model (as calculated by the low-level controllers)
+        acc:    Longitudinal acceleration
+        delta:  Steering angle
+        """
         return self.u_raw.view(self.u_dt)[0]
 
     @property
@@ -124,6 +136,40 @@ class Vehicle(object):
 
     @property
     def s(self):
+        """
+        Augmented state vector, containing the vehicle's state w.r.t. the road it is currently
+        travelling on and w.r.t. its nearest neighbours. The construction of this state vector
+        is influenced by 3 parameters:
+            * L: the number of visible lanes to the left & right of the current lane.
+            * N_OV: the number of visible vehicles in front of and behind us in each of the
+                    visible lanes. In case there are less then N_OV vehicles within the
+                    detection horizon (D_MAX), the remaining spots in the state vector will
+                    be filled with dummy entries.
+            * D_MAX: the detection horizon, i.e. the maximum visible distance. Only vehicles
+                    within D_MAX metres from our current position will be included in the
+                    state vector.
+
+        The following information is contained in this augmented state vector:
+        gapB:   available space w.r.t. the right and left road edge
+        maxVel: maximum allowed velocity on the current road segment
+        vel:    current longitudinal and lateral speed
+        laneC:  lane information of the current lane
+        laneR:  lane information of all visible (L) lanes to the right
+        laneL:  lane information of all visible (L) lanes to the left
+
+        The lane information consists of:
+        off:    distance towards the lane's center (measured from the vehicle's CG)
+        width:  width of this lane
+        relB:   vehicle information of all visible (N_OV) vehicles behind us
+        relF:   vehicle information of all visible (N_OV) vehicles in front of us
+
+        The vehicle information consists of:
+        off:    longitudinal and lateral distance between both vehicle's CGs
+        gap:    longitudinal and lateral available space between both vehicle's (
+                takes vehicle dimensions into account)
+        vel:    relative longitudinal and lateral velocity (own velocity minus
+                other vehicle's velocity)
+        """
         return self.s_raw.view(self.s_dt)[0]
 
     @property
@@ -134,6 +180,11 @@ class Vehicle(object):
 
     @property
     def a(self):
+        """
+        Last reference actions (provided by the vehicle's Policy).
+        vel:    reference longitudinal velocity
+        off:    lateral offset
+        """
         return self.a_raw.view(self.a_dt)[0]
 
     @a.setter

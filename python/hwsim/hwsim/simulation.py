@@ -26,6 +26,21 @@ class Simulation(object):
     # TODO: maybe create dataclass for sConfig and vTypes instead of passing dicts
     # TODO: instead of sConfig, specify all fields as arguments. Caller can then use dict unpacking
     def __init__(self, sConfig):
+        """
+        Simulation parameters:
+        dt:         Time step [s]
+        scenario:   Name of scenario to load
+        name:       Name of this simulation
+        output_dir: Path to folder in which this simulation's data should be stored
+        input_dir:  Path to folder of previous simulation to load in
+        k0:         Initial value for the current time step k
+        replay:     True to replay the loaded simulation, False to continue simulating from k=k0
+        kM:         Maximum number of iterations (simulation will be automatically stopped when k>=kM)
+        L:          Default value for state parameter L (see Vehicle)
+        N_OV:       Default value for state parameter N_OV (see Vehicle)
+        D_MAX:      Default value for state parameter D_MAX (see Vehicle)
+        vehicles:   Configuration for all vehicles in this simulation (see add_vehicles)
+        """
         # Create simulation configuration and internal variables
         self._simCfg = {
             "dt": 0, # Time step
@@ -178,6 +193,18 @@ class Simulation(object):
 
     @conditional(_inactive)
     def add_vehicles(self, data):
+        """
+        Adds the given vehicle configurations to this simulation. A vehicle configuration does
+        always consist of a Model and Policy blueprint as well as values for the state parameters
+        L, N_OV and D_MAX (if omitted the defaults from this simulation will be used instead).
+        * In case you want to configure individual vehicles, the configuration should furthermore
+        include a road ID and road coordinates (s and l). Initial velocity (v) and heading angle
+        (gamma) can also be provided (otherwise default to 0). A size and mass can also be specified
+        and are otherwise randomly initialized.
+        * In case you do not care about initial positions of vehicles, a whole 'fleet' of vehicles
+        can also be configured (vehicle types). In this case you can only specify minimum and maximum
+        bounds on the vehicles' sizes and masses.
+        """
         self._simCfg["input_dir"] = ""
         if not isinstance(data, typing.List):
             data = [data]
