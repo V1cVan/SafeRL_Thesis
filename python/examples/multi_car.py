@@ -46,7 +46,7 @@ if __name__=="__main__":
         shape = (4,2)
         shape = (2,2)
         groups = [([0,1],0)]
-        vehicle_type = "car" if FANCY_CARS else "box"
+        vehicle_type = "car" if FANCY_CARS else "cuboid3D"
         p = Plotter(sim,"Multi car simulation",mode=PLOT_MODE,shape=shape,groups=groups,off_screen=OFF_SCREEN)
         p.V = 64
         p.subplot(0,0)

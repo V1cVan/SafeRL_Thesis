@@ -2,194 +2,16 @@
 #define SIM_POLICY
 
 #include "Utils.hpp"
+#include "VehicleBase.hpp"
 #include <array>
 #include <vector>
 #include <cmath>
 #include <random>
 #include <algorithm>
 
+
+// --- Definition of Vehicle Policies ---
 namespace Policy{
-
-    // --- State definition ---
-    struct relState{
-        // size = 6
-        std::array<double,2> off;// Relative longitudinal and lateral offset of vehicle's CG (positive if EV is to the left/front) ; longitudinal offset is an estimate
-        std::array<double,2> gap;// Relative longitudinal and lateral gap between vehicle's bounds (front to back or left to right). Positive in case of no overlap, negative otherwise
-        std::array<double,2> vel;// Relative longitudinal and lateral velocity along the lane (positive if EV is travelling faster)
-    };
-    struct laneInfo{
-        // size = 2 + 2*N_OV*relState::size
-        double off;// Lateral offset of the vehicle's CG w.r.t. this lane's center
-        double width;
-        // TODO: include distance to next merge? Absolute value is distance till merge. Positive
-        // if it is a merge with the left lane, negative if it is a merge with the right lane. Zero
-        // if there is no upcoming merge. One variable for merge in front, one variable for merge behind.
-        std::vector<relState> relB;// Relative states w.r.t. other vehicles on (or moving towards) this lane. relB contains
-        std::vector<relState> relF;// vehicle's whose off<0 whereas relF contains the vehicle's whose off>=0
-        // Note that vehicles can be part of multiple lanes if they are switching lanes
-
-        inline const std::vector<relState>& rel(int side) const{
-            return (side < 0) ? relB : relF;
-        }
-
-        inline std::vector<relState>& rel(int side){
-            return (side < 0) ? relB : relF;
-        }
-    };
-    struct augState{
-        // size = 5 + (2*L+1)*laneInfo::size
-        std::array<double,2> gapB;// Gap w.r.t. right and left road boundary
-        double maxVel;// Maximum allowed speed
-        std::array<double,2> vel;// Vehicle's velocity in both longitudinal and lateral direction of the lane
-        laneInfo laneC;// Lane information about the current lane (vehicle's CG within the lane bounds),
-        std::vector<laneInfo> laneR;// the lanes directly to the right and
-        std::vector<laneInfo> laneL;// left
-        //std::vector<relState> rel;// Relative states w.r.t. other vehicles in the neighbourhood
-        // TODO: possible future states might include lane information for all lanes, lane information at different
-        // longitudinal offsets w.r.t. the ego vehicle, relative vehicle information stored per lane
-        // TODO: use Eigen vector/array and make fields reference slices (Eigen::Map)
-
-        inline const laneInfo& lane(int idx) const{
-            if(idx==0){
-                return laneC;
-            }else if(idx<0){
-                return laneR[-idx-1];
-            }else{
-                return laneL[idx-1];
-            }
-        }
-
-        inline laneInfo& lane(int idx){
-            return const_cast<laneInfo&>(std::as_const(*this).lane(idx));
-        }
-    };
-    struct redState{
-        // The reduced state is calculated from the augmented state, taking only vehicles
-        // within a certain region of interest (ROI) into account. The longitudinal
-        // component of the reduced state (frontOff and frontVel) is determined from other
-        // vehicles within the lateral region of interest. Similarly, the lateral component
-        // of the reduced state (rightOff and leftOff) is determined from other vehicles
-        // within the longitudinal region of interest.
-        double frontOff;
-        double frontVel;
-        double rightOff;
-        double leftOff;
-    };
-
-
-    // --- ROI definition ---
-    struct ROI{
-        // Defines a region of interest around a vehicle, allowing to calculate a reduced
-        // state vector from a given augmented state vector, taking only vehicles within the
-        // longitudinal and lateral limitations of this ROI into account. Both the
-        // longitudinal and lateral regions of interest are defined through a pair of
-        // offsets and a minimal time-to-collision (to account for fast vehicles approaching
-        // the ROI)
-        std::array<double,2> LONG_OFF;// Vehicles within these longitudinal offsets (behind or in front) will be taken into account (in meters)
-        std::array<double,2> LAT_OFF;// Vehicles within these lateral offsets (to the right or left) will be taken into account (in meters)
-        double LONG_TTC;// Vehicles whose longitudinal time-to-collision is below this value will be taken into account (in seconds)
-        double LAT_TTC;// Vehicles whose lateral time-to-collision is below this value will be taken into account (in seconds)
-
-        inline redState getReducedState(const augState& s, const redState& default_r) const{
-            // Calculate a reduced vehicle state from the given augmented state vector.
-            // This simplified state only takes the closest vehicle in front of us into
-            // account, together with two lateral offset indicators.
-            redState r = default_r;// Start with defaults
-            // TODO: rewrite, only taking vehicles in their respective lane into account (laneChange
-            // will take care of including vehicles that are crossing edges/plan to do so). I.e. to 
-            // determine frontOff and frontVel only look at vehicle directly in front and to determine
-            // right and left offsets, only look at closest vehicle in front/behind us in the left and
-            // right lane.
-            for(int Lr=-1;Lr<=1;Lr++){
-                // Loop over the current lane and left and right neighbouring lanes
-                for(int side=-1;side<=1;side+=2){
-                    // Loop over the front and back side
-                    const relState& ov = s.lane(Lr).rel(side)[0];
-                    if(inLongROI(ov)){
-                        // The nearest vehicle on this side is within the longitudinal region of interest
-                        if(ov.off[1]>0 && ov.gap[1]<r.rightOff){
-                            // And it is to the right and closer than the current rightOff
-                            r.rightOff = ov.gap[1];
-                        }
-                        if(ov.off[1]<0 && ov.gap[1]<r.leftOff){
-                            // And it is to the left and closer than the current leftOff
-                            r.leftOff = ov.gap[1];
-                        }
-                    }
-                }
-                const relState& ovF = s.lane(Lr).relF[0];
-                if(inLatROI(ovF) || Lr==0){// Make sure the vehicle in front of our current lane is always considered
-                    // The nearest vehicle in front is within the lateral ROI
-                    // if(ov.gap[0]<r.frontOff){
-                    //     // And it is closer than the current frontOff
-                    //     r.frontOff = ov.gap[0];
-                    //     r.frontVel = s.vel[0]-ov.vel[0];
-                    // }
-                    r.frontOff = std::min(ovF.gap[0],r.frontOff);
-                    r.frontVel = std::min(s.vel[0]-ovF.vel[0],r.frontVel);
-                }
-            }
-            return r;
-        }
-
-        inline bool inLongROI(const relState& ov) const{
-            // Return whether other vehicle is within the longitudinal region of interest
-            if(ov.gap[1]<0){
-                // If we have lateral overlap with the other vehicle, do not consider it
-                return false;
-            }
-            if(ov.off[0]>0){
-                // Other vehicle is behind
-                return ov.gap[0]<LONG_OFF[0] || ov.gap[0]<-ov.vel[0]*LONG_TTC;
-            }else{
-                // Other vehicle is in front
-                return ov.gap[0]<LONG_OFF[1] || ov.gap[0]<ov.vel[0]*LONG_TTC;
-            }
-        }
-
-        inline bool inLatROI(const relState& ov) const{
-            // Return whether other vehicle is within the lateral region of interest
-            if(ov.off[1]<0){
-                // Other vehicle is to the right
-                return ov.gap[1]<LAT_OFF[0] || ov.gap[1]<-ov.vel[1]*LAT_TTC;
-            }else{
-                // Other vehicle is to the left
-                return ov.gap[1]<LAT_OFF[1] || ov.gap[1]<ov.vel[1]*LAT_TTC;
-            }
-        }
-    };
-
-
-    // --- Action definition ---
-    struct Action{
-        // size = 2
-        double vel;// Relative velocity w.r.t. current longitudinal velocity
-        double off;// Lateral offset w.r.t. current lateral position on the road
-    };
-
-
-    // --- Base Vehicle definition (as required by the Policies) ---
-    struct VehicleBase{
-        // This class contains basic vehicle properties, as required by the different policies.
-        static constexpr double SAFETY_GAP = 5;// Safety gap, used to determine safetyBounds
-
-        const unsigned int L; // Number of lanes around the current one to include in the augmented state vector (to the left and right)
-        const unsigned int N_OV; // Number of other vehicles in the augmented state vector (per lane per side)
-        const double D_MAX; // Radius of the detection horizon. The augmented state vector will only contain vehicles within this radius
-        augState s;// Current augmented state vector
-        Action a;// Current driving actions
-        const ROI safetyROI = {// ROI used to calculate the safety bounds
-            {10,10},// Ensure at least 10m between vehicles before allowing lane changes
-            {0.1,0.1},
-            8, // Ensure at least 8s of time to collision before allowing lane changes
-            8
-        };
-        redState r;// Current reduced state (used to determine safetyBounds)
-        std::array<Action,2> safetyBounds;// Minimum and maximum bounds on the action space to remain 'in safe operation'
-
-        VehicleBase(const unsigned int L, const unsigned int N_OV, const double D_MAX) : L(L), N_OV(N_OV), D_MAX(D_MAX){}
-    };
-
 
     // --- Base Policy definition ---
     class PolicyBase : public ISerializable{
@@ -220,6 +42,19 @@ namespace Policy{
     #ifdef COMPAT
     Factory<PolicyBase> PolicyBase::factory("policy");
     #endif
+
+
+    // --- CustomPolicy ---
+    class CustomPolicy : public Serializable<PolicyBase,PolicyBase::factory,CustomPolicy,0>{
+        // Used for custom driving policies
+
+        public:
+            CustomPolicy(const sdata_t = sdata_t()){}
+
+            inline Action getAction(const VehicleBase& vb){
+                return {std::nan(""),std::nan("")};
+            }
+    };
 
 
     // --- StepPolicy ---
@@ -268,19 +103,6 @@ namespace Policy{
 
             inline void loadState(Utils::sdata_t data){
                 ps = Utils::deserialize<PolicyState>(data);
-            }
-    };
-
-
-    // --- CustomPolicy ---
-    class CustomPolicy : public Serializable<PolicyBase,PolicyBase::factory,CustomPolicy,0>{
-        // Used for custom driving policies
-
-        public:
-            CustomPolicy(const sdata_t = sdata_t()){}
-
-            inline Action getAction(const VehicleBase& vb){
-                return {std::nan(""),std::nan("")};
             }
     };
 
@@ -339,14 +161,14 @@ namespace Policy{
                 // The right and left offsets are equal to the right and left boundary offsets.
                 redState def = {ADAPT_GAP,vb.s.vel[0],vb.s.gapB[0],vb.s.gapB[1]};
                 redState rs = roi.getReducedState(vb.s, def);// TODO: maybe use v.r instead (from safetyBounds calculation)?
-                if(rs.frontOff < ADAPT_GAP){
+                if(rs.frontGap < ADAPT_GAP){
                     // If there is a vehicle in front of us, linearly adapt speed to match frontVel
-                    double alpha = (rs.frontOff-SAFETY_GAP)/(ADAPT_GAP-SAFETY_GAP);
+                    double alpha = (rs.frontGap-SAFETY_GAP)/(ADAPT_GAP-SAFETY_GAP);
                     a.vel = std::max(0.0,std::min(desVel,(1-alpha)*rs.frontVel+alpha*desVel));// And clip between [0;desVel]
                 }
-                const bool rightFree = std::abs(vb.s.laneR[0].off-vb.s.laneC.off)>EPS && rs.rightOff-vb.s.laneC.off>vb.s.laneR[0].width-EPS;// Right lane is free if there is a lane and the right offset is larger than the lane width
-                const bool leftFree = std::abs(vb.s.laneL[0].off-vb.s.laneC.off)>EPS && rs.leftOff+vb.s.laneC.off>vb.s.laneL[0].width-EPS;// Left lane is free if there is a lane and the left offset is larger than the lane width
-                const bool shouldOvertake = leftFree && rs.frontOff<overtakeGap && rs.frontVel<0.9*desVel;// Overtaking condition
+                const bool rightFree = std::abs(vb.s.laneR[0].off-vb.s.laneC.off)>EPS && rs.rightGap-vb.s.laneC.off>vb.s.laneR[0].width-EPS;// Right lane is free if there is a lane and the right offset is larger than the lane width
+                const bool leftFree = std::abs(vb.s.laneL[0].off-vb.s.laneC.off)>EPS && rs.leftGap+vb.s.laneC.off>vb.s.laneL[0].width-EPS;// Left lane is free if there is a lane and the left offset is larger than the lane width
+                const bool shouldOvertake = leftFree && rs.frontGap<overtakeGap && rs.frontVel<0.9*desVel;// Overtaking condition
                 if(shouldOvertake && !overtaking){
                     overtaking = true;// Start overtaking if it is not already the case
                 }
@@ -375,7 +197,7 @@ namespace Policy{
 
             inline Utils::sdata_t saveState() const{
                 Utils::sdata_t data;
-                data.push_back(std::byte{static_cast<int>(overtaking)});
+                data.push_back(std::byte{static_cast<uint8_t>(overtaking)});
                 return data;
             }
 
@@ -421,6 +243,90 @@ namespace Policy{
                 { std::byte{2}, BasicPolicy::Type::FAST}
             };
     #endif
+
+
+    // --- IMPolicy ---
+    class IMPolicy : public Serializable<PolicyBase,PolicyBase::factory,IMPolicy,3>{
+        // Basic driving policy, trying to mimic human driver behaviour using the IDM and MOBIL models.
+        private:
+            static constexpr double MIN_VEL = -5;// w.r.t. maximum allowed velocity
+            static constexpr double MAX_VEL = 4;
+
+        public:
+            static constexpr double EPS = 1e-2;// Lateral epsilon (in meters)
+
+            // --- IDM parameters ---
+            static constexpr double JAM_GAP0 = 2;// Jam distance (s0) [m]
+            static constexpr double JAM_GAP1 = 0;// Jam distance (s1) [m]
+            static constexpr double MAX_ACC = 2.5;// Maximum acceleration (a) [m/s^2]
+            static constexpr double DES_DEC = 1.8;// Desired deceleration (b) [m/s^2]
+            static constexpr double T = 1.6;// Safe time headway [s]
+            static constexpr int DELTA = 4;// Acceleration exponent
+
+            // --- MOBIL parameters ---
+            static constexpr double POLITENESS = 0.4;// Politeness factor (p)
+            static constexpr double MAX_DEC = 4;// Maximum safe deceleration (b_safe) [m/s^2]
+            static constexpr double ACC_TH = 0.1;// Changing threshold (\Delta a_th) [m/s^2]
+            static constexpr double ACC_BIAS = 0.3;// Bias for right lane (\Delta a_bias) [m/s^2]
+
+            // Policy specific properties
+            const double desVelDiff;// Difference between the desired velocity of this driver and the maximum allowed speed (in m/s)
+
+            IMPolicy(const sdata_t = sdata_t()) : desVelDiff(getDesVelDiff()){}
+
+            inline Action getAction(const VehicleBase& vb){
+                double desVel = vb.s.maxVel+desVelDiff;// Vehicle's desired velocity, based on the current maximum allowed speed
+                double vel = vb.s.vel[0];// Vehicle's current velocity
+                const bool right = std::abs(vb.s.laneR[0].off-vb.s.laneC.off)>EPS;
+                const bool left = std::abs(vb.s.laneL[0].off-vb.s.laneC.off)>EPS;
+                Action a = {desVel,-vb.s.laneC.off};// Default action is driving at desired velocity and going towards the middle of the lane
+                // --- IDM ---
+                auto calcAcc = [](double vel, double desVel, double frontVel, double frontGap){
+                    frontGap = std::max(0.01, frontGap);
+                    double desGap = JAM_GAP0 + JAM_GAP1*std::sqrt(vel/desVel) + T*vel + vel*(vel-frontVel)/2/std::sqrt(MAX_ACC*DES_DEC);
+                    return MAX_ACC*(1-std::pow(vel/desVel,DELTA)-desGap*desGap/frontGap/frontGap);
+                };
+                double accC = calcAcc(vel, desVel, vb.r.frontVel, vb.r.frontGap);
+                a.vel = vel + accC*0.2;// TODO: resolve hard-coded time step (find way to let policies decide upon acceleration directly, without low level controllers)
+
+                // --- MOBIL ---
+                auto& cF = vb.s.laneC.relF[0]; auto& rF = vb.s.laneR[0].relF[0]; auto& lF = vb.s.laneL[0].relF[0];
+                auto& cB = vb.s.laneC.relB[0]; auto& rB = vb.s.laneR[0].relB[0]; auto& lB = vb.s.laneL[0].relB[0];
+                double accCr = -2*MAX_DEC, accCl = -2*MAX_DEC;// Acceleration of Current vehicle after a possible lane change to the right or left
+                double accR = 0, accRt = -2*MAX_DEC;// Acceleration of following vehicle in the Right lane before and after a possible lane change
+                double accL = 0, accLt = -2*MAX_DEC;// Acceleration of following vehicle in the Left lane before and after a possible lane change
+                double accO = calcAcc(vel-cB.vel[0], vb.s.maxVel, vel, cB.gap[0]);// Acceleration of following vehicle in current lane
+                double accOt = calcAcc(vel-cB.vel[0], vb.s.maxVel, vel-cF.vel[0], cF.gap[0]+cB.gap[0]+vb.size[0]);// Acceleration of following vehicle in current lane after a possible lane change
+                if(right){
+                    accR = calcAcc(vel-rB.vel[0], vb.s.maxVel, vel-rF.vel[0], rF.gap[0]+rB.gap[0]+vb.size[0]);
+                    accRt = calcAcc(vel-rB.vel[0], vb.s.maxVel, vel, rB.gap[0]);
+                    accCr = calcAcc(vel, desVel, vel-rF.vel[0], rF.gap[0]);
+                }
+                if(left){
+                    accL = calcAcc(vel-lB.vel[0], vb.s.maxVel, vel-lF.vel[0], lF.gap[0]+lB.gap[0]+vb.size[0]);
+                    accLt = calcAcc(vel-lB.vel[0], vb.s.maxVel, vel, lB.gap[0]);
+                    accCl = calcAcc(vel, desVel, vel-lF.vel[0], lF.gap[0]);
+                }
+                // TODO: implement passing rule (eq. 5) if necessary
+                bool incR = accCr-accC + POLITENESS*(accOt-accO) > ACC_TH-ACC_BIAS;
+                bool incL = accCl-accC + POLITENESS*(accLt-accL) > ACC_TH+ACC_BIAS;
+                if(accRt>=-MAX_DEC && incR){
+                    // Perform a lane change to the right
+                    a.off = -vb.s.laneR[0].off;
+                }else if(accLt>=-MAX_DEC && incL){
+                    // Perform a lane change to the left
+                    a.off = -vb.s.laneL[0].off;
+                }
+
+                return a;
+            }
+
+        private:
+            static inline double getDesVelDiff(){
+                std::uniform_real_distribution<double> dis(MIN_VEL,MAX_VEL);
+                return dis(Utils::rng);
+            }
+    };
 
 };
 

@@ -2,6 +2,7 @@
 #define SIM_VEHICLE
 
 #include "Utils.hpp"
+#include "VehicleBase.hpp"
 #include "Scenario.hpp"
 #include "Model.hpp"
 #include "Policy.hpp"
@@ -11,7 +12,7 @@
 #include <array>
 #include <random>
 
-class Vehicle : public Model::VehicleBase, public Policy::VehicleBase{
+class Vehicle : public VehicleBase{
     public:
         struct Config{
             BaseFactory::BluePrint model;
@@ -96,9 +97,9 @@ class Vehicle : public Model::VehicleBase, public Policy::VehicleBase{
         int colStatus;// Collision status
 
         Vehicle(const Scenario& vSc, const Config& vCfg, const Props& vProps, const InitialState& vIs)
-        : Model::VehicleBase(createVehicleModelBase(vProps)), Policy::VehicleBase(vCfg.L,vCfg.N_OV,vCfg.D_MAX), sc(vSc)
-        , model(Model::ModelBase::factory.create(vCfg.model)), policy(Policy::PolicyBase::factory.create(vCfg.policy))
-        , longCtrl(3.5), latCtrl(0.08), roadInfo(), colStatus(COL_NONE){
+        : VehicleBase(createVehicleBase(vProps, vCfg)), sc(vSc), model(Model::ModelBase::factory.create(vCfg.model))
+        , policy(Policy::PolicyBase::factory.create(vCfg.policy)), longCtrl(3.5), latCtrl(0.08), roadInfo()
+        , colStatus(COL_NONE){
             // TODO: below initializations can all be moved to initializer list or static initializer methods
             // Create full model state from the initial state
             roadInfo.laneR.assign(L,{});// Initialize lane vectors to hold exactly
@@ -315,16 +316,16 @@ class Vehicle : public Model::VehicleBase, public Policy::VehicleBase{
             Policy::redState def = {D_MAX,s.maxVel,std::min(s.gapB[0],roadInfo.gapE[0]),std::min(s.gapB[1],roadInfo.gapE[1])};
             r = safetyROI.getReducedState(s, def);
             // Update minBrakeDist to incorporate current speed of vehicle in front:
-            //double brakeGap = r.frontOff+r.frontVel*r.frontVel/maxBrakeAcc/2-minBrakeDist;
+            //double brakeGap = r.frontGap+r.frontVel*r.frontVel/maxBrakeAcc/2-minBrakeDist;
             // Linearly adapt maximum speed based on distance to vehicle in front (ensuring a minimal SAFETY_GAP)
-            // double alpha = (r.frontOff-SAFETY_GAP)/(minBrakeDist-SAFETY_GAP);
+            // double alpha = (r.frontGap-SAFETY_GAP)/(minBrakeDist-SAFETY_GAP);
             // double maxVel = (1-alpha)*r.frontVel+alpha*s.maxVel;
             // Maximum allowed velocity if both vehicles start max braking:
-            double maxVel = std::sqrt(std::max(0.0,2*maxBrakeAcc*(r.frontOff-SAFETY_GAP)+r.frontVel*r.frontVel));
+            double maxVel = std::sqrt(std::max(0.0,2*maxBrakeAcc*(r.frontGap-SAFETY_GAP)+r.frontVel*r.frontVel));
             maxVel = std::max(0.0,std::min(s.maxVel,maxVel));// And clip between [0;maxRoadVel]
 
-            safetyBounds[0] = {0.0,-r.rightOff};
-            safetyBounds[1] = {maxVel,r.leftOff};
+            safetyBounds[0] = {0.0,-r.rightGap};
+            safetyBounds[1] = {maxVel,r.leftGap};
         }
 
         inline RoadState roadDerivatives(const RoadState& rs){
@@ -344,9 +345,9 @@ class Vehicle : public Model::VehicleBase, public Policy::VehicleBase{
             return {{ds,dl},dModel};
         }
 
-        static inline Model::VehicleBase createVehicleModelBase(const Props& props){
+        static inline VehicleBase createVehicleBase(const Props& props, const Config& cfg){
             std::array<double,3> relCgLoc = {0.45,0.5,0.3};
-            return Model::VehicleBase(props.size,Model::VehicleBase::calcCg(props.size,relCgLoc),props.mass);
+            return VehicleBase(props.size,VehicleBase::calcCg(props.size,relCgLoc),props.mass,cfg.L,cfg.N_OV,cfg.D_MAX);
         }
 };
 

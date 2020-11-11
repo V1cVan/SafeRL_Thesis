@@ -75,6 +75,19 @@ class BasicPolicy(_Policy,enc_name="basic"):
         return self.names[self._type]
 
 
+class IMPolicy(_Policy,enc_name="im"):
+
+    def __init__(self):
+        super().__init__(3)
+
+    @property
+    def color(self):
+        """
+        Color used for drawing vehicles with this policy (if policyColoring is used).
+        """
+        return [0.7,0.7,0.7] # Gray
+
+
 class CustomPolicy(_Policy):
 
     def __init__(self):

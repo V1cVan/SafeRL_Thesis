@@ -54,6 +54,7 @@ class Simulation{
         // Simulation variables
         std::vector<Vehicle> vehicles;
         Mode mode;
+        bool fast_replay;
         unsigned int k;
         uint8_t part;
         // Logging variables
@@ -289,9 +290,9 @@ class Simulation{
         };
 
         // Actual constructor setting up all simulation variables
-        Simulation(const sConfig& config, const Scenario& sc, const std::vector<VehicleDef>& vDefs, std::unique_ptr<Log> inputLog, const Mode mode, const unsigned int k0)
+        Simulation(const sConfig& config, const Scenario& sc, const std::vector<VehicleDef>& vDefs, std::unique_ptr<Log> inputLog, const Mode mode, const bool fast_replay, const unsigned int k0)
         : dt(config.dt), scenario(sc), vehicles(std::move(createVehicles(scenario,vDefs)))
-        , mode(mode), k(k0), part(1), inputLog(std::move(inputLog))
+        , mode(mode), fast_replay(fast_replay), k(k0), part(1), inputLog(std::move(inputLog))
         , outputLog(config.log_path.empty() ? std::unique_ptr<Log>() : std::make_unique<Log>(*this,config.log_path)){
             // Simulation creates a copy of the scenario and all created vehicles get
             // a reference to this simulation's scenario.
@@ -306,21 +307,21 @@ class Simulation{
         }
 
         // Private helper constructor to initialize the simulation from a log file
-        Simulation(const sConfig& config, Log::loadedSim_t loadedSim, const Mode mode, const unsigned int k0)
-        : Simulation(config,std::get<0>(loadedSim),std::get<1>(loadedSim),std::move(std::get<2>(loadedSim)),mode,k0){}
+        Simulation(const sConfig& config, Log::loadedSim_t loadedSim, const Mode mode, const bool fast_replay, const unsigned int k0)
+        : Simulation(config,std::get<0>(loadedSim),std::get<1>(loadedSim),std::move(std::get<2>(loadedSim)),mode,fast_replay,k0){}
 
     public:
         // Create a simulation from the given vehicle configurations
         Simulation(const sConfig& config, const Scenario& sc, const std::vector<VehicleDef>& vDefs)
-        : Simulation(config,sc,vDefs,std::unique_ptr<Log>(),Mode::SIMULATE,0){}
+        : Simulation(config,sc,vDefs,std::unique_ptr<Log>(),Mode::SIMULATE,false,0){}
 
         // Create a simulation from the given vehicle types
         Simulation(const sConfig& config, const Scenario& sc, const std::vector<VehicleType>& vehicleTypes)
         : Simulation(config,sc,createVehicleDefs(sc,vehicleTypes)){}
 
         // Create a simulation from the given log file
-        Simulation(const sConfig& config, const std::string& start_log, const unsigned int k0, const bool replay = false)
-        : Simulation(config,Log::load(start_log),replay ? Mode::REPLAY_INPUT : Mode::SIMULATE,k0){}
+        Simulation(const sConfig& config, const std::string& start_log, const unsigned int k0, const bool replay = false, const bool fast_replay = true)
+        : Simulation(config,Log::load(start_log),replay ? Mode::REPLAY_INPUT : Mode::SIMULATE,fast_replay,k0){}
 
         // ~Simulation(){} // Input and output logs will clean up, flush to memory and their resource managers will close all resources.
 
@@ -357,7 +358,7 @@ class Simulation{
             // In the second part of the new time step, we update all augmented state vectors
             // and retrieve the new actions from the vehicle policies.
             part = 1;
-            if(mode==Mode::SIMULATE){
+            if(mode==Mode::SIMULATE || !fast_replay){
                 // TODO: this is the most heavy step
                 return updateStates();
             }else{

@@ -28,18 +28,20 @@ class Simulation(object):
     def __init__(self, sConfig):
         """
         Simulation parameters:
-        dt:         Time step [s]
-        scenario:   Name of scenario to load
-        name:       Name of this simulation
-        output_dir: Path to folder in which this simulation's data should be stored
-        input_dir:  Path to folder of previous simulation to load in
-        k0:         Initial value for the current time step k
-        replay:     True to replay the loaded simulation, False to continue simulating from k=k0
-        kM:         Maximum number of iterations (simulation will be automatically stopped when k>=kM)
-        L:          Default value for state parameter L (see Vehicle)
-        N_OV:       Default value for state parameter N_OV (see Vehicle)
-        D_MAX:      Default value for state parameter D_MAX (see Vehicle)
-        vehicles:   Configuration for all vehicles in this simulation (see add_vehicles)
+        dt:             Time step [s]
+        scenario:       Name of scenario to load
+        name:           Name of this simulation
+        output_dir:     Path to folder in which this simulation's data should be stored
+        output_mode:    Either '~' or 'none' to suppress all output; 'cfg' to only store the used configuration; or 'all' to also store the log files
+        input_dir:      Path to folder of previous simulation to load in
+        k0:             Initial value for the current time step k
+        replay:         True to replay the loaded simulation, False to continue simulating from k=k0
+        fast_replay:    True to speed up the replay (leads to invalid augmented states), False for slower replay (but with valid augmented states)
+        kM:             Maximum number of iterations (simulation will be automatically stopped when k>=kM)
+        L:              Default value for state parameter L (see Vehicle)
+        N_OV:           Default value for state parameter N_OV (see Vehicle)
+        D_MAX:          Default value for state parameter D_MAX (see Vehicle)
+        vehicles:       Configuration for all vehicles in this simulation (see add_vehicles)
         """
         # Create simulation configuration and internal variables
         self._simCfg = {
@@ -51,6 +53,7 @@ class Simulation(object):
             "input_dir": "", # Input log folder
             "k0": 0, # Initial value for k
             "replay": False, # Replay simulation from input folder or load initial states and simulate from there
+            "fast_replay": True, # Skip calculation of augmented states in replays
             # Simulation from vehicle types or definitions
             "scenario": "", # Scenario name
             "types": [], # Types of vehicles that will be created
@@ -64,25 +67,27 @@ class Simulation(object):
         self._mode = None
         self._k = -1
         # Initialize configuration based on passed configuration dict
-        self.dt = sConfig.get("dt",0.1)
-        self.output_dir = sConfig.get("output_dir","")
-        self.kM = sConfig.get("kM",1000)
+        self.dt = sConfig.get("dt", 0.1)
+        self.output_dir = sConfig.get("output_dir", "")
+        self.output_mode = sConfig.get("output_mode", "all")
+        self.kM = sConfig.get("kM", 1000)
         self._vehCfgDefaults = {
-            "L": sConfig.get("L",1),
-            "N_OV": sConfig.get("N_OV",1),
-            "D_MAX": sConfig.get("D_MAX",150.0),
+            "L": sConfig.get("L", 1),
+            "N_OV": sConfig.get("N_OV", 1),
+            "D_MAX": sConfig.get("D_MAX", 150.0),
             "minSize": [4,1.6,1.5],
             "maxSize": [5,2.1,2],
             "minMass": 1500,
             "maxMass": 3000
         }
-        input_dir = sConfig.get("input_dir","")
-        k0 = sConfig.get("k0",0)
-        replay = sConfig.get("replay",False)
-        vData = sConfig.get("vehicles",[])
+        input_dir = sConfig.get("input_dir", "")
+        k0 = sConfig.get("k0", 0)
+        replay = sConfig.get("replay", False)
+        fast_replay = sConfig.get("fast_replay", True)
+        vData = sConfig.get("vehicles", [])
         # And load from log or from the given vehicle data
         if input_dir:
-            self.load_log(input_dir,sConfig["name"],k0,replay,vData)
+            self.load_log(input_dir,sConfig["name"],k0,replay,fast_replay,vData)
         else:
             self.name = sConfig.get("name",f"sim_{int(time.time())}")
             self.scenario = sConfig.get("scenario","CIRCULAR")
@@ -122,6 +127,20 @@ class Simulation(object):
         self._simCfg["output_dir"] = str(val) if val else ""
 
     @property
+    def output_mode(self):
+        return self._simCfg["output_mode"]
+
+    @output_mode.setter
+    @conditional(_inactive)
+    def output_mode(self, val):
+        modes = ["~", "none", "cfg", "all"]
+        val = str(val).lower()
+        assert val in modes
+        if val=="~" or val=="none":
+            val = None
+        self._simCfg["output_mode"] = val
+
+    @property
     def name(self):
         return self._simCfg["name"]
 
@@ -158,7 +177,7 @@ class Simulation(object):
         return self._convert_path(path,dtype)
 
     @conditional(_inactive)
-    def load_log(self, input_dir, name, k0=0, replay=False, config=None):
+    def load_log(self, input_dir, name, k0=0, replay=False, fast_replay=True, config=None):
         assert self._sim_file("log",input_dir,name).exists()
         assert int(k0)>=0
         self.name = name
@@ -171,6 +190,7 @@ class Simulation(object):
         self._simCfg["input_dir"] = str(input_dir)
         self._simCfg["k0"] = int(k0)
         self._simCfg["replay"] = bool(replay)
+        self._simCfg["fast_replay"] = bool(fast_replay)
         self.clear_vehicles()
         self._extend_vehicles(config,[],[]) # Fills self._simCfg["vehicles"] with vehicle configurations extracted from config
 
@@ -295,7 +315,7 @@ class Simulation(object):
     def __enter__(self):
         assert self._simCfg["input_dir"] or len(self._simCfg["types"])>0 or len(self._simCfg["defs"])>0
         # Make sure output directory exists:
-        if self._simCfg["output_dir"]:
+        if self._simCfg["output_dir"] and self._simCfg["output_mode"]:
             self._sim_dir(self._simCfg["output_dir"]).mkdir(parents=True)
             # Save simulation configuration in output dir for later use
             cfg = {key: val for key,val in self._simCfg.items() if key not in ["types","defs"]}
@@ -304,11 +324,12 @@ class Simulation(object):
         # Create new simulation object
         simCfg = SimConfig()
         simCfg.dt = self._simCfg["dt"]
-        simCfg.output_log = self._sim_file("log",self._simCfg["output_dir"],dtype='b')
+        output_dir = self._simCfg["output_dir"] if self._simCfg["output_mode"]=="all" else ""
+        simCfg.output_log = self._sim_file("log", output_dir, dtype='b')
         # Call proper constructor
         if self._simCfg["input_dir"]:
             input_log = self._sim_file("log",self._simCfg["input_dir"],dtype='b')
-            self._h = simLib.sim_from_log(simCfg,input_log,self._simCfg["k0"],self._simCfg["replay"])
+            self._h = simLib.sim_from_log(simCfg,input_log,self._simCfg["k0"],self._simCfg["replay"],self._simCfg["fast_replay"])
         elif len(self._simCfg["types"])>0:
             N = len(self._simCfg["types"])
             self._h = simLib.sim_from_types(simCfg,self._simCfg["scenario"].encode("utf8"),(VehType*N)(*self._simCfg["types"]),N)

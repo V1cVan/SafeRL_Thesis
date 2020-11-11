@@ -52,10 +52,10 @@ class Vehicle(object):
         ])
         self.a_dt = np.dtype([("vel",np.float64),("off",np.float64)])
         self._rs_dt = np.dtype([
-            ("frontOff",np.float64),
+            ("frontGap",np.float64),
             ("frontVel",np.float64),
-            ("rightOff",np.float64),
-            ("leftOff",np.float64)
+            ("rightGap",np.float64),
+            ("leftGap",np.float64)
         ])
         # Call initialization code of custom policies:
         self.policy.init_vehicle(self)

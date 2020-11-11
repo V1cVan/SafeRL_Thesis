@@ -121,7 +121,7 @@ extern "C"{
 
     // Create a new simulation from the given input log
     LIB_PUBLIC
-    Simulation* sim_from_log(const sConfig* config, const char* input_log, const unsigned int k0, const bool replay);
+    Simulation* sim_from_log(const sConfig* config, const char* input_log, const unsigned int k0, const bool replay, const bool fast_replay);
 
     // Delete an existing simulation. Note that all pointers returned by any of the other functions
     // with argument sim, will become invalid after this call.

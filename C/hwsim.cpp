@@ -162,14 +162,14 @@ extern "C"{
     }
 
     LIB_PUBLIC
-    Simulation* sim_from_log(const sConfig* config, const char* input_log, const unsigned int k0, const bool replay){
+    Simulation* sim_from_log(const sConfig* config, const char* input_log, const unsigned int k0, const bool replay, const bool fast_replay){
         Simulation::sConfig simConfig = convertSimConfig(config);
         if(input_log==NULL || input_log[0]==0){
             std::cerr << "Invalid input log path." << std::endl;
             return NULL;
         }
         try{
-            return new Simulation(simConfig,std::string(input_log),k0,replay);
+            return new Simulation(simConfig,std::string(input_log),k0,replay,fast_replay);
         }catch(std::invalid_argument& e){
             std::cerr << e.what() << std::endl;
             return NULL;
@@ -490,10 +490,10 @@ extern "C"{
 
     LIB_PUBLIC
     void veh_getReducedState(const Vehicle* veh, double* state){
-        state[0] = veh->r.frontOff;
+        state[0] = veh->r.frontGap;
         state[1] = veh->r.frontVel;
-        state[2] = veh->r.rightOff;
-        state[3] = veh->r.leftOff;
+        state[2] = veh->r.rightGap;
+        state[3] = veh->r.leftGap;
     }
 
     LIB_PUBLIC

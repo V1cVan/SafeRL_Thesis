@@ -4,6 +4,7 @@ import vtk
 import time
 import timeit
 import pathlib
+import collections
 from enum import Enum, Flag, auto
 from tkinter import Tk, Label, Entry, Button
 
@@ -119,6 +120,7 @@ class _PlotterView(object):
 
     def __init__(self,p):
         assert(isinstance(p,Plotter))
+        self._p = p
         self._sim = p._sim
         self._V = p._V
         self._r = p.renderer
@@ -151,25 +153,18 @@ class SimulationPlot(_PlotterView):
     all vehicles in the simulation from a fixed camera position.
     """
 
-    def __init__(self,p,scale_markings=False,vehicle_type="box",show_marker=False,show_ids=False,coloring=None):
+    def __init__(self,p,scale_markings=False,vehicle_type="cuboid3D",show_marker=False,show_ids=False,coloring=None):
         super().__init__(p)
-        # Create the base mesh for all vehicles, having its center at the origin and
-        # having size 1 in each dimension
-        vehicle_base = None
-        if vehicle_type=="box":
-            vehicle_base = _cuboidMesh(np.full((3,2),0.5))
-        if vehicle_type=="car":
-            obj_file = pathlib.Path(__file__).parent.absolute().joinpath("car_low.obj")
-            vehicle_base = pv.read(obj_file)
-            # TODO: color based on materialIds (in original obj file)
-            _normalizeMesh(vehicle_base)
 
         # Plot the scenario:
         for road in self._sim.sc.roads:
             self._plotRoad(p,road,scale_markings)
         # Plot the vehicles:
         self._vehicles = None
-        if vehicle_base is not None:
+        if vehicle_type is not None:
+            # Register mesh for all vehicles in the simulation
+            self._M, vehicle_base = p._register_mesh(vehicle_type,'size',np.s_[:])
+
             # Coloring scheme for vehicles:
             if isinstance(coloring,list):
                 self._vehicleColoring = SimulationPlot._fixedColoring(coloring)
@@ -181,10 +176,6 @@ class SimulationPlot(_PlotterView):
             # Initialize the plot:
             self._vehicles = []
             for veh in self._sim.vehicles:
-                # Calculate the base points form the vehicle_base mesh i.e.
-                # scale to match vehicle's size and translate such that the
-                # vehicle's CG is at the origin:
-                base = _transformPoints(vehicle_base.points,C=veh.size/2-veh.cg,S=veh.size)
                 mesh = vehicle_base.copy()
                 ec = [0.7,0.7,0.7] # Edge colors for active vehicle
                 actor = p.add_mesh(mesh,color=self._vehicleColoring(veh),edge_color=ec,show_edges=(veh.id==self.V))
@@ -198,12 +189,11 @@ class SimulationPlot(_PlotterView):
                     idFollower.SetMapper(mapper)
                     idFollower.GetProperty().SetColor((1,1,1))
                     p.add_actor(idFollower)
-                self._vehicles.append({"base": base, "mesh": mesh, "actor": actor, "id": idFollower})
+                self._vehicles.append({"mesh": mesh, "actor": actor, "id": idFollower})
         self._marker = None
         if show_marker:
-            S = np.ones((2,2))
-            mesh = _cuboidMesh(S)
-            self._marker = {"mesh": mesh, "base": mesh.points}
+            M, marker_base = p._register_mesh('cuboid2D','D_MAX',self.V)
+            self._marker = {"M": M, "mesh": marker_base}
             p.add_mesh(self._marker["mesh"],style="wireframe",color=[0.8,0.2,0.0],line_width=6)
         p.view_xy()
         pos = np.array(self._r.camera_position.position)
@@ -228,23 +218,21 @@ class SimulationPlot(_PlotterView):
             # Update vehicle meshes:
             for veh in self._sim.vehicles:
                 # TODO: update colors (in case of custom coloring method)
-                # Rotate the base around the vehicle's CG and translate it towards
-                # the vehicle's actual position to match the simulation state.
-                self._vehicles[veh.id]["mesh"].points = _transformPoints(self._vehicles[veh.id]["base"],
-                                                            C=veh.x["pos"], A=veh.x["ang"])
+                self._vehicles[veh.id]["mesh"].points = self._p._veh_mesh_data[veh.id][self._M]["data"]
                 if self._vehicles[veh.id]["id"] is not None:
                     pos = veh.x["pos"]
                     pos[2] += veh.size[2]-veh.cg[2]
                     self._vehicles[veh.id]["id"].SetPosition(pos)
         if self._marker is not None:
-            veh = self._sim.vehicles[self.V]
-            self._marker["mesh"].points = _transformPoints(self._marker["base"],C=veh.x["pos"],
-                                                S=np.full(3,veh.D_MAX),A=veh.x["ang"])
+            self._marker["mesh"].points = self._p._veh_mesh_data[self.V][self._marker["M"]]["data"]
 
     def _handle_V_change(self,oldV):
         if self._vehicles is not None:
             self._vehicles[oldV]["actor"].GetProperty().EdgeVisibilityOff()
             self._vehicles[self.V]["actor"].GetProperty().EdgeVisibilityOn()
+        if self._marker is not None:
+            self._p._unregister_veh(self._marker["M"], oldV)
+            self._p._register_veh(self._marker["M"], self.V)
 
     @staticmethod
     def _plotRoad(p,road,scale_markings=False):
@@ -336,7 +324,7 @@ class DetailPlot(SimulationPlot):
     """
 
     def __init__(self,p,D=None,coloring=None,show_ids=False):
-        super().__init__(p,scale_markings=True,vehicle_type="box",coloring=coloring,show_ids=show_ids)
+        super().__init__(p,scale_markings=True,vehicle_type="cuboid3D",coloring=coloring,show_ids=show_ids)
         self.D = D
         self._calc_camera_cfg()
 
@@ -359,9 +347,9 @@ class DetailPlot(SimulationPlot):
         # plane distance will be set equal to the distance to the focus point minus
         # 10.
         self._r.camera.SetClippingRange(self._H-10,self._H+10)
-        self._r.camera_position = (np.array([pos[0],pos[1],pos[2]+self._H]),# Camera position
-                                   pos,                                     # Camera focus
-                                   np.array([np.cos(yaw),np.sin(yaw),0]))   # Camera viewup
+        self._r.camera_position = ([pos[0],pos[1],pos[2]+self._H],# Camera position
+                                   pos,                           # Camera focus
+                                   [np.cos(yaw),np.sin(yaw),0])   # Camera viewup
         # The above command is the same as the following 3 commands, however
         # in multiple subplots, the below commands render an empty screen until
         # the first interaction with the window...
@@ -384,7 +372,7 @@ class BirdsEyePlot(SimulationPlot):
         FRONT = auto()
         REAR = auto()
 
-    def __init__(self,p,view=View.FRONT,vehicle_type="box",coloring=None):
+    def __init__(self,p,view=View.FRONT,vehicle_type="cuboid3D",coloring=None):
         super().__init__(p,vehicle_type=vehicle_type,coloring=coloring)
         self._view = view
         self._calc_camera_cfg()
@@ -549,8 +537,8 @@ class TimeChartPlot(_PlotterView):
         self._bounds.SetBounds(data_bounds)
         # Custom self._r.view_xy() that is more 'zoomed in' without flashes:
         focus = np.array(self._r.center)
-        viewup = np.array([0,1,0])
-        pos = focus+np.array([0,0,1])
+        viewup = [0,1,0]
+        pos = focus+[0,0,1]
         self._r.camera_position = (pos,focus,viewup)
         self._r.ResetCamera() # Zooms out to see all actors, but too much, so zoom back in a little
         self._r.camera.Zoom(1.9)
@@ -656,6 +644,22 @@ class InputsPlot(TimeChartPlot):
             labels.append("steering angle (rad)")
         return lines, labels
 
+
+class LabelPlot(_PlotterView):
+
+    def __init__(self, p, text_cb):
+        super().__init__(p)
+        self.text_cb = text_cb
+        self.label = p.add_text("", position=(0,0), font_size=8)
+
+    def plot(self):
+        txt = self.text_cb(self._sim.vehicles[self.V])
+        if isinstance(txt, collections.Mapping):
+            txt = [f"{key}: {val}" for (key, val) in txt.items()]
+        if isinstance(txt, collections.Sequence):
+            txt = " ; ".join(txt)
+        self.label.SetInput(txt)
+
 #endregion
 
 class Plotter(pv.Plotter):
@@ -679,6 +683,8 @@ class Plotter(pv.Plotter):
     def __init__(self,sim,title=None,mode=Mode.LIVE,state=State.PLAY,V=0,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self._sim = sim
+        self._meshes = []
+        self._veh_mesh_data = [{} for _ in range(len(sim.vehicles))]
         self._V = V
         self._title = title or sim.name
         self._mode = mode
@@ -695,6 +701,78 @@ class Plotter(pv.Plotter):
         self.add_key_event("s",self._unblock) # Step
         self.add_key_event("v",self._change_vehicle)
         self._dialog = None
+
+    def _register_mesh(self, mesh_type='cuboid3D', scale='size', v_ids=None):
+        # Create the base mesh for all vehicles, having its center at the origin and
+        # having size 1 in each dimension
+        mesh_base = None
+        if mesh_type=="cuboid2D":
+            mesh_base = _cuboidMesh(np.full((2,2),0.5))
+        elif mesh_type=="cuboid3D":
+            mesh_base = _cuboidMesh(np.full((3,2),0.5))
+        elif mesh_type=="car":
+            obj_file = pathlib.Path(__file__).parent.absolute().joinpath("car_low.obj")
+            mesh_base = pv.read(obj_file)
+            # TODO: color based on materialIds (in original obj file)
+            _normalizeMesh(mesh_base)
+        else:
+            raise ValueError("Invalid mesh_type")
+
+        # Convert v_ids to array of ints
+        if v_ids is None:
+            v_ids = np.s_[:] # Default to all vehicles
+        elif isinstance(v_ids, int):
+            v_ids = [v_ids]
+
+        if isinstance(v_ids, slice):
+            v_ids = np.arange(len(self._sim.vehicles),dtype=int)[v_ids]
+        else:
+            v_ids = np.array(v_ids,dtype=int)
+
+        # Check if there is already a mesh defined with mesh_type and scale
+        M = None
+        for i, mesh in enumerate(self._meshes):
+            if mesh["type"]==mesh_type and mesh["scale"]==scale:
+                M = i
+                mesh_base = mesh["base"]
+                break
+
+        if M is not None:
+            # Register possible new vehicles
+            for V in v_ids:
+                if M not in self._veh_mesh_data[V]:
+                    self._register_veh(M, V)
+        else:
+            # Create new mesh and register vehicles
+            M = len(self._meshes)
+            self._meshes.append({
+                "type": mesh_type,
+                "scale": scale,
+                "base": mesh_base
+            })
+            for V in v_ids:
+                self._register_veh(M, V)
+        return M, mesh_base
+
+    def _register_veh(self, M, V):
+        base = self._meshes[M]["base"]
+        scale = self._meshes[M]["scale"]
+        veh = self._sim.vehicles[V]
+        # Get vehicle scale
+        if scale=="size":
+            scale = veh.size
+        elif scale=="D_MAX":
+            scale = np.full(3,2*veh.D_MAX)
+        else:
+            raise ValueError("Invalid mesh scale")
+        # Calculate the scaled_base points from the base mesh i.e.
+        # rescale to match scale and translate such that the
+        # vehicle's CG is at the origin:
+        scaled_base = _transformPoints(base.points,C=veh.size/2-veh.cg,S=scale)
+        self._veh_mesh_data[V][M] = {"base": scaled_base, "data": scaled_base}
+
+    def _unregister_veh(self, M, V):
+        self._veh_mesh_data[V].pop(M)
 
     def _add_view(self,plotter_view,*args,**kwargs):
         assert(self._first_time) # Only allow adding views before first plot
@@ -798,6 +876,17 @@ class Plotter(pv.Plotter):
             self._unblock() # Step once to update all views
 
     def plot(self):
+        # Update registered meshes
+        # t_mesh = timeit.default_timer()
+        for V in range(len(self._veh_mesh_data)):
+            for mesh in self._veh_mesh_data[V].values():
+                # Rotate the base around the vehicle's CG and translate it towards
+                # the vehicle's actual position to match the simulation state.
+                x = self._sim.vehicles[V].x
+                mesh["data"] = _transformPoints(mesh["base"], C=x["pos"], A=x["ang"])
+        # t_mesh = timeit.default_timer()-t_mesh
+        # print(f"Updating mesh points took {t_mesh*1000}ms")
+
         # Update views
         # t_update = 0
         for view in self._views:
