@@ -7,8 +7,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from NeuralModels import *
-from RL_Policies import *
+from implementation/NeuralModels import *
+from implementation/RL_Policies import *
 
 physical_devices = tf.config.list_physical_devices('GPU')
 print(physical_devices)
