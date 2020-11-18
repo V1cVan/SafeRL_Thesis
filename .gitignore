@@ -1,0 +1,16 @@
+/build
+/.idea
+/C
+/dependencies
+/examples
+/include
+/install
+/logs
+/matlab
+/scenarios
+/tests
+/CMakeLists.txt
+/readme.md
+/.gitignore
+/python/examples
+/python/hwsim

@@ -1,0 +1,56 @@
+{
+  "dt": 0.1,
+  "output_dir": "logs",
+  "name": "multi_car_-1",
+  "kM": 1000,
+  "input_dir": "",
+  "k0": 0,
+  "replay": false,
+  "fast_replay": true,
+  "scenario": "CIRCUIT",
+  "vehicles": [
+    {
+      "amount": 20,
+      "model": "kbm",
+      "policy": {
+        "basic": "slow"
+      },
+      "L": 1,
+      "N_OV": 1,
+      "D_MAX": 150.0,
+      "minSize": [4,1.6,1.5],
+      "maxSize": [5,2.1,2],
+      "minMass": 1500,
+      "maxMass": 3000
+    },
+    {
+      "amount": 40,
+      "model": "kbm",
+      "policy": {
+        "basic": "normal"
+      },
+      "L": 1,
+      "N_OV": 1,
+      "D_MAX": 150.0,
+      "minSize": [4,1.6,1.5],
+      "maxSize": [5,2.1,2],
+      "minMass": 1500,
+      "maxMass": 3000
+    },
+    {
+      "amount": 7,
+      "model": "kbm",
+      "policy": {
+        "basic": "fast"
+      },
+      "L": 1,
+      "N_OV": 1,
+      "D_MAX": 150.0,
+      "minSize": [4,1.6,1.5],
+      "maxSize": [5,2.1,2],
+      "minMass": 1500,
+      "maxMass": 3000
+    }
+  ],
+  "output_mode": "all"
+}
