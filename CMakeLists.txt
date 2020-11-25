@@ -36,6 +36,10 @@ else()
   set(DEBUG_CONFIG OFF)
 endif()
 
+# ----- OpenMP -----
+find_package(OpenMP)
+message(STATUS "Found OpenMP_CXX with version ${OpenMP_CXX_VERSION}")
+
 # Include (and build if necessary) our dependency targets:
 add_subdirectory(dependencies)
 
@@ -48,6 +52,7 @@ target_include_directories(hwsim
 )
 target_link_libraries(hwsim
   INTERFACE
+    OpenMP::OpenMP_CXX
     Clothoids
     Eigen
     HDF5

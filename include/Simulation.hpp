@@ -516,9 +516,9 @@ class Simulation{
                 }
             }
             // Then construct the augmented state vectors for all vehicles:
-            auto nsIt = neighbours.begin();
-            for(vId Vr = 0; Vr<vehicles.size(); ++Vr,++nsIt){
+            for(vId Vr = 0; Vr<vehicles.size(); ++Vr){
                 Vehicle& v = vehicles[Vr];
+                std::set<NeighbourInfo>& ns = neighbours[Vr];
                 Policy::augState s = v.getDefaultAugmentedState();
                 // Store iterators/indices to last 'real' vehicle in each lane's front and back buffer
                 std::vector<std::array<unsigned int,2>> laneIts;// Stores index to next available vehicle in front/behind buffers. Lanes are in the order: 0,-1,1,-2,2,...
@@ -527,7 +527,7 @@ class Simulation{
                     laneIts.push_back({0,0});
                     laneIts.push_back({0,0});
                 }
-                for(auto nIt = (*nsIt).begin(); nIt!=(*nsIt).end(); ++nIt){// Loop over all neighbours in the set in increasing order of relative distance and only keep N_OV closest ones
+                for(auto nIt = ns.begin(); nIt!=ns.end(); ++nIt){// Loop over all neighbours in the set in increasing order of relative distance and only keep N_OV closest ones
                     vId Vo = (*nIt).omega;
                     double offLat = (*nIt).off[1];
                     double gapLat = std::abs(offLat)-v.roadInfo.size[1]/2-vehicles[Vo].roadInfo.size[1]/2;// Take vehicle dimensions into account
@@ -585,10 +585,10 @@ class Simulation{
             // TODO: this method will fail for more complex road layouts. Although when this
             // becomes a problem we will probably need a decent way to encode the road and lane
             // geometry and changes in the state vector anyway.
-            Road::id_t Rr = vehicles[Vr].roadInfo.R;
-            Road::id_t Ro = vehicles[Vo].roadInfo.R;
-            Road::id_t Lr = vehicles[Vr].roadInfo.L;
-            Road::id_t Lo = vehicles[Vo].roadInfo.L;
+            const Road::id_t Rr = vehicles[Vr].roadInfo.R;
+            const Road::id_t Ro = vehicles[Vo].roadInfo.R;
+            const Road::id_t Lr = vehicles[Vr].roadInfo.L;
+            const Road::id_t Lo = vehicles[Vo].roadInfo.L;
             Road::Lane::Direction rDir = scenario.roads[Rr].lanes[Lr].direction;
             Road::Lane::Direction oDir = scenario.roads[Ro].lanes[Lo].direction;
             const std::array<double,2>& rPos = vehicles[Vr].roadInfo.pos;
@@ -598,7 +598,7 @@ class Simulation{
             // Check whether there is a connection between (Rr,Lc) and (Ro,Lo):
             std::vector<Road::id_t> rLanes = std::vector<Road::id_t>(scenario.roads[Rr].lanes.size());
             std::iota(rLanes.begin(),rLanes.end(),0);// Vector with all lane ids of road Rr
-            auto itLt = std::find_if(std::begin(rLanes),std::end(rLanes),[Rr,rRoad=scenario.roads[Rr],rDir,sr=rPos[0],Ro,oRoad=scenario.roads[Ro],oDir,so=oPos[0],D_MAX=D_MAX](Road::id_t Lt){
+            auto itLt = std::find_if(std::begin(rLanes),std::end(rLanes),[Rr,&rRoad=scenario.roads[Rr],rDir,&sr=rPos[0],Ro,&oRoad=scenario.roads[Ro],oDir,&so=oPos[0],D_MAX](Road::id_t Lt){
                 // Returns the first lane Lt of road Rr that has a connection from lane Lf of road Ro satisfying:
                 //  * Lt has the same direction as Lr
                 //  * Lf has the same direction as Lo
@@ -612,7 +612,7 @@ class Simulation{
                         std::abs(sr-rRoad.lanes[Lt].start())<D_MAX && (static_cast<int>(rDir)*(sr-rRoad.lanes[Lt].start())>=0 || Rr!=Ro) &&
                         static_cast<int>(oDir)*(oRoad.lanes[Lf].end()-so)<D_MAX && static_cast<int>(oDir)*(oRoad.lanes[Lf].end()-so)>=0;
             });
-            auto itLf = std::find_if(std::begin(rLanes),std::end(rLanes),[Rr,rRoad=scenario.roads[Rr],rDir,sr=rPos[0],Ro,oRoad=scenario.roads[Ro],oDir,so=oPos[0],D_MAX=D_MAX](Road::id_t Lf){
+            auto itLf = std::find_if(std::begin(rLanes),std::end(rLanes),[Rr,&rRoad=scenario.roads[Rr],rDir,&sr=rPos[0],Ro,&oRoad=scenario.roads[Ro],oDir,&so=oPos[0],D_MAX](Road::id_t Lf){
                 // Returns the first lane Lf of road Rr that has a connection towards lane Lt of road Ro satisfying:
                 //  * Lf has the same direction as Lr
                 //  * Lt has the same direction as Lo

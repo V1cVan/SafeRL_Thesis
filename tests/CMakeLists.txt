@@ -21,6 +21,10 @@ add_executable(libhwsim-test libhwsim-test.cpp)
 target_link_libraries(libhwsim-test PRIVATE libhwsim doctest)
 target_compile_features(libhwsim-test PRIVATE cxx_std_17)
 
+# Performance test:
+add_executable(perf-test perf-test.cpp)
+target_link_libraries(perf-test PRIVATE hwsim)
+
 # Add tests to the cmake unit tests:
 add_test(NAME hwsimTest COMMAND hwsim-test WORKING_DIRECTORY ${hwsim_BINARY_DIR})
 add_test(NAME libhwsimTest COMMAND libhwsim-test WORKING_DIRECTORY ${hwsim_BINARY_DIR})
