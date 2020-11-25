@@ -6,28 +6,30 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 
-class AcPolicy(CustomPolicy):
+class AcPolicyDiscrete(CustomPolicy):
     """
     Actor-critic on-policy RL controller for highway decision making.
     """
 
     def __init__(self, trainer):
-        super(AcPolicy, self).__init__()
+        super(AcPolicyDiscrete, self).__init__()
         self.trainer = trainer  # trainer = f(NN_model)
 
     def init_vehicle(self, veh):
         # Bookkeeping of last states and actions
         veh.s0 = None  # Previous vehicle state
         veh.s0_mod = None  # Previous vehicle state as passed to the actor and critic models
-        veh.s1 = None  # Current vehicle state
-        veh.s1_mod = None  # Current vehicle state as passed to the actor and critic models
+        veh.s1 = veh.s_raw  # Current vehicle state
+        veh.s1_mod = self.convertState(veh)  # Current vehicle state as passed to the actor and critic models
         veh.a0 = None
         veh.a0_mod = None
-        veh.a1 = None
-        veh.a1_mod = None
+        veh.a1_mod = self.getAction(veh)
+        veh.a1 = self.convertActionDiscrete(veh)
         veh.reward = self.getReward()
 
     def custom_action(self, veh):
+        # s0, a0 = previous vehicle state action pair
+        # s1, a1 = current vehicle state action pair
         veh.s0 = veh.s1
         veh.s0_mod = veh.s1_mod
         veh.a0 = veh.a1
@@ -35,7 +37,7 @@ class AcPolicy(CustomPolicy):
         veh.s1 = veh.s_raw
         veh.s1_mod = self.convertState(veh)
         veh.a1_mod = self.getAction(veh)
-        veh.a1 = self.convertAction(veh)
+        veh.a1 = self.convertActionDiscrete(veh)
         veh.crit = self.getCritic(veh)
         if veh.s0_mod is not None:
             # Calculate new metrics
@@ -43,9 +45,7 @@ class AcPolicy(CustomPolicy):
             # And report new experience to trainer, if available
             if self.trainer is not None:
                 self.trainer.addExperience(veh.s0_mod, veh.a0_mod, veh.reward, veh.s1_mod, veh.crit)
-
-        # veh.a(np.array([veh.a1]).view(np.float64))
-        return np.array([veh.a1]).view(np.float64)  # The hwsim library uses double precision floats
+        return np.array(np.squeeze(veh.a1)).view(np.float64)  # The hwsim library uses double precision floats
 
     def convertState(self, veh):
         """ Get the modified state vector that will be passed to the actor and critic models from the
@@ -57,7 +57,49 @@ class AcPolicy(CustomPolicy):
 
         return veh.s1_mod  # Can be overridden by subclasses
 
-    def convertAction(self, veh):
+    def convertActionDiscrete(self, veh):
+        """
+        Get the action vector that will be passed to the vehicle from the given model action vector
+        (used by the actor and critic models and available in veh). I.e. the mapping a_mod->a
+        4 discrete actions: slow, maintain ,acc, left, centre, right
+        """
+        # if veh.a1 == None:
+        #     veh.a1 = veh.a1_mod.__array__().astype(np.float32)
+        veh.a1 = np.zeros([1, 2])
+
+        vel_bounds = veh.a_bounds["vel"]
+        vel_actions_prob = veh.a1_mod[0]
+        vel_actions = np.random.choice(np.size(vel_actions_prob), p=np.squeeze(vel_actions_prob))
+        if vel_actions == 0:
+            vel_controller = veh.s["vel"][0]-1
+        elif vel_actions == 1:
+            vel_controller = veh.s["vel"][0]
+        elif vel_actions == 2:
+            vel_controller = veh.s["vel"][0]+1
+        else:
+            print("Error with setting vehicle velocity!")
+        v = min(vel_controller, vel_bounds[1])
+        veh.a1[0, 0] = max(0, v)
+
+
+        off_bounds = veh.a_bounds["off"]
+        off_actions_prob = veh.a1_mod[1]
+        off_actions = np.random.choice(np.size(off_actions_prob), p=np.squeeze(off_actions_prob))
+        if off_actions == 0:
+            off_controller = max(off_bounds[0], -3.6)
+        elif off_actions == 1:
+            off_controller = veh.s["laneC"]["off"]
+        elif off_actions == 2:
+            off_controller = min(off_bounds[1], +3.6)
+        else:
+            print("Error with setting offset action!")
+        veh.a1[0, 1] = off_controller
+
+        veh.a1 = tf.convert_to_tensor(veh.a1)
+        return veh.a1  # Can be overridden by subclasses
+
+
+    def convertActionContinuous(self, veh):
         """ Get the action vector that will be passed to the vehicle from the given model action vector
         (used by the actor and critic models and available in veh). I.e. the mapping a_mod->a """
         if veh.a1 is not None:
@@ -97,8 +139,10 @@ class AcPolicy(CustomPolicy):
         return self.trainer.critic(veh.s1_mod)
 
     def getReward(self, veh=None):
-        # Calculate the reward and any other metrics you want to keep track of for this policy
-        # Reward = high speed + lane center + penalty collisions + good following distance
+        """
+        Calculate reward for actions.
+        Reward = Speed + LaneCentre + FollowingDistance
+        """
         if veh is not None:
             # Velocity reward:
             v = veh.s["vel"][0]
@@ -108,8 +152,6 @@ class AcPolicy(CustomPolicy):
             # Lane center reward: # How
             lane_offset = veh.s["laneC"]["off"]
             r_off = np.exp(-(lane_offset) ** 2 / 1)
-
-            # Collisions how to do?
 
             # Following distance:
             # TODO just take long. component
@@ -121,3 +163,4 @@ class AcPolicy(CustomPolicy):
         else:
             reward = 0
         return reward
+

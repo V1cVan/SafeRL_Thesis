@@ -3,18 +3,19 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np
 
-class ActorNet(keras.Model):
+class ActorNetDiscrete(keras.Model):
     """
     Neural network architecture for the actor.
     """
     def __init__(self, modelParam):
-        super(ActorNet, self).__init__()
+        super(ActorNetDiscrete, self).__init__()
         # TODO Add variability in depth.
         self.inputLayer = layers.Input(shape=(modelParam["n_inputs"],))
         self.denseLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=tf.nn.relu)(self.inputLayer)
         self.denseLayer2 = layers.Dense(modelParam["n_nodes"][1], activation=tf.nn.relu)(self.denseLayer1)
-        self.outputLayer = layers.Dense(modelParam["n_actions"], activation=tf.nn.tanh)(self.denseLayer2)
-        self.model = keras.Model(inputs=self.inputLayer, outputs=self.outputLayer)
+        self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax)(self.denseLayer2)
+        self.outputLayerOff = layers.Dense(3, activation=tf.nn.softmax)(self.denseLayer2)
+        self.model = keras.Model(inputs=self.inputLayer, outputs=[self.outputLayerVel, self.outputLayerOff])
 
     def call(self, inputs):
         y = self.model(inputs)
@@ -26,12 +27,12 @@ class ActorNet(keras.Model):
         self.model.summary()
         print("############################\n")
 
-class CriticNet(keras.Model):
+class CriticNetDiscrete(keras.Model):
     """
     Neural network architecture for the critic.
     """
     def __init__(self, modelParam):
-        super(CriticNet, self).__init__()
+        super(CriticNetDiscrete, self).__init__()
         # TODO Add variability in depth.
         self.inputLayer = layers.Input(shape=(modelParam["n_inputs"],))
         self.denseLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=tf.nn.relu)(self.inputLayer)
@@ -51,14 +52,14 @@ class CriticNet(keras.Model):
 
 
 
-class GradAscentTrainer(keras.models.Model):
+class GradAscentTrainerDiscrete(keras.models.Model):
     """
     Gradient ascent training algorithm.
     https://spinningup.openai.com/en/latest/algorithms/vpg.html
     """
 
     def __init__(self, actor, critic, training_param):
-        super(GradAscentTrainer, self).__init__()
+        super(GradAscentTrainerDiscrete, self).__init__()
         self.actor = actor
         self.critic = critic
         # self.cfg = cfg
@@ -82,7 +83,7 @@ class GradAscentTrainer(keras.models.Model):
         print("trainStep")
         eps = np.finfo(np.float32).eps.item()  # Smallest number such that 1.0 + eps != 1.0
         if self.training:
-            gamma = training_param["gamma"]
+            gamma = self.training_param["gamma"]
             returns = []
             discounted_sum = 0
             for r in self.reward_hist[::-1]:

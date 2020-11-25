@@ -84,8 +84,8 @@ class Main(object):
                         print("break")
                     timestep += 1
                 else:
-                    # TODO look at adding max_timesteps_per_episode to ensure you learn even when the policy is already pretty good
-                    # Or update policy throughout
+                    # Note: episode ends when kM is reached (max_timesteps_per_episode) - Then policy is updated
+                    # Policy can also be updated throughout (after each decision reward pair is received)*
                     running_reward = 0.05 * episode_reward + (1-0.05)*running_reward
                     # Perform one train step, using the collected new experience:
                     policy.trainer.trainStep()
@@ -137,22 +137,22 @@ if __name__=="__main__":
         "n_actions": 2
     }
     training_param = {
-        "max_steps_per_episode": 10000,  # TODO kM - max value of k
+        "max_steps_per_episode": 1000,  # TODO kM - max value of k
         "final_return": 150,
         "optimiser": keras.optimizers.Adam(learning_rate=0.02),
         "loss_function": keras.losses.Huber()
     }
 
     # Initialise network/model architecture:
-    actor_net = ActorNet(model_param)
+    actor_net = ActorNetDiscrete(model_param)
     actor_net.displayOverview()
-    critic_net = CriticNet(model_param)
+    critic_net = CriticNetDiscrete(model_param)
     critic_net.displayOverview()
-    trainer = GradAscentTrainer(actor_net, critic_net, training_param)  # training method used
+    trainer = GradAscentTrainerDiscrete(actor_net, critic_net, training_param)  # training method used
 
     # Simulation configuration and settings
     veh_types = [
-        {"amount": 1, "model": KBModel(), "policy": AcPolicy(trainer)},
+        {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)},
         {"amount": 40, "model": KBModel(), "policy": BasicPolicy("slow")},
         {"amount": 40, "model": KBModel(), "policy": BasicPolicy("normal")},
         {"amount": 20, "model": KBModel(), "policy": BasicPolicy("fast")}
@@ -160,7 +160,7 @@ if __name__=="__main__":
     sim_config = {
         "name": "AC_policy",
         "scenario": "CIRCUIT",
-        "kM": 1000,  # TODO  for max_timesteps_per_episode
+        "kM": training_param["max_steps_per_episode"],  # Max timesteps per episode enforced by simulator
         "k0": 0,
         "replay": False,
         "vehicles": veh_types
