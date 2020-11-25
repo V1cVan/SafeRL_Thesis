@@ -45,9 +45,9 @@ class AcPolicyDiscrete(CustomPolicy):
             # And report new experience to trainer, if available
             if self.trainer is not None:
                 action_val_choice = self.getActionChoice(veh.a0_mod)
-                action_history = np.array([tf.math.log(veh.a0_mod[0, action_val_choice[0]]),
-                                           tf.math.log(veh.a0_mod[1, action_val_choice[1]])])
-                self.trainer.addExperience(veh.s0_mod, action_history, veh.reward, veh.s1_mod, veh.critic)
+                action = np.array([tf.math.log(veh.a0_mod[0, action_val_choice[0]]),
+                                           tf.math.log(veh.a0_mod[1, action_val_choice[1]])]).tolist()
+                self.trainer.addExperience(veh.s0_mod, action, veh.reward, veh.s1_mod, veh.critic.__array__()[0, 0])
         return np.array(np.squeeze(veh.a1)).view(np.float64)  # The hwsim library uses double precision floats
 
     def convertState(self, veh):
@@ -131,7 +131,7 @@ class AcPolicyDiscrete(CustomPolicy):
 
     def getAction(self, veh):
         """ Get the modified action vector from the modified state vector. I.e. the mapping s_mod->a_mod """
-        action_probs = self.trainer.actor(veh.s1_mod)
+        action_probs = self.trainer.actor_net(veh.s1_mod)
         action_probs = tf.convert_to_tensor(np.squeeze(np.array([action_probs[0], action_probs[1]])))
         return action_probs
 
@@ -143,7 +143,7 @@ class AcPolicyDiscrete(CustomPolicy):
 
     def getCritic(self, veh):
         """ Get the critic value for the current state transition"""
-        return self.trainer.critic(veh.s1_mod)
+        return self.trainer.critic_net(veh.s1_mod)
 
     def getReward(self, veh=None):
         """
