@@ -71,24 +71,43 @@ class Main(object):
                 episode_reward = 0
                 timestep = 0
                 # Loop through each timestep in episode.
-                while not self.sim.stopped:
-
+                for i in np.arange(training_param["max_steps_per_episode"]):
                     # Perform one simulations step:
                     self.sim.step()  # Calls AcPolicy.customAction method.
-                    # ... (visualization/extra callbacks)
                     self.p.plot()
                     if timestep > 0:
-                        episode_reward += policy.trainer.buffer[-1][2]
+                        episode_reward += policy.trainer.reward_hist[-1]
 
-                    if timestep == 100:
-                        print("break")
-                    timestep += 1
-                else:
+                    if sim.stopped:
+                        break
+
                     # Note: episode ends when kM is reached (max_timesteps_per_episode) - Then policy is updated
-                    # Policy can also be updated throughout (after each decision reward pair is received)*
-                    running_reward = 0.05 * episode_reward + (1-0.05)*running_reward
-                    # Perform one train step, using the collected new experience:
-                    policy.trainer.trainStep()
+                    #    Policy can also be updated throughout (after each decision reward pair is received)*
+                    #    Running reward smoothing effect
+                running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
+                policy.trainer.trainStep()
+
+                # while not self.sim.stopped:
+                #
+                #     # Perform one simulations step:
+                #     self.sim.step()  # Calls AcPolicy.customAction method.
+                #     # ... (visualization/extra callbacks)
+                #     self.p.plot()
+                #     if timestep > 0:
+                #         episode_reward += policy.trainer.reward_hist[-1]
+                #     if timestep == 100:
+                #         print("break")
+                #
+                #
+                #     timestep += 1
+                # else:
+                #     # Note: episode ends when kM is reached (max_timesteps_per_episode) - Then policy is updated
+                #     # Policy can also be updated throughout (after each decision reward pair is received)*
+                #     # Running reward smoothing effect
+                #     # TODO Figure out why we never enter here when kM reached?
+                #     running_reward = 0.05 * episode_reward + (1-0.05)*running_reward
+                #     # Perform one train step, using the collected new experience:
+                #     policy.trainer.trainStep()
 
             episode_count += 1
             if episode_count % 10 == 0:
@@ -130,15 +149,15 @@ if __name__=="__main__":
 
     # Model configuration and settings
     model_param = {
-        "gamma": 0.99,  # Discount factor
         "n_nodes": [400, 200],  # Number of hidden nodes in each layer
         "n_layers": 2,  # Number of layers
         "n_inputs": 47,  # Standard size of S
         "n_actions": 2
     }
     training_param = {
-        "max_steps_per_episode": 1000,  # TODO kM - max value of k
+        "max_steps_per_episode": 10,  # TODO kM - max value of k
         "final_return": 150,
+        "gamma": 0.99,  # Discount factor
         "optimiser": keras.optimizers.Adam(learning_rate=0.02),
         "loss_function": keras.losses.Huber()
     }
@@ -160,7 +179,7 @@ if __name__=="__main__":
     sim_config = {
         "name": "AC_policy",
         "scenario": "CIRCUIT",
-        "kM": training_param["max_steps_per_episode"],  # Max timesteps per episode enforced by simulator
+        #"kM": 0,  # Max timesteps per episode enforced by simulator
         "k0": 0,
         "replay": False,
         "vehicles": veh_types
