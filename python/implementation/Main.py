@@ -10,6 +10,8 @@ from tensorflow.keras import layers
 from NeuralModels import *
 from RL_Policies import *
 from RL_Policies import *
+from HelperClasses import *
+
 
 physical_devices = tf.config.list_physical_devices('GPU')
 print(physical_devices)
@@ -75,21 +77,27 @@ class Main(object):
                 # TODO try passing tape from policy to trainStep
                 # TODO try doing the forward pass inside trainer's buffer
                 # TODO Timeit.defaulttimer
-                for i in np.arange(training_param["max_steps_per_episode"]):
-                    # Perform one simulations step:
-                    self.sim.step()  # Calls AcPolicy.customAction method.
-                    self.p.plot()
-                    if timestep > 0:
-                        episode_reward += policy.trainer.reward_hist[-1]
+                with episodeTimer:
+                    for i in np.arange(training_param["max_steps_per_episode"]):
+                        # Perform one simulations step:
+                        self.sim.step()  # Calls AcPolicy.customAction method.
 
-                    if sim.stopped:
-                        break
+                        with plotTimer:
+                            self.p.plot()
 
-                    # Note: episode ends when kM is reached (max_timesteps_per_episode) - Then policy is updated
-                    #    Policy can also be updated throughout (after each decision reward pair is received)*
-                    #    Running reward smoothing effect
-                running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
-                policy.trainer.trainStep()
+
+                        if timestep > 0:
+                            episode_reward += policy.trainer.reward_hist[-1]
+
+                        if sim.stopped:
+                            break
+
+                        # Note: episode ends when kM is reached (max_timesteps_per_episode) - Then policy is updated
+                        #    Policy can also be updated throughout (after each decision reward pair is received)*
+                        #    Running reward smoothing effect
+                    running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
+                    with trainerTimer:
+                        policy.trainer.trainStep()
 
                 # while not self.sim.stopped:
                 #
@@ -188,6 +196,10 @@ if __name__=="__main__":
         "replay": False,
         "vehicles": veh_types
     }
+
+    plotTimer = Timer("Plotting")
+    trainerTimer = Timer("the Trainer")
+    episodeTimer = Timer("Episode")
 
     sim = Simulation(sim_config)
 

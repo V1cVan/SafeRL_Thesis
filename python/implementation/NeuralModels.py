@@ -111,18 +111,18 @@ class GradAscentTrainerDiscrete(keras.models.Model):
                 critic_losses.append(self.training_param["loss_function"](tf.expand_dims(critic_val, 0), tf.expand_dims(ret, 0)))
 
 
-            # # Backpropogation
-            # with tf.GradientTape() as tape_actor:
-            #
-            #     loss_value_actor = sum(actor_losses_vel) + sum(actor_losses_off)
-            #     loss_value_actor = tf.Variable(loss_value_actor, dtype=tf.float32)
-            #     gradients_actor = tape_actor.gradient(loss_value_actor, self.actor_net.trainable_variables)
-            #     optimiser.apply_gradients(zip(gradients_actor, self.actor_net.trainable_variables))
-            # with tf.GradientTape() as tape_critic:
-            #     loss_value_critic = sum(critic_losses)
-            #     loss_value_critic = tf.convert_to_tensor(loss_value_critic)
-            #     gradients_critic = tape_critic.gradient(loss_value_critic, self.critic_net.trainable_variables)
-            #     optimiser.apply_gradients(zip(gradients_critic, self.critic_net.trainable_variables))
+            # Backpropogation
+            with tf.GradientTape() as tape_actor:
+
+                loss_value_actor = sum(actor_losses_vel) + sum(actor_losses_off)
+                loss_value_actor = tf.Variable(loss_value_actor, dtype=tf.float32)
+                gradients_actor = tape_actor.gradient(loss_value_actor, self.actor_net.trainable_variables)
+                optimiser.apply_gradients(zip(gradients_actor, self.actor_net.trainable_variables))
+            with tf.GradientTape() as tape_critic:
+                loss_value_critic = sum(critic_losses)
+                loss_value_critic = tf.convert_to_tensor(loss_value_critic)
+                gradients_critic = tape_critic.gradient(loss_value_critic, self.critic_net.trainable_variables)
+                optimiser.apply_gradients(zip(gradients_critic, self.critic_net.trainable_variables))
 
             # Clear loss values and reward history
             self.action_hist.clear()
