@@ -71,6 +71,10 @@ class Main(object):
                 episode_reward = 0
                 timestep = 0
                 # Loop through each timestep in episode.
+                # TODO try persistent tape here
+                # TODO try passing tape from policy to trainStep
+                # TODO try doing the forward pass inside trainer's buffer
+                # TODO Timeit.defaulttimer
                 for i in np.arange(training_param["max_steps_per_episode"]):
                     # Perform one simulations step:
                     self.sim.step()  # Calls AcPolicy.customAction method.
@@ -155,7 +159,7 @@ if __name__=="__main__":
         "n_actions": 2
     }
     training_param = {
-        "max_steps_per_episode": 10,  # TODO kM - max value of k
+        "max_steps_per_episode": 10000,  # TODO kM - max value of k
         "final_return": 150,
         "gamma": 0.99,  # Discount factor
         "optimiser": keras.optimizers.Adam(learning_rate=0.02),
