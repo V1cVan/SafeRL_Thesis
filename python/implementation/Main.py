@@ -74,7 +74,7 @@ class Main(object):
                 timestep = 0
                 # Loop through each timestep in episode.
                 # TODO try persistent tape here
-                # TODO try passing tape from policy to trainStep
+                # TODO try passing tape from policy to trainStep => didnt work (check branch!)
                 # TODO try doing the forward pass inside trainer's buffer
                 # TODO Timeit.defaulttimer
                 with episodeTimer:
@@ -175,11 +175,9 @@ if __name__=="__main__":
     }
 
     # Initialise network/model architecture:
-    actor_net = ActorNetDiscrete(model_param)
-    actor_net.displayOverview()
-    critic_net = CriticNetDiscrete(model_param)
-    critic_net.displayOverview()
-    trainer = GradAscentTrainerDiscrete(actor_net, critic_net, training_param)  # training method used
+    actor_critic_net = ActorCriticNetDiscrete(model_param)
+    actor_critic_net.displayOverview()
+    trainer = GradAscentTrainerDiscrete(actor_critic_net, training_param)  # training method used
 
     # Simulation configuration and settings
     veh_types = [

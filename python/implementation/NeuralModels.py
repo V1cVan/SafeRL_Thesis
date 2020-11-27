@@ -3,19 +3,24 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np
 
-class ActorNetDiscrete(keras.Model):
+class ActorCriticNetDiscrete(keras.Model):
     """
     Neural network architecture for the actor.
     """
     def __init__(self, modelParam):
-        super(ActorNetDiscrete, self).__init__()
+        super(ActorCriticNetDiscrete, self).__init__()
         # TODO Add variability in depth.
         self.inputLayer = layers.Input(shape=(modelParam["n_inputs"],))
-        self.denseLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=tf.nn.relu)(self.inputLayer)
-        self.denseLayer2 = layers.Dense(modelParam["n_nodes"][1], activation=tf.nn.relu)(self.denseLayer1)
-        self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax)(self.denseLayer2)
-        self.outputLayerOff = layers.Dense(3, activation=tf.nn.softmax)(self.denseLayer2)
-        self.model = keras.Model(inputs=self.inputLayer, outputs=[self.outputLayerVel, self.outputLayerOff])
+
+        self.denseActorLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=tf.nn.relu)(self.inputLayer)
+        self.denseActorLayer2 = layers.Dense(modelParam["n_nodes"][1], activation=tf.nn.relu)(self.denseActorLayer1)
+        self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax)(self.denseActorLayer2)
+        self.outputLayerOff = layers.Dense(3, activation=tf.nn.softmax)(self.denseActorLayer2)
+
+        self.denseCriticLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=tf.nn.relu)(self.inputLayer)
+        self.outputLayerCritic = layers.Dense(1, activation=tf.nn.softmax)(self.denseCriticLayer1)
+
+        self.model = keras.Model(inputs=self.inputLayer, outputs=[self.outputLayerVel, self.outputLayerOff, self.outputLayerCritic])
 
     def call(self, inputs):
         y = self.model(inputs)
@@ -27,30 +32,6 @@ class ActorNetDiscrete(keras.Model):
         self.model.summary()
         print("############################\n")
 
-class CriticNetDiscrete(keras.Model):
-    """
-    Neural network architecture for the critic.
-    """
-    def __init__(self, modelParam):
-        super(CriticNetDiscrete, self).__init__()
-        # TODO Add variability in depth.
-        self.inputLayer = layers.Input(shape=(modelParam["n_inputs"],))
-        self.denseLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=tf.nn.relu)(self.inputLayer)
-        self.denseLayer2 = layers.Dense(modelParam["n_nodes"][1], activation=tf.nn.relu)(self.denseLayer1)
-        self.outputLayer = layers.Dense(1, activation=tf.nn.softmax)(self.denseLayer2)
-        self.model = keras.Model(inputs=self.inputLayer, outputs=self.outputLayer)
-
-    def call(self, inputs):
-        y = self.model(inputs)
-        return y
-
-    def displayOverview(self):
-        # Display overview of model
-        print("\nCritic network model summary:")
-        self.model.summary()
-        print("############################\n")
-
-
 
 class GradAscentTrainerDiscrete(keras.models.Model):
     """
@@ -58,10 +39,9 @@ class GradAscentTrainerDiscrete(keras.models.Model):
     https://spinningup.openai.com/en/latest/algorithms/vpg.html
     """
 
-    def __init__(self, actor, critic, training_param):
+    def __init__(self, actor_critic_net, training_param):
         super(GradAscentTrainerDiscrete, self).__init__()
-        self.actor_net = actor.model
-        self.critic_net = critic.model
+        self.actor_critic_net = actor_critic_net
         # self.cfg = cfg
         self.buffer = list()  # [[s0, a, r, s1, critic], [] , ...]
         self.action_hist = list()

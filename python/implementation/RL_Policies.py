@@ -23,7 +23,8 @@ class AcPolicyDiscrete(CustomPolicy):
         veh.s1_mod = self.convertState(veh.s_raw)  # Current vehicle state as passed to the actor and critic models
         veh.a0 = None
         veh.a0_mod = None
-        veh.a1_mod = self.getAction(veh.s1_mod)
+        action_vel_probs, action_off_probs, veh.critic = self.getActionAndCritic(veh.s1_mod)
+        veh.a1_mod = [action_off_probs, action_off_probs]
         veh.a1 = self.convertActionDiscrete(veh, veh.a1_mod)
         veh.reward = self.getReward()
 
@@ -36,16 +37,18 @@ class AcPolicyDiscrete(CustomPolicy):
         veh.a0_mod = veh.a1_mod
         veh.s1 = veh.s_raw
         veh.s1_mod = self.convertState(veh.s1)
-        veh.a1_mod = self.getAction(veh.s1_mod)
+        action_vel_probs, action_off_probs, veh.critic = self.getActionAndCritic(veh.s1_mod)
+        veh.a1_mod = [action_off_probs, action_off_probs]
         veh.a1 = self.convertActionDiscrete(veh, veh.a1_mod)
-        veh.critic = self.getCritic(veh.s1_mod)
 
         # Calculate new metrics
         veh.reward = self.getReward(veh)
+
         # And report new experience to trainer, if available
         if self.trainer is not None:
-            vel_action, off_action = self.getActionChoice(veh.a1_mod)
-            action = [tf.math.log(veh.a1_mod[0, vel_action]), tf.math.log(veh.a1_mod[1, off_action])]
+            vel_action_choice, off_action_choice = self.getActionChoice(veh.a1_mod)
+            action = [tf.math.log(veh.a1_mod[0][0, vel_action_choice]),
+                      tf.math.log(veh.a1_mod[1][0, off_action_choice])]
             self.trainer.addExperience(veh.s0_mod, action, veh.reward, veh.s1_mod, veh.critic[0, 0])
 
         return veh.a1  # The hwsim library uses double precision floats
@@ -60,16 +63,16 @@ class AcPolicyDiscrete(CustomPolicy):
 
         return state  # Can be overridden by subclasses
 
-    def getAction(self, state):
+    def getActionAndCritic(self, state):
         """ Get the modified action vector from the modified state vector. I.e. the mapping s_mod->a_mod """
-        action_probs = self.trainer.actor_net(state)
-        action_probs = tf.convert_to_tensor(np.squeeze(action_probs))
-        return action_probs
+        action_vel_probs, action_off_probs, critic_prob = self.trainer.actor_critic_net(state)
+        return action_vel_probs, action_off_probs, critic_prob
 
     def getActionChoice(self, action_prob):
         """ Randomly choose from the available actions."""
-        vel_actions_choice = np.random.choice(np.size(action_prob[0]), p=np.squeeze(action_prob[0]))
-        off_actions_choice = np.random.choice(np.size(action_prob[1]), p=np.squeeze(action_prob[1]))
+        action_vel_probs, action_off_probs = action_prob
+        vel_actions_choice = np.random.choice(np.size(action_vel_probs), p=np.squeeze(action_vel_probs))
+        off_actions_choice = np.random.choice(np.size(action_off_probs), p=np.squeeze(action_off_probs))
         return vel_actions_choice, off_actions_choice
 
     def convertActionDiscrete(self, veh, action):
@@ -95,20 +98,16 @@ class AcPolicyDiscrete(CustomPolicy):
 
         off_bounds = veh.a_bounds["off"]
         if off_actions == 0:  # Turn left
-            off_controller = max(off_bounds[0], veh.s["laneC"]["off"]-3.5)
+            off_controller = max(off_bounds[0]+0.1, veh.s["laneC"]["off"]-3.5)
         elif off_actions == 1:  # Straight
             off_controller = veh.s["laneC"]["off"]
         elif off_actions == 2:  # Turn right
-            off_controller = min(off_bounds[1], veh.s["laneC"]["off"]+3.5)
+            off_controller = min(off_bounds[1]-0.1, veh.s["laneC"]["off"]+3.5)
         else:
             print("Error with setting offset action!")
         sim_action[0, 1] = off_controller
 
         return np.squeeze(sim_action).view(np.float64)  # output is array
-
-    def getCritic(self, state):
-        """ Get the critic value for the current state transition"""
-        return self.trainer.critic_net(state)
 
     def getReward(self, veh=None):
         """
