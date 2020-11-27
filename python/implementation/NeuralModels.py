@@ -22,7 +22,7 @@ class ActorCriticNetDiscrete(keras.Model):
 
         self.model = keras.Model(inputs=self.inputLayer, outputs=[self.outputLayerVel, self.outputLayerOff, self.outputLayerCritic])
 
-    def call(self, inputs):
+    def call(self, inputs: tf.Tensor):
         y = self.model(inputs)
         return y
 

@@ -1,9 +1,5 @@
-from hwsim import Simulation, BasicPolicy, StepPolicy, KBModel, CustomPolicy, config
-from hwsim.plotting import Plotter, SimulationPlot, DetailPlot, BirdsEyePlot, TimeChartPlot, ActionsPlot
-import numpy as np
+from hwsim import CustomPolicy
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 
 
 class AcPolicyDiscrete(CustomPolicy):
@@ -27,6 +23,8 @@ class AcPolicyDiscrete(CustomPolicy):
         veh.a1_mod = [action_off_probs, action_off_probs]
         veh.a1 = self.convertActionDiscrete(veh, veh.a1_mod)
         veh.reward = self.getReward()
+
+        # TODO SET ACTION_PROBS, VALUES, and REWARDS as TENSORS!
 
     def custom_action(self, veh):
         # s0, a0 = previous vehicle state action pair
@@ -57,10 +55,8 @@ class AcPolicyDiscrete(CustomPolicy):
         """ Get the modified state vector that will be passed to the actor and critic models from the
         state vector (available in veh). I.e. the mapping s->s_mod """
         # TODO Edit convert state method to remove unnecessary states
-        state = state.astype(np.float32)
-        state = tf.convert_to_tensor(state)  # shape = (47,)
+        state = tf.convert_to_tensor(state, dtype=tf.float32)  # shape = (47,)
         state = tf.expand_dims(state, 0)  # shape = (1,47)
-
         return state  # Can be overridden by subclasses
 
     def getActionAndCritic(self, state):
@@ -71,8 +67,8 @@ class AcPolicyDiscrete(CustomPolicy):
     def getActionChoice(self, action_prob):
         """ Randomly choose from the available actions."""
         action_vel_probs, action_off_probs = action_prob
-        vel_actions_choice = np.random.choice(np.size(action_vel_probs), p=np.squeeze(action_vel_probs))
-        off_actions_choice = np.random.choice(np.size(action_off_probs), p=np.squeeze(action_off_probs))
+        vel_actions_choice = tf.random.categorical(action_vel_probs, 1)[0,0]
+        off_actions_choice = tf.random.categorical(action_off_probs, 1)[0,0]
         return vel_actions_choice, off_actions_choice
 
     def convertActionDiscrete(self, veh, action):
@@ -81,7 +77,7 @@ class AcPolicyDiscrete(CustomPolicy):
         (used by the actor and critic models and available in veh). I.e. the mapping a_mod->a
         4 discrete actions: slow, maintain ,acc, left, centre, right
         """
-        sim_action = np.zeros([1, 2])
+        sim_action = tf.TensorArray(size=0, dtype=tf.float64, dynamic_size=True)
         vel_actions, off_actions = self.getActionChoice(action)
 
         vel_bounds = veh.a_bounds["vel"]
@@ -93,48 +89,50 @@ class AcPolicyDiscrete(CustomPolicy):
             vel_controller = veh.s["vel"][0]+1
         else:
             print("Error with setting vehicle velocity!")
-        v = min(vel_controller, vel_bounds[1])
-        sim_action[0, 0] = max(0, v)
+        v = tf.math.minimum(vel_controller, vel_bounds[1])
+        sim_action = sim_action.write(0, tf.math.maximum(0, v))
 
         off_bounds = veh.a_bounds["off"]
         if off_actions == 0:  # Turn left
-            off_controller = max(off_bounds[0]+0.1, veh.s["laneC"]["off"]-3.5)
+            off_controller = tf.math.maximum(off_bounds[0]+0.1, veh.s["laneC"]["off"]-3.5)
         elif off_actions == 1:  # Straight
-            off_controller = veh.s["laneC"]["off"]
+            off_controller = tf.convert_to_tensor(veh.s["laneC"]["off"])
         elif off_actions == 2:  # Turn right
-            off_controller = min(off_bounds[1]-0.1, veh.s["laneC"]["off"]+3.5)
+            off_controller = tf.math.minimum(off_bounds[1]-0.1, veh.s["laneC"]["off"]+3.5)
         else:
             print("Error with setting offset action!")
-        sim_action[0, 1] = off_controller
+        sim_action = sim_action.write(1,off_controller)
 
-        return np.squeeze(sim_action).view(np.float64)  # output is array
+        sim_action = sim_action.stack()
+        return sim_action.__array__()  # output is array
 
     def getReward(self, veh=None):
         """
         Calculate reward for actions.
         Reward = Speed + LaneCentre + FollowingDistance
         """
+        reward = tf.Variable(0)
         if veh is not None:
             # Velocity reward:
             v = veh.s["vel"][0]
             v_lim = 120 / 3.6
-            r_s = np.exp(-(v - v_lim) ** 2 / 10)
+            r_s = tf.math.exp(-(v - v_lim) ** 2 / 10)
 
             # Collision??
 
             # Lane center reward:
             lane_offset = veh.s["laneC"]["off"]
-            r_off = np.exp(-(lane_offset) ** 2 / 1)
+            r_off = tf.math.exp(-(lane_offset) ** 2 / 1)
 
             # Following distance:
             # TODO just take long. component
-            d_gap = np.linalg.norm(veh.s["laneC"]["relF"]["gap"])
+            d_gap = tf.math.l2_normalize(veh.s["laneC"]["relF"]["gap"])
             d_lim = 10
-            r_follow = np.exp(-(d_gap - d_lim) ** 2 / 2)
+            r_follow = tf.math.exp(-(d_gap - d_lim) ** 2 / 2)
 
-            reward = r_s + r_off + r_follow
+            reward.write(r_s + r_off + r_follow)
         else:
-            reward = 0
+            reward.write(0)
         return reward
 
         # def convertActionContinuous(self, veh):

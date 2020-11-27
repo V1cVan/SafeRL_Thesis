@@ -30,11 +30,11 @@ class Main(object):
         }]
 
     # ...
-    def createPlot(self,sim):
+    def createPlot(self):
         shape = (4, 2)
         groups = [([0, 2], 0)]
         vehicle_type = "car" if FANCY_CARS else "cuboid3D"
-        self.p = Plotter(sim, "Multi car simulation", mode=PLOT_MODE, shape=shape, groups=groups, off_screen=OFF_SCREEN)
+        self.p = Plotter(self.sim, "Multi car simulation", mode=PLOT_MODE, shape=shape, groups=groups, off_screen=OFF_SCREEN)
         self.p.V = 0
         self.p.subplot(0, 0)
         self.p.add_text("Detail view")
@@ -68,15 +68,9 @@ class Main(object):
             # Set simulation environment
             with self.sim:
                 self.createPlot(self.sim)
-                vehicle = self.sim.vehicles[0]
-                policy.init_vehicle(vehicle)  ## call sim will do the same
                 episode_reward = 0
                 timestep = 0
                 # Loop through each timestep in episode.
-                # TODO try persistent tape here
-                # TODO try passing tape from policy to trainStep => didnt work (check branch!)
-                # TODO try doing the forward pass inside trainer's buffer
-                # TODO Timeit.defaulttimer
                 with episodeTimer:
                     for i in np.arange(training_param["max_steps_per_episode"]):
                         # Perform one simulations step:
@@ -94,7 +88,7 @@ class Main(object):
 
                         # Note: episode ends when kM is reached (max_timesteps_per_episode) - Then policy is updated
                         #    Policy can also be updated throughout (after each decision reward pair is received)*
-                        #    Running reward smoothing effect
+                    #    Running reward smoothing effect
                     running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
                     with trainerTimer:
                         policy.trainer.trainStep()
