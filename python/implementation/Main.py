@@ -60,45 +60,51 @@ class Main(object):
     def train_policy(self):
         running_reward = 0
         episode_count = 0
+
         policy = self.pol[0]["policy"]
 
         # Run until all episodes are completed (reward reached).
         while True:
-            logging.info(" - - Episode number: %0.2f" % episode_count)
+            logging.critical("Episode number: %0.2f" % episode_count)
             # Set simulation environment
             with self.sim:
-                self.create_plot()
+                if episode_count % 10 == 0:
+                    self.create_plot()
                 episode_reward = 0
-                timestep = 0
                 # Loop through each timestep in episode.
                 # TODO Explain use of gradienttape not working when used here on sim.step
                 with episodeTimer:
                     # Run the model for one episode to collect training data
                     # Saves actions values, critic values, and rewards in policy class variables
-                    for t in tf.range(training_param["max_steps_per_episode"]):
-                        logging.info(" - Timestep of episode: %0.2f" % self.sim.k)
-                        policy.trainer.set_timestep(t)
-                        # Perform one simulations step:
-                        self.sim.step()  # Calls AcPolicy.customAction method.
-                        with plotTimer:
-                            self.p.plot()
-                        if sim.stopped:
-                            break
+                    while not self.sim.stopped:
+                        for t in tf.range(training_param["max_steps_per_episode"]):
+                            # logging.critical("Timestep of episode: %0.2f" % self.sim.k)
+                            policy.trainer.set_timestep(t)
+                            # Perform one simulations step:
+                            self.sim.step()  # Calls AcPolicy.customAction method.
+                            if episode_count % 10 == 0:
+                                with plotTimer:
+                                    self.p.plot()
 
                     # Batch policy update
                     with trainerTimer:
-                        states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards = policy.trainer.get_experience()
-                        policy.trainer.set_tf_action_choices(states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards)
+                        # states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards = policy.trainer.get_experience()
+                        # policy.trainer.set_tf_action_choices(states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards)
                         episode_reward = policy.trainer.train_step()
 
-                # Running reward smoothing effect
-                running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
+            self.p.close()
+            # Running reward smoothing effect
+            running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
             episode_count += 1
             if episode_count % 10 == 0:
                 print_template = "Running reward = {:.2f} at episode {}"
-                print(print_template.format(running_reward, episode_count))
-            if running_reward >= final_return:
-                print("Solved at episode {}!".format(episode_count))
+                print_output = print_template.format(running_reward, episode_count)
+                print(print_output)
+                logging.critical(print_output)
+            if running_reward >= training_param["final_return"]:
+                print_output = "Solved at episode {}!".format(episode_count)
+                print(print_output)
+                logging.critical(print_output)
                 break
 
     def simulate(self):
@@ -127,14 +133,20 @@ if __name__=="__main__":
     ROOT = pathlib.Path(__file__).resolve().parents[2]
     SC_PATH = ROOT.joinpath("scenarios/scenarios.h5")
 
-    config.scenarios_path = str(SC_PATH)
-    # config.seed = 1249517370
-    print(f"Using seed {config.seed}")
-
     # Logging
     logging.basicConfig(level=logging.INFO, filename="./python/implementation/logfiles/main.log")
+    logging.disable(logging.ERROR) # Temporarily disable error tf logs.
     with open('./python/implementation/logfiles/main.log', 'w'):
         pass  # Clear the log file of previous run
+
+
+    config.scenarios_path = str(SC_PATH)
+    # config.seed = 1249517370
+    print_output = "Using seed %f"%(config.seed)
+    print(print_output)
+    logging.critical(print_output)
+
+
 
     # Model configuration and settings
     model_param = {
@@ -143,13 +155,17 @@ if __name__=="__main__":
         "n_inputs": 47,  # Standard size of S
         "n_actions": 2
     }
+    logging.critical("Model Parameters:")
+    logging.critical(model_param)
     training_param = {
-        "max_steps_per_episode": 10,  # TODO kM - max value of k
+        "max_steps_per_episode": 150,  # TODO kM - max value of k
         "final_return": 150,
         "gamma": 0.99,  # Discount factor
         "adam_optimiser": keras.optimizers.Adam(learning_rate=0.01),
         "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM)
     }
+    logging.critical("Training param:")
+    logging.critical(training_param)
 
     # Initialise network/model architecture:
     actor_critic_net = ActorCriticNetDiscrete(model_param)
@@ -180,6 +196,7 @@ if __name__=="__main__":
 
     # Set up main class for running simulations:
     main = Main(sim_config)
+
 
     # Train model:
     main.train_policy()

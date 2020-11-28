@@ -3,7 +3,8 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np
 import logging
-from typing import List
+
+
 
 class ActorCriticNetDiscrete(keras.Model):
     """
@@ -61,6 +62,8 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         self.actions_off = []
         self.action_choices = []
         self.timestep = 0
+
+
 
         # Logging
         logging.basicConfig(level=logging.INFO, filename="./python/implementation/logfiles/trainer.log")

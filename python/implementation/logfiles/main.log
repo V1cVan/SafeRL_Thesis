@@ -1,0 +1,6 @@
+CRITICAL:root:Using seed 2428413951.000000
+CRITICAL:root:Model Parameters:
+CRITICAL:root:{'n_nodes': [400, 200], 'n_layers': 2, 'n_inputs': 47, 'n_actions': 2}
+CRITICAL:root:Training param:
+CRITICAL:root:{'max_steps_per_episode': 150, 'final_return': 150, 'gamma': 0.99, 'adam_optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x000001FB4533B048>, 'huber_loss': <tensorflow.python.keras.losses.Huber object at 0x000001FB4533B6C8>}
+CRITICAL:root:Episode number: 0.00
