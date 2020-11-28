@@ -1,6 +1,7 @@
 from hwsim import CustomPolicy
 import tensorflow as tf
-
+import logging
+import numpy as np
 
 class AcPolicyDiscrete(CustomPolicy):
     """
@@ -10,21 +11,22 @@ class AcPolicyDiscrete(CustomPolicy):
     def __init__(self, trainer):
         super(AcPolicyDiscrete, self).__init__()
         self.trainer = trainer  # trainer = f(NN_model)
+        logging.basicConfig(level=logging.INFO, filename="./python/implementation/logfiles/ACPolicyDiscrete.log")
+        with open('./python/implementation/logfiles/ACPolicyDiscrete.log', 'w'):
+            pass  # Clear the log file of previous run
 
     def init_vehicle(self, veh):
-        # Bookkeeping of last states and actions
+        # Book-keeping of last states and actions
         veh.s0 = None  # Previous vehicle state
         veh.s0_mod = None  # Previous vehicle state as passed to the actor and critic models
         veh.s1 = veh.s_raw  # Current vehicle state
-        veh.s1_mod = self.convertState(veh.s_raw)  # Current vehicle state as passed to the actor and critic models
+        veh.s1_mod = self.convert_state(veh.s_raw)  # Current vehicle state as passed to the actor and critic models
         veh.a0 = None
         veh.a0_mod = None
-        action_vel_probs, action_off_probs, veh.critic = self.getActionAndCritic(veh.s1_mod)
+        action_vel_probs, action_off_probs, veh.critic = self.get_action_and_critic(veh.s1_mod)
         veh.a1_mod = [action_off_probs, action_off_probs]
-        veh.a1 = self.convertActionDiscrete(veh, veh.a1_mod)
-        veh.reward = self.getReward()
-
-        # TODO SET ACTION_PROBS, VALUES, and REWARDS as TENSORS!
+        action_choice_vel, action_choice_off = self.trainer.get_action_choice([action_off_probs, action_off_probs])
+        veh.a1 = self.convert_action_discrete(veh, [action_choice_vel, action_choice_off])
 
     def custom_action(self, veh):
         # s0, a0 = previous vehicle state action pair
@@ -34,84 +36,77 @@ class AcPolicyDiscrete(CustomPolicy):
         veh.a0 = veh.a1
         veh.a0_mod = veh.a1_mod
         veh.s1 = veh.s_raw
-        veh.s1_mod = self.convertState(veh.s1)
-        action_vel_probs, action_off_probs, veh.critic = self.getActionAndCritic(veh.s1_mod)
+        veh.s1_mod = self.convert_state(veh.s1)
+        action_vel_probs, action_off_probs, veh.critic = self.get_action_and_critic(veh.s1_mod)
         veh.a1_mod = [action_off_probs, action_off_probs]
-        veh.a1 = self.convertActionDiscrete(veh, veh.a1_mod)
+        action_choice_vel, action_choice_off = self.trainer.get_action_choice([action_off_probs, action_off_probs])
+        veh.a1 = self.convert_action_discrete(veh, [action_choice_vel, action_choice_off])
 
         # Calculate new metrics
-        veh.reward = self.getReward(veh)
+        veh.reward = self.get_reward(veh)
 
         # And report new experience to trainer, if available
         if self.trainer is not None:
-            vel_action_choice, off_action_choice = self.getActionChoice(veh.a1_mod)
-            action = [tf.math.log(veh.a1_mod[0][0, vel_action_choice]),
-                      tf.math.log(veh.a1_mod[1][0, off_action_choice])]
-            self.trainer.addExperience(veh.s0_mod, action, veh.reward, veh.s1_mod, veh.critic[0, 0])
+            action = veh.a1_mod[0][0, action_choice_vel], veh.a1_mod[1][0, action_choice_off]
+            self.trainer.add_experience(tf.get_static_value(tf.squeeze(veh.s0_mod)), action, [action_choice_vel, action_choice_off], veh.reward, tf.squeeze(veh.critic))
 
         return veh.a1  # The hwsim library uses double precision floats
 
-    def convertState(self, state):
+    def convert_state(self, state):
         """ Get the modified state vector that will be passed to the actor and critic models from the
         state vector (available in veh). I.e. the mapping s->s_mod """
         # TODO Edit convert state method to remove unnecessary states
-        state = tf.convert_to_tensor(state, dtype=tf.float32)  # shape = (47,)
+        state = tf.convert_to_tensor(state, dtype=tf.float32, name="state_input")  # shape = (47,)
         state = tf.expand_dims(state, 0)  # shape = (1,47)
         return state  # Can be overridden by subclasses
 
-    def getActionAndCritic(self, state):
+    def get_action_and_critic(self, state):
         """ Get the modified action vector from the modified state vector. I.e. the mapping s_mod->a_mod """
         action_vel_probs, action_off_probs, critic_prob = self.trainer.actor_critic_net(state)
         return action_vel_probs, action_off_probs, critic_prob
 
-    def getActionChoice(self, action_prob):
-        """ Randomly choose from the available actions."""
-        action_vel_probs, action_off_probs = action_prob
-        vel_actions_choice = tf.random.categorical(action_vel_probs, 1)[0,0]
-        off_actions_choice = tf.random.categorical(action_off_probs, 1)[0,0]
-        return vel_actions_choice, off_actions_choice
-
-    def convertActionDiscrete(self, veh, action):
+    def convert_action_discrete(self, veh, action_choices):
         """
         Get the action vector that will be passed to the vehicle from the given model action vector
         (used by the actor and critic models and available in veh). I.e. the mapping a_mod->a
         4 discrete actions: slow, maintain ,acc, left, centre, right
         """
         sim_action = tf.TensorArray(size=0, dtype=tf.float64, dynamic_size=True)
-        vel_actions, off_actions = self.getActionChoice(action)
+        vel_actions, off_actions = action_choices
 
         vel_bounds = veh.a_bounds["vel"]
         if vel_actions == 0:
-            vel_controller = veh.s["vel"][0]-1
+            vel_controller = veh.s["vel"][0]-3
         elif vel_actions == 1:
             vel_controller = veh.s["vel"][0]
         elif vel_actions == 2:
-            vel_controller = veh.s["vel"][0]+1
+            vel_controller = veh.s["vel"][0]+3
         else:
             print("Error with setting vehicle velocity!")
         v = tf.math.minimum(vel_controller, vel_bounds[1])
         sim_action = sim_action.write(0, tf.math.maximum(0, v))
 
+        # TODO create logs to debug the offset not always obeying bounds!
         off_bounds = veh.a_bounds["off"]
         if off_actions == 0:  # Turn left
-            off_controller = tf.math.maximum(off_bounds[0]+0.1, veh.s["laneC"]["off"]-3.5)
+            off_controller = tf.math.maximum(off_bounds[0]+0.2, veh.s["laneC"]["off"]-3.5)
         elif off_actions == 1:  # Straight
             off_controller = tf.convert_to_tensor(veh.s["laneC"]["off"])
         elif off_actions == 2:  # Turn right
-            off_controller = tf.math.minimum(off_bounds[1]-0.1, veh.s["laneC"]["off"]+3.5)
+            off_controller = tf.math.minimum(off_bounds[1]-0.2, veh.s["laneC"]["off"]+3.5)
         else:
             print("Error with setting offset action!")
-        sim_action = sim_action.write(1,off_controller)
+        sim_action = sim_action.write(1, off_controller)
 
         sim_action = sim_action.stack()
-        return sim_action.__array__()  # output is array
+        return tf.get_static_value(sim_action)  # output is array
 
-    def getReward(self, veh=None):
+    def get_reward(self, veh=None):
         """
         Calculate reward for actions.
         Reward = Speed + LaneCentre + FollowingDistance
         """
-        reward = tf.Variable(0)
+        reward = tf.Variable(0, dtype=tf.float64)
         if veh is not None:
             # Velocity reward:
             v = veh.s["vel"][0]
@@ -126,14 +121,14 @@ class AcPolicyDiscrete(CustomPolicy):
 
             # Following distance:
             # TODO just take long. component
-            d_gap = tf.math.l2_normalize(veh.s["laneC"]["relF"]["gap"])
+            d_gap = veh.s["laneC"]["relF"]["gap"][0]
             d_lim = 10
             r_follow = tf.math.exp(-(d_gap - d_lim) ** 2 / 2)
 
-            reward.write(r_s + r_off + r_follow)
+            reward.assign(r_s + r_off + r_follow)
         else:
-            reward.write(0)
-        return reward
+            reward.assign(0.0)
+        return tf.dtypes.cast(reward, tf.float32)
 
         # def convertActionContinuous(self, veh):
         #     """ Get the action vector that will be passed to the vehicle from the given model action vector

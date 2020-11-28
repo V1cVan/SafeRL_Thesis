@@ -2,6 +2,8 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np
+import logging
+from typing import List
 
 class ActorCriticNetDiscrete(keras.Model):
     """
@@ -26,7 +28,7 @@ class ActorCriticNetDiscrete(keras.Model):
         y = self.model(inputs)
         return y
 
-    def displayOverview(self):
+    def display_overview(self):
         # Display overview of model
         print("\nActor network model summary:")
         self.model.summary()
@@ -43,57 +45,177 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         super(GradAscentTrainerDiscrete, self).__init__()
         self.actor_critic_net = actor_critic_net
         # self.cfg = cfg
-        self.buffer = Buffer()  # Buffer class defined below
+        #self.buffer = Buffer()  # Buffer class defined below
         self.training = True
         self.training_param = training_param
+        self.state = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+        # Old implementation - Gives tensorflow warnings...
+        # self.action_vel_probs = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+        # self.action_off_probs = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+        # self.action_choices = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+        # self.critic_values = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+        # self.rewards = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+        self.states = []
+        self.rewards = []
+        self.actions_vel = []
+        self.actions_off = []
+        self.action_choices = []
+        self.timestep = 0
 
-    def addExperience(self, s0, a0, r, s1, critic):
+        # Logging
+        logging.basicConfig(level=logging.INFO, filename="./python/implementation/logfiles/trainer.log")
+        with open('./python/implementation/logfiles/trainer.log', 'w'):
+            pass  # Clear the log file of previous run
+
+    def set_timestep(self, timestep):
+        self.timestep = timestep
+
+    def add_experience(self, s0, a0, a_choices, r, c):
+        """ Saves the experience after the sim.step() call. """
         if self.training:
-            self.buffer.addToBuffer(s0, a0, r, s1, c)
+            self.states.append(s0)
+            self.actions_vel.append(a0[0])
+            self.actions_off.append(a0[1])
+            self.action_choices.append(a_choices)
+            self.rewards.append(r)
+            # Old implementation. Gives TF warnings...
+            # self.state.write(self.timestep, s0)
+            # self.action_vel_probs.write(self.timestep, a0[0])
+            # self.action_off_probs.write(self.timestep, a0[1])
+            # self.action_choices.write(self.timestep, a_choices)
+            # self.critic_values.write(self.timestep, c)
+            # self.rewards.write(self.timestep, r)
 
-    def trainStep(self):
-        eps = np.finfo(np.float32).eps.item()  # Smallest number such that 1.0 + eps != 1.0
+    def get_experience(self):
+        """ Returns the experiences """
+        action_choices = np.array(self.action_choices, dtype=np.float32)
+        action_vel_choice = action_choices[:, 0]
+        action_off_choice = action_choices[:, 1]
+        rewards = np.array(self.rewards, dtype=np.float32)
+        states = np.array(self.states, dtype=np.float32)
+        actions_vel = np.array(self.actions_vel, dtype=np.float32)
+        actions_off = np.array(self.actions_off, dtype=np.float32)
+        # state = self.state.stack()
+        # action_vel_probs = self.action_vel_probs.stack()
+        # action_off_probs = self.action_off_probs.stack()
+        # action_choices = self.action_choices.stack()
+        # critic_values = self.critic_values.stack()
+        # rewards = self.rewards.stack()
+        return states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards
+
+    def set_tf_action_choices(self, states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards):
+        self.states = tf.convert_to_tensor(states)
+        self.actions_vel = tf.convert_to_tensor(actions_vel)
+        self.actions_off = tf.convert_to_tensor(actions_off)
+        self.action_vel_choice = tf.convert_to_tensor(action_vel_choice)
+        self.action_off_choice = tf.convert_to_tensor(action_off_choice)
+        self.rewards = tf.convert_to_tensor(rewards)
+
+    def clear_experience(self):
+        self.states.clear()
+        self.rewards.clear()
+        self.action_choices.clear()
+        # self.action_vel_probs = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+        # self.action_off_probs = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+        # self.action_choices = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+        # self.critic_values = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+        # self.rewards = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+
+    def get_action_choice(self, action_probs):
+        """ Randomly choose from the available actions."""
+        action_vel_probs, action_off_probs = action_probs
+        vel_actions_choice = tf.random.categorical(action_vel_probs, 1)[0,0]
+        off_actions_choice = tf.random.categorical(action_off_probs, 1)[0,0]
+        return vel_actions_choice, off_actions_choice
+
+    def get_expected_returns(self, rewards: tf.Tensor) -> tf.Tensor:
+        """
+        Compute expected returns per timestep.
+        """
+        n = tf.shape(rewards)[0]
+        returns = tf.TensorArray(dtype=tf.float32, size=n)
+        eps = np.finfo(np.float32).eps.item()
+
+        # Start from the end of `rewards` and accumulate reward sums
+        # into the `returns` array
+        rewards = tf.cast(rewards[::-1], dtype=tf.float32)
+        discounted_sum = tf.constant(0.0)
+        discounted_sum_shape = discounted_sum.shape
+        for i in tf.range(n):
+            reward = rewards[i]
+            discounted_sum = reward + self.training_param["gamma"] * discounted_sum
+            discounted_sum.set_shape(discounted_sum_shape)
+            returns = returns.write(i, discounted_sum)
+        returns = returns.stack()[::-1]
+
+        returns = ((returns - tf.math.reduce_mean(returns))/(tf.math.reduce_std(returns) + eps))
+        return returns
+
+    def compute_loss(
+            self,
+            action_vel_probs: tf.Tensor,
+            action_off_probs: tf.Tensor,
+            critic_values: tf.Tensor,
+            returns: tf.Tensor) -> tf.Tensor:
+        """ Computes the combined actor-critic loss."""
+        advantage = returns - critic_values
+
+        action_vel_log_probs = tf.math.log(action_vel_probs)
+        action_off_log_probs = tf.math.log(action_off_probs)
+        actor_vel_loss = -tf.math.reduce_sum(action_vel_log_probs * advantage)
+        actor_off_loss = -tf.math.reduce_sum(action_off_log_probs * advantage)
+        critic_loss = self.training_param["huber_loss"](critic_values, returns)
+
+        return actor_vel_loss + actor_off_loss + critic_loss
+
+    #@tf.function
+    def train_step(self):
+        """ Performs a training step. """
         if self.training:
-            returns = []
-            discounted_sum = 0
+            with tf.GradientTape() as tape:
+                action_vel_values = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+                action_off_values = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+                # Data from simulation:
+                sim_states = tf.convert_to_tensor(self.states)
+                rewards = tf.convert_to_tensor(self.rewards)
+                sim_action_vel_choices = tf.convert_to_tensor(np.array(self.action_choices)[:,0])
+                sim_action_off_choices = tf.convert_to_tensor(np.array(self.action_choices)[:,1])
+                # Forward Pass - (Re)Calculation of actions that caused saved states
+                # TODO log the values from ACPolicy class to ensure actions+critic correspond to calculations done here (indices etc.)
+                action_vel_probs, action_off_probs, critic_values = self.actor_critic_net(sim_states)
+                for t in tf.range(tf.size(sim_states[:, 0])):
+                    vel_choice = tf.get_static_value(sim_action_vel_choices[t])
+                    off_choice = tf.get_static_value(sim_action_off_choices[t])
+                    action_vel_values.write(t, action_vel_probs[tf.get_static_value(t), vel_choice])
+                    action_off_values.write(t, action_off_probs[tf.get_static_value(t), off_choice])
 
-            # Return = SUM_t=0^inf (gamma*reward_t)
-            for r in self.buffer.reward_hist[::-1]:
-                discounted_sum = r + self.training_param["gamma"] * discounted_sum
-                returns.insert(0, discounted_sum)
+                action_vel_values = action_vel_values.stack()
+                action_off_values = action_off_values.stack()
 
-            # Normalise returns
-            returns = np.array(returns)
-            returns = (returns - np.mean(returns)) / (np.std(returns) + eps)
-            returns = returns.tolist()
 
-            # Fetch experience from buffer and calculate loss values:
-            history = zip(self.buffer.action_vel_hist, self.buffer.action_off_hist,
-                          self.buffer.critic_hist, returns)
-            actor_losses_vel = []
-            actor_losses_off = []
-            critic_losses = []
-            for actor_log_prob_vel, actor_log_prob_off, critic_val, ret in history:
-                diff = ret - critic_val
-                # if diff neg weaken, if diff pos strengthen connections
-                actor_losses_vel.append(-actor_log_prob_vel * diff)  # actor velocity loss
-                actor_losses_off.append(-actor_log_prob_off * diff)  # actor off loss
-                critic_losses.append(
-                    self.training_param["loss_function"](tf.expand_dims(critic_val, 0), tf.expand_dims(ret, 0)))
+                # Calculate expected returns
+                returns = self.get_expected_returns(rewards)
 
-            # Backpropogation
-            loss_value_actor = sum(actor_losses_vel) + sum(actor_losses_off)
-            gradients_actor = self.tape_actor.gradient(loss_value_actor, self.actor_net.trainable_variables)
-            self.training_param["optimiser"].apply_gradients(zip(gradients_actor, self.actor_net.trainable_variables))
+                # Convert training data to appropriate TF tensor shapes
+                action_vel_values, action_off_values, critic_values, returns = [
+                    tf.expand_dims(x, 1) for x in [action_vel_values, action_off_values, critic_values, returns]]
 
-            loss_value_critic = sum(critic_losses)
-            gradients_critic = self.tape_critic.gradient(loss_value_critic, self.critic_net.trainable_variables)
-            self.training_param["optimiser"].apply_gradients(zip(gradients_critic, self.critic_net.trainable_variables))
+                # Calculating loss values to update our network
+                loss = self.compute_loss(action_vel_values, action_off_values, critic_values, returns)
 
+                # Compute the gradients from the loss
+                grads = tape.gradient(loss, self.actor_critic_net.trainable_variables)
+
+                # Apply the gradients to the model's parameters
+            self.training_param["adam_optimiser"].apply_gradients(
+                zip(grads, self.actor_critic_net.trainable_variables))
+            episode_reward = tf.math.reduce_sum(rewards)
             # Clear loss values and reward history
-            self.action_hist.clear()
-            self.critic_hist.clear()
-            self.reward_hist.clear()
+            self.clear_experience()
+
+            return episode_reward
+
+
 
 
 class Buffer(object):

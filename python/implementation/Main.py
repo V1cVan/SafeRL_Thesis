@@ -11,7 +11,7 @@ from NeuralModels import *
 from RL_Policies import *
 from RL_Policies import *
 from HelperClasses import *
-
+import logging
 
 physical_devices = tf.config.list_physical_devices('GPU')
 print(physical_devices)
@@ -30,7 +30,7 @@ class Main(object):
         }]
 
     # ...
-    def createPlot(self):
+    def create_plot(self):
         shape = (4, 2)
         groups = [([0, 2], 0)]
         vehicle_type = "car" if FANCY_CARS else "cuboid3D"
@@ -54,67 +54,45 @@ class Main(object):
         ActionsPlot(self.p,actions="off")
         self.p.plot()  # Initial plot
 
-
-    def trainPolicy(self):
-        action_history = []
-        critic_history = []
-        rewards_history = []
+    # TODO query tf.function problems with Bram!
+    # TODO query tf.numpy_function of of sim.step?
+    #tf.function
+    def train_policy(self):
         running_reward = 0
         episode_count = 0
         policy = self.pol[0]["policy"]
 
         # Run until all episodes are completed (reward reached).
         while True:
+            logging.info(" - - Episode number: %0.2f" % episode_count)
             # Set simulation environment
             with self.sim:
-                self.createPlot(self.sim)
+                self.create_plot()
                 episode_reward = 0
                 timestep = 0
                 # Loop through each timestep in episode.
+                # TODO Explain use of gradienttape not working when used here on sim.step
                 with episodeTimer:
-                    for i in np.arange(training_param["max_steps_per_episode"]):
+                    # Run the model for one episode to collect training data
+                    # Saves actions values, critic values, and rewards in policy class variables
+                    for t in tf.range(training_param["max_steps_per_episode"]):
+                        logging.info(" - Timestep of episode: %0.2f" % self.sim.k)
+                        policy.trainer.set_timestep(t)
                         # Perform one simulations step:
                         self.sim.step()  # Calls AcPolicy.customAction method.
-
                         with plotTimer:
                             self.p.plot()
-
-
-                        if timestep > 0:
-                            episode_reward += policy.trainer.reward_hist[-1]
-
                         if sim.stopped:
                             break
 
-                        # Note: episode ends when kM is reached (max_timesteps_per_episode) - Then policy is updated
-                        #    Policy can also be updated throughout (after each decision reward pair is received)*
-                    #    Running reward smoothing effect
-                    running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
+                    # Batch policy update
                     with trainerTimer:
-                        policy.trainer.trainStep()
+                        states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards = policy.trainer.get_experience()
+                        policy.trainer.set_tf_action_choices(states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards)
+                        episode_reward = policy.trainer.train_step()
 
-                # while not self.sim.stopped:
-                #
-                #     # Perform one simulations step:
-                #     self.sim.step()  # Calls AcPolicy.customAction method.
-                #     # ... (visualization/extra callbacks)
-                #     self.p.plot()
-                #     if timestep > 0:
-                #         episode_reward += policy.trainer.reward_hist[-1]
-                #     if timestep == 100:
-                #         print("break")
-                #
-                #
-                #     timestep += 1
-                # else:
-                #     # Note: episode ends when kM is reached (max_timesteps_per_episode) - Then policy is updated
-                #     # Policy can also be updated throughout (after each decision reward pair is received)*
-                #     # Running reward smoothing effect
-                #     # TODO Figure out why we never enter here when kM reached?
-                #     running_reward = 0.05 * episode_reward + (1-0.05)*running_reward
-                #     # Perform one train step, using the collected new experience:
-                #     policy.trainer.trainStep()
-
+                # Running reward smoothing effect
+                running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
             episode_count += 1
             if episode_count % 10 == 0:
                 print_template = "Running reward = {:.2f} at episode {}"
@@ -153,6 +131,11 @@ if __name__=="__main__":
     # config.seed = 1249517370
     print(f"Using seed {config.seed}")
 
+    # Logging
+    logging.basicConfig(level=logging.INFO, filename="./python/implementation/logfiles/main.log")
+    with open('./python/implementation/logfiles/main.log', 'w'):
+        pass  # Clear the log file of previous run
+
     # Model configuration and settings
     model_param = {
         "n_nodes": [400, 200],  # Number of hidden nodes in each layer
@@ -161,16 +144,16 @@ if __name__=="__main__":
         "n_actions": 2
     }
     training_param = {
-        "max_steps_per_episode": 10000,  # TODO kM - max value of k
+        "max_steps_per_episode": 10,  # TODO kM - max value of k
         "final_return": 150,
         "gamma": 0.99,  # Discount factor
-        "optimiser": keras.optimizers.Adam(learning_rate=0.02),
-        "loss_function": keras.losses.Huber()
+        "adam_optimiser": keras.optimizers.Adam(learning_rate=0.01),
+        "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM)
     }
 
     # Initialise network/model architecture:
     actor_critic_net = ActorCriticNetDiscrete(model_param)
-    actor_critic_net.displayOverview()
+    actor_critic_net.display_overview()
     trainer = GradAscentTrainerDiscrete(actor_critic_net, training_param)  # training method used
 
     # Simulation configuration and settings
@@ -199,7 +182,7 @@ if __name__=="__main__":
     main = Main(sim_config)
 
     # Train model:
-    main.trainPolicy()
+    main.train_policy()
 
     # Simulate model:
 
