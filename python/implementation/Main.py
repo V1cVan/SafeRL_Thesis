@@ -68,8 +68,8 @@ class Main(object):
             # logging.critical("Episode number: %0.2f" % episode_count)
              # Set simulation environment
             with self.sim:
-                # if episode_count % 30 == 0 and not self.sim.stopped:
-                #     self.create_plot()
+                if episode_count % 50 == 0 and not self.sim.stopped and training_param["show_plots_when_training"]:
+                    self.create_plot()
                 episode_reward = 0
                 # Loop through each timestep in episode.
                 # TODO Explain use of gradienttape not working when used here on sim.step
@@ -82,24 +82,21 @@ class Main(object):
                         # Perform one simulations step:
                         if not self.sim.stopped:
                             self.sim.step()  # Calls AcPolicy.customAction method.
-                            # if episode_count % 30 == 0:
-                            #     with plotTimer:
-                            #         self.p.plot()
+                            if episode_count % 50 == 0 and training_param["show_plots_when_training"]:
+                                with plotTimer:
+                                    self.p.plot()
                             if self.sim._collision:
                                 logging.critical("Collision. At episode %f" % episode_count)
-                                policy.trainer.set_neg_collision_reward()
+                                policy.trainer.set_neg_collision_reward(10)
                                 break
-
-
-
 
                     # Batch policy update
                     with trainerTimer:
                         # states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards = policy.trainer.get_experience()
                         # policy.trainer.set_tf_action_choices(states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards)
                         episode_reward = policy.trainer.train_step()
-
-            # self.p.close()
+            if training_param["show_plots_when_training"]:
+                self.p.close()
             # Running reward smoothing effect
             running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
             episode_count += 1
@@ -112,22 +109,24 @@ class Main(object):
                 print_output = "Solved at episode {}!".format(episode_count)
                 print(print_output)
                 logging.critical(print_output)
+                policy.trainer.actor_critic_net.save_weights(model_param["weights_file_path"])
                 break
+            # Save intermediate policies
+            if episode_count % 50 == 0:
+                policy.trainer.actor_critic_net.save_weights(model_param["weights_file_path"])
+
 
     def simulate(self):
+        policy = self.pol[0]["policy"]
+        policy.trainer.training = False
+        policy.trainer.actor_critic_net.load_weights(model_param["weights_file_path"])
         with self.sim:
+            self.create_plot()
             while not self.sim.stopped:
-                # Perform one simulation step:
+
                 self.sim.step()
-                # ... (visualization/extra callbacks)
+                self.p.plot()
 
-                # Keep track of average metrics in this episode
-                # ...
-
-                # Perform one train step, using the collected new experience:
-                for auto in self.auto:
-                    if auto["policy"].trainer.training:
-                        auto["policy"].trainer.train_step()
 
 
 if __name__=="__main__":
@@ -160,13 +159,15 @@ if __name__=="__main__":
         "n_nodes": [400, 200],  # Number of hidden nodes in each layer
         "n_layers": 2,  # Number of layers
         "n_inputs": 47,  # Standard size of S
-        "n_actions": 2
+        "n_actions": 2,
+        "weights_file_path": "./python/implementation/trained_models/model_weights"
     }
     logging.critical("Model Parameters:")
     logging.critical(model_param)
     training_param = {
-        "max_steps_per_episode": 150,  # TODO kM - max value of k
-        "final_return": 180,
+        "max_steps_per_episode": 100,  # TODO kM - max value of k
+        "final_return": 300,
+        "show_plots_when_training": False,
         "gamma": 0.99,  # Discount factor
         "adam_optimiser": keras.optimizers.Adam(learning_rate=0.01),
         "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM)
@@ -209,7 +210,7 @@ if __name__=="__main__":
     main.train_policy()
 
     # Simulate model:
-
+    main.simulate()
 
     print("EOF")
 

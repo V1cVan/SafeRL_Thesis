@@ -122,8 +122,8 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         # self.critic_values = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
         # self.rewards = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
 
-    def set_neg_collision_reward(self):
-        self.rewards[-1] = self.rewards[-1] - 20
+    def set_neg_collision_reward(self, punishment):
+        self.rewards[-1] = self.rewards[-1] - punishment
 
     def get_action_choice(self, action_probs):
         """ Randomly choose from the available actions."""

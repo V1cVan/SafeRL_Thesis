@@ -1,37 +1,8 @@
-CRITICAL:root:Using seed 932947206.000000
+CRITICAL:root:Using seed 3596840819.000000
 CRITICAL:root:Model Parameters:
-CRITICAL:root:{'n_nodes': [400, 200], 'n_layers': 2, 'n_inputs': 47, 'n_actions': 2}
+CRITICAL:root:{'n_nodes': [400, 200], 'n_layers': 2, 'n_inputs': 47, 'n_actions': 2, 'weights_file_path': './python/implementation/trained_models/model_weights'}
 CRITICAL:root:Training param:
-CRITICAL:root:{'max_steps_per_episode': 150, 'final_return': 180, 'gamma': 0.99, 'adam_optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x0000021DF129B208>, 'huber_loss': <tensorflow.python.keras.losses.Huber object at 0x0000021DF129B8C8>}
-CRITICAL:root:Collision. At episode 0.000000
-CRITICAL:root:Collision. At episode 1.000000
-CRITICAL:root:Collision. At episode 6.000000
-CRITICAL:root:Running reward = 8.30 at episode 10
-CRITICAL:root:Collision. At episode 10.000000
-CRITICAL:root:Collision. At episode 16.000000
-CRITICAL:root:Running reward = 12.94 at episode 20
-CRITICAL:root:Running reward = 18.83 at episode 30
-CRITICAL:root:Collision. At episode 31.000000
-CRITICAL:root:Running reward = 21.80 at episode 40
-CRITICAL:root:Running reward = 19.85 at episode 50
-CRITICAL:root:Running reward = 20.30 at episode 60
-CRITICAL:root:Collision. At episode 61.000000
-CRITICAL:root:Running reward = 25.33 at episode 70
-CRITICAL:root:Running reward = 28.35 at episode 80
-CRITICAL:root:Running reward = 29.13 at episode 90
-CRITICAL:root:Running reward = 24.20 at episode 100
-CRITICAL:root:Running reward = 22.62 at episode 110
-CRITICAL:root:Collision. At episode 110.000000
-CRITICAL:root:Running reward = 25.29 at episode 120
-CRITICAL:root:Collision. At episode 122.000000
-CRITICAL:root:Collision. At episode 126.000000
-CRITICAL:root:Running reward = 26.81 at episode 130
-CRITICAL:root:Collision. At episode 136.000000
-CRITICAL:root:Running reward = 24.17 at episode 140
-CRITICAL:root:Collision. At episode 148.000000
-CRITICAL:root:Running reward = 21.96 at episode 150
-CRITICAL:root:Collision. At episode 151.000000
-CRITICAL:root:Collision. At episode 155.000000
-CRITICAL:root:Collision. At episode 157.000000
-CRITICAL:root:Running reward = 23.04 at episode 160
-CRITICAL:root:Collision. At episode 166.000000
+CRITICAL:root:{'max_steps_per_episode': 100, 'final_return': 300, 'show_plots_when_training': False, 'gamma': 0.99, 'adam_optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x000001D214F21C48>, 'huber_loss': <tensorflow.python.keras.losses.Huber object at 0x000001D214F21F88>}
+CRITICAL:root:Running reward = 9.64 at episode 10
+CRITICAL:root:Collision. At episode 18.000000
+CRITICAL:root:Running reward = 15.29 at episode 20
