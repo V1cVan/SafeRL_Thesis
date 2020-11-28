@@ -68,8 +68,8 @@ class Main(object):
             # logging.critical("Episode number: %0.2f" % episode_count)
              # Set simulation environment
             with self.sim:
-                if episode_count % 10 == 0:
-                    self.create_plot()
+                # if episode_count % 30 == 0 and not self.sim.stopped:
+                #     self.create_plot()
                 episode_reward = 0
                 # Loop through each timestep in episode.
                 # TODO Explain use of gradienttape not working when used here on sim.step
@@ -82,11 +82,16 @@ class Main(object):
                         # Perform one simulations step:
                         if not self.sim.stopped:
                             self.sim.step()  # Calls AcPolicy.customAction method.
-                        if self.sim._collision:
-                            break
-                        if episode_count % 30 == 0:
-                            with plotTimer:
-                                self.p.plot()
+                            # if episode_count % 30 == 0:
+                            #     with plotTimer:
+                            #         self.p.plot()
+                            if self.sim._collision:
+                                logging.critical("Collision. At episode %f" % episode_count)
+                                policy.trainer.set_neg_collision_reward()
+                                break
+
+
+
 
                     # Batch policy update
                     with trainerTimer:
@@ -94,7 +99,7 @@ class Main(object):
                         # policy.trainer.set_tf_action_choices(states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards)
                         episode_reward = policy.trainer.train_step()
 
-            self.p.close()
+            # self.p.close()
             # Running reward smoothing effect
             running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
             episode_count += 1
@@ -161,7 +166,7 @@ if __name__=="__main__":
     logging.critical(model_param)
     training_param = {
         "max_steps_per_episode": 150,  # TODO kM - max value of k
-        "final_return": 150,
+        "final_return": 180,
         "gamma": 0.99,  # Discount factor
         "adam_optimiser": keras.optimizers.Adam(learning_rate=0.01),
         "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM)
@@ -177,8 +182,8 @@ if __name__=="__main__":
     # Simulation configuration and settings
     veh_types = [
         {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)},
-        {"amount": 40, "model": KBModel(), "policy": BasicPolicy("slow")},
-        {"amount": 40, "model": KBModel(), "policy": BasicPolicy("normal")},
+        {"amount": 30, "model": KBModel(), "policy": BasicPolicy("slow")},
+        {"amount": 30, "model": KBModel(), "policy": BasicPolicy("normal")},
         {"amount": 20, "model": KBModel(), "policy": BasicPolicy("fast")}
     ]
     sim_config = {

@@ -89,11 +89,11 @@ class AcPolicyDiscrete(CustomPolicy):
         # TODO create logs to debug the offset not always obeying bounds!
         off_bounds = veh.a_bounds["off"]
         if off_actions == 0:  # Turn left
-            off_controller = tf.math.maximum(off_bounds[0]+0.2, veh.s["laneC"]["off"]-3.5)
+            off_controller = tf.math.maximum(off_bounds[0]+0.2, veh.s["laneC"]["off"]-0.2)
         elif off_actions == 1:  # Straight
             off_controller = tf.convert_to_tensor(veh.s["laneC"]["off"])
         elif off_actions == 2:  # Turn right
-            off_controller = tf.math.minimum(off_bounds[1]-0.2, veh.s["laneC"]["off"]+3.5)
+            off_controller = tf.math.minimum(off_bounds[1]-0.2, veh.s["laneC"]["off"]+0.2)
         else:
             print("Error with setting offset action!")
         sim_action = sim_action.write(1, off_controller)
@@ -111,19 +111,19 @@ class AcPolicyDiscrete(CustomPolicy):
             # Velocity reward:
             v = veh.s["vel"][0]
             v_lim = 120 / 3.6
-            r_s = 2* tf.math.exp(-(v - v_lim) ** 2 / 10)
+            r_s = 2 * tf.math.exp(-(v_lim - v) ** 2 / 10)
 
             # Collision??
 
             # Lane center reward:
             lane_offset = veh.s["laneC"]["off"]
-            r_off = tf.math.exp(-(lane_offset) ** 2 / 1)
+            r_off = tf.math.exp(-(lane_offset) ** 2 / 0.2)
 
             # Following distance:
             # TODO just take long. component
             d_gap = veh.s["laneC"]["relF"]["gap"][0]
             d_lim = 10
-            r_follow = tf.math.exp(-(d_gap - d_lim) ** 2 / 2)
+            r_follow = -tf.math.exp(-(d_lim - d_gap) ** 2 / 20)
 
             reward.assign(r_s + r_off + r_follow)
         else:

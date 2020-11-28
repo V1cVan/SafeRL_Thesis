@@ -63,8 +63,6 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         self.action_choices = []
         self.timestep = 0
 
-
-
         # Logging
         logging.basicConfig(level=logging.INFO, filename="./python/implementation/logfiles/trainer.log")
         with open('./python/implementation/logfiles/trainer.log', 'w'):
@@ -123,6 +121,9 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         # self.action_choices = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
         # self.critic_values = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
         # self.rewards = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+
+    def set_neg_collision_reward(self):
+        self.rewards[-1] = self.rewards[-1] - 20
 
     def get_action_choice(self, action_probs):
         """ Randomly choose from the available actions."""
