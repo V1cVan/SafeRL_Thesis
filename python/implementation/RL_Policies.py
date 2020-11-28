@@ -111,7 +111,7 @@ class AcPolicyDiscrete(CustomPolicy):
             # Velocity reward:
             v = veh.s["vel"][0]
             v_lim = 120 / 3.6
-            r_s = tf.math.exp(-(v - v_lim) ** 2 / 10)
+            r_s = 2* tf.math.exp(-(v - v_lim) ** 2 / 10)
 
             # Collision??
 

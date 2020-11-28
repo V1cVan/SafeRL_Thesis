@@ -65,8 +65,8 @@ class Main(object):
 
         # Run until all episodes are completed (reward reached).
         while True:
-            logging.critical("Episode number: %0.2f" % episode_count)
-            # Set simulation environment
+            # logging.critical("Episode number: %0.2f" % episode_count)
+             # Set simulation environment
             with self.sim:
                 if episode_count % 10 == 0:
                     self.create_plot()
@@ -76,15 +76,17 @@ class Main(object):
                 with episodeTimer:
                     # Run the model for one episode to collect training data
                     # Saves actions values, critic values, and rewards in policy class variables
-                    while not self.sim.stopped:
-                        for t in tf.range(training_param["max_steps_per_episode"]):
-                            # logging.critical("Timestep of episode: %0.2f" % self.sim.k)
-                            policy.trainer.set_timestep(t)
-                            # Perform one simulations step:
+                    for t in tf.range(training_param["max_steps_per_episode"]):
+                        # logging.critical("Timestep of episode: %0.2f" % self.sim.k)
+                        policy.trainer.set_timestep(t)
+                        # Perform one simulations step:
+                        if not self.sim.stopped:
                             self.sim.step()  # Calls AcPolicy.customAction method.
-                            if episode_count % 10 == 0:
-                                with plotTimer:
-                                    self.p.plot()
+                        if self.sim._collision:
+                            break
+                        if episode_count % 30 == 0:
+                            with plotTimer:
+                                self.p.plot()
 
                     # Batch policy update
                     with trainerTimer:
