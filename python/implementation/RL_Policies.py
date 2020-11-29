@@ -114,8 +114,8 @@ class AcPolicyDiscrete(CustomPolicy):
                           offset_left_lane_center, rel_offset_back_left_lane, rel_vel_back_left_lane, rel_offset_front_left_lane, rel_vel_front_left_lane,
                           offset_right_lane_center, rel_offset_back_right_lane, rel_vel_back_right_late, rel_offset_front_right_lane, rel_vel_front_right_late))
 
-        state = tf.convert_to_tensor(state, dtype=tf.float32, name="state_input")  # shape = (47,)
-        state = tf.expand_dims(state, 0)  # shape = (1,47)
+        state = tf.convert_to_tensor(state, dtype=tf.float32, name="state_input")  # 30 entries
+        state = tf.expand_dims(state, 0)
         return state  # Can be overridden by subclasses
 
     def get_action_and_critic(self, state):
