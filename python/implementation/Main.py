@@ -76,18 +76,19 @@ class Main(object):
                 with episodeTimer:
                     # Run the model for one episode to collect training data
                     # Saves actions values, critic values, and rewards in policy class variables
-                    for t in tf.range(training_param["max_steps_per_episode"]):
+                    for t in tf.range(1,training_param["max_steps_per_episode"]+1):
                         # logging.critical("Timestep of episode: %0.2f" % self.sim.k)
-                        policy.trainer.set_timestep(t)
+                        policy.trainer.timestep = t
                         # Perform one simulations step:
                         if not self.sim.stopped:
+                            # TODO Query with bram, step applies policy then steps in sim? or other way around?
                             self.sim.step()  # Calls AcPolicy.customAction method.
                             if episode_count % 50 == 0 and training_param["show_plots_when_training"]:
                                 with plotTimer:
                                     self.p.plot()
                             if self.sim._collision:
                                 logging.critical("Collision. At episode %f" % episode_count)
-                                policy.trainer.set_neg_collision_reward(10)
+                                policy.trainer.set_neg_collision_reward(5)
                                 break
 
                     # Batch policy update
@@ -116,14 +117,14 @@ class Main(object):
                 policy.trainer.actor_critic_net.save_weights(model_param["weights_file_path"])
 
 
+
     def simulate(self):
         policy = self.pol[0]["policy"]
         policy.trainer.training = False
         policy.trainer.actor_critic_net.load_weights(model_param["weights_file_path"])
         with self.sim:
             self.create_plot()
-            while not self.sim.stopped:
-
+            while not self.sim.stopped and not self.p.closed:
                 self.sim.step()
                 self.p.plot()
 
@@ -141,6 +142,7 @@ if __name__=="__main__":
 
     # Logging
     logging.basicConfig(level=logging.INFO, filename="./python/implementation/logfiles/main.log")
+    # TODO Enable TF warnings and query with Bram
     logging.disable(logging.ERROR) # Temporarily disable error tf logs.
     with open('./python/implementation/logfiles/main.log', 'w'):
         pass  # Clear the log file of previous run
@@ -166,7 +168,7 @@ if __name__=="__main__":
     logging.critical(model_param)
     training_param = {
         "max_steps_per_episode": 100,  # TODO kM - max value of k
-        "final_return": 300,
+        "final_return": 500,
         "show_plots_when_training": False,
         "gamma": 0.99,  # Discount factor
         "adam_optimiser": keras.optimizers.Adam(learning_rate=0.01),
@@ -207,7 +209,7 @@ if __name__=="__main__":
 
 
     # Train model:
-    main.train_policy()
+    # main.train_policy()
 
     # Simulate model:
     main.simulate()

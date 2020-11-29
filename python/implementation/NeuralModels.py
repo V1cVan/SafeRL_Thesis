@@ -16,9 +16,9 @@ class ActorCriticNetDiscrete(keras.Model):
         self.inputLayer = layers.Input(shape=(modelParam["n_inputs"],))
 
         self.denseActorLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=tf.nn.relu)(self.inputLayer)
-        self.denseActorLayer2 = layers.Dense(modelParam["n_nodes"][1], activation=tf.nn.relu)(self.denseActorLayer1)
-        self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax)(self.denseActorLayer2)
-        self.outputLayerOff = layers.Dense(3, activation=tf.nn.softmax)(self.denseActorLayer2)
+        # self.denseActorLayer2 = layers.Dense(modelParam["n_nodes"][1], activation=tf.nn.relu)(self.denseActorLayer1)
+        self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax)(self.denseActorLayer1)
+        self.outputLayerOff = layers.Dense(3, activation=tf.nn.softmax)(self.denseActorLayer1)
 
         self.denseCriticLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=tf.nn.relu)(self.inputLayer)
         self.outputLayerCritic = layers.Dense(1, activation=tf.nn.softmax)(self.denseCriticLayer1)
@@ -61,15 +61,12 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         self.actions_vel = []
         self.actions_off = []
         self.action_choices = []
-        self.timestep = 0
+        self.timestep = 1
 
         # Logging
         logging.basicConfig(level=logging.INFO, filename="./python/implementation/logfiles/trainer.log")
         with open('./python/implementation/logfiles/trainer.log', 'w'):
             pass  # Clear the log file of previous run
-
-    def set_timestep(self, timestep):
-        self.timestep = timestep
 
     def add_experience(self, s0, a0, a_choices, r, c):
         """ Saves the experience after the sim.step() call. """
@@ -166,8 +163,8 @@ class GradAscentTrainerDiscrete(keras.models.Model):
 
         action_vel_log_probs = tf.math.log(action_vel_probs)
         action_off_log_probs = tf.math.log(action_off_probs)
-        actor_vel_loss = -tf.math.reduce_sum(action_vel_log_probs * advantage)
-        actor_off_loss = -tf.math.reduce_sum(action_off_log_probs * advantage)
+        actor_vel_loss = tf.math.reduce_sum(-action_vel_log_probs * advantage)
+        actor_off_loss = tf.math.reduce_sum(-action_off_log_probs * advantage)
         critic_loss = self.training_param["huber_loss"](critic_values, returns)
 
         return actor_vel_loss + actor_off_loss + critic_loss
@@ -192,17 +189,12 @@ class GradAscentTrainerDiscrete(keras.models.Model):
                     off_choice = tf.get_static_value(sim_action_off_choices[t])
                     action_vel_values.write(t, action_vel_probs[tf.get_static_value(t), vel_choice])
                     action_off_values.write(t, action_off_probs[tf.get_static_value(t), off_choice])
-
+                critic_values = tf.squeeze(critic_values)
                 action_vel_values = action_vel_values.stack()
                 action_off_values = action_off_values.stack()
 
-
                 # Calculate expected returns
                 returns = self.get_expected_returns(rewards)
-
-                # Convert training data to appropriate TF tensor shapes
-                action_vel_values, action_off_values, critic_values, returns = [
-                    tf.expand_dims(x, 1) for x in [action_vel_values, action_off_values, critic_values, returns]]
 
                 # Calculating loss values to update our network
                 loss = self.compute_loss(action_vel_values, action_off_values, critic_values, returns)

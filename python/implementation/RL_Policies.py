@@ -23,32 +23,42 @@ class AcPolicyDiscrete(CustomPolicy):
         veh.s1_mod = self.convert_state(veh.s_raw)  # Current vehicle state as passed to the actor and critic models
         veh.a0 = None
         veh.a0_mod = None
-        action_vel_probs, action_off_probs, veh.critic = self.get_action_and_critic(veh.s1_mod)
-        veh.a1_mod = [action_off_probs, action_off_probs]
-        action_choice_vel, action_choice_off = self.trainer.get_action_choice([action_off_probs, action_off_probs])
-        veh.a1 = self.convert_action_discrete(veh, [action_choice_vel, action_choice_off])
+        veh.a0_choice = None
+        veh.a1_mod = None
+        veh.a1_choice = None
+
+        veh.a1 = None
+
 
     def custom_action(self, veh):
         # s0, a0 = previous vehicle state action pair
         # s1, a1 = current vehicle state action pair
-        veh.s0 = veh.s1
-        veh.s0_mod = veh.s1_mod
-        veh.a0 = veh.a1
-        veh.a0_mod = veh.a1_mod
+
+        # Set current vehicle state and action pair
         veh.s1 = veh.s_raw
         veh.s1_mod = self.convert_state(veh.s1)
         action_vel_probs, action_off_probs, veh.critic = self.get_action_and_critic(veh.s1_mod)
         veh.a1_mod = [action_off_probs, action_off_probs]
         action_choice_vel, action_choice_off = self.trainer.get_action_choice([action_off_probs, action_off_probs])
+        veh.a1_choice = [action_choice_vel, action_choice_off]
         veh.a1 = self.convert_action_discrete(veh, [action_choice_vel, action_choice_off])
 
-        # Calculate new metrics
-        veh.reward = self.get_reward(veh)
+        # Save experience
+        if veh.a0_mod is not None:
+            # Calculate reward at current state (if action was taken previously)
+            veh.reward = self.get_reward(veh)
+            if self.trainer is not None:
+                # Save action taken previously on previous state value
+                action = veh.a0_mod[0][0, veh.a0_choice[0]], veh.a0_mod[1][0, veh.a0_choice[1]]
+                self.trainer.add_experience(tf.get_static_value(tf.squeeze(veh.s0_mod)), action,
+                                            [action_choice_vel, action_choice_off], veh.reward, tf.squeeze(veh.critic))
 
-        # And report new experience to trainer, if available
-        if self.trainer is not None:
-            action = veh.a1_mod[0][0, action_choice_vel], veh.a1_mod[1][0, action_choice_off]
-            self.trainer.add_experience(tf.get_static_value(tf.squeeze(veh.s0_mod)), action, [action_choice_vel, action_choice_off], veh.reward, tf.squeeze(veh.critic))
+        # Set past vehicle state and action pair
+        veh.s0 = veh.s1
+        veh.s0_mod = veh.s1_mod
+        veh.a0 = veh.a1
+        veh.a0_mod = veh.a1_mod
+        veh.a0_choice = veh.a1_choice
 
         return veh.a1  # The hwsim library uses double precision floats
 
@@ -76,11 +86,11 @@ class AcPolicyDiscrete(CustomPolicy):
 
         vel_bounds = veh.a_bounds["vel"]
         if vel_actions == 0:
-            vel_controller = veh.s["vel"][0]-3
+            vel_controller = veh.s["vel"][0]-10
         elif vel_actions == 1:
             vel_controller = veh.s["vel"][0]
         elif vel_actions == 2:
-            vel_controller = veh.s["vel"][0]+3
+            vel_controller = veh.s["vel"][0]+10
         else:
             print("Error with setting vehicle velocity!")
         v = tf.math.minimum(vel_controller, vel_bounds[1])
@@ -89,11 +99,11 @@ class AcPolicyDiscrete(CustomPolicy):
         # TODO create logs to debug the offset not always obeying bounds!
         off_bounds = veh.a_bounds["off"]
         if off_actions == 0:  # Turn left
-            off_controller = tf.math.maximum(off_bounds[0]+0.2, veh.s["laneC"]["off"]-0.2)
+            off_controller = tf.math.maximum(off_bounds[0]+0.2, veh.s["laneC"]["off"]-0.5)
         elif off_actions == 1:  # Straight
             off_controller = tf.convert_to_tensor(veh.s["laneC"]["off"])
         elif off_actions == 2:  # Turn right
-            off_controller = tf.math.minimum(off_bounds[1]-0.2, veh.s["laneC"]["off"]+0.2)
+            off_controller = tf.math.minimum(off_bounds[1]-0.2, veh.s["laneC"]["off"]+0.5)
         else:
             print("Error with setting offset action!")
         sim_action = sim_action.write(1, off_controller)
@@ -111,16 +121,16 @@ class AcPolicyDiscrete(CustomPolicy):
             # Velocity reward:
             v = veh.s["vel"][0]
             v_lim = 120 / 3.6
-            r_s = 2 * tf.math.exp(-(v_lim - v) ** 2 / 140)
+            r_s = 5*tf.math.exp(-(v_lim - v) ** 2 / 140)
 
             # Collision??
+            # TODO check collision punishment with Bram
 
             # Lane center reward:
             lane_offset = veh.s["laneC"]["off"]
-            r_off = tf.math.exp(-(lane_offset) ** 2 / 0.2)
+            r_off = tf.math.exp(-(lane_offset) ** 2 / 3.6)
 
             # Following distance:
-            # TODO just take long. component
             d_gap = veh.s["laneC"]["relF"]["gap"][0]
             d_lim = 10
             r_follow = -tf.math.exp(-(d_lim - d_gap) ** 2 / 20)
