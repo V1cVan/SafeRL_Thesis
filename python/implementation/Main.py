@@ -96,6 +96,8 @@ class Main(object):
                         # states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards = policy.trainer.get_experience()
                         # policy.trainer.set_tf_action_choices(states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards)
                         episode_reward = policy.trainer.train_step()
+                        # Clear loss values and reward history
+                        policy.trainer.clear_experience()
             if episode_count % 30 == 0 and training_param["show_plots_when_training"]:
                 self.p.close()
             # Running reward smoothing effect
@@ -210,7 +212,7 @@ if __name__=="__main__":
 
 
     # Train model:
-    # main.train_policy()
+    main.train_policy()
 
     # Simulate model:
     main.simulate()
