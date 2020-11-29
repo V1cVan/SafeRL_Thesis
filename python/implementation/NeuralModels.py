@@ -188,9 +188,9 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         action_off_log_probs = tf.math.log(action_off_probs)
         # TODO PROBLEM LIES HERE ! query with bram if it is correct to do the actor losses like this?
         # TODO Probably need multiple critics!
-        actor_vel_loss = -tf.math.reduce_sum(tf.math.multiply(action_vel_log_probs,advantage))
-        actor_off_loss = -tf.math.reduce_sum(tf.math.multiply(action_off_log_probs,advantage))
-        actor_loss = tf.math.reduce_sum(-(action_vel_log_probs+action_off_log_probs)*advantage)  # ERROR!!!
+        actor_vel_loss = tf.math.reduce_sum(tf.math.multiply(-action_vel_log_probs, advantage))
+        actor_off_loss = tf.math.reduce_sum(tf.math.multiply(-action_off_log_probs, advantage))
+        # actor_loss = tf.math.reduce_sum(-(action_vel_log_probs+action_off_log_probs)*advantage)  # ERROR!!!
         critic_loss = self.training_param["huber_loss"](critic_values, returns)
         loss = critic_loss + actor_vel_loss + actor_off_loss
         return loss

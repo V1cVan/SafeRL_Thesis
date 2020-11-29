@@ -52,8 +52,11 @@ class AcPolicyDiscrete(CustomPolicy):
             if self.trainer is not None:
                 # Save action taken previously on previous state value
                 action = veh.a0_mod[0][0, veh.a0_choice[0]], veh.a0_mod[1][0, veh.a0_choice[1]]
-                self.trainer.add_experience(tf.get_static_value(tf.squeeze(veh.s0_mod)), action,
-                                            [veh.a0_choice[0], veh.a0_choice[1]], veh.reward, tf.squeeze(veh.critic))
+                # trainer.add_exp expects (states, actions, action_choices, rewards, critic)
+                self.trainer.add_experience(tf.squeeze(veh.s0_mod),
+                                            [action[0], action[1]],
+                                            [veh.a0_choice[0], veh.a0_choice[1]],
+                                            veh.reward, veh.critic)
 
         # Set past vehicle state and action pair
         veh.s0 = veh.s1
