@@ -15,7 +15,7 @@ import logging
 
 physical_devices = tf.config.list_physical_devices('GPU')
 print(physical_devices)
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
+# tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 
 class Main(object):
@@ -59,7 +59,7 @@ class Main(object):
     #tf.function
     def train_policy(self):
         running_reward = 0
-        episode_count = 0
+        episode_count = 1
 
         policy = self.pol[0]["policy"]
 
@@ -68,7 +68,7 @@ class Main(object):
             # logging.critical("Episode number: %0.2f" % episode_count)
              # Set simulation environment
             with self.sim:
-                if episode_count % 50 == 0 and not self.sim.stopped and training_param["show_plots_when_training"]:
+                if episode_count % 30 == 0 and not self.sim.stopped and training_param["show_plots_when_training"]:
                     self.create_plot()
                 episode_reward = 0
                 # Loop through each timestep in episode.
@@ -83,7 +83,7 @@ class Main(object):
                         if not self.sim.stopped:
                             # TODO Query with bram, step applies policy then steps in sim? or other way around?
                             self.sim.step()  # Calls AcPolicy.customAction method.
-                            if episode_count % 50 == 0 and training_param["show_plots_when_training"]:
+                            if episode_count % 30 == 0 and training_param["show_plots_when_training"]:
                                 with plotTimer:
                                     self.p.plot()
                             if self.sim._collision:
@@ -96,7 +96,7 @@ class Main(object):
                         # states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards = policy.trainer.get_experience()
                         # policy.trainer.set_tf_action_choices(states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards)
                         episode_reward = policy.trainer.train_step()
-            if training_param["show_plots_when_training"]:
+            if episode_count % 30 == 0 and training_param["show_plots_when_training"]:
                 self.p.close()
             # Running reward smoothing effect
             running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
@@ -167,9 +167,10 @@ if __name__=="__main__":
     logging.critical("Model Parameters:")
     logging.critical(model_param)
     training_param = {
-        "max_steps_per_episode": 100,  # TODO kM - max value of k
+        "max_steps_per_episode": 50,  # TODO kM - max value of k
         "final_return": 500,
-        "show_plots_when_training": False,
+        "show_plots_when_training": True,
+        "plot_freq": 3,  # TODO Reimplement plot freq (debug why crash)
         "gamma": 0.99,  # Discount factor
         "adam_optimiser": keras.optimizers.Adam(learning_rate=0.01),
         "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM)
@@ -209,7 +210,7 @@ if __name__=="__main__":
 
 
     # Train model:
-    # main.train_policy()
+    main.train_policy()
 
     # Simulate model:
     main.simulate()

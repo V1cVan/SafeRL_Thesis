@@ -1,5 +1,5 @@
-CRITICAL:root:Using seed 3517694531.000000
+CRITICAL:root:Using seed 2291967980.000000
 CRITICAL:root:Model Parameters:
 CRITICAL:root:{'n_nodes': [400, 200], 'n_layers': 2, 'n_inputs': 47, 'n_actions': 2, 'weights_file_path': './python/implementation/trained_models/model_weights'}
 CRITICAL:root:Training param:
-CRITICAL:root:{'max_steps_per_episode': 100, 'final_return': 500, 'show_plots_when_training': False, 'gamma': 0.99, 'adam_optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x000001D7249AD1C8>, 'huber_loss': <tensorflow.python.keras.losses.Huber object at 0x000001D7249AD848>}
+CRITICAL:root:{'max_steps_per_episode': 50, 'final_return': 500, 'show_plots_when_training': True, 'plot_freq': 3, 'gamma': 0.99, 'adam_optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x000001A293E39E48>, 'huber_loss': <tensorflow.python.keras.losses.Huber object at 0x000001A293E3A288>}

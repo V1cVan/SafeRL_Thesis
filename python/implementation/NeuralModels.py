@@ -15,13 +15,26 @@ class ActorCriticNetDiscrete(keras.Model):
         # TODO Add variability in depth.
         self.inputLayer = layers.Input(shape=(modelParam["n_inputs"],))
 
-        self.denseActorLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=tf.nn.relu)(self.inputLayer)
-        # self.denseActorLayer2 = layers.Dense(modelParam["n_nodes"][1], activation=tf.nn.relu)(self.denseActorLayer1)
-        self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax)(self.denseActorLayer1)
-        self.outputLayerOff = layers.Dense(3, activation=tf.nn.softmax)(self.denseActorLayer1)
+        self.denseActorLayer1 = layers.Dense(modelParam["n_nodes"][0],
+                                             activation=tf.nn.relu,
+                                             kernel_initializer='random_normal',
+                                             bias_initializer='zeros')(self.inputLayer)
+        # self.denseActorLayer2 = layers.Dense(modelParam["n_nodes"][1], activation=tf.nn.relu,
+        #                                      kernel_initializer='random_normal',
+        #                                      bias_initializer='zeros')(self.denseActorLayer1)
+        self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax,
+                                           kernel_initializer='random_normal',
+                                           bias_initializer='zeros')(self.denseActorLayer1)
+        self.outputLayerOff = layers.Dense(3, activation=tf.nn.softmax,
+                                           kernel_initializer='random_normal',
+                                           bias_initializer='zeros')(self.denseActorLayer1)
 
-        self.denseCriticLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=tf.nn.relu)(self.inputLayer)
-        self.outputLayerCritic = layers.Dense(1, activation=tf.nn.softmax)(self.denseCriticLayer1)
+        self.denseCriticLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=tf.nn.relu,
+                                              kernel_initializer='random_normal',
+                                              bias_initializer='zeros')(self.inputLayer)
+        self.outputLayerCritic = layers.Dense(1, activation=tf.nn.softmax,
+                                              kernel_initializer='random_normal',
+                                              bias_initializer='zeros')(self.denseCriticLayer1)
 
         self.model = keras.Model(inputs=self.inputLayer, outputs=[self.outputLayerVel, self.outputLayerOff, self.outputLayerCritic])
 
@@ -161,13 +174,14 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         """ Computes the combined actor-critic loss."""
         advantage = returns - critic_values
 
+        # TODO PROBLEM LIES HERE ! query with bram if it is correct to do the actor losses like this?
         action_vel_log_probs = tf.math.log(action_vel_probs)
         action_off_log_probs = tf.math.log(action_off_probs)
         actor_vel_loss = tf.math.reduce_sum(-action_vel_log_probs * advantage)
         actor_off_loss = tf.math.reduce_sum(-action_off_log_probs * advantage)
         critic_loss = self.training_param["huber_loss"](critic_values, returns)
 
-        return actor_vel_loss + actor_off_loss + critic_loss
+        return actor_vel_loss + critic_loss + actor_off_loss
 
     #@tf.function
     def train_step(self):

@@ -17,10 +17,13 @@ class AcPolicyDiscrete(CustomPolicy):
 
     def init_vehicle(self, veh):
         # Book-keeping of last states and actions
-        veh.s0 = None  # Previous vehicle state
-        veh.s0_mod = None  # Previous vehicle state as passed to the actor and critic models
-        veh.s1 = veh.s_raw  # Current vehicle state
-        veh.s1_mod = self.convert_state(veh.s_raw)  # Current vehicle state as passed to the actor and critic models
+        # s0, a0 = previous vehicle state action pair
+        # s1, a1 = current vehicle state action pair
+
+        veh.s0 = None
+        veh.s0_mod = None
+        veh.s1 = veh.s_raw
+        veh.s1_mod = self.convert_state(veh.s_raw)
         veh.a0 = None
         veh.a0_mod = None
         veh.a0_choice = None
@@ -28,7 +31,6 @@ class AcPolicyDiscrete(CustomPolicy):
         veh.a1_choice = None
 
         veh.a1 = None
-
 
     def custom_action(self, veh):
         # s0, a0 = previous vehicle state action pair
@@ -121,7 +123,7 @@ class AcPolicyDiscrete(CustomPolicy):
             # Velocity reward:
             v = veh.s["vel"][0]
             v_lim = 120 / 3.6
-            r_s = 5*tf.math.exp(-(v_lim - v) ** 2 / 140)
+            r_s = 1*tf.math.exp(-(v_lim - v) ** 2 / 140)
 
             # Collision??
             # TODO check collision punishment with Bram
