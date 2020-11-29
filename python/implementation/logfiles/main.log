@@ -1,5 +1,12 @@
-CRITICAL:root:Using seed 2291967980.000000
+CRITICAL:root:Using seed 1791166690.000000
 CRITICAL:root:Model Parameters:
 CRITICAL:root:{'n_nodes': [400, 200], 'n_layers': 2, 'n_inputs': 47, 'n_actions': 2, 'weights_file_path': './python/implementation/trained_models/model_weights'}
 CRITICAL:root:Training param:
-CRITICAL:root:{'max_steps_per_episode': 50, 'final_return': 500, 'show_plots_when_training': True, 'plot_freq': 3, 'gamma': 0.99, 'adam_optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x000001A293E39E48>, 'huber_loss': <tensorflow.python.keras.losses.Huber object at 0x000001A293E3A288>}
+CRITICAL:root:{'max_steps_per_episode': 50, 'final_return': 500, 'show_plots_when_training': True, 'plot_freq': 3, 'gamma': 0.99, 'adam_optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x00000202131F0348>, 'huber_loss': <tensorflow.python.keras.losses.Huber object at 0x0000020218A5BC48>}
+CRITICAL:root:Collision. At episode 5.000000
+CRITICAL:root:Running reward = 17.29 at episode 10
+CRITICAL:root:Running reward = 28.94 at episode 20
+CRITICAL:root:Running reward = 34.59 at episode 30
+CRITICAL:root:Running reward = 39.76 at episode 40
+CRITICAL:root:Running reward = 42.94 at episode 50
+CRITICAL:root:Running reward = 43.82 at episode 60
