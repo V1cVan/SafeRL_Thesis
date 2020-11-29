@@ -13,15 +13,16 @@ class ActorCriticNetDiscrete(keras.Model):
     def __init__(self, modelParam):
         super(ActorCriticNetDiscrete, self).__init__()
         # TODO Add variability in depth.
+        # Actor net
         self.inputLayer = layers.Input(shape=(modelParam["n_inputs"],))
 
         self.denseActorLayer1 = layers.Dense(modelParam["n_nodes"][0],
                                              activation=tf.nn.relu,
                                              kernel_initializer='random_normal',
                                              bias_initializer='zeros')(self.inputLayer)
-        # self.denseActorLayer2 = layers.Dense(modelParam["n_nodes"][1], activation=tf.nn.relu,
-        #                                      kernel_initializer='random_normal',
-        #                                      bias_initializer='zeros')(self.denseActorLayer1)
+        self.denseActorLayer2 = layers.Dense(modelParam["n_nodes"][1], activation=tf.nn.relu,
+                                             kernel_initializer='random_normal',
+                                             bias_initializer='zeros')(self.denseActorLayer1)
         self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax,
                                            kernel_initializer='random_normal',
                                            bias_initializer='zeros')(self.denseActorLayer1)
@@ -180,7 +181,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         # TODO Probably need multiple critics!
         actor_vel_loss = tf.math.reduce_sum(-action_vel_log_probs * advantage)
         actor_off_loss = tf.math.reduce_sum(-action_off_log_probs * advantage)
-        actor_loss = tf.math.reduce_sum(-(action_vel_log_probs+action_off_log_probs)*advantage)
+        actor_loss = tf.math.reduce_sum(-(action_vel_log_probs+action_off_log_probs)*advantage)  # ERROR!!!
         critic_loss = self.training_param["huber_loss"](critic_values, returns)
         loss = actor_loss + critic_loss
         return loss

@@ -210,7 +210,7 @@ if __name__=="__main__":
 
 
     # Train model:
-    main.train_policy()
+    # main.train_policy()
 
     # Simulate model:
     main.simulate()

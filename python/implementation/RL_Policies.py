@@ -41,7 +41,7 @@ class AcPolicyDiscrete(CustomPolicy):
         veh.s1_mod = self.convert_state(veh.s1)
         action_vel_probs, action_off_probs, veh.critic = self.get_action_and_critic(veh.s1_mod)
         veh.a1_mod = [action_off_probs, action_off_probs]
-        action_choice_vel, action_choice_off = self.trainer.get_action_choice([action_off_probs, action_off_probs])
+        action_choice_vel, action_choice_off = self.trainer.get_action_choice([action_vel_probs, action_off_probs])
         veh.a1_choice = [action_choice_vel, action_choice_off]
         veh.a1 = self.convert_action_discrete(veh, [action_choice_vel, action_choice_off])
 
