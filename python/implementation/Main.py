@@ -162,7 +162,7 @@ if __name__=="__main__":
     model_param = {
         "n_nodes": [400, 200],  # Number of hidden nodes in each layer
         "n_layers": 2,  # Number of layers
-        "n_inputs": 47,  # Standard size of S
+        "n_inputs": 30,  # Standard size of S
         "n_actions": 2,
         "weights_file_path": "./python/implementation/trained_models/model_weights"
     }
