@@ -39,7 +39,7 @@ class ActorCriticNetDiscrete(keras.Model):
                                               kernel_initializer='random_normal',
                                               bias_initializer='zeros',
                                               name="denseCriticLayer1")(self.inputLayer)
-        self.outputLayerCritic = layers.Dense(1, activation=tf.nn.softmax,
+        self.outputLayerCritic = layers.Dense(1,
                                               kernel_initializer='random_normal',
                                               bias_initializer='zeros',
                                               name="outputCriticLayer")(self.denseCriticLayer1)
@@ -186,8 +186,8 @@ class GradAscentTrainerDiscrete(keras.models.Model):
 
         action_vel_log_probs = tf.math.log(action_vel_probs)
         action_off_log_probs = tf.math.log(action_off_probs)
-        # TODO PROBLEM LIES HERE ! query with bram if it is correct to do the actor losses like this?
-        # TODO Probably need multiple critics!
+        # TODO Query with bram if it is correct to do the actor losses like this?
+        # TODO Probably need multiple critics?
         actor_vel_loss = tf.math.reduce_sum(tf.math.multiply(-action_vel_log_probs, advantage))
         actor_off_loss = tf.math.reduce_sum(tf.math.multiply(-action_off_log_probs, advantage))
         # actor_loss = tf.math.reduce_sum(-(action_vel_log_probs+action_off_log_probs)*advantage)  # ERROR!!!

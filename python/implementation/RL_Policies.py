@@ -23,7 +23,7 @@ class AcPolicyDiscrete(CustomPolicy):
         veh.s0 = None
         veh.s0_mod = None
         veh.s1 = veh.s_raw
-        veh.s1_mod = self.convert_state(veh.s_raw)
+        veh.s1_mod = self.convert_state(veh)
         veh.a0 = None
         veh.a0_mod = None
         veh.a0_choice = None
@@ -38,7 +38,7 @@ class AcPolicyDiscrete(CustomPolicy):
 
         # Set current vehicle state and action pair
         veh.s1 = veh.s_raw
-        veh.s1_mod = self.convert_state(veh.s1)
+        veh.s1_mod = self.convert_state(veh)
         action_vel_probs, action_off_probs, veh.critic = self.get_action_and_critic(veh.s1_mod)
         veh.a1_mod = [action_vel_probs, action_off_probs]
         action_choice_vel, action_choice_off = self.trainer.get_action_choice([action_vel_probs, action_off_probs])
@@ -67,10 +67,53 @@ class AcPolicyDiscrete(CustomPolicy):
 
         return veh.a1  # The hwsim library uses double precision floats
 
-    def convert_state(self, state):
-        """ Get the modified state vector that will be passed to the actor and critic models from the
-        state vector (available in veh). I.e. the mapping s->s_mod """
+    def convert_state(self, veh):
+        """
+        Assembles state vector in TF form to pass to neural network.
+        Normalises certain state variables and excludes constants.
+        """
+
         # TODO Edit convert state method to remove unnecessary states
+        # TODO Normalisation of input data? How to do gapB? Check with Bram
+
+        lane_width = veh.s["laneC"]["width"]  # Excluded
+        gap_to_road_edge = veh.s["gapB"]/(lane_width*3)  # Normalised
+        max_vel = veh.s["maxVel"]  # Excluded
+        curr_vel = veh.s["vel"][0]/max_vel  # Normalised and lateral component exluded
+
+        # Current Lane:
+        offset_current_lane_center = veh.s["laneC"]["off"]/(lane_width/2)  # Normalised
+        rel_offset_back_center_lane = np.hstack((veh.s["laneC"]["relB"]["off"][0]/150,
+                                                 veh.s["laneC"]["relB"]["off"][1]/(lane_width/2)))  # Normalised to Dmax default
+        rel_vel_back_center_lane = veh.s["laneC"]["relB"]["vel"]  # Normalised
+        rel_offset_front_center_lane = np.hstack((veh.s["laneC"]["relF"]["off"][0]/150,
+                                                  veh.s["laneC"]["relF"]["off"][1]/(lane_width/2)))  # Normalised to Dmax default
+        rel_vel_front_center_lane = veh.s["laneC"]["relF"]["vel"]/max_vel  # Normalised
+
+        # Left Lane:
+        offset_left_lane_center = veh.s["laneL"]["off"]/(lane_width/2)  # Normalised
+        rel_offset_back_left_lane = np.hstack((veh.s["laneL"]["relB"]["off"][0]/150,
+                                               veh.s["laneL"]["relB"]["off"][1]/(lane_width/2)))  # Normalised to Dmax default
+        rel_vel_back_left_lane = veh.s["laneL"]["relB"]["vel"]/max_vel  # Normalised
+        rel_offset_front_left_lane = np.hstack((veh.s["laneL"]["relF"]["off"][0]/150,
+                                                veh.s["laneL"]["relF"]["off"][1]/(lane_width/2)))  # Normalised to Dmax default
+        rel_vel_front_left_lane = veh.s["laneL"]["relF"]["vel"]/max_vel  # Normalised
+
+        # Right Lane:
+        offset_right_lane_center = veh.s["laneR"]["off"]/(lane_width/2)  # Normalised
+        rel_offset_back_right_lane = np.hstack((veh.s["laneR"]["relB"]["off"][0]/150,
+                                                veh.s["laneR"]["relB"]["off"][1]/(lane_width/2)))  # Normalised to Dmax default
+        rel_vel_back_right_late = veh.s["laneR"]["relB"]["vel"]/max_vel  # Normalised
+        rel_offset_front_right_lane = np.hstack((veh.s["laneR"]["relB"]["off"][0]/150,
+                                                 veh.s["laneR"]["relB"]["off"][1]/(lane_width/2)))  # Normalised to Dmax default
+        rel_vel_front_right_late = veh.s["laneR"]["relB"]["vel"]/max_vel  # Normalised
+
+        # Assemble state vector
+        state = np.hstack((gap_to_road_edge, curr_vel,
+                          offset_current_lane_center, rel_offset_back_center_lane, rel_vel_back_center_lane, rel_offset_front_center_lane, rel_vel_front_center_lane,
+                          offset_left_lane_center, rel_offset_back_left_lane, rel_vel_back_left_lane, rel_offset_front_left_lane, rel_vel_front_left_lane,
+                          offset_right_lane_center, rel_offset_back_right_lane, rel_vel_back_right_late, rel_offset_front_right_lane, rel_vel_front_right_late))
+
         state = tf.convert_to_tensor(state, dtype=tf.float32, name="state_input")  # shape = (47,)
         state = tf.expand_dims(state, 0)  # shape = (1,47)
         return state  # Can be overridden by subclasses
