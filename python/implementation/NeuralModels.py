@@ -12,8 +12,9 @@ class ActorCriticNetDiscrete(keras.Model):
     """
     def __init__(self, modelParam):
         super(ActorCriticNetDiscrete, self).__init__()
+        tf.random.set_seed(modelParam["seed"])
         # TODO Add variability in depth.
-        # Actor net
+        # Actor net:
         self.inputLayer = layers.Input(shape=(modelParam["n_inputs"],),
                                        name="inputStateLayer")
 
@@ -22,19 +23,30 @@ class ActorCriticNetDiscrete(keras.Model):
                                              kernel_initializer='random_normal',
                                              bias_initializer='zeros',
                                              name="densActorLayer1")(self.inputLayer)
-        self.denseActorLayer2 = layers.Dense(modelParam["n_nodes"][1], activation=tf.nn.relu,
-                                             kernel_initializer='random_normal',
-                                             bias_initializer='zeros',
-                                             name="denseActorLayer2")(self.denseActorLayer1)
-        self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax,
-                                           kernel_initializer='random_normal',
-                                           bias_initializer='zeros',
-                                           name="outputActorLayerVel")(self.denseActorLayer2)
-        self.outputLayerOff = layers.Dense(3, activation=tf.nn.softmax,
-                                           kernel_initializer='random_normal',
-                                           bias_initializer='zeros',
-                                           name="outputActorLayerOff")(self.denseActorLayer2)
+        if modelParam["n_nodes"][1] == 0:  # if no depth in network:
+            self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax,
+                                               kernel_initializer='random_normal',
+                                               bias_initializer='zeros',
+                                               name="outputActorLayerVel")(self.denseActorLayer1)
+            self.outputLayerOff = layers.Dense(3, activation=tf.nn.softmax,
+                                               kernel_initializer='random_normal',
+                                               bias_initializer='zeros',
+                                               name="outputActorLayerOff")(self.denseActorLayer1)
+        else:  # if depth in network exists
+            self.denseActorLayer2 = layers.Dense(modelParam["n_nodes"][1], activation=tf.nn.relu,
+                                                 kernel_initializer='random_normal',
+                                                 bias_initializer='zeros',
+                                                 name="denseActorLayer2")(self.denseActorLayer1)
+            self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax,
+                                               kernel_initializer='random_normal',
+                                               bias_initializer='zeros',
+                                               name="outputActorLayerVel")(self.denseActorLayer2)
+            self.outputLayerOff = layers.Dense(3, activation=tf.nn.softmax,
+                                               kernel_initializer='random_normal',
+                                               bias_initializer='zeros',
+                                               name="outputActorLayerOff")(self.denseActorLayer2)
 
+        # Critic net:
         self.denseCriticLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=tf.nn.relu,
                                               kernel_initializer='random_normal',
                                               bias_initializer='zeros',
@@ -49,6 +61,7 @@ class ActorCriticNetDiscrete(keras.Model):
                                  name="ActorCriticNetwork")
 
     def call(self, inputs: tf.Tensor):
+        # Returns the output of the model given an input
         y = self.model(inputs)
         return y
 
@@ -67,9 +80,10 @@ class GradAscentTrainerDiscrete(keras.models.Model):
 
     def __init__(self, actor_critic_net, training_param):
         super(GradAscentTrainerDiscrete, self).__init__()
+        tf.random.set_seed(training_param["seed"])
         self.actor_critic_net = actor_critic_net
-        # self.cfg = cfg
-        #self.buffer = Buffer()  # Buffer class defined below
+        self.reward_weights = training_param["reward_weights"]
+        # TODO implement data logging class for debugging training
         self.training = True
         self.training_param = training_param
         self.state = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
@@ -108,7 +122,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
             # self.rewards.write(self.timestep, r)
 
     def get_experience(self):
-        """ Returns the experiences """
+        """ Returns the experiences. """
         action_choices = np.array(self.action_choices, dtype=np.float32)
         action_vel_choice = action_choices[:, 0]
         action_off_choice = action_choices[:, 1]
@@ -125,6 +139,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         return states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards
 
     def set_tf_action_choices(self, states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards):
+        """ Convert actions into TF format. """
         self.states = tf.convert_to_tensor(states)
         self.actions_vel = tf.convert_to_tensor(actions_vel)
         self.actions_off = tf.convert_to_tensor(actions_off)
@@ -133,6 +148,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         self.rewards = tf.convert_to_tensor(rewards)
 
     def clear_experience(self):
+        """ Clear past experiences. """
         self.states.clear()
         self.rewards.clear()
         self.action_choices.clear()
@@ -143,6 +159,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         # self.rewards = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
 
     def set_neg_collision_reward(self, punishment):
+        """"""
         self.rewards[-1] = self.rewards[-1] - punishment
 
     def get_action_choice(self, action_probs):
@@ -193,6 +210,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         # actor_loss = tf.math.reduce_sum(-(action_vel_log_probs+action_off_log_probs)*advantage)  # ERROR!!!
         critic_loss = self.training_param["huber_loss"](critic_values, returns)
         loss = critic_loss + actor_vel_loss + actor_off_loss
+        # TODO look at a critic receiving actions directly?
         return loss
 
 
@@ -203,7 +221,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
             with tf.GradientTape() as tape:
                 action_vel_values = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
                 action_off_values = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-                # Data from simulation:
+                # Gather and convert data from simulation:
                 sim_states = tf.convert_to_tensor(self.states)
                 rewards = tf.convert_to_tensor(self.rewards)
                 sim_action_vel_choices = tf.convert_to_tensor(np.array(self.action_choices)[:,0])
@@ -214,6 +232,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
                 for t in tf.range(tf.size(sim_states[:, 0])):
                     vel_choice = tf.get_static_value(sim_action_vel_choices[t])
                     off_choice = tf.get_static_value(sim_action_off_choices[t])
+                    # Choose actions based on what was previously (randomly) sampled during simulation
                     action_vel_values.write(t, action_vel_probs[tf.get_static_value(t), vel_choice])
                     action_off_values.write(t, action_off_probs[tf.get_static_value(t), off_choice])
                 critic_values = tf.squeeze(critic_values)
@@ -229,11 +248,11 @@ class GradAscentTrainerDiscrete(keras.models.Model):
                 # Compute the gradients from the loss
                 grads = tape.gradient(loss, self.actor_critic_net.trainable_variables)
 
-                # Apply the gradients to the model's parameters
+            # Apply the gradients to the model's parameters
             self.training_param["adam_optimiser"].apply_gradients(
                 zip(grads, self.actor_critic_net.trainable_variables))
-            episode_reward = tf.math.reduce_sum(rewards)
 
+            episode_reward = tf.math.reduce_sum(rewards)
             return episode_reward
 
 

@@ -69,7 +69,7 @@ class Main(object):
             # logging.critical("Episode number: %0.2f" % episode_count)
              # Set simulation environment
             with self.sim:
-                if episode_count % 30 == 0 and not self.sim.stopped and training_param["show_plots_when_training"]:
+                if episode_count % 1 == 0 and not self.sim.stopped and training_param["show_plots_when_training"]:
                     self.create_plot()
                 episode_reward = 0
                 # Loop through each timestep in episode.
@@ -84,7 +84,7 @@ class Main(object):
                         if not self.sim.stopped:
                             # TODO Query with bram, step applies policy then steps in sim? or other way around?
                             self.sim.step()  # Calls AcPolicy.customAction method.
-                            if episode_count % 30 == 0 and training_param["show_plots_when_training"]:
+                            if episode_count % 1 == 0 and training_param["show_plots_when_training"]:
                                 with plotTimer:
                                     self.p.plot()
                             if self.sim._collision:
@@ -99,7 +99,7 @@ class Main(object):
                         episode_reward = policy.trainer.train_step()
                         # Clear loss values and reward history
                         policy.trainer.clear_experience()
-            if episode_count % 30 == 0 and training_param["show_plots_when_training"]:
+            if episode_count % 1 == 0 and training_param["show_plots_when_training"]:
                 self.p.close()
             # Running reward smoothing effect
             running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
@@ -152,31 +152,37 @@ if __name__=="__main__":
 
 
     config.scenarios_path = str(SC_PATH)
-    # config.seed = 1249517370
     print_output = "Using seed %f"%(config.seed)
     print(print_output)
     logging.critical(print_output)
 
+    seed = 50
+    tf.random.set_seed(seed)
+
+    data_logger = DataLogger(seed)
 
 
     # Model configuration and settings
     model_param = {
-        "n_nodes": [400, 400],  # Number of hidden nodes in each layer
+        "n_nodes": [400, 0],  # Number of hidden nodes in each layer
         "n_layers": 2,  # Number of layers
         "n_inputs": 30,  # Standard size of S
         "n_actions": 2,
-        "weights_file_path": "./python/implementation/trained_models/model_weights"
+        "weights_file_path": "./python/implementation/trained_models/model_weights",
+        "seed": seed
     }
     logging.critical("Model Parameters:")
     logging.critical(model_param)
     training_param = {
-        "max_steps_per_episode": 300,  # TODO kM - max value of k
-        "final_return": 100000,
+        "max_steps_per_episode": 50,  # TODO kM - max value of k
+        "final_return": 200,
         "show_plots_when_training": False,
-        "plot_freq": 3,  # TODO Reimplement plot freq (debug why crash)
+        "plot_freq": 5,  # TODO Reimplement plot freq (debug why crash)
         "gamma": 0.99,  # Discount factor
         "adam_optimiser": keras.optimizers.Adam(learning_rate=0.01),
-        "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM)
+        "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM),
+        "seed": seed,
+        "reward_weights": np.array([1, 1, 1])  # (rew_vel, rew_lat_position, rew_fol_dist)
     }
     logging.critical("Training param:")
     logging.critical(training_param)
@@ -187,11 +193,15 @@ if __name__=="__main__":
     trainer = GradAscentTrainerDiscrete(actor_critic_net, training_param)  # training method used
 
     # Simulation configuration and settings
+    # TODO Move to training on more complex scenario without other vehicles.
+    # veh_types = [
+    #     {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)},
+    #     {"amount": 30, "model": KBModel(), "policy": BasicPolicy("slow")},
+    #     {"amount": 30, "model": KBModel(), "policy": BasicPolicy("normal")},
+    #     {"amount": 20, "model": KBModel(), "policy": BasicPolicy("fast")}
+    # ]
     veh_types = [
-        {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)},
-        {"amount": 30, "model": KBModel(), "policy": BasicPolicy("slow")},
-        {"amount": 30, "model": KBModel(), "policy": BasicPolicy("normal")},
-        {"amount": 20, "model": KBModel(), "policy": BasicPolicy("fast")}
+        {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)}
     ]
     sim_config = {
         "name": "AC_policy",
