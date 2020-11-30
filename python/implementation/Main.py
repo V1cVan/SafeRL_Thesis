@@ -14,8 +14,9 @@ from HelperClasses import *
 import logging
 
 physical_devices = tf.config.list_physical_devices('GPU')
-print(physical_devices)
 # tf.config.experimental.set_memory_growth(physical_devices[0], True)
+print(physical_devices)
+
 
 
 class Main(object):
@@ -174,7 +175,7 @@ if __name__=="__main__":
         "show_plots_when_training": False,
         "plot_freq": 3,  # TODO Reimplement plot freq (debug why crash)
         "gamma": 0.99,  # Discount factor
-        "adam_optimiser": keras.optimizers.Adam(learning_rate=0.02),
+        "adam_optimiser": keras.optimizers.Adam(learning_rate=0.01),
         "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM)
     }
     logging.critical("Training param:")
