@@ -18,40 +18,24 @@ class ActorCriticNetDiscrete(keras.Model):
 
         self.denseActorLayer1 = layers.Dense(modelParam["n_nodes"][0],
                                              activation=tf.nn.relu,
-                                             kernel_initializer='random_normal',
-                                             bias_initializer='zeros',
                                              name="denseActorLayer1")(self.inputLayer)
         if modelParam["n_nodes"][1] == 0:  # if no depth in network:
             self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax,
-                                               kernel_initializer='random_normal',
-                                               bias_initializer='zeros',
                                                name="outputActorLayerVel")(self.denseActorLayer1)
             self.outputLayerOff = layers.Dense(3, activation=tf.nn.softmax,
-                                               kernel_initializer='random_normal',
-                                               bias_initializer='zeros',
                                                name="outputActorLayerOff")(self.denseActorLayer1)
         else:  # if depth in network exists
             self.denseActorLayer2 = layers.Dense(modelParam["n_nodes"][1], activation=tf.nn.relu,
-                                                 kernel_initializer='random_normal',
-                                                 bias_initializer='zeros',
                                                  name="denseActorLayer2")(self.denseActorLayer1)
             self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax,
-                                               kernel_initializer='random_normal',
-                                               bias_initializer='zeros',
                                                name="outputActorLayerVel")(self.denseActorLayer2)
             self.outputLayerOff = layers.Dense(3, activation=tf.nn.softmax,
-                                               kernel_initializer='random_normal',
-                                               bias_initializer='zeros',
                                                name="outputActorLayerOff")(self.denseActorLayer2)
 
         # Critic net:
         self.denseCriticLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=tf.nn.relu,
-                                              kernel_initializer='random_normal',
-                                              bias_initializer='zeros',
                                               name="denseCriticLayer1")(self.inputLayer)
         self.outputLayerCritic = layers.Dense(1,
-                                              kernel_initializer='random_normal',
-                                              bias_initializer='zeros',
                                               name="outputCriticLayer")(self.denseCriticLayer1)
 
         self.model = keras.Model(inputs=self.inputLayer,
@@ -92,15 +76,9 @@ class GradAscentTrainerDiscrete(keras.models.Model):
     def get_action_choice(self, action_probs):
         """ Randomly choose from the available actions."""
         action_vel_probs, action_off_probs = action_probs
-
         # np.random.choice accepts probabilities
         vel_action_choice = np.random.choice(3, p=np.squeeze(action_vel_probs))
         off_action_choice = np.random.choice(3, p=np.squeeze(action_off_probs))
-
-        # rf.random.categrical accepts log probabilities!
-        # vel_action_choice = tf.random.categorical(tf.math.log(action_vel_probs), 1)[0, 0]
-        # off_action_choice = tf.random.categorical(tf.math.log(action_off_probs), 1)[0, 0]
-
         return vel_action_choice, off_action_choice
 
     def get_expected_returns(self, rewards: tf.Tensor) -> tf.Tensor:
