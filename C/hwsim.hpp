@@ -100,7 +100,7 @@ extern "C"{
 
     // Create BluePrint for the CustomPolicy ; args should be a byte array of size 0
     LIB_PUBLIC
-    void pbp_custom(unsigned char* args);
+    void pbp_custom(unsigned char* args, const uint8_t tx, const uint8_t ty);
 
     // Create BluePrint for the StepPolicy ; args should be a byte array of size 0
     LIB_PUBLIC

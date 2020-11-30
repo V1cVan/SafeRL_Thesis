@@ -246,6 +246,8 @@ class Road{
             // Get the first valid lane towards the left/right of the given lane. This method
             // takes the lane direction into account. At a point s' where the neighbour changes,
             // the NEW neighbour is returned (in the direction of the lane).
+            // TODO: redesign this without the peculiar behaviour at the end of the neighbouring
+            // lane's validity region
             if(!lanes[L].isValid(s)){
                 return std::nullopt;
             }

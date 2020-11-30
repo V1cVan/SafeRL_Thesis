@@ -275,8 +275,22 @@ namespace Policy{
     // --- Action definition ---
     struct Action{
         // size = 2
-        double vel;// Relative velocity w.r.t. current longitudinal velocity
-        double off;// Lateral offset w.r.t. current lateral position on the road
+        double x;// Longitudinal action
+        double y;// Lateral action
+    };
+
+
+    // --- Action types ---
+    enum class ActionType{
+        // Longitudinal:
+        ACC,        // Absolute acceleration [m/s^2]
+        ABS_VEL,    // Absolute velocity [m/s]
+        REL_VEL,    // Relative velocity w.r.t. current velocity [m/s]
+        // Lateral:
+        DELTA,      // Steering angle [rad]
+        ABS_OFF,    // Absolute offset w.r.t. right road boundary [m]
+        REL_OFF,    // Relative offset w.r.t. current position [m]
+        LANE        // Discrete target lane [-]
     };
 
 };

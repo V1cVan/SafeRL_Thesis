@@ -210,6 +210,7 @@ class Simulation(object):
     def clear_vehicles(self):
         self._simCfg["types"].clear()
         self._simCfg["defs"].clear()
+        self._simCfg["entries"].clear()
 
     @conditional(_inactive)
     def add_vehicles(self, data):

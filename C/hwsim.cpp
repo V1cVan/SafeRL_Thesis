@@ -68,8 +68,8 @@ extern "C"{
     }
 
     LIB_PUBLIC
-    void pbp_custom(unsigned char* args){
-        BaseFactory::BluePrint bp = Policy::CustomPolicy().blueprint();
+    void pbp_custom(unsigned char* args, const uint8_t tx, const uint8_t ty){
+        BaseFactory::BluePrint bp = Policy::CustomPolicy(static_cast<Policy::ActionType>(tx), static_cast<Policy::ActionType>(ty)).blueprint();
         std::byte* bytes = reinterpret_cast<std::byte*>(args);
         std::copy(bp.args.begin(),bp.args.end(),bytes);
     }
@@ -478,14 +478,14 @@ extern "C"{
     
     LIB_PUBLIC
     void veh_getPolicyAction(const Vehicle* veh, double* action){
-        action[0] = veh->a.vel;
-        action[1] = veh->a.off;
+        action[0] = veh->a.x;
+        action[1] = veh->a.y;
     }
 
     LIB_PUBLIC
     void veh_setPolicyAction(Vehicle* veh, const double* action){
-        veh->a.vel = action[0];
-        veh->a.off = action[1];
+        veh->a.x = action[0];
+        veh->a.y = action[1];
     }
 
     LIB_PUBLIC
@@ -498,9 +498,9 @@ extern "C"{
 
     LIB_PUBLIC
     void veh_getSafetyBounds(const Vehicle* veh, double* bounds){
-        bounds[0] = veh->safetyBounds[0].vel;
-        bounds[1] = veh->safetyBounds[0].off;
-        bounds[2] = veh->safetyBounds[1].vel;
-        bounds[3] = veh->safetyBounds[1].off;
+        bounds[0] = veh->safetyBounds[0].x;
+        bounds[1] = veh->safetyBounds[0].y;
+        bounds[2] = veh->safetyBounds[1].x;
+        bounds[3] = veh->safetyBounds[1].y;
     }
 }

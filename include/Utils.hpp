@@ -283,11 +283,18 @@ struct Serializable : public T{// T inherits from ISerializable
     #endif
     using sid_t = BaseFactory::id_t;
     using sdata_t = BaseFactory::data_t;
+    using Base = Serializable<T,F,S,I,N>;
     static constexpr size_t SERIALIZED_LENGTH = N;
 
-    Serializable(){
+    template<class... Args>
+    Serializable(Args&&... args) : T(std::forward<Args>(args)...){
+        // Forward constructor arguments to Base constructor (T)
         ID; // Prevent ID (and hence the class registration) from being removed by compiler optimizations
     }
+
+    // Serializable(){
+    //     ID; // Prevent ID (and hence the class registration) from being removed by compiler optimizations
+    // }
 
     inline typename BaseFactory::BluePrint blueprint() const{
         sdata_t data;

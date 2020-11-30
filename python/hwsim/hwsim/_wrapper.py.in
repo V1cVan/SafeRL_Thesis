@@ -138,7 +138,7 @@ simLib.cfg_scenariosPath.restype = None
 simLib.mbp_kbm.argtypes = [POINTER(c_ubyte)]
 simLib.mbp_kbm.restype = c_void_p
 
-simLib.pbp_custom.argtypes = [POINTER(c_ubyte)]
+simLib.pbp_custom.argtypes = [POINTER(c_ubyte),c_uint8,c_uint8]
 simLib.pbp_custom.restype = c_void_p
 
 simLib.pbp_step.argtypes = [POINTER(c_ubyte)]

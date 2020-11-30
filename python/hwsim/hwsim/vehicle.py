@@ -39,18 +39,18 @@ class Vehicle(object):
         lane_info_dt = np.dtype([
             ("off",np.float64),
             ("width",np.float64),
-            ("relB",rel_s_dt,self.N_OV),
-            ("relF",rel_s_dt,self.N_OV)
+            ("relB",rel_s_dt,(self.N_OV,)),
+            ("relF",rel_s_dt,(self.N_OV,))
         ])
         self.s_dt = np.dtype([
             ("gapB",np.float64,2),
             ("maxVel",np.float64),
             ("vel",np.float64,2),
             ("laneC",lane_info_dt),
-            ("laneR",lane_info_dt,self.L),
-            ("laneL",lane_info_dt,self.L)
+            ("laneR",lane_info_dt,(self.L,)),
+            ("laneL",lane_info_dt,(self.L,))
         ])
-        self.a_dt = np.dtype([("vel",np.float64),("off",np.float64)])
+        self.a_dt = np.dtype([("long",np.float64),("lat",np.float64)])
         self._rs_dt = np.dtype([
             ("frontGap",np.float64),
             ("frontVel",np.float64),
@@ -181,9 +181,10 @@ class Vehicle(object):
     @property
     def a(self):
         """
-        Last reference actions (provided by the vehicle's Policy).
-        vel:    reference longitudinal velocity
-        off:    lateral offset
+        Last reference actions (provided by the vehicle's Policy). The interpretation
+        of these action values depends on the Policy's action types.
+        long:    longitudinal action
+        lat:     lateral action
         """
         return self.a_raw.view(self.a_dt)[0]
 

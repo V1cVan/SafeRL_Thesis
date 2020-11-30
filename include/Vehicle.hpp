@@ -105,6 +105,13 @@ class Vehicle : public VehicleBase{
             roadInfo.laneR.assign(L,{});// Initialize lane vectors to hold exactly
             roadInfo.laneL.assign(L,{});// L lanes.
             updateState(vIs);
+            // TODO: Extra notice until safetyBounds are fixed
+            if(policy->tx==Policy::ActionType::ACC){
+                std::cout << "Warning: Safetybounds are not correctly implemented yet for longitudinal ACC action type." << std::endl;
+            }
+            if(policy->ty==Policy::ActionType::DELTA){
+                std::cout << "Warning: Safetybounds are not correctly implemented yet for lateral DELTA action type." << std::endl;
+            }
             // sc.roads[vIs.R].globalPose({vIs.pos[0],vIs.pos[1],vIs.gamma},x.pos,x.ang);
             // x.vel = vIs.vel;
             // x.ang_vel = vIs.ang_vel;
@@ -165,8 +172,31 @@ class Vehicle : public VehicleBase{
             // Get nominal inputs
             Model::Input nom = model->nominalInputs(*this, x, roadInfo.gamma);
             // Update model inputs based on updated reference actions (from the driver)
-            u.longAcc = nom.longAcc+longCtrl.step(dt,a.vel-s.vel[0]);// Get acceleration input from longitudinal velocity error
-            u.delta = nom.delta+latCtrl.step(dt,a.off);// Get steering angle from lateral offset error
+            u.longAcc = nom.longAcc;
+            if(policy->tx==Policy::ActionType::ACC){
+                u.longAcc += a.x;
+            }else if(policy->tx==Policy::ActionType::ABS_VEL){
+                u.longAcc += longCtrl.step(dt,a.x-s.vel[0]);// Get acceleration input from longitudinal velocity error
+            }else if(policy->tx==Policy::ActionType::REL_VEL){
+                u.longAcc += longCtrl.step(dt,a.x);
+            }
+
+            u.delta = nom.delta;
+            if(policy->ty==Policy::ActionType::DELTA){
+                u.delta += a.y;
+            }else if(policy->ty==Policy::ActionType::ABS_OFF){
+                u.delta += latCtrl.step(dt,a.y-s.gapB[0]);// Get steering angle from lateral offset error
+            }else if(policy->ty==Policy::ActionType::REL_OFF){
+                u.delta += latCtrl.step(dt,a.y);
+            }else if(policy->ty==Policy::ActionType::LANE){
+                if(a.y>0.5){// Go towards center of left lane
+                    u.delta += latCtrl.step(dt,-s.laneL[0].off);
+                }else if(a.y<-0.5){// Go towards center of right lane
+                    u.delta += latCtrl.step(dt,-s.laneR[0].off);
+                }else{// Go towards center of current lane
+                    u.delta += latCtrl.step(dt,-s.laneC.off);
+                }
+            }
         }
 
         // Get the default augmented state vector for this vehicle (not taking into
@@ -194,8 +224,8 @@ class Vehicle : public VehicleBase{
         inline dtypes::vehicle_data::C saveState() const noexcept{
             dtypes::vehicle_data::C data{
                 roadInfo.R,roadInfo.pos[0],roadInfo.pos[1],roadInfo.gamma,
-                {},{},{a.vel,a.off},{safetyBounds[0].vel,safetyBounds[0].off},
-                {safetyBounds[1].vel,safetyBounds[1].off},{},
+                {},{},{a.x,a.y},{safetyBounds[0].x,safetyBounds[0].y},
+                {safetyBounds[1].x,safetyBounds[1].y},{},
                 {longCtrl.ep,longCtrl.ei},{latCtrl.ep,latCtrl.ei},{u.longAcc,u.delta}
             };
             Eigen::Vector3d::Map(data.vel) = x.vel;
@@ -211,12 +241,12 @@ class Vehicle : public VehicleBase{
             const Eigen::Map<const Eigen::Vector3d> vel(data.vel);
             const Eigen::Map<const Eigen::Vector3d> ang_vel(data.ang_vel);
             updateState({data.R,data.s,data.l,data.gamma,vel,ang_vel});
-            a.vel = data.a[0];
-            a.off = data.a[1];
-            safetyBounds[0].vel = data.a_min[0];
-            safetyBounds[0].off = data.a_min[1];
-            safetyBounds[1].vel = data.a_max[0];
-            safetyBounds[1].off = data.a_max[1];
+            a.x = data.a[0];
+            a.y = data.a[1];
+            safetyBounds[0].x = data.a_min[0];
+            safetyBounds[0].y = data.a_min[1];
+            safetyBounds[1].x = data.a_max[0];
+            safetyBounds[1].y = data.a_max[1];
             Utils::sdata_t ps(std::begin(data.ps),std::end(data.ps));
             policy->loadState(ps);
             longCtrl.ep = data.longCtrl[0];
@@ -322,10 +352,32 @@ class Vehicle : public VehicleBase{
             // double maxVel = (1-alpha)*r.frontVel+alpha*s.maxVel;
             // Maximum allowed velocity if both vehicles start max braking:
             double maxVel = std::sqrt(std::max(0.0,2*maxBrakeAcc*(r.frontGap-SAFETY_GAP)+r.frontVel*r.frontVel));
-            maxVel = std::max(0.0,std::min(s.maxVel,maxVel));// And clip between [0;maxRoadVel]
+            maxVel = std::clamp(maxVel, 0.0, s.maxVel);// And clip between [0;maxRoadVel]
 
+            // SafetyBounds for ABS_VEL and REL_OFF action types
             safetyBounds[0] = {0.0,-r.rightGap};
             safetyBounds[1] = {maxVel,r.leftGap};
+
+            if(policy->tx==Policy::ActionType::REL_VEL){
+                safetyBounds[0].x -= s.vel[0];
+                safetyBounds[1].x -= s.vel[0];
+            }else if(policy->tx==Policy::ActionType::ACC){
+                // TODO: change bounds when ActionType is ACC
+                safetyBounds[0].x = model->inputBounds[0].longAcc;
+                safetyBounds[1].x = model->inputBounds[1].longAcc;
+            }
+
+            if(policy->ty==Policy::ActionType::ABS_OFF){
+                safetyBounds[0].y += r.rightGap;
+                safetyBounds[1].y += r.rightGap;
+            }else if(policy->ty==Policy::ActionType::LANE){
+                safetyBounds[0].y = r.rightGap>s.laneR[0].off ? -1.0 : 0.0;
+                safetyBounds[1].y = r.leftGap>-s.laneL[0].off ? 1.0 : 0.0;
+            }else if(policy->ty==Policy::ActionType::DELTA){
+                // TODO: change bounds when ActionType is DELTA
+                safetyBounds[0].y = model->inputBounds[0].delta;
+                safetyBounds[1].y = model->inputBounds[1].delta;
+            }
         }
 
         inline RoadState roadDerivatives(const RoadState& rs){

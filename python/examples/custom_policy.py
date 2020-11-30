@@ -1,7 +1,7 @@
 import pathlib
 import random
 import numpy as np
-from hwsim import Simulation, BasicPolicy, KBModel, CustomPolicy, config
+from hwsim import Simulation, BasicPolicy, IMPolicy, KBModel, ActionType, CustomPolicy, config
 from hwsim.plotting import Plotter, SimulationPlot, DetailPlot, BirdsEyePlot, TimeChartPlot, ActionsPlot
 
 
@@ -9,7 +9,9 @@ class FixedLanePolicy(CustomPolicy, enc_name="fixed_lane"):
     """ Simple policy where each vehicle will stay in its initial lane with a certain target
     velocity (relative to the maximum allowed speed). The actual velocity is always upper
     bounded by the safety bounds (taking vehicles in front into account)."""
-
+    LONG_ACTION = ActionType.ABS_VEL
+    LAT_ACTION = ActionType.REL_OFF # Alternatively: ActionType.LANE
+    
     def __init__(self):
         super().__init__()
         self.STEP_TIME = 100 # Change reference velocity every 100 iterations (10s)
@@ -37,10 +39,12 @@ class FixedLanePolicy(CustomPolicy, enc_name="fixed_lane"):
         s = veh.s # Current augmented state
         bounds = veh.a_bounds # Current safety bounds on the actions (calculated from the current augmented state). Vehicle operation remains 'safe' as long as we respect these bounds.
         v_max = veh.rel_vel*(s["maxVel"])
-        v = min(v_max,bounds["vel"][1])
+        v = min(v_max,bounds["long"][1])
         v = max(0,v)
         # Final actions are: the target velocity and negating the offset towards the lane center
         return np.array([v,-s["laneC"]["off"]])
+        # Alternatively (with LANE actionType):
+        # return np.array([v,0]) # Lane reference is 0 => remain in (center of) current lane
 
 
 def simulate(sim):
@@ -67,9 +71,9 @@ def simulate(sim):
         }
         TimeChartPlot(p, lines, None, "rel_vel", [0])
         p.subplot(2,1)
-        ActionsPlot(p,actions="vel")
+        ActionsPlot(p,actions="long")
         p.subplot(3,1)
-        ActionsPlot(p,actions="off")
+        ActionsPlot(p,actions="lat")
         p.plot() # Initial plot
 
         while not sim.stopped and not p.closed:
@@ -111,7 +115,7 @@ if __name__=="__main__":
     # object that we can further modify for a subsequent run. In this case we will add two more
     # vehicles in the leftmost lane:
     sim.add_vehicles([
-        {"model": kbm, "policy": BasicPolicy("normal"), "R": 0, "l": 3.6, "s": 25},
+        {"model": kbm, "policy": IMPolicy(), "R": 0, "l": 3.6, "s": 25},
         {"model": kbm, "policy": BasicPolicy("slow"), "R": 0, "l": 3.6, "s": 50}
     ])
     simulate(sim)

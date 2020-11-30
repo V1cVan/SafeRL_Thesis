@@ -1,7 +1,25 @@
 from ctypes import c_ubyte
+from enum import Enum
 from hwsim._wrapper import simLib, Blueprint
 
+
+class ActionType(Enum):
+    # Longitudinal:
+    ACC = 0     # Absolute acceleration
+    ABS_VEL = 1 # Absolute velocity
+    REL_VEL = 2 # Relative velocity w.r.t. current velocity
+    # Lateral:
+    DELTA = 3   # Steering angle
+    ABS_OFF = 4 # Absolute offset w.r.t. right road boundary
+    REL_OFF = 5 # Relative offset w.r.t. current position
+    LANE = 6    # Discrete target lane
+
+
 class _Policy(Blueprint):
+    # Subclasses can set the longitudinal or lateral action types according
+    # to their needs. The defaults for CustomPolicies are set below.
+    LONG_ACTION = ActionType.REL_VEL
+    LAT_ACTION = ActionType.REL_OFF
 
     def __init__(self, id, args=None):
         super().__init__(id,args)
@@ -32,6 +50,8 @@ class _Policy(Blueprint):
 
 
 class StepPolicy(_Policy,enc_name="step"):
+    LONG_ACTION = ActionType.ABS_VEL
+    LAT_ACTION = ActionType.ABS_OFF
 
     def __init__(self):
         super().__init__(1)
@@ -45,6 +65,8 @@ class StepPolicy(_Policy,enc_name="step"):
 
 
 class BasicPolicy(_Policy,enc_name="basic"):
+    LONG_ACTION = ActionType.ABS_VEL
+    LAT_ACTION = ActionType.REL_OFF
 
     types = {
         "slow": 0,
@@ -76,6 +98,8 @@ class BasicPolicy(_Policy,enc_name="basic"):
 
 
 class IMPolicy(_Policy,enc_name="im"):
+    LONG_ACTION = ActionType.ACC
+    LAT_ACTION = ActionType.LANE
 
     def __init__(self):
         super().__init__(3)
@@ -91,4 +115,6 @@ class IMPolicy(_Policy,enc_name="im"):
 class CustomPolicy(_Policy):
 
     def __init__(self):
-        super().__init__(0)
+        args = (c_ubyte * 2)()
+        simLib.pbp_custom(args, self.LONG_ACTION.value, self.LAT_ACTION.value)
+        super().__init__(0,args)

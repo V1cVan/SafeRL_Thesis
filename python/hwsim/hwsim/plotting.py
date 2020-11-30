@@ -7,6 +7,7 @@ import pathlib
 import collections
 from enum import Enum, Flag, auto
 from tkinter import Tk, Label, Entry, Button
+from hwsim.policy import ActionType
 
 #region: Helper functions
 def _cuboidMesh(S):
@@ -520,6 +521,7 @@ class TimeChartPlot(_PlotterView):
             patch["mesh"].points = points
         data_bounds = np.array(self._r.bounds) # x_min,x_max,y_min,y_max,z_min,z_max
         # TODO: x_min is always 0 instead of the minimum value in memory?
+        # TODO: zooming is wrong when render_height >> render_width?
         data_bounds[0] = np.nanmin(self._time)
         render_width, render_height = self._r.GetSize()
         # Below code is same as
@@ -558,43 +560,80 @@ class ActionsPlot(TimeChartPlot):
     @staticmethod
     def get_config(actions=None, show_bounds=True):
         if actions is None:
-            actions = ["vel","off"]
+            actions = ["long","lat"]
         lines = {}
         patches = {}
         labels = []
-        if "vel" in actions:
-            lines["vel"] = {
+        if "long" in actions:
+            lines["long"] = {
                 "color": [0,0,1],
-                "getValue": lambda veh: veh.x["vel"][0]
+                "getValue": lambda veh: veh.s["vel"][0]
             }
-            lines["vel_ref"] = {
+            lines["long_ref"] = {
                 "color": [1,0,0],
                 "stippled": True,
-                "getValue": lambda veh: veh.a["vel"]
+                "getValue": ActionsPlot.long_ref
             }
             if show_bounds:
-                patches["vel"] = {
+                patches["long"] = {
                     "color": [0.2,0.9,0.2,0.5],
-                    "getBounds": lambda veh: veh.a_bounds["vel"]
+                    "getBounds": ActionsPlot.long_bounds
                 }
             labels.append("velocity (m/s)")
-        if "off" in actions:
-            lines["off"] = {
+        if "lat" in actions:
+            lines["lat"] = {
                 "color": [0,0,1],
                 "getValue": lambda veh: veh.s["gapB"][0]
             }
-            lines["off_ref"] = {
+            lines["lat_ref"] = {
                 "color": [1,0,0],
                 "stippled": True,
-                "getValue": lambda veh: veh.s["gapB"][0]+veh.a["off"]
+                "getValue": ActionsPlot.lat_ref
             }
             if show_bounds:
-                patches["off"] = {
+                patches["lat"] = {
                     "color": [0.2,0.9,0.2,0.5],
-                    "getBounds": lambda veh: veh.s["gapB"][0]+veh.a_bounds["off"]
+                    "getBounds": ActionsPlot.lat_bounds
                 }
             labels.append("offset (m)")
         return lines, patches, labels
+    
+    @staticmethod
+    def convert_long(veh, a):
+        if veh.policy.LONG_ACTION==ActionType.REL_VEL:
+            a += veh.s["vel"][0]
+        # TODO: think about what to plot for ActionType ACC
+        return a
+
+    @staticmethod
+    def long_ref(veh):
+        return ActionsPlot.convert_long(veh, veh.a["long"])
+    
+    @staticmethod
+    def long_bounds(veh):
+        return [ActionsPlot.convert_long(veh,bound) for bound in veh.a_bounds["long"]]
+    
+    @staticmethod
+    def convert_lat(veh, a):
+        if veh.policy.LAT_ACTION==ActionType.REL_OFF:
+            a += veh.s["gapB"][0]
+        elif veh.policy.LAT_ACTION==ActionType.LANE:
+            if a>0.5:
+                a = veh.s["gapB"][0]-veh.s["laneL"][0]["off"]
+            elif a<-0.5:
+                a = veh.s["gapB"][0]-veh.s["laneR"][0]["off"]
+            else:
+                a = veh.s["gapB"][0]-veh.s["laneC"]["off"]
+        # TODO: think about what to plot for ActionType DELTA
+        return a
+
+    @staticmethod
+    def lat_ref(veh):
+        return ActionsPlot.convert_lat(veh, veh.a["lat"])
+    
+    @staticmethod
+    def lat_bounds(veh):
+        return [ActionsPlot.convert_lat(veh,bound) for bound in veh.a_bounds["lat"]]
 
 class InputsPlot(TimeChartPlot):
 

@@ -78,7 +78,7 @@ class BaseSerializer(object):
             return [cls.encode(el) for el in obj]
         elif isinstance(obj,Serializable):
             return cls.encode_serializable(obj)
-        elif isinstance(obj,(int,float,str)):
+        elif isinstance(obj,(int,float,str)) or obj is None:
             return obj
         else:
             raise TypeError(f"Objects of type {type(obj)} are not supported by BaseSerializer.")

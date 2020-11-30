@@ -27,6 +27,10 @@ namespace Policy{
             static inline Factory<PolicyBase> factory{"policy"};
             #endif
 
+            const ActionType tx, ty;// ActionType of longitudinal and lateral action
+
+            PolicyBase(const ActionType& tx, const ActionType& ty) : tx(tx), ty(ty){}
+
             // Get new driving actions based on the current augmented state vector
             virtual Action getAction(const VehicleBase& vb) = 0;
 
@@ -45,14 +49,37 @@ namespace Policy{
 
 
     // --- CustomPolicy ---
-    class CustomPolicy : public Serializable<PolicyBase,PolicyBase::factory,CustomPolicy,0>{
+    class CustomPolicy : public Serializable<PolicyBase,PolicyBase::factory,CustomPolicy,0,2>{
         // Used for custom driving policies
+        private:
+            static constexpr ActionType DEFAULT_TYPE_X = ActionType::REL_VEL;
+            static constexpr ActionType DEFAULT_TYPE_Y = ActionType::REL_OFF;
+
+            CustomPolicy(const std::vector<ActionType>& types) : CustomPolicy(types[0], types[1]){}
 
         public:
-            CustomPolicy(const sdata_t = sdata_t()){}
+            CustomPolicy(const ActionType& tx = DEFAULT_TYPE_X, const ActionType& ty = DEFAULT_TYPE_Y)
+            : Base(tx, ty){}
+
+            CustomPolicy(const sdata_t args) : CustomPolicy(parseArgs(args)){}
 
             inline Action getAction(const VehicleBase& vb){
                 return {std::nan(""),std::nan("")};
+            }
+
+            inline void serialize(sdata_t& data) const{
+                data.push_back(std::byte{static_cast<uint8_t>(tx)});
+                data.push_back(std::byte{static_cast<uint8_t>(ty)});
+            }
+        
+        private:
+            static inline std::vector<ActionType> parseArgs(const sdata_t args){
+                std::vector<ActionType> types = {DEFAULT_TYPE_X, DEFAULT_TYPE_Y};
+                if(!args.empty()){
+                    types[0] = static_cast<ActionType>(args[0]);
+                    types[1] = static_cast<ActionType>(args[1]);
+                }
+                return types;
             }
     };
 
@@ -70,6 +97,8 @@ namespace Policy{
             static constexpr double MIN_REL_OFF = 0.1;
             static constexpr double MAX_REL_OFF = 0.9;
 
+            const ActionType tx = ActionType::ABS_VEL, ty = ActionType::REL_OFF;
+
             // Policy specific properties
             const double minRelVel, maxRelVel;
 
@@ -82,7 +111,8 @@ namespace Policy{
             PolicyState ps;
 
             StepPolicy(const double minVel = DEFAULT_MIN_REL_VEL, const double maxVel = DEFAULT_MAX_REL_VEL)
-            : velDis(minVel,maxVel), offDis(MIN_REL_OFF,MAX_REL_OFF), minRelVel(minVel), maxRelVel(maxVel){}
+            : Base(ActionType::ABS_VEL, ActionType::ABS_OFF), velDis(minVel,maxVel), offDis(MIN_REL_OFF,MAX_REL_OFF)
+            , minRelVel(minVel), maxRelVel(maxVel){}
 
             StepPolicy(const sdata_t) : StepPolicy(){}
 
@@ -92,8 +122,8 @@ namespace Policy{
                     ps.k = 0;
                     ps.curActions = {velDis(Utils::rng),offDis(Utils::rng)};
                 }
-                double vel = ps.curActions.vel*vb.safetyBounds[1].vel;
-                double off = ps.curActions.off*(vb.s.gapB[0]+vb.s.gapB[1]) - vb.s.gapB[0];
+                double vel = ps.curActions.x*vb.safetyBounds[1].x;
+                double off = ps.curActions.y*(vb.s.gapB[0]+vb.s.gapB[1]) - vb.s.gapB[0];
                 return {vel,off};
             }
 
@@ -148,7 +178,9 @@ namespace Policy{
             bool overtaking;// Flag denoting whether we are currently overtaking or not
 
             BasicPolicy(const Type& t)
-            : type(t), desVelDiff(getDesVelDiff(t)), overtakeGap(DEFAULT_OVERTAKE_GAP[static_cast<int>(t)]), roi({{SAFETY_GAP,std::max(SAFETY_GAP,overtakeGap)},{0.1,0.1},TTC,TTC}), overtaking(false){}
+            : Base(ActionType::ABS_VEL, ActionType::REL_OFF), type(t), desVelDiff(getDesVelDiff(t))
+            , overtakeGap(DEFAULT_OVERTAKE_GAP[static_cast<int>(t)]), roi({{SAFETY_GAP,std::max(SAFETY_GAP,overtakeGap)}
+            ,{0.1,0.1},TTC,TTC}), overtaking(false){}
 
             BasicPolicy(const sdata_t args) : BasicPolicy(parseArgs(args)){}
 
@@ -164,7 +196,7 @@ namespace Policy{
                 if(rs.frontGap < ADAPT_GAP){
                     // If there is a vehicle in front of us, linearly adapt speed to match frontVel
                     double alpha = (rs.frontGap-SAFETY_GAP)/(ADAPT_GAP-SAFETY_GAP);
-                    a.vel = std::max(0.0,std::min(desVel,(1-alpha)*rs.frontVel+alpha*desVel));// And clip between [0;desVel]
+                    a.x = std::max(0.0,std::min(desVel,(1-alpha)*rs.frontVel+alpha*desVel));// And clip between [0;desVel]
                 }
                 const bool rightFree = std::abs(vb.s.laneR[0].off-vb.s.laneC.off)>EPS && rs.rightGap-vb.s.laneC.off>vb.s.laneR[0].width-EPS;// Right lane is free if there is a lane and the right offset is larger than the lane width
                 const bool leftFree = std::abs(vb.s.laneL[0].off-vb.s.laneC.off)>EPS && rs.leftGap+vb.s.laneC.off>vb.s.laneL[0].width-EPS;// Left lane is free if there is a lane and the left offset is larger than the lane width
@@ -180,13 +212,13 @@ namespace Policy{
                         overtaking = false;
                     }else if(leftFree && vb.s.laneC.off>-EPS){
                         // If the left lane is still free while we are on the previous lane, go left.
-                        a.off = -vb.s.laneL[0].off;
+                        a.y = -vb.s.laneL[0].off;
                     }
                     // In the other case we are already on the next lane so we should first wait to get to the
                     // middle of the lane before deciding to overtake yet another lane.
                 }else if(rightFree){
                     // Otherwise if we are not overtaking and the right lane is free, go there
-                    a.off = -vb.s.laneR[0].off;
+                    a.y = -vb.s.laneR[0].off;
                 }
                 return a;
             }
@@ -272,14 +304,14 @@ namespace Policy{
             // Policy specific properties
             const double desVelDiff;// Difference between the desired velocity of this driver and the maximum allowed speed (in m/s)
 
-            IMPolicy(const sdata_t = sdata_t()) : desVelDiff(getDesVelDiff()){}
+            IMPolicy(const sdata_t = sdata_t()) : Base(ActionType::ACC, ActionType::LANE), desVelDiff(getDesVelDiff()){}
 
             inline Action getAction(const VehicleBase& vb){
                 double desVel = vb.s.maxVel+desVelDiff;// Vehicle's desired velocity, based on the current maximum allowed speed
                 double vel = vb.s.vel[0];// Vehicle's current velocity
                 const bool right = std::abs(vb.s.laneR[0].off-vb.s.laneC.off)>EPS;
                 const bool left = std::abs(vb.s.laneL[0].off-vb.s.laneC.off)>EPS;
-                Action a = {desVel,-vb.s.laneC.off};// Default action is driving at desired velocity and going towards the middle of the lane
+                Action a = {0, 0};// Default action is driving at current velocity and staying in the current lane
                 // --- IDM ---
                 auto calcAcc = [](double vel, double desVel, double frontVel, double frontGap){
                     frontGap = std::max(0.01, frontGap);
@@ -287,7 +319,7 @@ namespace Policy{
                     return MAX_ACC*(1-std::pow(vel/desVel,DELTA)-desGap*desGap/frontGap/frontGap);
                 };
                 double accC = calcAcc(vel, desVel, vb.r.frontVel, vb.r.frontGap);
-                a.vel = vel + accC*0.2;// TODO: resolve hard-coded time step (find way to let policies decide upon acceleration directly, without low level controllers)
+                a.x = accC;
 
                 // --- MOBIL ---
                 auto& cF = vb.s.laneC.relF[0]; auto& rF = vb.s.laneR[0].relF[0]; auto& lF = vb.s.laneL[0].relF[0];
@@ -312,10 +344,10 @@ namespace Policy{
                 bool incL = accCl-accC + POLITENESS*(accLt-accL) > ACC_TH+ACC_BIAS;
                 if(accRt>=-MAX_DEC && incR){
                     // Perform a lane change to the right
-                    a.off = -vb.s.laneR[0].off;
+                    a.y = -1;
                 }else if(accLt>=-MAX_DEC && incL){
                     // Perform a lane change to the left
-                    a.off = -vb.s.laneL[0].off;
+                    a.y = 1;
                 }
 
                 return a;

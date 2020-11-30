@@ -43,7 +43,7 @@ if __name__=="__main__":
     }
 
     with Simulation(sConfig) as sim:
-        shape = (4,2)
+        # shape = (4,2)
         shape = (2,2)
         groups = [([0,1],0)]
         vehicle_type = "car" if FANCY_CARS else "cuboid3D"
@@ -62,9 +62,9 @@ if __name__=="__main__":
         BirdsEyePlot(p,vehicle_type=vehicle_type,view=BirdsEyePlot.View.REAR)
         # p.subplot(2,0)
         # p.add_text("Actions")
-        # ActionsPlot(p,actions="vel")
+        # ActionsPlot(p,actions="long")
         # p.subplot(3,0)
-        # ActionsPlot(p,actions="off")
+        # ActionsPlot(p,actions="lat")
         # p.subplot(2,1)
         # p.subplot(3,1)
         p.plot() # Initial plot

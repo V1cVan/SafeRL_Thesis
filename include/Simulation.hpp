@@ -380,7 +380,7 @@ class Simulation{
             part = 2;
             if(mode==Mode::SIMULATE){
                 for(Vehicle& v : vehicles){
-                    assert(!std::isnan(v.a.off) && !std::isnan(v.a.vel));// Invalid actions, possibly caused by custom policies
+                    assert(!std::isnan(v.a.x) && !std::isnan(v.a.y));// Invalid actions, possibly caused by custom policies
                     v.controllerUpdate(dt);
                 }
             }
@@ -595,10 +595,13 @@ class Simulation{
             const std::array<double,2>& oPos = vehicles[Vo].roadInfo.pos;
             const double D_MAX = std::max(vehicles[Vr].D_MAX,vehicles[Vo].D_MAX);
 
+            // To prevent stupid GCC bug (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66735):
+            const auto& rRoad = scenario.roads[Rr];
+            const auto& oRoad = scenario.roads[Ro];
             // Check whether there is a connection between (Rr,Lc) and (Ro,Lo):
             std::vector<Road::id_t> rLanes = std::vector<Road::id_t>(scenario.roads[Rr].lanes.size());
             std::iota(rLanes.begin(),rLanes.end(),0);// Vector with all lane ids of road Rr
-            auto itLt = std::find_if(std::begin(rLanes),std::end(rLanes),[Rr,&rRoad=scenario.roads[Rr],rDir,&sr=rPos[0],Ro,&oRoad=scenario.roads[Ro],oDir,&so=oPos[0],D_MAX](Road::id_t Lt){
+            auto itLt = std::find_if(std::begin(rLanes),std::end(rLanes),[Rr,&rRoad,rDir,sr=rPos[0],Ro,&oRoad,oDir,so=oPos[0],D_MAX](Road::id_t Lt){
                 // Returns the first lane Lt of road Rr that has a connection from lane Lf of road Ro satisfying:
                 //  * Lt has the same direction as Lr
                 //  * Lf has the same direction as Lo
@@ -612,7 +615,7 @@ class Simulation{
                         std::abs(sr-rRoad.lanes[Lt].start())<D_MAX && (static_cast<int>(rDir)*(sr-rRoad.lanes[Lt].start())>=0 || Rr!=Ro) &&
                         static_cast<int>(oDir)*(oRoad.lanes[Lf].end()-so)<D_MAX && static_cast<int>(oDir)*(oRoad.lanes[Lf].end()-so)>=0;
             });
-            auto itLf = std::find_if(std::begin(rLanes),std::end(rLanes),[Rr,&rRoad=scenario.roads[Rr],rDir,&sr=rPos[0],Ro,&oRoad=scenario.roads[Ro],oDir,&so=oPos[0],D_MAX](Road::id_t Lf){
+            auto itLf = std::find_if(std::begin(rLanes),std::end(rLanes),[Rr,&rRoad,rDir,sr=rPos[0],Ro,&oRoad,oDir,so=oPos[0],D_MAX](Road::id_t Lf){
                 // Returns the first lane Lf of road Rr that has a connection towards lane Lt of road Ro satisfying:
                 //  * Lf has the same direction as Lr
                 //  * Lt has the same direction as Lo
@@ -636,6 +639,10 @@ class Simulation{
                 double sEnd = scenario.roads[Ro].lanes[Lf].end();
                 ds = static_cast<int>(rDir)*(rPos[0]-sStart) + static_cast<int>(oDir)*(sEnd-oPos[0]);
                 dl = static_cast<int>(rDir)*(rPos[1]-scenario.roads[Rr].lanes[Lt].offset(sStart)) + static_cast<int>(oDir)*(scenario.roads[Ro].lanes[Lf].offset(sEnd)-oPos[1]);
+                // Below fix prevents stupid behaviour of laneNeighbour method at the end of the lane's validity
+                // without this, laneOffset can return an empty optional, giving invalid values for dL and
+                // leading to crashes at lane connections
+                sEnd -= static_cast<int>(oDir)*0.1;// TODO: this is really bad, fix this...
                 dL = *scenario.roads[Rr].laneOffset(sStart,Lr,Lt) + *scenario.roads[Ro].laneOffset(sEnd,Lf,Lo);
             }else if(itLf!=std::end(rLanes)){
                 Road::id_t Lf = *itLf;
@@ -644,6 +651,8 @@ class Simulation{
                 double sEnd = scenario.roads[Rr].lanes[Lf].end();
                 ds = static_cast<int>(rDir)*(rPos[0]-sEnd) + static_cast<int>(oDir)*(sStart-oPos[0]);
                 dl = static_cast<int>(rDir)*(rPos[1]-scenario.roads[Rr].lanes[Lf].offset(sEnd)) + static_cast<int>(oDir)*(scenario.roads[Ro].lanes[Lt].offset(sStart)-oPos[1]);
+                // Same thing here as above...
+                sEnd -= static_cast<int>(rDir)*0.1;
                 dL = *scenario.roads[Rr].laneOffset(sEnd,Lr,Lf) + *scenario.roads[Ro].laneOffset(sStart,Lt,Lo);
             }else if(Rr==Ro && rDir==oDir){
                 // There are no connections, but both vehicles are on the same road and travelling in the same direction
