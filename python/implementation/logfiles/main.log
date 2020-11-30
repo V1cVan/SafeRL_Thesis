@@ -1,5 +1,25 @@
-CRITICAL:root:Using seed 3977522162.000000
+CRITICAL:root:Using seed 2493545969.000000
 CRITICAL:root:Model Parameters:
 CRITICAL:root:{'n_nodes': [400, 0], 'n_layers': 2, 'n_inputs': 30, 'n_actions': 2, 'weights_file_path': './python/implementation/trained_models/model_weights', 'seed': 50}
 CRITICAL:root:Training param:
-CRITICAL:root:{'max_steps_per_episode': 50, 'final_return': 200, 'show_plots_when_training': False, 'plot_freq': 5, 'gamma': 0.99, 'adam_optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x0000021B24634388>, 'huber_loss': <tensorflow.python.keras.losses.Huber object at 0x0000021B243143C8>, 'seed': 50, 'reward_weights': array([1, 1, 1])}
+CRITICAL:root:{'max_steps_per_episode': 50, 'final_return': 200, 'show_plots_when_training': False, 'plot_freq': 5, 'gamma': 0.99, 'adam_optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x0000015EDF024D48>, 'huber_loss': <tensorflow.python.keras.losses.Huber object at 0x0000015EE2ED41C8>, 'seed': 50, 'reward_weights': array([1, 1, 1])}
+CRITICAL:root:Running reward = 13.84 at episode 5
+CRITICAL:root:Running reward = 26.62 at episode 10
+CRITICAL:root:Running reward = 35.68 at episode 15
+CRITICAL:root:Running reward = 45.36 at episode 20
+CRITICAL:root:Running reward = 47.42 at episode 25
+CRITICAL:root:Running reward = 48.43 at episode 30
+CRITICAL:root:Running reward = 48.60 at episode 35
+CRITICAL:root:Running reward = 49.87 at episode 40
+CRITICAL:root:Running reward = 50.85 at episode 45
+CRITICAL:root:Running reward = 51.87 at episode 50
+CRITICAL:root:Running reward = 52.17 at episode 55
+CRITICAL:root:Running reward = 52.85 at episode 60
+CRITICAL:root:Running reward = 52.30 at episode 65
+CRITICAL:root:Running reward = 52.51 at episode 70
+CRITICAL:root:Running reward = 53.42 at episode 75
+CRITICAL:root:Running reward = 53.29 at episode 80
+CRITICAL:root:Running reward = 52.56 at episode 85
+CRITICAL:root:Running reward = 51.75 at episode 90
+CRITICAL:root:Running reward = 52.95 at episode 95
+CRITICAL:root:Running reward = 54.29 at episode 100

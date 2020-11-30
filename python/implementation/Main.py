@@ -61,30 +61,31 @@ class Main(object):
     def train_policy(self):
         running_reward = 0
         episode_count = 1
-
+        plot_freq = training_param["plot_freq"]
+        show_plots = training_param["show_plots_when_training"]
+        max_timesteps_episode = training_param["max_steps_per_episode"]
         policy = self.pol[0]["policy"]
 
         # Run until all episodes are completed (reward reached).
         while True:
-            # logging.critical("Episode number: %0.2f" % episode_count)
-             # Set simulation environment
+            episode_reward = 0
+            logging.critical("Episode number: %0.2f" % episode_count)
+            # Set simulation environment
             with self.sim:
-                if episode_count % 1 == 0 and not self.sim.stopped and training_param["show_plots_when_training"]:
+                if episode_count % plot_freq == 0 and not self.sim.stopped and show_plots:
                     self.create_plot()
-                episode_reward = 0
+
                 # Loop through each timestep in episode.
-                # TODO Explain use of gradienttape not working when used here on sim.step
                 with episodeTimer:
                     # Run the model for one episode to collect training data
                     # Saves actions values, critic values, and rewards in policy class variables
-                    for t in tf.range(1,training_param["max_steps_per_episode"]+1):
+                    for t in tf.range(1, max_timesteps_episode+1):
                         # logging.critical("Timestep of episode: %0.2f" % self.sim.k)
                         policy.trainer.timestep = t
                         # Perform one simulations step:
                         if not self.sim.stopped:
-                            # TODO Query with bram, step applies policy then steps in sim? or other way around?
                             self.sim.step()  # Calls AcPolicy.customAction method.
-                            if episode_count % 1 == 0 and training_param["show_plots_when_training"]:
+                            if episode_count % 1 == 0 and show_plots:
                                 with plotTimer:
                                     self.p.plot()
                             if self.sim._collision:
@@ -92,15 +93,15 @@ class Main(object):
                                 policy.trainer.set_neg_collision_reward(5)
                                 break
 
-                    # Batch policy update
-                    with trainerTimer:
-                        # states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards = policy.trainer.get_experience()
-                        # policy.trainer.set_tf_action_choices(states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards)
-                        episode_reward = policy.trainer.train_step()
-                        # Clear loss values and reward history
-                        policy.trainer.clear_experience()
-            if episode_count % 1 == 0 and training_param["show_plots_when_training"]:
+                # Batch policy update
+                with trainerTimer:
+                    episode_reward = policy.trainer.train_step()
+                    # Clear loss values and reward history
+                    policy.trainer.buffer.clear_experience()
+
+            if episode_count % plot_freq == 0 and show_plots:
                 self.p.close()
+
             # Running reward smoothing effect
             running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
             episode_count += 1
@@ -159,10 +160,6 @@ if __name__=="__main__":
     seed = 50
     tf.random.set_seed(seed)
 
-
-
-
-
     # Model configuration and settings
     model_param = {
         "n_nodes": [400, 0],  # Number of hidden nodes in each layer
@@ -177,10 +174,12 @@ if __name__=="__main__":
     training_param = {
         "max_steps_per_episode": 50,  # TODO kM - max value of k
         "final_return": 200,
-        "show_plots_when_training": False,
+        "show_plots_when_training": True,
         "plot_freq": 5,  # TODO Reimplement plot freq (debug why crash)
         "gamma": 0.99,  # Discount factor
+        # TODO Check results of different learning rates
         "adam_optimiser": keras.optimizers.Adam(learning_rate=0.01),
+        # TODO Check results of different loss functions sum/mse
         "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM),
         "seed": seed,
         "reward_weights": np.array([1, 1, 1])  # (rew_vel, rew_lat_position, rew_fol_dist)
