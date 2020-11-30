@@ -75,7 +75,6 @@ class AcPolicyDiscrete(CustomPolicy):
         Normalises certain state variables and excludes constants.
         """
 
-
         # Normalise states and remove unnecessary states:
         lane_width = veh.s["laneC"]["width"]  # Excluded
         gap_to_road_edge = veh.s["gapB"]/(lane_width*3)  # Normalised
@@ -151,11 +150,11 @@ class AcPolicyDiscrete(CustomPolicy):
         # TODO create logs to debug the offset not always obeying bounds!
         off_bounds = veh.a_bounds["off"]
         if off_actions == 0:  # Turn left
-            off_controller = tf.math.maximum(off_bounds[0], veh.s["laneC"]["off"]-0.05)
+            off_controller = tf.math.maximum(off_bounds[0], veh.s["laneC"]["off"]-0.01)
         elif off_actions == 1:  # Straight
             off_controller = tf.convert_to_tensor(veh.s["laneC"]["off"])
         elif off_actions == 2:  # Turn right
-            off_controller = tf.math.minimum(off_bounds[1], veh.s["laneC"]["off"]+0.05)
+            off_controller = tf.math.minimum(off_bounds[1], veh.s["laneC"]["off"]+0.01)
         else:
             print("Error with setting offset action!")
         sim_action = sim_action.write(1, off_controller)

@@ -159,6 +159,14 @@ class Buffer(object):
         action_off_choices = tf.cast(tf.squeeze(self.actions["offset_choice"]), tf.int32)
         return timesteps, states, rewards, action_vel_choices, action_off_choices
 
+    def alter_reward_at_timestep(self, timestep, reward_change):
+        """
+        Sets a custom reward at a specific training timestep e.g. collision punishments.
+        """
+        index = timestep-1
+        reward_change = tf.convert_to_tensor(reward_change, dtype=tf.float32)
+        self.rewards[index] = self.rewards[index] + reward_change
+
     def clear_experience(self):
         """ Clears all the experiences in the episode. """
         self.timesteps.clear()
