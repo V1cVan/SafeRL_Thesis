@@ -22,7 +22,7 @@ class ActorCriticNetDiscrete(keras.Model):
                                              activation=tf.nn.relu,
                                              kernel_initializer='random_normal',
                                              bias_initializer='zeros',
-                                             name="densActorLayer1")(self.inputLayer)
+                                             name="denseActorLayer1")(self.inputLayer)
         if modelParam["n_nodes"][1] == 0:  # if no depth in network:
             self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax,
                                                kernel_initializer='random_normal',
@@ -165,8 +165,12 @@ class GradAscentTrainerDiscrete(keras.models.Model):
     def get_action_choice(self, action_probs):
         """ Randomly choose from the available actions."""
         action_vel_probs, action_off_probs = action_probs
-        vel_actions_choice = tf.random.categorical(action_vel_probs, 1)[0,0]
-        off_actions_choice = tf.random.categorical(action_off_probs, 1)[0,0]
+        if self.training:
+            vel_actions_choice = tf.random.categorical(action_vel_probs, 1)[0,0]
+            off_actions_choice = tf.random.categorical(action_off_probs, 1)[0,0]
+        else:
+            vel_actions_choice = tf.squeeze(tf.math.argmax(action_vel_probs, axis=1))
+            off_actions_choice = tf.squeeze(tf.math.argmax(action_off_probs, axis=1))
         return vel_actions_choice, off_actions_choice
 
     def get_expected_returns(self, rewards: tf.Tensor) -> tf.Tensor:
@@ -205,6 +209,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         action_off_log_probs = tf.math.log(action_off_probs)
         # TODO Query with bram if it is correct to do the actor losses like this?
         # TODO Probably need multiple critics?
+
         actor_vel_loss = tf.math.reduce_sum(tf.math.multiply(-action_vel_log_probs, advantage))
         actor_off_loss = tf.math.reduce_sum(tf.math.multiply(-action_off_log_probs, advantage))
         # actor_loss = tf.math.reduce_sum(-(action_vel_log_probs+action_off_log_probs)*advantage)  # ERROR!!!
@@ -224,8 +229,8 @@ class GradAscentTrainerDiscrete(keras.models.Model):
                 # Gather and convert data from simulation:
                 sim_states = tf.convert_to_tensor(self.states)
                 rewards = tf.convert_to_tensor(self.rewards)
-                sim_action_vel_choices = tf.convert_to_tensor(np.array(self.action_choices)[:,0])
-                sim_action_off_choices = tf.convert_to_tensor(np.array(self.action_choices)[:,1])
+                sim_action_vel_choices = tf.convert_to_tensor(np.array(self.action_choices)[:, 0])
+                sim_action_off_choices = tf.convert_to_tensor(np.array(self.action_choices)[:, 1])
                 # Forward Pass - (Re)Calculation of actions that caused saved states
                 # TODO log the values from ACPolicy class to ensure actions+critic correspond to calculations done here (indices etc.)
                 action_vel_probs, action_off_probs, critic_values = self.actor_critic_net(sim_states)

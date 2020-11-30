@@ -104,7 +104,7 @@ class Main(object):
             # Running reward smoothing effect
             running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
             episode_count += 1
-            if episode_count % 10 == 0:
+            if episode_count % 5 == 0:
                 print_template = "Running reward = {:.2f} at episode {}"
                 print_output = print_template.format(running_reward, episode_count)
                 print(print_output)
@@ -159,7 +159,8 @@ if __name__=="__main__":
     seed = 50
     tf.random.set_seed(seed)
 
-    data_logger = DataLogger(seed)
+
+
 
 
     # Model configuration and settings
@@ -215,6 +216,9 @@ if __name__=="__main__":
     plotTimer = Timer("Plotting")
     trainerTimer = Timer("the Trainer")
     episodeTimer = Timer("Episode")
+
+    # Create object for data logging and visualisation
+    data_logger = DataLogger(seed, model_param, training_param)
 
     sim = Simulation(sim_config)
 
