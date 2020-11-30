@@ -85,20 +85,23 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         self.timestep = 1
         self.buffer = Buffer()
 
-    def set_neg_collision_reward(self, punishment):
+    def set_neg_collision_reward(self, timestep, punishment):
         """ Sets a negative reward if a collision occurs. """
-        self.rewards[-1] = self.rewards[-1] - punishment
+        self.buffer.alter_reward_at_timestep(timestep, punishment)
 
     def get_action_choice(self, action_probs):
         """ Randomly choose from the available actions."""
         action_vel_probs, action_off_probs = action_probs
-        if self.training:
-            vel_actions_choice = tf.random.categorical(action_vel_probs, 1)[0, 0]
-            off_actions_choice = tf.random.categorical(action_off_probs, 1)[0, 0]
-        else:
-            vel_actions_choice = tf.squeeze(tf.math.argmax(action_vel_probs, axis=1))
-            off_actions_choice = tf.squeeze(tf.math.argmax(action_off_probs, axis=1))
-        return vel_actions_choice, off_actions_choice
+
+        # np.random.choice accepts probabilities
+        vel_action_choice = np.random.choice(3, p=np.squeeze(action_vel_probs))
+        off_action_choice = np.random.choice(3, p=np.squeeze(action_off_probs))
+
+        # rf.random.categrical accepts log probabilities!
+        # vel_action_choice = tf.random.categorical(tf.math.log(action_vel_probs), 1)[0, 0]
+        # off_action_choice = tf.random.categorical(tf.math.log(action_off_probs), 1)[0, 0]
+
+        return vel_action_choice, off_action_choice
 
     def get_expected_returns(self, rewards: tf.Tensor) -> tf.Tensor:
         """

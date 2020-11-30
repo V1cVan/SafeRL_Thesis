@@ -85,13 +85,15 @@ class Main(object):
                         # Perform one simulations step:
                         if not self.sim.stopped:
                             self.sim.step()  # Calls AcPolicy.customAction method.
-                            if episode_count % 1 == 0 and show_plots:
-                                with plotTimer:
-                                    self.p.plot()
                             if self.sim._collision:
                                 logging.critical("Collision. At episode %f" % episode_count)
-                                policy.trainer.set_neg_collision_reward(5)
+                                policy.trainer.set_neg_collision_reward(t, -5)
                                 break
+                            if episode_count % plot_freq == 0 and show_plots:
+                                with plotTimer:
+                                    self.p.plot()
+
+
 
                 # Batch policy update
                 with trainerTimer:
@@ -136,7 +138,7 @@ class Main(object):
 
 if __name__=="__main__":
     # Initial configuration
-    ID = -1 # ID of simulation to replay or -1 to create a new one
+    ID = -1  # ID of simulation to replay or -1 to create a new one
     PLOT_MODE = Plotter.Mode.LIVE
     OFF_SCREEN = False
     FANCY_CARS = True
@@ -153,7 +155,7 @@ if __name__=="__main__":
 
 
     config.scenarios_path = str(SC_PATH)
-    print_output = "Using seed %f"%(config.seed)
+    print_output = "Using seed %f" % config.seed
     print(print_output)
     logging.critical(print_output)
 
@@ -162,7 +164,7 @@ if __name__=="__main__":
 
     # Model configuration and settings
     model_param = {
-        "n_nodes": [400, 0],  # Number of hidden nodes in each layer
+        "n_nodes": [400, 400],  # Number of hidden nodes in each layer
         "n_layers": 2,  # Number of layers
         "n_inputs": 30,  # Standard size of S
         "n_actions": 2,
@@ -172,9 +174,9 @@ if __name__=="__main__":
     logging.critical("Model Parameters:")
     logging.critical(model_param)
     training_param = {
-        "max_steps_per_episode": 50,  # TODO kM - max value of k
+        "max_steps_per_episode": 120,  # TODO kM - max value of k
         "final_return": 200,
-        "show_plots_when_training": True,
+        "show_plots_when_training": False,
         "plot_freq": 5,  # TODO Reimplement plot freq (debug why crash)
         "gamma": 0.99,  # Discount factor
         # TODO Check results of different learning rates
@@ -224,9 +226,8 @@ if __name__=="__main__":
     # Set up main class for running simulations:
     main = Main(sim_config)
 
-
     # Train model:
-    main.train_policy()
+    # main.train_policy()
 
     # Simulate model:
     main.simulate()
