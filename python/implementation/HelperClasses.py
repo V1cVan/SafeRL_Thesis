@@ -1,10 +1,17 @@
 import time
-from typing import Dict, Any, List, Sequence
+from typing import Dict, List
 import seaborn as sns
 from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
 import tensorflow as tf
+
+"""
+    HelperClasses.py module contains:
+        DataLogger - for logging, saving and plotting of all RL training data during runtime.
+        Buffer - for temporarily handling and data during a RL episode.
+        Timer - for timing of python tasks.
+"""
 
 
 class DataLogger(object):
@@ -84,6 +91,88 @@ class DataLogger(object):
         plt.title("Total reward per episode.")
         plt.xlabel("Episode number")
         plt.ylabel("Reward")
+
+
+
+class Buffer(object):
+    """
+    Buffer class (temporarily) saves and handles the experiences per episode during training.
+    """
+
+    def __init__(self):
+        self.timesteps = []
+        self.states = []
+        self.actions = {
+            "vel_model": [],
+            "offset_model": [],
+            "vel_simulator": [],
+            "offset_simulator": [],
+            "vel_choice": [],
+            "offset_choice": []
+        }
+        self.critic = []
+        self.rewards = []
+
+    def add_experience(self, timestep, state, vel_model_action, off_model_action,
+                       vel_action_sim, offset_action_sim, vel_choice, off_choice, reward, critic):
+        """ Adds the most recent experience to the buffer. """
+        self.timesteps.append(timestep)
+        self.states.append(state)
+        self.actions["vel_model"].append(vel_model_action)
+        self.actions["offset_model"].append(off_model_action)
+        self.actions["vel_simulator"].append(vel_action_sim)
+        self.actions["offset_simulator"].append(offset_action_sim)
+        self.actions["vel_choice"].append(vel_choice)
+        self.actions["offset_choice"].append(off_choice)
+        self.rewards.append(reward)
+        self.critic.append(critic)
+
+    def get_experience_at_timestep(self, timestep: int):
+        """ Returns the experience at the provided timestep. """
+        index = timestep-1
+        actions = {
+            "vel_model": self.actions["vel_model"][index],
+            "offset_model": self.actions["offset_model"][index],
+            "vel_simulator": self.actions["vel_simulator"][index],
+            "offset_simulator": self.actions["offset_simulator"][index],
+            "vel_choice": self.actions["vel_choice"][index],
+            "offset_choice": self.actions["offset_choice"][index],
+        }
+        output_dict = {
+            "timestep": self.timesteps[index],
+            "action": actions,
+            "state": self.states[index],
+            "reward": self.rewards[index],
+            "critic": self.critic[index]
+        }
+        return output_dict
+
+    def get_experience_for_episode_training(self):
+        """
+        Returns the states, rewards, and action choices of the episode
+        for training of the network in TF vectors at each timestep.
+        """
+        timesteps = tf.squeeze(self.timesteps)
+        states = tf.squeeze(self.states)
+        rewards = tf.squeeze(self.rewards)
+        action_vel_choices = tf.cast(tf.squeeze(self.actions["vel_choice"]), tf.int32)
+        action_off_choices = tf.cast(tf.squeeze(self.actions["offset_choice"]), tf.int32)
+        return timesteps, states, rewards, action_vel_choices, action_off_choices
+
+    def clear_experience(self):
+        """ Clears all the experiences in the episode. """
+        self.timesteps.clear()
+        self.states.clear()
+        self.actions["vel_model"].clear()
+        self.actions["offset_model"].clear()
+        self.actions["vel_simulator"].clear()
+        self.actions["offset_simulator"].clear()
+        self.actions["vel_choice"].clear()
+        self.actions["offset_choice"].clear()
+        self.rewards.clear()
+        self.critic.clear()
+
+
 
 
 class Timer(object):

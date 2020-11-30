@@ -1,6 +1,6 @@
 from hwsim import CustomPolicy
 import tensorflow as tf
-import logging
+
 import numpy as np
 
 class AcPolicyDiscrete(CustomPolicy):
@@ -11,14 +11,11 @@ class AcPolicyDiscrete(CustomPolicy):
     def __init__(self, trainer):
         super(AcPolicyDiscrete, self).__init__()
         self.trainer = trainer  # trainer = f(NN_model)
-        logging.basicConfig(level=logging.INFO, filename="./python/implementation/logfiles/ACPolicyDiscrete.log")
-        with open('./python/implementation/logfiles/ACPolicyDiscrete.log', 'w'):
-            pass  # Clear the log file of previous run
 
     def init_vehicle(self, veh):
         # Book-keeping of last states and actions
-        # s0, a0 = previous vehicle state action pair
-        # s1, a1 = current vehicle state action pair
+        # s0, a0, c0 = previous vehicle state and action-critic pair
+        # s1, a1, c0 = current vehicle state action-critic pair
 
         veh.s0 = None
         veh.s0_mod = None
@@ -27,10 +24,11 @@ class AcPolicyDiscrete(CustomPolicy):
         veh.a0 = None
         veh.a0_mod = None
         veh.a0_choice = None
+        veh.c0 = None
         veh.a1_mod = None
         veh.a1_choice = None
-
         veh.a1 = None
+        veh.c1 = None
 
     def custom_action(self, veh):
         # s0, a0 = previous vehicle state action pair
@@ -39,7 +37,7 @@ class AcPolicyDiscrete(CustomPolicy):
         # Set current vehicle state and action pair
         veh.s1 = veh.s_raw
         veh.s1_mod = self.convert_state(veh)
-        action_vel_probs, action_off_probs, veh.critic = self.get_action_and_critic(veh.s1_mod)
+        action_vel_probs, action_off_probs, veh.c1 = self.get_action_and_critic(veh.s1_mod)
         veh.a1_mod = [action_vel_probs, action_off_probs]
         action_choice_vel, action_choice_off = self.trainer.get_action_choice([action_vel_probs, action_off_probs])
         veh.a1_choice = [action_choice_vel, action_choice_off]
@@ -49,14 +47,17 @@ class AcPolicyDiscrete(CustomPolicy):
         if veh.a0_mod is not None:
             # Calculate reward at current state (if action was taken previously)
             veh.reward = self.get_reward(veh)
-            if self.trainer is not None:
+            if self.trainer is not None and self.trainer.training is True:
                 # Save action taken previously on previous state value
                 action = veh.a0_mod[0][0, veh.a0_choice[0]], veh.a0_mod[1][0, veh.a0_choice[1]]
-                # trainer.add_exp expects (states, actions, action_choices, rewards, critic)
-                self.trainer.add_experience(tf.squeeze(veh.s0_mod),
-                                            [action[0], action[1]],
-                                            [veh.a0_choice[0], veh.a0_choice[1]],
-                                            veh.reward, veh.critic)
+                # Save to buffer from the Buffer class in HelperClasses.py module
+                # add_experience expects (timestep, state, vel_model_action, off_model_action,
+                #                         vel_action_sim, offset_action_sim, vel_choice, off_choice, reward, critic)
+                self.trainer.buffer.add_experience(self.trainer.timestep, tf.squeeze(veh.s0_mod),
+                                                   action[0], action[1],
+                                                   veh.a0[0], veh.a0[1],
+                                                   veh.a0_choice[0], veh.a0_choice[1],
+                                                   veh.reward, tf.squeeze(veh.c0))
 
         # Set past vehicle state and action pair
         veh.s0 = veh.s1
@@ -64,6 +65,7 @@ class AcPolicyDiscrete(CustomPolicy):
         veh.a0 = veh.a1
         veh.a0_mod = veh.a1_mod
         veh.a0_choice = veh.a1_choice
+        veh.c0 = veh.c1
 
         return veh.a1  # The hwsim library uses double precision floats
 

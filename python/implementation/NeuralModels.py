@@ -2,9 +2,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np
-import logging
-
-
+from HelperClasses import Buffer
 
 class ActorCriticNetDiscrete(keras.Model):
     """
@@ -61,15 +59,13 @@ class ActorCriticNetDiscrete(keras.Model):
                                  name="ActorCriticNetwork")
 
     def call(self, inputs: tf.Tensor):
-        # Returns the output of the model given an input
+        """ Returns the output of the model given an input. """
         y = self.model(inputs)
         return y
 
     def display_overview(self):
-        # Display overview of model
-        print("\nActor network model summary:")
+        """ Displays an overview of the model. """
         self.model.summary()
-        print("############################\n")
 
 
 class GradAscentTrainerDiscrete(keras.models.Model):
@@ -86,88 +82,19 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         # TODO implement data logging class for debugging training
         self.training = True
         self.training_param = training_param
-        self.state = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-        # Old implementation - Gives tensorflow warnings...
-        # self.action_vel_probs = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-        # self.action_off_probs = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-        # self.action_choices = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-        # self.critic_values = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-        # self.rewards = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-        self.states = []
-        self.rewards = []
-        self.actions_vel = []
-        self.actions_off = []
-        self.action_choices = []
         self.timestep = 1
-
-        # Logging
-        logging.basicConfig(level=logging.INFO, filename="./python/implementation/logfiles/trainer.log")
-        with open('./python/implementation/logfiles/trainer.log', 'w'):
-            pass  # Clear the log file of previous run
-
-    def add_experience(self, s0, a0, a_choices, r, c):
-        """ Saves the experience after the sim.step() call. """
-        if self.training:
-            self.states.append(s0)
-            self.actions_vel.append(a0[0])
-            self.actions_off.append(a0[1])
-            self.action_choices.append(a_choices)
-            self.rewards.append(r)
-            # Old implementation. Gives TF warnings...
-            # self.state.write(self.timestep, s0)
-            # self.action_vel_probs.write(self.timestep, a0[0])
-            # self.action_off_probs.write(self.timestep, a0[1])
-            # self.action_choices.write(self.timestep, a_choices)
-            # self.critic_values.write(self.timestep, c)
-            # self.rewards.write(self.timestep, r)
-
-    def get_experience(self):
-        """ Returns the experiences. """
-        action_choices = np.array(self.action_choices, dtype=np.float32)
-        action_vel_choice = action_choices[:, 0]
-        action_off_choice = action_choices[:, 1]
-        rewards = np.array(self.rewards, dtype=np.float32)
-        states = np.array(self.states, dtype=np.float32)
-        actions_vel = np.array(self.actions_vel, dtype=np.float32)
-        actions_off = np.array(self.actions_off, dtype=np.float32)
-        # state = self.state.stack()
-        # action_vel_probs = self.action_vel_probs.stack()
-        # action_off_probs = self.action_off_probs.stack()
-        # action_choices = self.action_choices.stack()
-        # critic_values = self.critic_values.stack()
-        # rewards = self.rewards.stack()
-        return states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards
-
-    def set_tf_action_choices(self, states, actions_vel, actions_off, action_vel_choice, action_off_choice, rewards):
-        """ Convert actions into TF format. """
-        self.states = tf.convert_to_tensor(states)
-        self.actions_vel = tf.convert_to_tensor(actions_vel)
-        self.actions_off = tf.convert_to_tensor(actions_off)
-        self.action_vel_choice = tf.convert_to_tensor(action_vel_choice)
-        self.action_off_choice = tf.convert_to_tensor(action_off_choice)
-        self.rewards = tf.convert_to_tensor(rewards)
-
-    def clear_experience(self):
-        """ Clear past experiences. """
-        self.states.clear()
-        self.rewards.clear()
-        self.action_choices.clear()
-        # self.action_vel_probs = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-        # self.action_off_probs = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-        # self.action_choices = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-        # self.critic_values = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-        # self.rewards = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+        self.buffer = Buffer()
 
     def set_neg_collision_reward(self, punishment):
-        """"""
+        """ Sets a negative reward if a collision occurs. """
         self.rewards[-1] = self.rewards[-1] - punishment
 
     def get_action_choice(self, action_probs):
         """ Randomly choose from the available actions."""
         action_vel_probs, action_off_probs = action_probs
         if self.training:
-            vel_actions_choice = tf.random.categorical(action_vel_probs, 1)[0,0]
-            off_actions_choice = tf.random.categorical(action_off_probs, 1)[0,0]
+            vel_actions_choice = tf.random.categorical(action_vel_probs, 1)[0, 0]
+            off_actions_choice = tf.random.categorical(action_off_probs, 1)[0, 0]
         else:
             vel_actions_choice = tf.squeeze(tf.math.argmax(action_vel_probs, axis=1))
             off_actions_choice = tf.squeeze(tf.math.argmax(action_off_probs, axis=1))
@@ -175,7 +102,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
 
     def get_expected_returns(self, rewards: tf.Tensor) -> tf.Tensor:
         """
-        Compute expected returns per timestep.
+        Computes expected returns per timestep.
         """
         n = tf.shape(rewards)[0]
         returns = tf.TensorArray(dtype=tf.float32, size=n)
@@ -207,15 +134,15 @@ class GradAscentTrainerDiscrete(keras.models.Model):
 
         action_vel_log_probs = tf.math.log(action_vel_probs)
         action_off_log_probs = tf.math.log(action_off_probs)
-        # TODO Query with bram if it is correct to do the actor losses like this?
-        # TODO Probably need multiple critics?
-
         actor_vel_loss = tf.math.reduce_sum(tf.math.multiply(-action_vel_log_probs, advantage))
         actor_off_loss = tf.math.reduce_sum(tf.math.multiply(-action_off_log_probs, advantage))
-        # actor_loss = tf.math.reduce_sum(-(action_vel_log_probs+action_off_log_probs)*advantage)  # ERROR!!!
+
         critic_loss = self.training_param["huber_loss"](critic_values, returns)
+
         loss = critic_loss + actor_vel_loss + actor_off_loss
-        # TODO look at a critic receiving actions directly?
+
+        # TODO look at a critic receiving actions directly in the model structure?
+
         return loss
 
 
@@ -226,21 +153,23 @@ class GradAscentTrainerDiscrete(keras.models.Model):
             with tf.GradientTape() as tape:
                 action_vel_values = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
                 action_off_values = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-                # Gather and convert data from simulation:
-                sim_states = tf.convert_to_tensor(self.states)
-                rewards = tf.convert_to_tensor(self.rewards)
-                sim_action_vel_choices = tf.convert_to_tensor(np.array(self.action_choices)[:, 0])
-                sim_action_off_choices = tf.convert_to_tensor(np.array(self.action_choices)[:, 1])
+
+                # Gather and convert data from the buffer (data from simulation):
+                timesteps, sim_states, rewards, sim_action_vel_choices, sim_action_off_choices \
+                    = self.buffer.get_experience_for_episode_training()
+
                 # Forward Pass - (Re)Calculation of actions that caused saved states
                 # TODO log the values from ACPolicy class to ensure actions+critic correspond to calculations done here (indices etc.)
                 action_vel_probs, action_off_probs, critic_values = self.actor_critic_net(sim_states)
-                for t in tf.range(tf.size(sim_states[:, 0])):
-                    vel_choice = tf.get_static_value(sim_action_vel_choices[t])
-                    off_choice = tf.get_static_value(sim_action_off_choices[t])
-                    # Choose actions based on what was previously (randomly) sampled during simulation
-                    action_vel_values.write(t, action_vel_probs[tf.get_static_value(t), vel_choice])
-                    action_off_values.write(t, action_off_probs[tf.get_static_value(t), off_choice])
                 critic_values = tf.squeeze(critic_values)
+
+                # Choose actions based on what was previously (randomly) sampled during simulation
+                for t in timesteps-1:
+                    vel_choice = sim_action_vel_choices[t]
+                    off_choice = sim_action_off_choices[t]
+                    action_vel_values.write(t, action_vel_probs[t, vel_choice])
+                    action_off_values.write(t, action_off_probs[t, off_choice])
+
                 action_vel_values = action_vel_values.stack()
                 action_off_values = action_off_values.stack()
 
@@ -262,19 +191,4 @@ class GradAscentTrainerDiscrete(keras.models.Model):
 
 
 
-
-class Buffer(object):
-    def __init__(self):
-        self.state_hist = []
-        self.action_vel_hist = []
-        self.action_off_hist = []
-        self.critic_hist = []
-        self.reward_hist = []
-
-    def addToBuffer(self, s0, a0, r, s1, c):
-        self.state_hist.append(s0)
-        self.action_vel_hist.append(a0[0])
-        self.action_off_hist.append(a0[1])
-        self.critic_hist.append(c)
-        self.reward_hist.append(r)
 
