@@ -29,11 +29,11 @@ class ActorCriticNetDiscrete(keras.Model):
         self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax,
                                            kernel_initializer='random_normal',
                                            bias_initializer='zeros',
-                                           name="outputActorLayerVel")(self.denseActorLayer1)
+                                           name="outputActorLayerVel")(self.denseActorLayer2)
         self.outputLayerOff = layers.Dense(3, activation=tf.nn.softmax,
                                            kernel_initializer='random_normal',
                                            bias_initializer='zeros',
-                                           name="outputActorLayerOff")(self.denseActorLayer1)
+                                           name="outputActorLayerOff")(self.denseActorLayer2)
 
         self.denseCriticLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=tf.nn.relu,
                                               kernel_initializer='random_normal',
