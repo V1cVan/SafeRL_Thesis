@@ -17,8 +17,6 @@ physical_devices = tf.config.list_physical_devices('GPU')
 # tf.config.experimental.set_memory_growth(physical_devices[0], True)
 print(physical_devices)
 
-
-
 class Main(object):
 
     def __init__(self, sim_config):
@@ -68,13 +66,13 @@ class Main(object):
 
         # Run until all episodes are completed (reward reached).
         while True:
-            episode_reward = 0
+            if episode_count % plot_freq == 0 and show_plots:
+                self.simulate(training_param["simulation_timesteps"])
+
             logging.critical("Episode number: %0.2f" % episode_count)
+
             # Set simulation environment
             with self.sim:
-                if episode_count % plot_freq == 0 and not self.sim.stopped and show_plots:
-                    self.create_plot()
-
                 # Loop through each timestep in episode.
                 with episodeTimer:
                     # Run the model for one episode to collect training data
@@ -89,20 +87,12 @@ class Main(object):
                                 logging.critical("Collision. At episode %f" % episode_count)
                                 policy.trainer.set_neg_collision_reward(t, -5)
                                 break
-                            if episode_count % plot_freq == 0 and show_plots:
-                                with plotTimer:
-                                    self.p.plot()
-
-
 
                 # Batch policy update
                 with trainerTimer:
                     episode_reward = policy.trainer.train_step()
                     # Clear loss values and reward history
                     policy.trainer.buffer.clear_experience()
-
-            if episode_count % plot_freq == 0 and show_plots:
-                self.p.close()
 
             # Running reward smoothing effect
             running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
@@ -118,23 +108,21 @@ class Main(object):
                 logging.critical(print_output)
                 policy.trainer.actor_critic_net.save_weights(model_param["weights_file_path"])
                 break
+
             # Save intermediate policies
             if episode_count % 50 == 0:
                 policy.trainer.actor_critic_net.save_weights(model_param["weights_file_path"])
 
-
-
-    def simulate(self):
-        policy = self.pol[0]["policy"]
-        policy.trainer.training = False
-        policy.trainer.actor_critic_net.load_weights(model_param["weights_file_path"])
+    def simulate(self, simulation_timesteps):
+        self.pol[0]["policy"].trainer.training = False
         with self.sim:
             self.create_plot()
-            while not self.sim.stopped and not self.p.closed:
-                self.sim.step()
-                self.p.plot()
-
-
+            for t in np.arange(simulation_timesteps):
+                if not self.sim.stopped and not self.p.closed:
+                    self.sim.step()
+                    self.p.plot()
+            self.p.close()
+        self.pol[0]["policy"].trainer.training = True
 
 if __name__=="__main__":
     # Initial configuration
@@ -176,8 +164,9 @@ if __name__=="__main__":
     training_param = {
         "max_steps_per_episode": 120,  # TODO kM - max value of k
         "final_return": 200,
-        "show_plots_when_training": False,
-        "plot_freq": 5,  # TODO Reimplement plot freq (debug why crash)
+        "show_plots_when_training": True,
+        "plot_freq": 10,  # TODO Reimplement plot freq (debug why crash)
+        "simulation_timesteps": 100,
         "gamma": 0.99,  # Discount factor
         # TODO Check results of different learning rates
         "adam_optimiser": keras.optimizers.Adam(learning_rate=0.01),
@@ -227,10 +216,11 @@ if __name__=="__main__":
     main = Main(sim_config)
 
     # Train model:
-    # main.train_policy()
+    main.train_policy()
 
     # Simulate model:
-    main.simulate()
+    main.pol[0]["policy"].trainer.actor_critic_net.load_weights(model_param["weights_file_path"])
+    main.simulate(training_param["simulation_timesteps"])
 
     print("EOF")
 
