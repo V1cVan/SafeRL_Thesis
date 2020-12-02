@@ -492,7 +492,7 @@ class Simulation{
 
     private:
         inline bool updateStates(){
-            auto neighbours = std::vector<std::set<NeighbourInfo>>(vehicles.size(),std::set<NeighbourInfo>());
+            auto neighbours = std::vector<std::multiset<NeighbourInfo>>(vehicles.size(),std::multiset<NeighbourInfo>());
             bool collision = false;
             if(vehicles.size()>1){
                 // First determine neighbouring vehicles:
@@ -518,7 +518,7 @@ class Simulation{
             // Then construct the augmented state vectors for all vehicles:
             for(vId Vr = 0; Vr<vehicles.size(); ++Vr){
                 Vehicle& v = vehicles[Vr];
-                std::set<NeighbourInfo>& ns = neighbours[Vr];
+                std::multiset<NeighbourInfo>& ns = neighbours[Vr];
                 Policy::augState s = v.getDefaultAugmentedState();
                 // Store iterators/indices to last 'real' vehicle in each lane's front and back buffer
                 std::vector<std::array<unsigned int,2>> laneIts;// Stores index to next available vehicle in front/behind buffers. Lanes are in the order: 0,-1,1,-2,2,...

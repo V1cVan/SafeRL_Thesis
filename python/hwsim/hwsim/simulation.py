@@ -210,7 +210,7 @@ class Simulation(object):
     def clear_vehicles(self):
         self._simCfg["types"].clear()
         self._simCfg["defs"].clear()
-        self._simCfg["entries"].clear()
+        self._simCfg["vehicles"].clear()
 
     @conditional(_inactive)
     def add_vehicles(self, data):
@@ -383,10 +383,16 @@ class Simulation(object):
         return False
 
     def _stepFromB(self):
+        # start = timeit.default_timer()
         stop = self._applyCustomPolicies() if self._mode==0 else False
+        # print(f"Custom policies: {(timeit.default_timer()-start)*1000}ms")
+        # start = timeit.default_timer()
         stop |= simLib.sim_stepC(self._h)
+        # print(f"Step C: {(timeit.default_timer()-start)*1000}ms")
         stop |= self._applyCustomControllers() if self._mode==0 else False
+        # start = timeit.default_timer()
         stop |= simLib.sim_stepD(self._h)
+        # print(f"Step D: {(timeit.default_timer()-start)*1000}ms")
         return stop
 
     def step(self):
@@ -405,9 +411,7 @@ class Simulation(object):
         # start = timeit.default_timer()
         stop |= simLib.sim_stepB(self._h)
         # print(f"Step B: {(timeit.default_timer()-start)*1000}ms")
-        # start = timeit.default_timer()
         stop |= self._stepFromB()
-        # print(f"from B: {(timeit.default_timer()-start)*1000}ms")
         self._collision = stop
         self._k += 1
         return self._collision
