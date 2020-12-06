@@ -1,19 +1,77 @@
-CRITICAL:root:Using seed 1771820938.000000
+CRITICAL:root:Using seed 3268889003.000000
 CRITICAL:root:Model Parameters:
-CRITICAL:root:{'n_nodes': [400, 400], 'n_layers': 2, 'n_inputs': 30, 'n_actions': 2, 'weights_file_path': './python/implementation/trained_models/model_weights', 'seed': 1771820938}
+CRITICAL:root:{'n_nodes': [400, 0], 'n_layers': 2, 'n_inputs': 30, 'n_actions': 2, 'weights_file_path': './python/implementation/trained_models/model_weights', 'seed': 3268889003}
 CRITICAL:root:Training param:
-CRITICAL:root:{'max_steps_per_episode': 300, 'final_return': 1000, 'show_plots_when_training': True, 'plot_freq': 5, 'simulation_timesteps': 100, 'gamma': 0.99, 'adam_optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x00000145A1FC0608>, 'huber_loss': <tensorflow.python.keras.losses.Huber object at 0x00000145A1FC0448>, 'seed': 1771820938, 'reward_weights': array([0.3, 0.3, 0.3])}
+CRITICAL:root:{'max_steps_per_episode': 300, 'final_return': 1000, 'show_plots_when_training': True, 'plot_freq': 5, 'simulation_timesteps': 100, 'gamma': 0.99, 'adam_optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x000002230DD0B088>, 'huber_loss': <tensorflow.python.keras.losses.Huber object at 0x000002230EE1D188>, 'seed': 3268889003, 'reward_weights': array([0.3, 0.3, 0.3])}
 CRITICAL:root:Episode number: 1.00
 CRITICAL:root:Episode number: 2.00
 CRITICAL:root:Episode number: 3.00
 CRITICAL:root:Episode number: 4.00
-CRITICAL:root:Running reward = 21.69 at episode 5
+CRITICAL:root:Running reward = 22.98 at episode 5
 CRITICAL:root:Episode number: 5.00
 CRITICAL:root:Episode number: 6.00
 CRITICAL:root:Episode number: 7.00
 CRITICAL:root:Episode number: 8.00
 CRITICAL:root:Episode number: 9.00
-CRITICAL:root:Running reward = 43.39 at episode 10
+CRITICAL:root:Running reward = 44.31 at episode 10
 CRITICAL:root:Episode number: 10.00
 CRITICAL:root:Episode number: 11.00
 CRITICAL:root:Episode number: 12.00
+CRITICAL:root:Episode number: 13.00
+CRITICAL:root:Episode number: 14.00
+CRITICAL:root:Running reward = 57.04 at episode 15
+CRITICAL:root:Episode number: 15.00
+CRITICAL:root:Episode number: 16.00
+CRITICAL:root:Episode number: 17.00
+CRITICAL:root:Episode number: 18.00
+CRITICAL:root:Episode number: 19.00
+CRITICAL:root:Running reward = 66.25 at episode 20
+CRITICAL:root:Episode number: 20.00
+CRITICAL:root:Episode number: 21.00
+CRITICAL:root:Episode number: 22.00
+CRITICAL:root:Episode number: 23.00
+CRITICAL:root:Episode number: 24.00
+CRITICAL:root:Running reward = 76.25 at episode 25
+CRITICAL:root:Episode number: 25.00
+CRITICAL:root:Episode number: 26.00
+CRITICAL:root:Episode number: 27.00
+CRITICAL:root:Episode number: 28.00
+CRITICAL:root:Episode number: 29.00
+CRITICAL:root:Running reward = 82.92 at episode 30
+CRITICAL:root:Episode number: 30.00
+CRITICAL:root:Episode number: 31.00
+CRITICAL:root:Episode number: 32.00
+CRITICAL:root:Episode number: 33.00
+CRITICAL:root:Episode number: 34.00
+CRITICAL:root:Running reward = 89.02 at episode 35
+CRITICAL:root:Episode number: 35.00
+CRITICAL:root:Episode number: 36.00
+CRITICAL:root:Episode number: 37.00
+CRITICAL:root:Episode number: 38.00
+CRITICAL:root:Episode number: 39.00
+CRITICAL:root:Running reward = 92.67 at episode 40
+CRITICAL:root:Episode number: 40.00
+CRITICAL:root:Episode number: 41.00
+CRITICAL:root:Episode number: 42.00
+CRITICAL:root:Episode number: 43.00
+CRITICAL:root:Episode number: 44.00
+CRITICAL:root:Running reward = 95.50 at episode 45
+CRITICAL:root:Episode number: 45.00
+CRITICAL:root:Episode number: 46.00
+CRITICAL:root:Episode number: 47.00
+CRITICAL:root:Episode number: 48.00
+CRITICAL:root:Episode number: 49.00
+CRITICAL:root:Running reward = 100.68 at episode 50
+CRITICAL:root:Episode number: 50.00
+CRITICAL:root:Episode number: 51.00
+CRITICAL:root:Episode number: 52.00
+CRITICAL:root:Episode number: 53.00
+CRITICAL:root:Episode number: 54.00
+CRITICAL:root:Running reward = 105.01 at episode 55
+CRITICAL:root:Episode number: 55.00
+CRITICAL:root:Episode number: 56.00
+CRITICAL:root:Episode number: 57.00
+CRITICAL:root:Episode number: 58.00
+CRITICAL:root:Episode number: 59.00
+CRITICAL:root:Running reward = 106.71 at episode 60
+CRITICAL:root:Episode number: 60.00

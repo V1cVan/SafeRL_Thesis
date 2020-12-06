@@ -133,6 +133,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
     def train_step(self):
         """ Performs a training step. """
         if self.training:
+
             with tf.GradientTape() as tape:
                 action_vel_values = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
                 action_off_values = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
@@ -168,6 +169,10 @@ class GradAscentTrainerDiscrete(keras.models.Model):
             # Apply the gradients to the model's parameters
             self.training_param["adam_optimiser"].apply_gradients(
                 zip(grads, self.actor_critic_net.trainable_variables))
+
+            for x in self.actor_critic_net.weights:
+                if tf.reduce_any(tf.math.is_nan(x)):
+                    print("NAN detected in network weight")
 
             episode_reward = tf.math.reduce_sum(rewards)
             return episode_reward
