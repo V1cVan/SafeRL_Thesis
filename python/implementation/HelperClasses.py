@@ -112,6 +112,7 @@ class Buffer(object):
         }
         self.critic = []
         self.rewards = []
+        self.experience = None
 
     def add_experience(self, timestep, state, vel_model_action, off_model_action,
                        vel_action_sim, offset_action_sim, vel_choice, off_choice, reward, critic):
@@ -147,24 +148,19 @@ class Buffer(object):
         }
         return output_dict
 
-    def get_experience_for_episode_training(self):
-        """
-        Returns the states, rewards, and action choices of the episode
-        for training of the network in TF vectors at each timestep.
-        """
-        timesteps = tf.squeeze(self.timesteps)
-        states = tf.squeeze(self.states)
-        rewards = tf.squeeze(self.rewards)
-        action_vel_choices = tf.cast(tf.squeeze(self.actions["vel_choice"]), tf.int32)
-        action_off_choices = tf.cast(tf.squeeze(self.actions["offset_choice"]), tf.int32)
-        return timesteps, states, rewards, action_vel_choices, action_off_choices
+    def set_tf_experience_for_episode_training(self):
+        timesteps = tf.convert_to_tensor(self.timesteps)
+        states = tf.convert_to_tensor(self.states)
+        rewards = tf.convert_to_tensor(self.rewards)
+        action_vel_choice = tf.expand_dims(tf.convert_to_tensor(self.actions["vel_choice"], dtype=tf.int32),1)
+        action_off_choice = tf.expand_dims(tf.convert_to_tensor(self.actions["offset_choice"], dtype=tf.int32),1)
+        self.experience = timesteps, states, rewards, action_vel_choice, action_off_choice
 
     def alter_reward_at_timestep(self, timestep, reward_change):
         """
         Sets a custom reward at a specific training timestep e.g. collision punishments.
         """
         index = timestep-1
-        reward_change = tf.convert_to_tensor(reward_change, dtype=tf.float32)
         self.rewards[index] = self.rewards[index] + reward_change
 
     def clear_experience(self):
