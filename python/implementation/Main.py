@@ -48,9 +48,9 @@ class Main(object):
         BirdsEyePlot(self.p, vehicle_type=vehicle_type, view=BirdsEyePlot.View.REAR)
         self.p.subplot(2,1)
         self.p.add_text("Actions")
-        ActionsPlot(self.p,actions="vel")
+        ActionsPlot(self.p,actions="long")
         self.p.subplot(3,1)
-        ActionsPlot(self.p,actions="off")
+        ActionsPlot(self.p,actions="lat")
         self.p.plot()  # Initial plot
 
     # TODO query tf.function problems with Bram!
@@ -135,10 +135,10 @@ if __name__=="__main__":
     SC_PATH = ROOT.joinpath("scenarios/scenarios.h5")
 
     # Logging
-    logging.basicConfig(level=logging.INFO, filename="./python/implementation/logfiles/main.log")
+    logging.basicConfig(level=logging.INFO, filename="./logfiles/main.log")
     # TODO Enable TF warnings and query with Bram
     logging.disable(logging.ERROR) # Temporarily disable error tf logs.
-    with open('./python/implementation/logfiles/main.log', 'w'):
+    with open('./logfiles/main.log', 'w'):
         pass  # Clear the log file of previous run
 
 
@@ -147,8 +147,9 @@ if __name__=="__main__":
     print(print_output)
     logging.critical(print_output)
 
-    seed = 50
+    seed = config.seed
     tf.random.set_seed(seed)
+    np.random.seed(seed)
 
     # Model configuration and settings
     model_param = {
@@ -162,10 +163,10 @@ if __name__=="__main__":
     logging.critical("Model Parameters:")
     logging.critical(model_param)
     training_param = {
-        "max_steps_per_episode": 120,  # TODO kM - max value of k
-        "final_return": 200,
+        "max_steps_per_episode": 300,  # TODO kM - max value of k
+        "final_return": 1000,
         "show_plots_when_training": True,
-        "plot_freq": 10,  # TODO Reimplement plot freq (debug why crash)
+        "plot_freq": 5,  # TODO Reimplement plot freq (debug why crash)
         "simulation_timesteps": 100,
         "gamma": 0.99,  # Discount factor
         # TODO Check results of different learning rates
@@ -173,7 +174,7 @@ if __name__=="__main__":
         # TODO Check results of different loss functions sum/mse
         "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM),
         "seed": seed,
-        "reward_weights": np.array([1, 1, 1])  # (rew_vel, rew_lat_position, rew_fol_dist)
+        "reward_weights": np.array([0.3, 0.3, 0.3])  # (rew_vel, rew_lat_position, rew_fol_dist)
     }
     logging.critical("Training param:")
     logging.critical(training_param)
@@ -185,15 +186,15 @@ if __name__=="__main__":
 
     # Simulation configuration and settings
     # TODO Move to training on more complex scenario without other vehicles.
-    # veh_types = [
-    #     {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)},
-    #     {"amount": 30, "model": KBModel(), "policy": BasicPolicy("slow")},
-    #     {"amount": 30, "model": KBModel(), "policy": BasicPolicy("normal")},
-    #     {"amount": 20, "model": KBModel(), "policy": BasicPolicy("fast")}
-    # ]
     veh_types = [
-        {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)}
+        {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)},
+        {"amount": 80, "model": KBModel(), "policy": BasicPolicy("slow")},
+        {"amount": 15, "model": KBModel(), "policy": BasicPolicy("normal")},
+        {"amount": 10, "model": KBModel(), "policy": BasicPolicy("fast")}
     ]
+    # veh_types = [
+    #     {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)}
+    # ]
     sim_config = {
         "name": "AC_policy",
         "scenario": "CIRCUIT",
