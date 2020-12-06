@@ -55,11 +55,11 @@ class AcPolicyDiscrete(CustomPolicy):
                 # Save to buffer from the Buffer class in HelperClasses.py module
                 # add_experience expects (timestep, state, vel_model_action, off_model_action,
                 #                         vel_action_sim, offset_action_sim, vel_choice, off_choice, reward, critic)
-                self.trainer.buffer.add_experience(self.trainer.timestep, tf.squeeze(veh.s0_mod),
-                                                   action[0], action[1],
+                self.trainer.buffer.add_experience(self.trainer.timestep, np.squeeze(veh.s0_mod),
+                                                   np.array(action[0]), np.array(action[1]),
                                                    veh.a0[0], veh.a0[1],
                                                    veh.a0_choice[0], veh.a0_choice[1],
-                                                   veh.reward, tf.squeeze(veh.c0))
+                                                   veh.reward, np.squeeze(veh.c0))
 
         # Set past vehicle state and action pair
         veh.s0 = veh.s1
@@ -135,36 +135,35 @@ class AcPolicyDiscrete(CustomPolicy):
         (used by the actor and critic models and available in veh). I.e. the mapping a_mod->a
         4 discrete actions: slow, maintain ,acc, left, centre, right
         """
-        sim_action = tf.TensorArray(size=0, dtype=tf.float64, dynamic_size=True)
+        sim_action = np.array([0, 0], dtype=np.float32)
         vel_actions, off_actions = action_choices
 
         # Compute safe velocity action:
         vel_bounds = veh.a_bounds["long"]  # [min_rel_vel, max_rel_vel]
         if vel_actions == 0:  # Slow down
-            vel_controller = tf.math.maximum(vel_bounds[0], -3)
+            vel_controller = np.maximum(vel_bounds[0], -3)
         elif vel_actions == 1:  # Constant speed
-            vel_controller = tf.constant(0, dtype=tf.float64)
+            vel_controller = 0
         elif vel_actions == 2:  # Speed up
-            vel_controller = tf.math.minimum(vel_bounds[1], +3)
+            vel_controller = np.minimum(vel_bounds[1], +3)
         else:
             print("Error with setting vehicle velocity!")
-        sim_action = sim_action.write(0, vel_controller)
+        sim_action[0] = vel_controller
 
         # Compute safe offset action:
         # TODO create logs to debug the offset not always obeying bounds!
         off_bounds = veh.a_bounds["lat"]
         if off_actions == 0:  # Turn left
-            off_controller = tf.math.maximum(off_bounds[0], -1)
+            off_controller = np.maximum(off_bounds[0], -1)
         elif off_actions == 1:  # Straight
-            off_controller = tf.convert_to_tensor(0, dtype=tf.float64)
+            off_controller = 0
         elif off_actions == 2:  # Turn right
-            off_controller = tf.math.minimum(off_bounds[1], 1)
+            off_controller = np.minimum(off_bounds[1], 1)
         else:
             print("Error with setting offset action!")
-        sim_action = sim_action.write(1, off_controller)
+        sim_action[1] = off_controller
 
-        sim_action = sim_action.stack()
-        return tf.get_static_value(sim_action)  # output is array
+        return sim_action
 
     def get_reward(self, veh=None):
         """
@@ -177,29 +176,29 @@ class AcPolicyDiscrete(CustomPolicy):
         w_dist = self.trainer.reward_weights[2]  # Lateral position
 
         # Reward function declaration:
-        reward = tf.Variable(0, dtype=tf.float64)
+        reward = np.array([0], dtype=np.float32)
         if veh is not None:
             # Velocity reward:
             v = np.squeeze(veh.s["vel"])[0]
             v_lim = 120 / 3.6
-            r_vel = tf.math.exp(-(v_lim - v) ** 2 / 140) - tf.math.exp(-(v) ** 2 / 70)
+            r_vel = np.exp(-(v_lim - v) ** 2 / 140) - np.exp(-(v) ** 2 / 70)
 
             # Collision??
             # TODO check collision punishment with Bram
 
             # Lane center reward:
             lane_offset = np.squeeze(veh.s["laneC"]["off"])
-            r_off = tf.math.exp(-(lane_offset) ** 2 / 3.6)
+            r_off = np.exp(-(lane_offset) ** 2 / 3.6)
 
             # Following distance:
             d_gap = np.squeeze(veh.s["laneC"]["relF"]["gap"])[0]
             d_lim = 10
-            r_follow = -tf.math.exp(-(d_lim - d_gap) ** 2 / 20)
+            r_follow = -np.exp(-(d_lim - d_gap) ** 2 / 20)
 
-            reward.assign(w_vel*r_vel + w_off*r_off + w_dist*r_follow)
+            reward = w_vel*r_vel + w_off*r_off + w_dist*r_follow
         else:
-            reward.assign(0.0)
-        return tf.dtypes.cast(reward, tf.float32)
+            reward = 0
+        return reward
 
     # def squeeze_vehicle_state(self, veh):
     #     # Squeeze values to fix matrix inconsistencies

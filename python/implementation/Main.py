@@ -53,9 +53,6 @@ class Main(object):
         ActionsPlot(self.p,actions="lat")
         self.p.plot()  # Initial plot
 
-    # TODO query tf.function problems with Bram!
-    # TODO query tf.numpy_function of of sim.step?
-    #tf.function
     def train_policy(self):
         running_reward = 0
         episode_count = 1
@@ -77,7 +74,7 @@ class Main(object):
                 with episodeTimer:
                     # Run the model for one episode to collect training data
                     # Saves actions values, critic values, and rewards in policy class variables
-                    for t in tf.range(1, max_timesteps_episode+1):
+                    for t in np.arange(1, max_timesteps_episode+1):
                         # logging.critical("Timestep of episode: %0.2f" % self.sim.k)
                         policy.trainer.timestep = t
                         # Perform one simulations step:
@@ -90,6 +87,7 @@ class Main(object):
 
                 # Batch policy update
                 with trainerTimer:
+                    policy.trainer.buffer.set_tf_experience_for_episode_training()
                     episode_reward = policy.trainer.train_step()
                     # Clear loss values and reward history
                     policy.trainer.buffer.clear_experience()
@@ -137,7 +135,7 @@ if __name__=="__main__":
     # Logging
     logging.basicConfig(level=logging.INFO, filename="./logfiles/main.log")
     # TODO Enable TF warnings and query with Bram
-    logging.disable(logging.ERROR) # Temporarily disable error tf logs.
+    # logging.disable(logging.ERROR) # Temporarily disable error tf logs.
     with open('./logfiles/main.log', 'w'):
         pass  # Clear the log file of previous run
 
@@ -156,6 +154,7 @@ if __name__=="__main__":
         "n_nodes": [400, 0],  # Number of hidden nodes in each layer
         "n_layers": 2,  # Number of layers
         "n_inputs": 30,  # Standard size of S
+        "activation_function": tf.nn.relu,  # activation function of hidden nodes
         "n_actions": 2,
         "weights_file_path": "./python/implementation/trained_models/model_weights",
         "seed": seed
@@ -172,7 +171,7 @@ if __name__=="__main__":
         # TODO Check results of different learning rates
         "adam_optimiser": keras.optimizers.Adam(learning_rate=0.01),
         # TODO Check results of different loss functions sum/mse
-        "huber_loss": keras.losses.Huber(),
+        "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM),
         "seed": seed,
         "reward_weights": np.array([0.3, 0.3, 0.3])  # (rew_vel, rew_lat_position, rew_fol_dist)
     }
@@ -188,9 +187,9 @@ if __name__=="__main__":
     # TODO Move to training on more complex scenario without other vehicles.
     veh_types = [
         {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)},
-        {"amount": 80, "model": KBModel(), "policy": BasicPolicy("slow")},
-        {"amount": 15, "model": KBModel(), "policy": BasicPolicy("normal")},
-        {"amount": 10, "model": KBModel(), "policy": BasicPolicy("fast")}
+        {"amount": 100, "model": KBModel(), "policy": BasicPolicy("slow")},
+        {"amount": 1, "model": KBModel(), "policy": BasicPolicy("normal")},
+        {"amount": 1, "model": KBModel(), "policy": BasicPolicy("fast")}
     ]
     # veh_types = [
     #     {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)}

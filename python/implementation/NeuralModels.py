@@ -12,13 +12,15 @@ class ActorCriticNetDiscrete(keras.Model):
         super(ActorCriticNetDiscrete, self).__init__()
         tf.random.set_seed(modelParam["seed"])
         np.random.seed(modelParam["seed"])
+        act_func = modelParam["activation_function"]
+
         # TODO Add variability in depth.
         # Actor net:
         self.inputLayer = layers.Input(shape=(modelParam["n_inputs"],),
                                        name="inputStateLayer")
 
         self.denseActorLayer1 = layers.Dense(modelParam["n_nodes"][0],
-                                             activation=tf.nn.relu,
+                                             activation=act_func,
                                              name="denseActorLayer1")(self.inputLayer)
         if modelParam["n_nodes"][1] == 0:  # if no depth in network:
             self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax,
@@ -26,7 +28,7 @@ class ActorCriticNetDiscrete(keras.Model):
             self.outputLayerOff = layers.Dense(3, activation=tf.nn.softmax,
                                                name="outputActorLayerOff")(self.denseActorLayer1)
         else:  # if depth in network exists
-            self.denseActorLayer2 = layers.Dense(modelParam["n_nodes"][1], activation=tf.nn.relu,
+            self.denseActorLayer2 = layers.Dense(modelParam["n_nodes"][1], activation=act_func,
                                                  name="denseActorLayer2")(self.denseActorLayer1)
             self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax,
                                                name="outputActorLayerVel")(self.denseActorLayer2)
@@ -34,7 +36,7 @@ class ActorCriticNetDiscrete(keras.Model):
                                                name="outputActorLayerOff")(self.denseActorLayer2)
 
         # Critic net:
-        self.denseCriticLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=tf.nn.relu,
+        self.denseCriticLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=act_func,
                                               name="denseCriticLayer1")(self.inputLayer)
         self.outputLayerCritic = layers.Dense(1,
                                               name="outputCriticLayer")(self.denseCriticLayer1)
@@ -133,14 +135,14 @@ class GradAscentTrainerDiscrete(keras.models.Model):
     def train_step(self):
         """ Performs a training step. """
         if self.training:
-
             with tf.GradientTape() as tape:
-                action_vel_values = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-                action_off_values = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
 
                 # Gather and convert data from the buffer (data from simulation):
                 timesteps, sim_states, rewards, sim_action_vel_choices, sim_action_off_choices \
-                    = self.buffer.get_experience_for_episode_training()
+                    = self.buffer.experience
+
+                action_vel = tf.TensorArray(dtype=tf.float32, size=tf.size(timesteps))
+                action_off = tf.TensorArray(dtype=tf.float32, size=tf.size(timesteps))
 
                 # Forward Pass - (Re)Calculation of actions that caused saved states
                 # TODO log the values from ACPolicy class to ensure actions+critic correspond to calculations done here (indices etc.)
@@ -149,30 +151,23 @@ class GradAscentTrainerDiscrete(keras.models.Model):
 
                 # Choose actions based on what was previously (randomly) sampled during simulation
                 for t in timesteps-1:
-                    vel_choice = sim_action_vel_choices[t]
-                    off_choice = sim_action_off_choices[t]
-                    action_vel_values.write(t, action_vel_probs[t, vel_choice])
-                    action_off_values.write(t, action_off_probs[t, off_choice])
-
-                action_vel_values = action_vel_values.stack()
-                action_off_values = action_off_values.stack()
+                    vel_choice = sim_action_vel_choices[t,0]
+                    off_choice = sim_action_off_choices[t,0]
+                    action_vel.write(t, action_vel_probs[t, vel_choice])
+                    action_off.write(t, action_off_probs[t, off_choice])
 
                 # Calculate expected returns
                 returns = self.get_expected_returns(rewards)
 
                 # Calculating loss values to update our network
-                loss = self.compute_loss(action_vel_values, action_off_values, critic_values, returns)
+                loss = self.compute_loss(action_vel, action_off, critic_values, returns)
 
-                # Compute the gradients from the loss
-                grads = tape.gradient(loss, self.actor_critic_net.trainable_variables)
+            # Compute the gradients from the loss
+            grads = tape.gradient(loss, self.actor_critic_net.trainable_variables)
 
             # Apply the gradients to the model's parameters
             self.training_param["adam_optimiser"].apply_gradients(
                 zip(grads, self.actor_critic_net.trainable_variables))
-
-            for x in self.actor_critic_net.weights:
-                if tf.reduce_any(tf.math.is_nan(x)):
-                    print("NAN detected in network weight")
 
             episode_reward = tf.math.reduce_sum(rewards)
             return episode_reward
