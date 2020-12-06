@@ -11,6 +11,7 @@ class ActorCriticNetDiscrete(keras.Model):
     def __init__(self, modelParam):
         super(ActorCriticNetDiscrete, self).__init__()
         tf.random.set_seed(modelParam["seed"])
+        np.random.seed(modelParam["seed"])
         # TODO Add variability in depth.
         # Actor net:
         self.inputLayer = layers.Input(shape=(modelParam["n_inputs"],),
@@ -61,6 +62,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
     def __init__(self, actor_critic_net, training_param):
         super(GradAscentTrainerDiscrete, self).__init__()
         tf.random.set_seed(training_param["seed"])
+        np.random.seed(training_param["seed"])
         self.actor_critic_net = actor_critic_net
         self.reward_weights = training_param["reward_weights"]
         # TODO implement data logging class for debugging training
