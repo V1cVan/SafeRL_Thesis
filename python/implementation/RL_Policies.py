@@ -201,25 +201,25 @@ class AcPolicyDiscrete(CustomPolicy):
             reward.assign(0.0)
         return tf.dtypes.cast(reward, tf.float32)
 
-    def squeeze_vehicle_state(self, veh):
-        # Squeeze values to fix matrix inconsistencies
-        # Current lane:
-        veh.s["laneC"]["off"] = np.squeeze(veh.s["laneC"]["off"])
-        veh.s["laneC"]["relB"]["off"] = np.squeeze(veh.s["laneC"]["relB"]["off"])
-        veh.s["laneC"]["relB"]["vel"] = np.squeeze(veh.s["laneC"]["relB"]["vel"])
-        veh.s["laneC"]["relF"]["off"] = np.squeeze(veh.s["laneC"]["relF"]["off"])
-        veh.s["laneC"]["relF"]["vel"] = np.squeeze(veh.s["laneC"]["relF"]["vel"])
-        # Left lane
-        veh.s["laneL"]["off"] = np.squeeze(veh.s["laneC"]["off"])
-        veh.s["laneL"]["relB"]["off"] = np.squeeze(veh.s["laneC"]["relB"]["off"])
-        veh.s["laneL"]["relB"]["vel"] = np.squeeze(veh.s["laneC"]["relB"]["vel"])
-        veh.s["laneL"]["relF"]["off"] = np.squeeze(veh.s["laneC"]["relF"]["off"])
-        veh.s["laneL"]["relF"]["vel"] = np.squeeze(veh.s["laneC"]["relF"]["vel"])
-        # Right lane
-        veh.s["laneR"]["off"] = np.squeeze(veh.s["laneC"]["off"])
-        veh.s["laneR"]["relB"]["off"] = np.squeeze(veh.s["laneC"]["relB"]["off"])
-        veh.s["laneR"]["relB"]["vel"] = np.squeeze(veh.s["laneC"]["relB"]["vel"])
-        veh.s["laneR"]["relF"]["off"] = np.squeeze(veh.s["laneC"]["relF"]["off"])
-        veh.s["laneR"]["relF"]["vel"] = np.squeeze(veh.s["laneC"]["relF"]["vel"])
-
-        return veh.s
+    # def squeeze_vehicle_state(self, veh):
+    #     # Squeeze values to fix matrix inconsistencies
+    #     # Current lane:
+    #     veh.s["laneC"]["off"] = np.squeeze(veh.s["laneC"]["off"])
+    #     veh.s["laneC"]["relB"]["off"] = np.squeeze(veh.s["laneC"]["relB"]["off"])
+    #     veh.s["laneC"]["relB"]["vel"] = np.squeeze(veh.s["laneC"]["relB"]["vel"])
+    #     veh.s["laneC"]["relF"]["off"] = np.squeeze(veh.s["laneC"]["relF"]["off"])
+    #     veh.s["laneC"]["relF"]["vel"] = np.squeeze(veh.s["laneC"]["relF"]["vel"])
+    #     # Left lane
+    #     veh.s["laneL"]["off"] = np.squeeze(veh.s["laneC"]["off"])
+    #     veh.s["laneL"]["relB"]["off"] = np.squeeze(veh.s["laneC"]["relB"]["off"])
+    #     veh.s["laneL"]["relB"]["vel"] = np.squeeze(veh.s["laneC"]["relB"]["vel"])
+    #     veh.s["laneL"]["relF"]["off"] = np.squeeze(veh.s["laneC"]["relF"]["off"])
+    #     veh.s["laneL"]["relF"]["vel"] = np.squeeze(veh.s["laneC"]["relF"]["vel"])
+    #     # Right lane
+    #     veh.s["laneR"]["off"] = np.squeeze(veh.s["laneC"]["off"])
+    #     veh.s["laneR"]["relB"]["off"] = np.squeeze(veh.s["laneC"]["relB"]["off"])
+    #     veh.s["laneR"]["relB"]["vel"] = np.squeeze(veh.s["laneC"]["relB"]["vel"])
+    #     veh.s["laneR"]["relF"]["off"] = np.squeeze(veh.s["laneC"]["relF"]["off"])
+    #     veh.s["laneR"]["relF"]["vel"] = np.squeeze(veh.s["laneC"]["relF"]["vel"])
+    #
+    #     return veh.s
