@@ -1,1 +1,71 @@
-# Safe Reinforcement Learning Policies for Self Driving Vehicles
+## Requirements:
+
+* A compiler supporting below C++17 features. Support for older compilers lacking any of these features can be enabled through the `COMPAT` flag.
+
+  * `static inline` variables
+  * `std::optional` or experimental support through `std::experimental::optional` (e.g. GCC-6.0).
+  * `std::byte`
+  * `std::clamp`
+  * `std::as_const`
+
+* CMake 3.16.3 or higher (required for installing the Matlab library).
+
+## Dependencies:
+
+1. [Clothoids](https://www.github.com/ebertolazzi/Clothoids)
+2. [HDF5](https://www.hdfgroup.org/downloads/hdf5/source-code/)
+3. [Eigen](http://eigen.tuxfamily.org)
+4. [doctest](https://github.com/onqtam/doctest)
+
+CMake will automatically extract the archives included in the dependencies folder, compile the sources and link with them.
+
+*Note: the build process can be sped up considerably if the HDF5 library is already pre-installed on the system.*
+
+## Installation instructions:
+*Note: for using the C++ or C library, it is not necessary to follow the steps below. Instead you can just add the source files of this library to a folder
+inside your project and include `add_subdirectory(<FOLDER_NAME>)` in your CMakeLists file. To link your application to the library, see below.*
+
+1. Create a build directory
+
+        mkdir build
+        cd build
+2. Create CMake project directory (, optionally perform the unit tests) and install:
+
+        cmake -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> [options] ..
+        [ctest -C Release -T test]
+        cmake --build . --target install --config Release
+
+    Possible options:
+
+    * -DHWSIM_COMPAT:BOOL=[ON/OFF]
+
+      Build with compatibility mode (to enable backward support for older compilers without `static inline` variables or `std::byte` support, see full list above), default OFF (requires C++17 support of your compiler).
+
+    * -DHWSIM_INSTALL_LIB:BOOL=[ON/OFF]
+      
+      Installs the C library and headers, default ON
+    * -DHWSIM_INSTALL_MATLAB:BOOL=[ON/OFF]
+
+      Installs the MATLAB wrappers, default OFF. **Note that this requires an active Matlab installation to be present on the system!**
+    * -DHWSIM_INSTALL_PYTHON:BOOL=[ON/OFF]
+
+      Installs the python wrappers, default ON.
+    * -DHWSIM_INSTALL_EXAMPLES:BOOL=[ON/OFF]
+
+      Installs the example executables, default ON.
+
+## Usage:
+
+* C++ project:
+  Include headers and link to Clothoids and HDF5 library. Using CMake this can easily be done by `target_link_libraries(myApp PRIVATE hwsim)`
+* C library:
+  Include C header and link to hwsim library. Using CMake this can be done by `target_link_libraries(myApp PRIVATE libhwsim)` (or libhwsim-static)
+* MATLAB wrappers:
+  Install project with the `HWSIM_INSTALL_MATLAB` flag enabled. The Matlab files can afterwards be found in the <INSTALL_DIR>/matlab directory
+* Python package:
+  Install project and run `pip install hwsim` from the <INSTALL_DIR>/python directory
+
+## Tested builds:
+
+* Windows 10 using Visual Studio Build Tools 2019
+* Linux using GCC 6.4.0 (with compatibility mode enabled)
