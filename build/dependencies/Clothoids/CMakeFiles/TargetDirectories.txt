@@ -1,5 +1,0 @@
-D:/Documents/Projects/hwsim/build/dependencies/Clothoids/CMakeFiles/Clothoids_win__static.dir
-D:/Documents/Projects/hwsim/build/dependencies/Clothoids/CMakeFiles/Clothoids_win_.dir
-D:/Documents/Projects/hwsim/build/dependencies/Clothoids/CMakeFiles/INSTALL.dir
-D:/Documents/Projects/hwsim/build/dependencies/Clothoids/CMakeFiles/ALL_BUILD.dir
-D:/Documents/Projects/hwsim/build/dependencies/Clothoids/CMakeFiles/ZERO_CHECK.dir
