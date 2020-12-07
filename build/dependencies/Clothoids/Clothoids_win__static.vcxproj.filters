@@ -1,0 +1,123 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\AABBtree.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\Biarc.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\BiarcList.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\Circle.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\Clothoid.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\ClothoidAsyPlot.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\ClothoidDistance.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\ClothoidG2.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\ClothoidList.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\Fresnel.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\G2lib.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\G2lib_intersect.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\Line.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\PolyLine.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\Triangle2D.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\submodules\quarticRootsFlocke\src\PolynomialRoots-1-Quadratic.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\submodules\quarticRootsFlocke\src\PolynomialRoots-2-Cubic.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\submodules\quarticRootsFlocke\src\PolynomialRoots-3-Quartic.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\submodules\quarticRootsFlocke\src\PolynomialRoots-Jenkins-Traub.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\submodules\quarticRootsFlocke\src\PolynomialRoots-Utils.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\AABBtree.hh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\BaseCurve_using.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\Biarc.hh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\BiarcList.hh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\Circle.hh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\Clothoid.hh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\ClothoidAsyPlot.hh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\ClothoidList.hh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\Fresnel.hh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\G2lib.hh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\Line.hh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\PolyLine.hh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\src\Triangle2D.hh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\submodules\quarticRootsFlocke\src\PolynomialRoots-Utils.hh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\submodules\quarticRootsFlocke\src\PolynomialRoots.hh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\Documents\Projects\hwsim\build\dependencies\Clothoids\source\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{2D68AC52-5835-35D7-BE3B-D1B191437299}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{F9B7A73D-43C7-3E92-AE0D-FB18F59C0225}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

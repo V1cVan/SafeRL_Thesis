@@ -1,0 +1,10 @@
+^D:\DOCUMENTS\PROJECTS\HWSIM\BUILD\CMAKEFILES\BD554DBBA4861E37E7B19FA78705D7E6\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SD:/Documents/Projects/hwsim -BD:/Documents/Projects/hwsim/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Documents/Projects/hwsim/build/hwsim.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

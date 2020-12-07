@@ -1,0 +1,88 @@
+        SUMMARY OF THE HDF5 CONFIGURATION
+        =================================
+
+General Information:
+-------------------
+                   HDF5 Version: 1.12.0
+                  Configured on: 2020-12-06
+                  Configured by: Visual Studio 16 2019
+                    Host system: Windows-10.0.19042
+              Uname information: Windows
+                       Byte sex: little-endian
+             Installation point: C:/Program Files (x86)/HDF5
+
+Compiling Options:
+------------------
+                     Build Mode: Release
+              Debugging Symbols: OFF
+                        Asserts: OFF
+                      Profiling: OFF
+             Optimization Level: OFF
+
+Linking Options:
+----------------
+                      Libraries: 
+  Statically Linked Executables: OFF
+                        LDFLAGS: /machine:x64
+                     H5_LDFLAGS: 
+                     AM_LDFLAGS: 
+                Extra libraries: 
+                       Archiver: 
+                         Ranlib: 
+
+Languages:
+----------
+                              C: YES
+                     C Compiler: C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/VC/Tools/MSVC/14.27.29110/bin/Hostx64/x64/cl.exe 19.27.29112.0
+                       CPPFLAGS: 
+                    H5_CPPFLAGS: 
+                    AM_CPPFLAGS: 
+                         CFLAGS:   /DWIN32 /D_WINDOWS /W3
+                      H5_CFLAGS: 
+                      AM_CFLAGS: 
+               Shared C Library: NO
+               Static C Library: YES
+
+                        Fortran: OFF
+               Fortran Compiler:  
+                  Fortran Flags: 
+               H5 Fortran Flags: 
+               AM Fortran Flags: 
+         Shared Fortran Library: NO
+         Static Fortran Library: YES
+
+                            C++: OFF
+                   C++ Compiler:  
+                      C++ Flags:  
+                   H5 C++ Flags: 
+                   AM C++ Flags: 
+             Shared C++ Library: NO
+             Static C++ Library: YES
+
+                            JAVA: OFF
+                 JAVA Compiler:  
+
+Features:
+---------
+                   Parallel HDF5: OFF
+Parallel Filtered Dataset Writes: 
+              Large Parallel I/O: 
+              High-level library: ON
+                Build HDF5 Tests: OFF
+                Build HDF5 Tools: OFF
+                    Threadsafety: OFF
+             Default API mapping: v112
+  With deprecated public symbols: ON
+          I/O filters (external): 
+                             MPE: 
+                      Direct VFD: 
+              (Read-Only) S3 VFD: 
+            (Read-Only) HDFS VFD: 
+                         dmalloc: 
+  Packages w/ extra debug output: 
+                     API Tracing: OFF
+            Using memory checker: OFF
+ Memory allocation sanity checks: OFF
+          Function Stack Tracing: OFF
+       Strict File Format Checks: OFF
+    Optimization Instrumentation: 

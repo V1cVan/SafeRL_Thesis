@@ -1,0 +1,1521 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5.c">
+      <Filter>H5</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5checksum.c">
+      <Filter>H5</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5dbg.c">
+      <Filter>H5</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5mpi.c">
+      <Filter>H5</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5system.c">
+      <Filter>H5</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5timer.c">
+      <Filter>H5</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5trace.c">
+      <Filter>H5</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5A.c">
+      <Filter>H5A</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Abtree2.c">
+      <Filter>H5A</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Adense.c">
+      <Filter>H5A</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Adeprec.c">
+      <Filter>H5A</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Aint.c">
+      <Filter>H5A</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Atest.c">
+      <Filter>H5A</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5AC.c">
+      <Filter>H5AC</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5ACdbg.c">
+      <Filter>H5AC</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5ACmpio.c">
+      <Filter>H5AC</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5ACproxy_entry.c">
+      <Filter>H5AC</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5B.c">
+      <Filter>H5B</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Bcache.c">
+      <Filter>H5B</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Bdbg.c">
+      <Filter>H5B</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5B2.c">
+      <Filter>H5B2</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5B2cache.c">
+      <Filter>H5B2</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5B2dbg.c">
+      <Filter>H5B2</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5B2hdr.c">
+      <Filter>H5B2</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5B2int.c">
+      <Filter>H5B2</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5B2internal.c">
+      <Filter>H5B2</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5B2leaf.c">
+      <Filter>H5B2</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5B2stat.c">
+      <Filter>H5B2</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5B2test.c">
+      <Filter>H5B2</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5C.c">
+      <Filter>H5C</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Cdbg.c">
+      <Filter>H5C</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Cepoch.c">
+      <Filter>H5C</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Cimage.c">
+      <Filter>H5C</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Clog.c">
+      <Filter>H5C</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Clog_json.c">
+      <Filter>H5C</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Clog_trace.c">
+      <Filter>H5C</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Cmpio.c">
+      <Filter>H5C</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Cprefetched.c">
+      <Filter>H5C</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Cquery.c">
+      <Filter>H5C</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ctag.c">
+      <Filter>H5C</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ctest.c">
+      <Filter>H5C</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5CS.c">
+      <Filter>H5CS</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5CX.c">
+      <Filter>H5CX</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5D.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dbtree.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dbtree2.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dchunk.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dcompact.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dcontig.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ddbg.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ddeprec.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dearray.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Defl.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dfarray.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dfill.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dint.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dio.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dlayout.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dmpio.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dnone.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Doh.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dscatgath.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dselect.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dsingle.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dtest.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dvirtual.c">
+      <Filter>H5D</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5E.c">
+      <Filter>H5E</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Edeprec.c">
+      <Filter>H5E</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Eint.c">
+      <Filter>H5E</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5EA.c">
+      <Filter>H5EA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5EAcache.c">
+      <Filter>H5EA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5EAdbg.c">
+      <Filter>H5EA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5EAdblkpage.c">
+      <Filter>H5EA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5EAdblock.c">
+      <Filter>H5EA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5EAhdr.c">
+      <Filter>H5EA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5EAiblock.c">
+      <Filter>H5EA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5EAint.c">
+      <Filter>H5EA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5EAsblock.c">
+      <Filter>H5EA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5EAstat.c">
+      <Filter>H5EA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5EAtest.c">
+      <Filter>H5EA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5F.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Faccum.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Fcwfs.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Fdbg.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Fdeprec.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Fefc.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ffake.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Fint.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Fio.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Fmount.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Fmpi.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Fquery.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Fsfile.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Fspace.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Fsuper.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Fsuper_cache.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ftest.c">
+      <Filter>H5F</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FA.c">
+      <Filter>H5FA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FAcache.c">
+      <Filter>H5FA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FAdbg.c">
+      <Filter>H5FA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FAdblkpage.c">
+      <Filter>H5FA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FAdblock.c">
+      <Filter>H5FA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FAhdr.c">
+      <Filter>H5FA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FAint.c">
+      <Filter>H5FA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FAstat.c">
+      <Filter>H5FA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FAtest.c">
+      <Filter>H5FA</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FD.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDcore.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDdirect.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDfamily.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDhdfs.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDint.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDlog.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDmpi.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDmpio.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDmulti.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDros3.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDs3comms.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDsec2.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDspace.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDstdio.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDtest.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDwindows.c">
+      <Filter>H5FD</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FL.c">
+      <Filter>H5FL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FO.c">
+      <Filter>H5FO</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FS.c">
+      <Filter>H5FS</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FScache.c">
+      <Filter>H5FS</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FSdbg.c">
+      <Filter>H5FS</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FSint.c">
+      <Filter>H5FS</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FSsection.c">
+      <Filter>H5FS</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FSstat.c">
+      <Filter>H5FS</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FStest.c">
+      <Filter>H5FS</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5G.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gbtree2.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gcache.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gcompact.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gdense.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gdeprec.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gent.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gint.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Glink.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gloc.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gname.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gnode.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gobj.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Goh.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Groot.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gstab.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gtest.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gtraverse.c">
+      <Filter>H5G</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HF.c">
+      <Filter>H5HF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFbtree2.c">
+      <Filter>H5HF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFcache.c">
+      <Filter>H5HF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFdbg.c">
+      <Filter>H5HF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFdblock.c">
+      <Filter>H5HF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFdtable.c">
+      <Filter>H5HF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFhdr.c">
+      <Filter>H5HF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFhuge.c">
+      <Filter>H5HF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFiblock.c">
+      <Filter>H5HF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFiter.c">
+      <Filter>H5HF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFman.c">
+      <Filter>H5HF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFsection.c">
+      <Filter>H5HF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFspace.c">
+      <Filter>H5HF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFstat.c">
+      <Filter>H5HF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFtest.c">
+      <Filter>H5HF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFtiny.c">
+      <Filter>H5HF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HG.c">
+      <Filter>H5HG</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HGcache.c">
+      <Filter>H5HG</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HGdbg.c">
+      <Filter>H5HG</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HGquery.c">
+      <Filter>H5HG</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HL.c">
+      <Filter>H5HL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HLcache.c">
+      <Filter>H5HL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HLdbg.c">
+      <Filter>H5HL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HLdblk.c">
+      <Filter>H5HL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HLint.c">
+      <Filter>H5HL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HLprfx.c">
+      <Filter>H5HL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HP.c">
+      <Filter>H5HP</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5I.c">
+      <Filter>H5I</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Itest.c">
+      <Filter>H5I</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5L.c">
+      <Filter>H5L</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ldeprec.c">
+      <Filter>H5L</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Lexternal.c">
+      <Filter>H5L</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5M.c">
+      <Filter>H5M</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5MF.c">
+      <Filter>H5MF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5MFaggr.c">
+      <Filter>H5MF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5MFdbg.c">
+      <Filter>H5MF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5MFsection.c">
+      <Filter>H5MF</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5MM.c">
+      <Filter>H5MM</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5MP.c">
+      <Filter>H5MP</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5MPtest.c">
+      <Filter>H5MP</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5O.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Oainfo.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Oalloc.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Oattr.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Oattribute.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Obogus.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Obtreek.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ocache.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ocache_image.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ochunk.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ocont.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ocopy.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ocopy_ref.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Odbg.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Odeprec.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Odrvinfo.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Odtype.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Oefl.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ofill.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Oflush.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ofsinfo.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Oginfo.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Oint.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Olayout.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Olinfo.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Olink.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Omessage.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Omtime.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Oname.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Onull.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Opline.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Orefcount.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Osdspace.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Oshared.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Oshmesg.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ostab.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Otest.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ounknown.c">
+      <Filter>H5O</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5P.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pacpl.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pdapl.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pdcpl.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pdeprec.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pdxpl.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pencdec.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pfapl.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pfcpl.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pfmpl.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pgcpl.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pint.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Plapl.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Plcpl.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pmapl.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pmcpl.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pocpl.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pocpypl.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pstrcpl.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ptest.c">
+      <Filter>H5P</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5PB.c">
+      <Filter>H5PB</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5PL.c">
+      <Filter>H5PL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5PLint.c">
+      <Filter>H5PL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5PLpath.c">
+      <Filter>H5PL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5PLplugin_cache.c">
+      <Filter>H5PL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5R.c">
+      <Filter>H5R</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Rdeprec.c">
+      <Filter>H5R</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Rint.c">
+      <Filter>H5R</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5UC.c">
+      <Filter>H5UC</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5RS.c">
+      <Filter>H5RS</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5S.c">
+      <Filter>H5S</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Sall.c">
+      <Filter>H5S</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Sdbg.c">
+      <Filter>H5S</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Sdeprec.c">
+      <Filter>H5S</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Shyper.c">
+      <Filter>H5S</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Smpio.c">
+      <Filter>H5S</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Snone.c">
+      <Filter>H5S</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Spoint.c">
+      <Filter>H5S</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Sselect.c">
+      <Filter>H5S</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Stest.c">
+      <Filter>H5S</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5SL.c">
+      <Filter>H5SL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5SM.c">
+      <Filter>H5SM</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5SMbtree2.c">
+      <Filter>H5SM</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5SMcache.c">
+      <Filter>H5SM</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5SMmessage.c">
+      <Filter>H5SM</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5SMtest.c">
+      <Filter>H5SM</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5ST.c">
+      <Filter>H5ST</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5T.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tarray.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tbit.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tcommit.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tcompound.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tconv.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tcset.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tdbg.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tdeprec.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tenum.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tfields.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tfixed.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tfloat.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tnative.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Toffset.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Toh.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Topaque.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Torder.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tpad.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tprecis.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tref.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tstrpad.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tvisit.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tvlen.c">
+      <Filter>H5T</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5TS.c">
+      <Filter>H5TS</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VL.c">
+      <Filter>H5VL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLcallback.c">
+      <Filter>H5VL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLint.c">
+      <Filter>H5VL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLnative.c">
+      <Filter>H5VL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLnative_attr.c">
+      <Filter>H5VL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLnative_blob.c">
+      <Filter>H5VL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLnative_dataset.c">
+      <Filter>H5VL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLnative_datatype.c">
+      <Filter>H5VL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLnative_file.c">
+      <Filter>H5VL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLnative_group.c">
+      <Filter>H5VL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLnative_link.c">
+      <Filter>H5VL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLnative_introspect.c">
+      <Filter>H5VL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLnative_object.c">
+      <Filter>H5VL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLnative_token.c">
+      <Filter>H5VL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLpassthru.c">
+      <Filter>H5VL</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VM.c">
+      <Filter>H5VM</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5WB.c">
+      <Filter>H5WB</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Z.c">
+      <Filter>H5Z</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Zdeflate.c">
+      <Filter>H5Z</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Zfletcher32.c">
+      <Filter>H5Z</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Znbit.c">
+      <Filter>H5Z</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Zscaleoffset.c">
+      <Filter>H5Z</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Zshuffle.c">
+      <Filter>H5Z</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Zszip.c">
+      <Filter>H5Z</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ztrans.c">
+      <Filter>H5Z</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\H5Tinit.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\H5lib_settings.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\hdf5.h">
+      <Filter>H5</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5api_adpt.h">
+      <Filter>H5</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5public.h">
+      <Filter>H5</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Apublic.h">
+      <Filter>H5A</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5ACpublic.h">
+      <Filter>H5AC</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Cpublic.h">
+      <Filter>H5C</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dpublic.h">
+      <Filter>H5D</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Epubgen.h">
+      <Filter>H5E</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Epublic.h">
+      <Filter>H5E</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5ESpublic.h">
+      <Filter>H5ES</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Fpublic.h">
+      <Filter>H5F</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDcore.h">
+      <Filter>H5FD</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDdirect.h">
+      <Filter>H5FD</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDfamily.h">
+      <Filter>H5FD</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDhdfs.h">
+      <Filter>H5FD</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDlog.h">
+      <Filter>H5FD</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDmpi.h">
+      <Filter>H5FD</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDmpio.h">
+      <Filter>H5FD</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDmulti.h">
+      <Filter>H5FD</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDpublic.h">
+      <Filter>H5FD</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDros3.h">
+      <Filter>H5FD</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDs3comms.h">
+      <Filter>H5FD</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDsec2.h">
+      <Filter>H5FD</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDstdio.h">
+      <Filter>H5FD</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDwindows.h">
+      <Filter>H5FD</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gpublic.h">
+      <Filter>H5G</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ipublic.h">
+      <Filter>H5I</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Lpublic.h">
+      <Filter>H5L</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Mpublic.h">
+      <Filter>H5M</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5MMpublic.h">
+      <Filter>H5MM</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Opublic.h">
+      <Filter>H5O</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ppublic.h">
+      <Filter>H5P</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5PLextern.h">
+      <Filter>H5PL</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5PLpublic.h">
+      <Filter>H5PL</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Rpublic.h">
+      <Filter>H5R</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Spublic.h">
+      <Filter>H5S</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tpublic.h">
+      <Filter>H5T</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLconnector.h">
+      <Filter>H5VL</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLconnector_passthru.h">
+      <Filter>H5VL</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLnative.h">
+      <Filter>H5VL</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLpassthru.h">
+      <Filter>H5VL</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLpublic.h">
+      <Filter>H5VL</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Zpublic.h">
+      <Filter>H5Z</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5private.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Apkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Aprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5ACpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5ACprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Bpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Bprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5B2pkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5B2private.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Clog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Cpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Cprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5CSprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5CXprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Dprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Edefin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Einit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Epkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Eprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Eterm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5EApkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5EAprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Fpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Fprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FApkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FAprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FDprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FLprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FOprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FSpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5FSprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Gprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HFprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HGpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HGprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HLpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HLprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5HPprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ipkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Iprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Lpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Lprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Mpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Mprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5MFprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5MMprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5MPpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5MPprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Opkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Oprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Oshared.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Ppkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Pprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5PBprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5PBpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5PLpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5PLprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Rpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Rprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5RSprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Spkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Sprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5SLprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5SMpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5SMprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5STprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Tprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5TSprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5UCprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLnative_private.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VLprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5VMprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5WBprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Zpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5Zprivate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5win32defs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\H5overflow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{D3103050-F1BC-3EFD-9A26-B1BD8C0DBDC6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5">
+      <UniqueIdentifier>{87417980-F9FA-3E66-8210-47965006BEED}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5A">
+      <UniqueIdentifier>{EEAC4CDA-4606-3598-A09D-E1BA1B29B4A0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5AC">
+      <UniqueIdentifier>{DB9C16FF-2317-3773-8FF9-EAE5BEA9AD42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5B">
+      <UniqueIdentifier>{49C167FF-54A6-3D81-9EA0-B4AAA106245D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5B2">
+      <UniqueIdentifier>{38137848-4FCE-30A3-99C8-27860A5B1EFE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5C">
+      <UniqueIdentifier>{EF352581-5947-3773-AAF6-839448053809}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5CS">
+      <UniqueIdentifier>{DE893693-274A-391A-8F3E-2B9D43AD0FA8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5CX">
+      <UniqueIdentifier>{C11319B0-DEC3-39D8-AC55-E7722B8E6126}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5D">
+      <UniqueIdentifier>{E9C5D44D-DE80-33A0-92D0-E21C212F2CBC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5E">
+      <UniqueIdentifier>{ADE21BF1-7513-3B45-B41A-8EF53145F07D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5EA">
+      <UniqueIdentifier>{4C64D5A9-59B6-3630-B14F-6A8BA1BE8491}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5ES">
+      <UniqueIdentifier>{256690F4-0BCB-3037-95F9-482F11300C29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5F">
+      <UniqueIdentifier>{937EC8F0-55A3-35ED-8B7D-0E3C89D4324C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5FA">
+      <UniqueIdentifier>{59C88C29-7114-3EA4-BEAF-ADA25770AB84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5FD">
+      <UniqueIdentifier>{16E392B1-B6CC-3F10-B5A2-39E4F085EBCC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5FL">
+      <UniqueIdentifier>{1EF813A5-FD02-34B3-BFA5-3E0F17F1018D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5FO">
+      <UniqueIdentifier>{5282817F-8851-3C30-A1CB-5810076AD831}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5FS">
+      <UniqueIdentifier>{B4066354-2AF4-3A0B-BEAD-F58F0A15EE15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5G">
+      <UniqueIdentifier>{716FB104-81F8-3625-8A3C-4CEE2CBDCC68}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5HF">
+      <UniqueIdentifier>{54C8E6E2-FF22-30FA-8CF6-0BE202236A08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5HG">
+      <UniqueIdentifier>{EA7A5075-9C19-33FD-973A-132F9649A3AB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5HL">
+      <UniqueIdentifier>{FA7C31E7-DBB2-3A1D-BCC8-98C1AD5E8287}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5HP">
+      <UniqueIdentifier>{9C8B0BD4-0F02-37FD-B226-B007D3152798}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5I">
+      <UniqueIdentifier>{CB70C78A-48B9-3B5A-90E4-61943A8DC0DE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5L">
+      <UniqueIdentifier>{ED07DB80-C407-357C-882D-E63A13B1B7F2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5M">
+      <UniqueIdentifier>{ABB9784F-9D20-3473-A931-EC53B16C8653}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5MF">
+      <UniqueIdentifier>{B82F85EC-8362-3DDC-9EB2-F0FD33A43A02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5MM">
+      <UniqueIdentifier>{AB766AD4-7E69-3705-B9EE-130AB80958BA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5MP">
+      <UniqueIdentifier>{81D75B59-245A-346A-8CA4-1221D577AA55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5O">
+      <UniqueIdentifier>{92DFF0DE-5E59-3CF9-BC76-50909930E04F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5P">
+      <UniqueIdentifier>{8603A5D8-BA17-3CE8-BF28-E2E7CF83F170}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5PB">
+      <UniqueIdentifier>{82FDDA62-F484-3F60-AEB3-BEC2F1D17773}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5PL">
+      <UniqueIdentifier>{DDC3C72D-8A8F-3E29-9D7F-A6EFC7200EF8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5R">
+      <UniqueIdentifier>{CEB11C57-A353-3855-A564-F19DE759AA8D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5RS">
+      <UniqueIdentifier>{9598727E-981F-3788-982D-00AF3C3E1C9E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5S">
+      <UniqueIdentifier>{46BF9009-70FD-36E1-9868-E8F6CD5FD3A1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5SL">
+      <UniqueIdentifier>{F61617C5-7C3B-3BC3-9B49-ADA21FA0EE32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5SM">
+      <UniqueIdentifier>{449FDBD6-107E-3692-944C-B1E6B02B373A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5ST">
+      <UniqueIdentifier>{AB899780-6DF5-3B06-951E-A3E196084228}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5T">
+      <UniqueIdentifier>{2BA783C4-F9FB-37AB-9794-7ED9CCA16D70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5TS">
+      <UniqueIdentifier>{E5ED2BC1-FBF9-3A50-8B1E-7239DED705D9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5UC">
+      <UniqueIdentifier>{4379D60E-685D-3379-A70D-2042D5B47BC7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5VL">
+      <UniqueIdentifier>{4266BC68-4213-392B-ABD7-67BE28DBF58B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5VM">
+      <UniqueIdentifier>{E9B90AF9-E08E-3640-9714-6ACB0FC3E551}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5WB">
+      <UniqueIdentifier>{804F85D7-C1E0-3B6C-8C9C-1502916606EA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="H5Z">
+      <UniqueIdentifier>{E91CB1C3-434D-351D-9847-87476D006658}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{CD82CE2E-EF8F-37DF-8659-87ED97A5DBA3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{102CF070-EA05-300A-BB5B-84A0A0E4F7B8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

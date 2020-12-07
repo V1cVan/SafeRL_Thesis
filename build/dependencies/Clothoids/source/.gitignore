@@ -1,0 +1,17 @@
+*.mexmaci64
+DerivedData
+*.aux
+*.bbl
+*.log
+*.gz
+libClothoid.a
+Usage.pdf
+*.blg
+*.spl
+*.o
+cmake
+build
+lib
+bin
+.vscode
+doxygen_doc
