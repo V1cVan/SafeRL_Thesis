@@ -184,12 +184,12 @@ if __name__=="__main__":
     trainer = GradAscentTrainerDiscrete(actor_critic_net, training_param)  # training method used
 
     # Simulation configuration and settings
-    # TODO Move to training on more complex scenario without other vehicles.
+    # TODO Move to randomly initialising vehicles infront of ego vehicle to learn more complex actions than staying in lane
     veh_types = [
         {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)},
-        {"amount": 100, "model": KBModel(), "policy": BasicPolicy("slow")},
-        {"amount": 1, "model": KBModel(), "policy": BasicPolicy("normal")},
-        {"amount": 1, "model": KBModel(), "policy": BasicPolicy("fast")}
+        {"amount": 60, "model": KBModel(), "policy": BasicPolicy("slow")},
+        {"amount": 20, "model": KBModel(), "policy": BasicPolicy("normal")},
+        {"amount": 20, "model": KBModel(), "policy": BasicPolicy("fast")}
     ]
     # veh_types = [
     #     {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)}

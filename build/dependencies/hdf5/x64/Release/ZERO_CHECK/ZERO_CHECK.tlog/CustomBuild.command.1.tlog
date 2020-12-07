@@ -1,0 +1,10 @@
+^D:\DOCUMENTS\PROJECTS\HWSIM\BUILD\DEPENDENCIES\HDF5\CMAKEFILES\7BDF9F03C987775A94DE2962C8C5ED6C\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SD:/Documents/Projects/hwsim/build/dependencies/hdf5/source -BD:/Documents/Projects/hwsim/build/dependencies/hdf5 --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Documents/Projects/hwsim/build/dependencies/hdf5/HDF5.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

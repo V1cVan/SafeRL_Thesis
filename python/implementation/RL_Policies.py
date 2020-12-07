@@ -138,6 +138,8 @@ class AcPolicyDiscrete(CustomPolicy):
         sim_action = np.array([0, 0], dtype=np.float32)
         vel_actions, off_actions = action_choices
 
+        # TODO add penalty for selecting improper actions
+
         # Compute safe velocity action:
         vel_bounds = veh.a_bounds["long"]  # [min_rel_vel, max_rel_vel]
         if vel_actions == 0:  # Slow down
@@ -151,7 +153,6 @@ class AcPolicyDiscrete(CustomPolicy):
         sim_action[0] = vel_controller
 
         # Compute safe offset action:
-        # TODO create logs to debug the offset not always obeying bounds!
         off_bounds = veh.a_bounds["lat"]
         if off_actions == 0:  # Turn left
             off_controller = np.maximum(off_bounds[0], -1)
@@ -186,6 +187,7 @@ class AcPolicyDiscrete(CustomPolicy):
             # Collision??
             # TODO check collision punishment with Bram
 
+            # TODO remove lane centre reward when acting with discrete lane changes
             # Lane center reward:
             lane_offset = np.squeeze(veh.s["laneC"]["off"])
             r_off = np.exp(-(lane_offset) ** 2 / 3.6)

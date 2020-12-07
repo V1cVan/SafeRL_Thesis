@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\0a1c5b4e0e46dbfa6a81db3139007190\H5Tinit.c.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\0a1c5b4e0e46dbfa6a81db3139007190\H5lib_settings.c.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\05857bb8f840de3daee17c90639a9dbf\gen_hdf5-static.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\src\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="D:\Documents\Projects\hwsim\build\dependencies\hdf5\src\CMakeFiles\gen_hdf5-static" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{D3103050-F1BC-3EFD-9A26-B1BD8C0DBDC6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

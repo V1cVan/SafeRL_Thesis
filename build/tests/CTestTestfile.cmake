@@ -1,0 +1,36 @@
+# CMake generated Testfile for 
+# Source directory: D:/Documents/Projects/hwsim/tests
+# Build directory: D:/Documents/Projects/hwsim/build/tests
+# 
+# This file includes the relevant testing commands required for 
+# testing this directory and lists subdirectories to be tested as well.
+if("${CTEST_CONFIGURATION_TYPE}" MATCHES "^([Dd][Ee][Bb][Uu][Gg])$")
+  add_test(hwsimTest "D:/Documents/Projects/hwsim/build/tests/Debug/hwsim-test.exe")
+  set_tests_properties(hwsimTest PROPERTIES  WORKING_DIRECTORY "D:/Documents/Projects/hwsim/build" _BACKTRACE_TRIPLES "D:/Documents/Projects/hwsim/tests/CMakeLists.txt;29;add_test;D:/Documents/Projects/hwsim/tests/CMakeLists.txt;0;")
+elseif("${CTEST_CONFIGURATION_TYPE}" MATCHES "^([Rr][Ee][Ll][Ee][Aa][Ss][Ee])$")
+  add_test(hwsimTest "D:/Documents/Projects/hwsim/build/tests/Release/hwsim-test.exe")
+  set_tests_properties(hwsimTest PROPERTIES  WORKING_DIRECTORY "D:/Documents/Projects/hwsim/build" _BACKTRACE_TRIPLES "D:/Documents/Projects/hwsim/tests/CMakeLists.txt;29;add_test;D:/Documents/Projects/hwsim/tests/CMakeLists.txt;0;")
+elseif("${CTEST_CONFIGURATION_TYPE}" MATCHES "^([Mm][Ii][Nn][Ss][Ii][Zz][Ee][Rr][Ee][Ll])$")
+  add_test(hwsimTest "D:/Documents/Projects/hwsim/build/tests/MinSizeRel/hwsim-test.exe")
+  set_tests_properties(hwsimTest PROPERTIES  WORKING_DIRECTORY "D:/Documents/Projects/hwsim/build" _BACKTRACE_TRIPLES "D:/Documents/Projects/hwsim/tests/CMakeLists.txt;29;add_test;D:/Documents/Projects/hwsim/tests/CMakeLists.txt;0;")
+elseif("${CTEST_CONFIGURATION_TYPE}" MATCHES "^([Rr][Ee][Ll][Ww][Ii][Tt][Hh][Dd][Ee][Bb][Ii][Nn][Ff][Oo])$")
+  add_test(hwsimTest "D:/Documents/Projects/hwsim/build/tests/RelWithDebInfo/hwsim-test.exe")
+  set_tests_properties(hwsimTest PROPERTIES  WORKING_DIRECTORY "D:/Documents/Projects/hwsim/build" _BACKTRACE_TRIPLES "D:/Documents/Projects/hwsim/tests/CMakeLists.txt;29;add_test;D:/Documents/Projects/hwsim/tests/CMakeLists.txt;0;")
+else()
+  add_test(hwsimTest NOT_AVAILABLE)
+endif()
+if("${CTEST_CONFIGURATION_TYPE}" MATCHES "^([Dd][Ee][Bb][Uu][Gg])$")
+  add_test(libhwsimTest "D:/Documents/Projects/hwsim/build/tests/Debug/libhwsim-test.exe")
+  set_tests_properties(libhwsimTest PROPERTIES  WORKING_DIRECTORY "D:/Documents/Projects/hwsim/build" _BACKTRACE_TRIPLES "D:/Documents/Projects/hwsim/tests/CMakeLists.txt;30;add_test;D:/Documents/Projects/hwsim/tests/CMakeLists.txt;0;")
+elseif("${CTEST_CONFIGURATION_TYPE}" MATCHES "^([Rr][Ee][Ll][Ee][Aa][Ss][Ee])$")
+  add_test(libhwsimTest "D:/Documents/Projects/hwsim/build/tests/Release/libhwsim-test.exe")
+  set_tests_properties(libhwsimTest PROPERTIES  WORKING_DIRECTORY "D:/Documents/Projects/hwsim/build" _BACKTRACE_TRIPLES "D:/Documents/Projects/hwsim/tests/CMakeLists.txt;30;add_test;D:/Documents/Projects/hwsim/tests/CMakeLists.txt;0;")
+elseif("${CTEST_CONFIGURATION_TYPE}" MATCHES "^([Mm][Ii][Nn][Ss][Ii][Zz][Ee][Rr][Ee][Ll])$")
+  add_test(libhwsimTest "D:/Documents/Projects/hwsim/build/tests/MinSizeRel/libhwsim-test.exe")
+  set_tests_properties(libhwsimTest PROPERTIES  WORKING_DIRECTORY "D:/Documents/Projects/hwsim/build" _BACKTRACE_TRIPLES "D:/Documents/Projects/hwsim/tests/CMakeLists.txt;30;add_test;D:/Documents/Projects/hwsim/tests/CMakeLists.txt;0;")
+elseif("${CTEST_CONFIGURATION_TYPE}" MATCHES "^([Rr][Ee][Ll][Ww][Ii][Tt][Hh][Dd][Ee][Bb][Ii][Nn][Ff][Oo])$")
+  add_test(libhwsimTest "D:/Documents/Projects/hwsim/build/tests/RelWithDebInfo/libhwsim-test.exe")
+  set_tests_properties(libhwsimTest PROPERTIES  WORKING_DIRECTORY "D:/Documents/Projects/hwsim/build" _BACKTRACE_TRIPLES "D:/Documents/Projects/hwsim/tests/CMakeLists.txt;30;add_test;D:/Documents/Projects/hwsim/tests/CMakeLists.txt;0;")
+else()
+  add_test(libhwsimTest NOT_AVAILABLE)
+endif()

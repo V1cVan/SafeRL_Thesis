@@ -1,0 +1,10 @@
+^D:\DOCUMENTS\PROJECTS\HWSIM\BUILD\CMAKEFILES\BD554DBBA4861E37E7B19FA78705D7E6\INSTALL_FORCE.RULE
+setlocal
+cd .
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

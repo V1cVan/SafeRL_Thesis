@@ -80,6 +80,9 @@ class GradAscentTrainerDiscrete(keras.models.Model):
     def get_action_choice(self, action_probs):
         """ Randomly choose from the available actions."""
         action_vel_probs, action_off_probs = action_probs
+
+        # TODO add some random actions to improve exploration
+
         # np.random.choice accepts probabilities
         vel_action_choice = np.random.choice(3, p=np.squeeze(action_vel_probs))
         off_action_choice = np.random.choice(3, p=np.squeeze(action_off_probs))
@@ -162,8 +165,15 @@ class GradAscentTrainerDiscrete(keras.models.Model):
                 # Calculating loss values to update our network
                 loss = self.compute_loss(action_vel, action_off, critic_values, returns)
 
+
+            for x in self.actor_critic_net.weights:
+                if tf.reduce_any(tf.math.is_nan(x)):
+                    print("NAN detected in network weight")
+
             # Compute the gradients from the loss
             grads = tape.gradient(loss, self.actor_critic_net.trainable_variables)
+
+
 
             # Apply the gradients to the model's parameters
             self.training_param["adam_optimiser"].apply_gradients(

@@ -1,0 +1,1012 @@
+The system is: Windows - 10.0.19042 - AMD64
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler:  
+Build flags: 
+Id flags:  
+
+The output was:
+0
+Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 12/6/2020 7:03:55 PM.
+Project "D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\3.17.20032601-MSVC_2\CompilerIdC\CompilerIdC.vcxproj" on node 1 (default targets).
+PrepareForBuild:
+  Creating directory "Debug\".
+  Creating directory "Debug\CompilerIdC.tlog\".
+InitializeBuildStatus:
+  Creating "Debug\CompilerIdC.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+ClCompile:
+  C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.27.29110\bin\HostX64\x64\CL.exe /c /nologo /W0 /WX- /diagnostics:column /Od /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Debug\\" /Fd"Debug\vc142.pdb" /Gd /TC /FC /errorReport:queue CMakeCCompilerId.c
+  CMakeCCompilerId.c
+Link:
+  C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.27.29110\bin\HostX64\x64\link.exe /ERRORREPORT:QUEUE /OUT:".\CompilerIdC.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:".\CompilerIdC.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:".\CompilerIdC.lib" /MACHINE:X64 Debug\CMakeCCompilerId.obj
+  CompilerIdC.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\3.17.20032601-MSVC_2\CompilerIdC\.\CompilerIdC.exe
+PostBuildEvent:
+  for %%i in (cl.exe) do @echo CMAKE_C_COMPILER=%%~$PATH:i
+  :VCEnd
+  CMAKE_C_COMPILER=C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.27.29110\bin\Hostx64\x64\cl.exe
+FinalizeBuildStatus:
+  Deleting file "Debug\CompilerIdC.tlog\unsuccessfulbuild".
+  Touching "Debug\CompilerIdC.tlog\CompilerIdC.lastbuildstate".
+Done Building Project "D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\3.17.20032601-MSVC_2\CompilerIdC\CompilerIdC.vcxproj" (default targets).
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.66
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CompilerIdC.exe"
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CompilerIdC.vcxproj"
+
+The C compiler identification is MSVC, found in "D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/3.17.20032601-MSVC_2/CompilerIdC/CompilerIdC.exe"
+
+Determining if the C compiler works passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_de9e0.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  testCCompiler.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_de9e0.dir\Debug\\" /Fd"cmTC_de9e0.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\testCCompiler.c
+  cmTC_de9e0.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_de9e0.exe
+
+
+
+Detecting C compiler ABI info compiled with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_b79d9.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  CMakeCCompilerABI.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_b79d9.dir\Debug\\" /Fd"cmTC_b79d9.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.17\Modules\CMakeCCompilerABI.c"
+  cmTC_b79d9.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_b79d9.exe
+
+
+
+Determining if files ;sys/stat.h exist passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_ed7de.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_HAVE_SYS_STAT_H.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_ed7de.dir\Debug\\" /Fd"cmTC_ed7de.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckIncludeFiles\H5_HAVE_SYS_STAT_H.c
+  cmTC_ed7de.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_ed7de.exe
+
+
+
+Determining if files sys/stat.h;sys/types.h exist passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_84b48.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_HAVE_SYS_TYPES_H.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_84b48.dir\Debug\\" /Fd"cmTC_84b48.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckIncludeFiles\H5_HAVE_SYS_TYPES_H.c
+  cmTC_84b48.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_84b48.exe
+
+
+
+Determining if files sys/stat.h;sys/types.h;setjmp.h exist passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_a7a9f.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_HAVE_SETJMP_H.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_a7a9f.dir\Debug\\" /Fd"cmTC_a7a9f.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckIncludeFiles\H5_HAVE_SETJMP_H.c
+  cmTC_a7a9f.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_a7a9f.exe
+
+
+
+Determining if files sys/stat.h;sys/types.h;setjmp.h;stddef.h exist passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_5d400.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_HAVE_STDDEF_H.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_5d400.dir\Debug\\" /Fd"cmTC_5d400.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckIncludeFiles\H5_HAVE_STDDEF_H.c
+  cmTC_5d400.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_5d400.exe
+
+
+
+Determining if files sys/stat.h;sys/types.h;setjmp.h;stddef.h;stdint.h exist passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_455df.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_HAVE_STDINT_H.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_455df.dir\Debug\\" /Fd"cmTC_455df.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckIncludeFiles\H5_HAVE_STDINT_H.c
+  cmTC_455df.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_455df.exe
+
+
+
+Determining if files sys/stat.h;sys/types.h;setjmp.h;stddef.h;stdint.h;io.h exist passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_561ce.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_HAVE_IO_H.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_561ce.dir\Debug\\" /Fd"cmTC_561ce.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckIncludeFiles\H5_HAVE_IO_H.c
+  cmTC_561ce.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_561ce.exe
+
+
+
+Determining if files sys/stat.h;sys/types.h;setjmp.h;stddef.h;stdint.h;io.h;winsock2.h exist passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_2148e.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_HAVE_WINSOCK2_H.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_2148e.dir\Debug\\" /Fd"cmTC_2148e.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckIncludeFiles\H5_HAVE_WINSOCK2_H.c
+  cmTC_2148e.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_2148e.exe
+
+
+
+Determining if files sys/stat.h;sys/types.h;setjmp.h;stddef.h;stdint.h;io.h;winsock2.h;sys/timeb.h exist passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_e86cd.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_HAVE_SYS_TIMEB_H.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_e86cd.dir\Debug\\" /Fd"cmTC_e86cd.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckIncludeFiles\H5_HAVE_SYS_TIMEB_H.c
+  cmTC_e86cd.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_e86cd.exe
+
+
+
+Determining if files sys/stat.h;sys/types.h;setjmp.h;stddef.h;stdint.h;io.h;winsock2.h;sys/timeb.h;string.h exist passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_cc7ad.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_HAVE_STRING_H.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_cc7ad.dir\Debug\\" /Fd"cmTC_cc7ad.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckIncludeFiles\H5_HAVE_STRING_H.c
+  cmTC_cc7ad.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_cc7ad.exe
+
+
+
+Determining if files sys/stat.h;sys/types.h;setjmp.h;stddef.h;stdint.h;io.h;winsock2.h;sys/timeb.h;string.h;stdlib.h exist passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_d2f0a.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_HAVE_STDLIB_H.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_d2f0a.dir\Debug\\" /Fd"cmTC_d2f0a.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckIncludeFiles\H5_HAVE_STDLIB_H.c
+  cmTC_d2f0a.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_d2f0a.exe
+
+
+
+Determining if files sys/stat.h;sys/types.h;setjmp.h;stddef.h;stdint.h;io.h;winsock2.h;sys/timeb.h;string.h;stdlib.h;memory.h exist passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_737c9.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_HAVE_MEMORY_H.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_737c9.dir\Debug\\" /Fd"cmTC_737c9.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckIncludeFiles\H5_HAVE_MEMORY_H.c
+  cmTC_737c9.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_737c9.exe
+
+
+
+Determining if files sys/stat.h;sys/types.h;setjmp.h;stddef.h;stdint.h;io.h;winsock2.h;sys/timeb.h;string.h;stdlib.h;memory.h;inttypes.h exist passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_4a605.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_HAVE_INTTYPES_H.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_4a605.dir\Debug\\" /Fd"cmTC_4a605.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckIncludeFiles\H5_HAVE_INTTYPES_H.c
+  cmTC_4a605.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_4a605.exe
+
+
+
+Determining if files sys/stat.h;sys/types.h;setjmp.h;stddef.h;stdint.h;io.h;winsock2.h;sys/timeb.h;string.h;stdlib.h;memory.h;inttypes.h;stdbool.h exist passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_54e6e.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_HAVE_STDBOOL_H.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_54e6e.dir\Debug\\" /Fd"cmTC_54e6e.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckIncludeFiles\H5_HAVE_STDBOOL_H.c
+  cmTC_54e6e.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_54e6e.exe
+
+
+
+Determining if the include file sys/types.h exists passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_72855.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  CheckIncludeFile.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_72855.dir\Debug\\" /Fd"cmTC_72855.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\CheckIncludeFile.c
+  cmTC_72855.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_72855.exe
+
+
+
+Determining if the include file stdint.h exists passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_77f2c.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  CheckIncludeFile.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_77f2c.dir\Debug\\" /Fd"cmTC_77f2c.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\CheckIncludeFile.c
+  cmTC_77f2c.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_77f2c.exe
+
+
+
+Determining if the include file stddef.h exists passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_ac330.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  CheckIncludeFile.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_ac330.dir\Debug\\" /Fd"cmTC_ac330.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\CheckIncludeFile.c
+  cmTC_ac330.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_ac330.exe
+
+
+
+Determining size of char passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_80ebf.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_CHAR.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_80ebf.dir\Debug\\" /Fd"cmTC_80ebf.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_CHAR.c
+  cmTC_80ebf.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_80ebf.exe
+
+
+
+Determining size of short passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_af67a.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_SHORT.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_af67a.dir\Debug\\" /Fd"cmTC_af67a.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_SHORT.c
+  cmTC_af67a.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_af67a.exe
+
+
+
+Determining size of int passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_6f6b9.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_INT.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_6f6b9.dir\Debug\\" /Fd"cmTC_6f6b9.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_INT.c
+  cmTC_6f6b9.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_6f6b9.exe
+
+
+
+Determining size of unsigned passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_af3a1.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_UNSIGNED.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_af3a1.dir\Debug\\" /Fd"cmTC_af3a1.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_UNSIGNED.c
+  cmTC_af3a1.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_af3a1.exe
+
+
+
+Determining size of long passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_b8c42.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_LONG.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_b8c42.dir\Debug\\" /Fd"cmTC_b8c42.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_LONG.c
+  cmTC_b8c42.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_b8c42.exe
+
+
+
+Determining size of long long passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_e9334.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_LONG_LONG.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_e9334.dir\Debug\\" /Fd"cmTC_e9334.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_LONG_LONG.c
+  cmTC_e9334.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_e9334.exe
+
+
+
+Determining size of __int64 passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_fcc3b.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF___INT64.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_fcc3b.dir\Debug\\" /Fd"cmTC_fcc3b.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF___INT64.c
+  cmTC_fcc3b.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_fcc3b.exe
+
+
+
+Determining size of float passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_83c4f.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_FLOAT.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_83c4f.dir\Debug\\" /Fd"cmTC_83c4f.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_FLOAT.c
+  cmTC_83c4f.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_83c4f.exe
+
+
+
+Determining size of double passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_92bbe.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_DOUBLE.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_92bbe.dir\Debug\\" /Fd"cmTC_92bbe.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_DOUBLE.c
+  cmTC_92bbe.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_92bbe.exe
+
+
+
+Determining size of long double passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_726b5.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_LONG_DOUBLE.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_726b5.dir\Debug\\" /Fd"cmTC_726b5.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_LONG_DOUBLE.c
+  cmTC_726b5.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_726b5.exe
+
+
+
+Determining size of int8_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_a33f8.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_INT8_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_a33f8.dir\Debug\\" /Fd"cmTC_a33f8.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_INT8_T.c
+  cmTC_a33f8.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_a33f8.exe
+
+
+
+Determining size of uint8_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_063e8.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_UINT8_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_063e8.dir\Debug\\" /Fd"cmTC_063e8.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_UINT8_T.c
+  cmTC_063e8.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_063e8.exe
+
+
+
+Determining size of int_least8_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_0b5aa.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_INT_LEAST8_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_0b5aa.dir\Debug\\" /Fd"cmTC_0b5aa.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_INT_LEAST8_T.c
+  cmTC_0b5aa.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_0b5aa.exe
+
+
+
+Determining size of uint_least8_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_be184.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_UINT_LEAST8_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_be184.dir\Debug\\" /Fd"cmTC_be184.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_UINT_LEAST8_T.c
+  cmTC_be184.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_be184.exe
+
+
+
+Determining size of int_fast8_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_45403.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_INT_FAST8_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_45403.dir\Debug\\" /Fd"cmTC_45403.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_INT_FAST8_T.c
+  cmTC_45403.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_45403.exe
+
+
+
+Determining size of uint_fast8_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_3fb38.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_UINT_FAST8_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_3fb38.dir\Debug\\" /Fd"cmTC_3fb38.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_UINT_FAST8_T.c
+  cmTC_3fb38.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_3fb38.exe
+
+
+
+Determining size of int16_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_dec29.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_INT16_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_dec29.dir\Debug\\" /Fd"cmTC_dec29.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_INT16_T.c
+  cmTC_dec29.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_dec29.exe
+
+
+
+Determining size of uint16_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_074d7.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_UINT16_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_074d7.dir\Debug\\" /Fd"cmTC_074d7.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_UINT16_T.c
+  cmTC_074d7.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_074d7.exe
+
+
+
+Determining size of int_least16_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_27889.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_INT_LEAST16_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_27889.dir\Debug\\" /Fd"cmTC_27889.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_INT_LEAST16_T.c
+  cmTC_27889.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_27889.exe
+
+
+
+Determining size of uint_least16_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_73a6b.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_UINT_LEAST16_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_73a6b.dir\Debug\\" /Fd"cmTC_73a6b.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_UINT_LEAST16_T.c
+  cmTC_73a6b.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_73a6b.exe
+
+
+
+Determining size of int_fast16_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_39131.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_INT_FAST16_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_39131.dir\Debug\\" /Fd"cmTC_39131.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_INT_FAST16_T.c
+  cmTC_39131.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_39131.exe
+
+
+
+Determining size of uint_fast16_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_3994a.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_UINT_FAST16_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_3994a.dir\Debug\\" /Fd"cmTC_3994a.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_UINT_FAST16_T.c
+  cmTC_3994a.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_3994a.exe
+
+
+
+Determining size of int32_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_a5299.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_INT32_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_a5299.dir\Debug\\" /Fd"cmTC_a5299.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_INT32_T.c
+  cmTC_a5299.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_a5299.exe
+
+
+
+Determining size of uint32_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_c27a6.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_UINT32_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_c27a6.dir\Debug\\" /Fd"cmTC_c27a6.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_UINT32_T.c
+  cmTC_c27a6.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_c27a6.exe
+
+
+
+Determining size of int_least32_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_f80ba.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_INT_LEAST32_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_f80ba.dir\Debug\\" /Fd"cmTC_f80ba.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_INT_LEAST32_T.c
+  cmTC_f80ba.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_f80ba.exe
+
+
+
+Determining size of uint_least32_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_f89dd.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_UINT_LEAST32_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_f89dd.dir\Debug\\" /Fd"cmTC_f89dd.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_UINT_LEAST32_T.c
+  cmTC_f89dd.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_f89dd.exe
+
+
+
+Determining size of int_fast32_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_9cd5e.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_INT_FAST32_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_9cd5e.dir\Debug\\" /Fd"cmTC_9cd5e.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_INT_FAST32_T.c
+  cmTC_9cd5e.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_9cd5e.exe
+
+
+
+Determining size of uint_fast32_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_f3d31.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_UINT_FAST32_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_f3d31.dir\Debug\\" /Fd"cmTC_f3d31.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_UINT_FAST32_T.c
+  cmTC_f3d31.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_f3d31.exe
+
+
+
+Determining size of int64_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_77070.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_77070.dir\Debug\\" /Fd"cmTC_77070.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_INT64_T.c
+  H5_SIZEOF_INT64_T.c
+  cmTC_77070.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_77070.exe
+
+
+
+Determining size of uint64_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_75eb1.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_UINT64_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_75eb1.dir\Debug\\" /Fd"cmTC_75eb1.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_UINT64_T.c
+  cmTC_75eb1.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_75eb1.exe
+
+
+
+Determining size of int_least64_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_2f3af.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_INT_LEAST64_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_2f3af.dir\Debug\\" /Fd"cmTC_2f3af.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_INT_LEAST64_T.c
+  cmTC_2f3af.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_2f3af.exe
+
+
+
+Determining size of uint_least64_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_5d8e1.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_UINT_LEAST64_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_5d8e1.dir\Debug\\" /Fd"cmTC_5d8e1.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_UINT_LEAST64_T.c
+  cmTC_5d8e1.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_5d8e1.exe
+
+
+
+Determining size of int_fast64_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_76c65.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_INT_FAST64_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_76c65.dir\Debug\\" /Fd"cmTC_76c65.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_INT_FAST64_T.c
+  cmTC_76c65.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_76c65.exe
+
+
+
+Determining size of uint_fast64_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_3916f.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_UINT_FAST64_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_3916f.dir\Debug\\" /Fd"cmTC_3916f.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_UINT_FAST64_T.c
+  cmTC_3916f.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_3916f.exe
+
+
+
+Determining size of size_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_6da0f.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_SIZE_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_6da0f.dir\Debug\\" /Fd"cmTC_6da0f.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_SIZE_T.c
+  cmTC_6da0f.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_6da0f.exe
+
+
+
+Determining size of off_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_07840.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_OFF_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_07840.dir\Debug\\" /Fd"cmTC_07840.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_OFF_T.c
+  cmTC_07840.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_07840.exe
+
+
+
+Determining size of time_t passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_fe79a.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_TIME_T.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_fe79a.dir\Debug\\" /Fd"cmTC_fe79a.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_TIME_T.c
+  cmTC_fe79a.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_fe79a.exe
+
+
+
+Determining size of _Bool passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_cc168.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  H5_SIZEOF_BOOL.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_cc168.dir\Debug\\" /Fd"cmTC_cc168.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CheckTypeSize\H5_SIZEOF_BOOL.c
+  cmTC_cc168.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_cc168.exe
+
+
+
+Determining if the function llround exists passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_b7f5a.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  CheckFunctionExists.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=llround /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_b7f5a.dir\Debug\\" /Fd"cmTC_b7f5a.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.17\Modules\CheckFunctionExists.c"
+  cmTC_b7f5a.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_b7f5a.exe
+
+
+
+Determining if the function llroundf exists passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_48fef.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  CheckFunctionExists.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=llroundf /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_48fef.dir\Debug\\" /Fd"cmTC_48fef.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.17\Modules\CheckFunctionExists.c"
+  cmTC_48fef.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_48fef.exe
+
+
+
+Determining if the function lround exists passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_86b59.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  CheckFunctionExists.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=lround /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_86b59.dir\Debug\\" /Fd"cmTC_86b59.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.17\Modules\CheckFunctionExists.c"
+  cmTC_86b59.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_86b59.exe
+
+
+
+Determining if the function lroundf exists passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_9f955.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  CheckFunctionExists.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=lroundf /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_9f955.dir\Debug\\" /Fd"cmTC_9f955.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.17\Modules\CheckFunctionExists.c"
+  cmTC_9f955.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_9f955.exe
+
+
+
+Determining if the function round exists passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_a71d4.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  CheckFunctionExists.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=round /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_a71d4.dir\Debug\\" /Fd"cmTC_a71d4.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.17\Modules\CheckFunctionExists.c"
+  cmTC_a71d4.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_a71d4.exe
+
+
+
+Determining if the function roundf exists passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_f01cf.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  CheckFunctionExists.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=roundf /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_f01cf.dir\Debug\\" /Fd"cmTC_f01cf.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.17\Modules\CheckFunctionExists.c"
+  cmTC_f01cf.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_f01cf.exe
+
+
+
+Determining if the function signal exists passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_6a0da.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  CheckFunctionExists.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=signal /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_6a0da.dir\Debug\\" /Fd"cmTC_6a0da.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.17\Modules\CheckFunctionExists.c"
+  cmTC_6a0da.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_6a0da.exe
+
+
+
+Determining if the function setjmp exists passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_2b362.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  CheckFunctionExists.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=setjmp /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_2b362.dir\Debug\\" /Fd"cmTC_2b362.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.17\Modules\CheckFunctionExists.c"
+  cmTC_2b362.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_2b362.exe
+
+
+
+Determining if the function strtoll exists passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_1f76a.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  CheckFunctionExists.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=strtoll /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_1f76a.dir\Debug\\" /Fd"cmTC_1f76a.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.17\Modules\CheckFunctionExists.c"
+  cmTC_1f76a.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_1f76a.exe
+
+
+
+Determining if the function strtoull exists passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_0d055.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  CheckFunctionExists.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=strtoull /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_0d055.dir\Debug\\" /Fd"cmTC_0d055.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.17\Modules\CheckFunctionExists.c"
+  cmTC_0d055.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_0d055.exe
+
+
+
+Determining if the function tmpfile exists passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_cbf58.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  CheckFunctionExists.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=tmpfile /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_cbf58.dir\Debug\\" /Fd"cmTC_cbf58.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.17\Modules\CheckFunctionExists.c"
+  cmTC_cbf58.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_cbf58.exe
+
+
+
+Performing C SOURCE FILE Test InitOnceExecuteOnce succeded with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_8cf4c.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  HDFTests.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D HAVE_IOEO /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_8cf4c.dir\Debug\\" /Fd"cmTC_8cf4c.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue D:\Documents\Projects\hwsim\build\dependencies\hdf5\source\config\cmake_ext_mod\HDFTests.c
+  cmTC_8cf4c.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_8cf4c.exe
+
+
+Return value: 
+Determining if the function difftime exists passed with the following output:
+Change Dir: D:/Documents/Projects/hwsim/build/dependencies/hdf5/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe cmTC_21cc9.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.7.0+b89cb5fde for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29112 for x64
+  CheckFunctionExists.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=difftime /D WIN32_LEAN_AND_MEAN=1 /D NOGDI=1 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_21cc9.dir\Debug\\" /Fd"cmTC_21cc9.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.17\Modules\CheckFunctionExists.c"
+  cmTC_21cc9.vcxproj -> D:\Documents\Projects\hwsim\build\dependencies\hdf5\CMakeFiles\CMakeTmp\Debug\cmTC_21cc9.exe
+
+
+

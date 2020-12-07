@@ -1,0 +1,18 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyUnreachableCodeInspection" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="python.implementation.Main.NeuralModels" />
+          <option value="python.implementation.Main.RL_Policies" />
+          <option value="python.implementation.Main.AcPolicy" />
+          <option value="python.implementation.Main.GradAscentTrainer" />
+          <option value="python.implementation.Main.ActorNet" />
+          <option value="python.implementation.Main.*" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

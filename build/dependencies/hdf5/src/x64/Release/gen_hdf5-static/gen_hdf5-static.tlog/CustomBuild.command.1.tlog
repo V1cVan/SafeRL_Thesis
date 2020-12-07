@@ -1,0 +1,50 @@
+^D:\DOCUMENTS\PROJECTS\HWSIM\BUILD\DEPENDENCIES\HDF5\CMAKEFILES\0A1C5B4E0E46DBFA6A81DB3139007190\H5TINIT.C.RULE
+setlocal
+cd D:\Documents\Projects\hwsim\build\dependencies\hdf5
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+D:\Documents\Projects\hwsim\build\dependencies\hdf5\bin\Release\H5detect.exe D:/Documents/Projects/hwsim/build/dependencies/hdf5/H5Tinit.c
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E touch D:/Documents/Projects/hwsim/build/dependencies/hdf5/gen_SRCS.stamp1
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\DOCUMENTS\PROJECTS\HWSIM\BUILD\DEPENDENCIES\HDF5\CMAKEFILES\0A1C5B4E0E46DBFA6A81DB3139007190\H5LIB_SETTINGS.C.RULE
+setlocal
+cd D:\Documents\Projects\hwsim\build\dependencies\hdf5
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+D:\Documents\Projects\hwsim\build\dependencies\hdf5\bin\Release\H5make_libsettings.exe D:/Documents/Projects/hwsim/build/dependencies/hdf5/H5lib_settings.c
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E touch D:/Documents/Projects/hwsim/build/dependencies/hdf5/gen_SRCS.stamp2
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\DOCUMENTS\PROJECTS\HWSIM\BUILD\DEPENDENCIES\HDF5\CMAKEFILES\05857BB8F840DE3DAEE17C90639A9DBF\GEN_HDF5-STATIC.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\DOCUMENTS\PROJECTS\HWSIM\BUILD\DEPENDENCIES\HDF5\SOURCE\SRC\CMAKELISTS.TXT
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SD:/Documents/Projects/hwsim/build/dependencies/hdf5/source -BD:/Documents/Projects/hwsim/build/dependencies/hdf5 --check-stamp-file D:/Documents/Projects/hwsim/build/dependencies/hdf5/src/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
