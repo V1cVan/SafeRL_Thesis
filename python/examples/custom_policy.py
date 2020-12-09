@@ -11,7 +11,7 @@ class FixedLanePolicy(CustomPolicy, enc_name="fixed_lane"):
     bounded by the safety bounds (taking vehicles in front into account)."""
     LONG_ACTION = ActionType.ABS_VEL
     LAT_ACTION = ActionType.REL_OFF # Alternatively: ActionType.LANE
-    
+
     def __init__(self):
         super().__init__()
         self.STEP_TIME = 100 # Change reference velocity every 100 iterations (10s)

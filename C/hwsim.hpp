@@ -285,5 +285,9 @@ extern "C"{
     // Get the safety bounds for the given vehicle
     LIB_PUBLIC
     void veh_getSafetyBounds(const Vehicle* veh, double* bounds);
+
+    // --- Plotting ---
+    LIB_PUBLIC
+    void utils_transformPoints(const double* points, double* out, const unsigned int N, const double* C, const double* S, const double* A);
 }
 #endif

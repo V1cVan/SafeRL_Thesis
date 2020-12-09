@@ -4,6 +4,7 @@
 #include "Utils.hpp"
 #include "Vehicle.hpp"
 #include "Scenario.hpp"
+#include "Plotting.hpp"
 #include "hdf5Helper.hpp"
 #include <vector>
 #include <array>

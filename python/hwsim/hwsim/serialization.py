@@ -134,8 +134,8 @@ class YAMLSerializer(object):
         # Same magic as in YAMLObjectMetaclass:
         for loader in [yaml.Loader,yaml.SafeLoader,yaml.FullLoader]:
             loader.add_constructor(S.yaml_tag, S.from_yaml)
-
-        yaml.Dumper.add_representer(S, S.to_yaml)
+        for dumper in [yaml.Dumper,yaml.SafeDumper]:
+            dumper.add_representer(S, S.to_yaml)
 
 
 class JSONEncoder(json.JSONEncoder):

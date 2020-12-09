@@ -4,6 +4,7 @@ import typing
 import pathlib
 import random
 import json
+import yaml
 import time
 from warnings import warn
 from hwsim._utils import conditional
@@ -32,7 +33,7 @@ class Simulation(object):
         scenario:       Name of scenario to load
         name:           Name of this simulation
         output_dir:     Path to folder in which this simulation's data should be stored
-        output_mode:    Either '~' or 'none' to suppress all output; 'cfg' to only store the used configuration; or 'all' to also store the log files
+        output_mode:    Either '~' or 'none' to suppress all output; 'cfg' to only store the used configuration; 'log' to only store the log files; or 'all' to store everything
         input_dir:      Path to folder of previous simulation to load in
         k0:             Initial value for the current time step k
         replay:         True to replay the loaded simulation, False to continue simulating from k=k0
@@ -133,7 +134,7 @@ class Simulation(object):
     @output_mode.setter
     @conditional(_inactive)
     def output_mode(self, val):
-        modes = ["~", "none", "cfg", "all"]
+        modes = ["~", "none", "cfg", "log", "all"]
         val = str(val).lower()
         assert val in modes
         if val=="~" or val=="none":
@@ -171,7 +172,8 @@ class Simulation(object):
             sim_name = self._simCfg["name"]
         file_name = {
             "log": "log.h5",
-            "cfg": "sim_cfg.jsonc"
+            "cfg": "sim_cfg.yaml",
+            "cfg_old": "sim_cfg.json"
         }[file]
         path = self._sim_dir(dir,sim_name).joinpath(file_name) if dir else None
         return self._convert_path(path,dtype)
@@ -183,8 +185,11 @@ class Simulation(object):
         self.name = name
         if not config:
             if self._sim_file("cfg",input_dir).exists():
+                # Uncomment for older json configuration file support:
+                # with open(self._sim_file("cfg_old",input_dir),'rb') as f:
+                #     config = json.load(f,cls=JSONDecoder)["vehicles"]
                 with open(self._sim_file("cfg",input_dir),'rb') as f:
-                    config = json.load(f,cls=JSONDecoder)["vehicles"]
+                    config = yaml.safe_load(f)["vehicles"]
             else:
                 config = []
         self._simCfg["input_dir"] = str(input_dir)
@@ -316,16 +321,22 @@ class Simulation(object):
     def __enter__(self):
         assert self._simCfg["input_dir"] or len(self._simCfg["types"])>0 or len(self._simCfg["defs"])>0
         # Make sure output directory exists:
+        output_dir = ""
         if self._simCfg["output_dir"] and self._simCfg["output_mode"]:
             self._sim_dir(self._simCfg["output_dir"]).mkdir(parents=True)
             # Save simulation configuration in output dir for later use
-            cfg = {key: val for key,val in self._simCfg.items() if key not in ["types","defs"]}
-            with open(self._sim_file("cfg",self._simCfg["output_dir"]),'w') as f:
-                json.dump(cfg, f, cls=JSONEncoder, indent=2)
+            if self._simCfg["output_mode"] in ("all","cfg"):
+                cfg = {key: val for key,val in self._simCfg.items() if key not in ["types","defs"]}
+                # with open(self._sim_file("cfg_old",self._simCfg["output_dir"]),'w') as f:
+                #     json.dump(cfg, f, cls=JSONEncoder, indent=2)
+                with open(self._sim_file("cfg",self._simCfg["output_dir"]),'w') as f:
+                    yaml.safe_dump(cfg, f, default_flow_style=None,sort_keys=False) # flow_style None will use flow style for inner lists/dicts
+            # Save log file in output dir for later replays
+            if self._simCfg["output_mode"] in ("all","log"):
+                output_dir = self._simCfg["output_dir"]
         # Create new simulation object
         simCfg = SimConfig()
         simCfg.dt = self._simCfg["dt"]
-        output_dir = self._simCfg["output_dir"] if self._simCfg["output_mode"]=="all" else ""
         simCfg.output_log = self._sim_file("log", output_dir, dtype='b')
         # Call proper constructor
         if self._simCfg["input_dir"]:

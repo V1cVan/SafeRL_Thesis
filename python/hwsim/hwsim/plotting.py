@@ -8,6 +8,7 @@ import collections
 from enum import Enum, Flag, auto
 from tkinter import Tk, Label, Entry, Button
 from hwsim.policy import ActionType
+from hwsim._wrapper import simLib
 
 #region: Helper functions
 def _cuboidMesh(S):
@@ -76,25 +77,36 @@ def _transformPoints(points,C=None,S=None,A=None):
         S = np.ones(3)
     if A is None:
         A = np.zeros(3)
-    if np.any(np.isnan(A[1:])):
+    if np.isnan(A[1]) or np.isnan(A[2]):
         # Only perform 2D rotation (but keep 3 dimensions)
         A[1:] = 0
 
-    sinA = np.sin(A).flatten()
-    cosA = np.cos(A).flatten()
-    Rx = np.array([[1,0,      0],
-                   [0,cosA[2],-sinA[2]],
-                   [0,sinA[2],cosA[2]]]) # Roll rotation matrix
-    Ry = np.array([[cosA[1], 0,sinA[1]],
-                   [0,       1,0],
-                   [-sinA[1],0,cosA[1]]]) # Pitch rotation matrix
-    Rz = np.array([[cosA[0],-sinA[0],0],
-                   [sinA[0],cosA[0], 0],
-                   [0,      0,       1]]) # Yaw rotation matrix
-    R = np.matmul(Rz,np.matmul(Ry,Rx)) # Full rotation matrix
-    T = np.matmul(np.diag(S),R) # Scaling and rotation matrix
+    # sinA = np.sin(A).flatten()
+    # cosA = np.cos(A).flatten()
+    # Rx = np.array([[1,0,      0],
+    #                [0,cosA[2],-sinA[2]],
+    #                [0,sinA[2],cosA[2]]]) # Roll rotation matrix
+    # Ry = np.array([[cosA[1], 0,sinA[1]],
+    #                [0,       1,0],
+    #                [-sinA[1],0,cosA[1]]]) # Pitch rotation matrix
+    # Rz = np.array([[cosA[0],-sinA[0],0],
+    #                [sinA[0],cosA[0], 0],
+    #                [0,      0,       1]]) # Yaw rotation matrix
+    # R = np.matmul(Rz,np.matmul(Ry,Rx)) # Full rotation matrix
+    # T = np.transpose(np.matmul(R,np.diag(S))) # Scaling and rotation matrix
+    # out = np.reshape(C,(1,3)) + np.matmul(points, T)
 
-    return np.reshape(C,(1,3)) + np.matmul(points,np.transpose(T))
+    out = np.empty(points.shape)
+    simLib.utils_transformPoints(
+        np.ascontiguousarray(points),   # Arrays should be in column-major order with shape (3,P), but this
+        out,                            # coincides with numpy's default row-major order and shape (P,3)
+        points.shape[0],
+        np.ascontiguousarray(C),
+        np.ascontiguousarray(S),
+        np.ascontiguousarray(A)
+    )
+
+    return out
 
 def _normalizeMesh(mesh):
     """
@@ -111,6 +123,33 @@ def _stippledTexture(pixels_on,pixels_off):
     texture = 255*np.ones((pixels_on+pixels_off,1,4),np.uint8) # Full display texture
     texture[pixels_on:,0,3] = 0 # Add stipples (fully transparent part)
     return pv.Texture(texture)
+
+class CyclicBuffer(object):
+
+    def __init__(self, size, fill_value=0, dtype=np.float64):
+        self._size = size
+        self._buffer = np.full(2*size, fill_value, dtype=dtype)
+        self._k = 0 # Pointer to slice of active memory slice
+
+    def store(self, val):
+        # Stores a new value at the end of the buffer, overwriting the oldest
+        # value at the start of the buffer
+        self[0] = val
+        self._k = (self._k + 1) % self._size
+
+    def __setitem__(self, idx, val):
+        # Puts the given value at the given location in the buffer. This does not
+        # cycle the buffer
+        k = (self._k + idx) % self._size
+        self._buffer[k] = val
+        self._buffer[k + self._size] = val
+
+    def __getitem__(self, idx):
+        return self._buffer[(self._k + idx) % self._size]
+
+    def view(self):
+        return self._buffer[self._k:self._k+self._size]
+
 #endregion
 
 #region: Plotter views
@@ -309,7 +348,7 @@ class SimulationPlot(_PlotterView):
             line = pv.lines_from_points(pts)
             # Texture coordinates:
             line.t_coords = np.stack((ts,np.zeros(s.size)),axis=1)
-        
+
         # Create texture:
         if stippled:
             # Note that the below texture is only accurate up to 0.01 meters
@@ -391,7 +430,7 @@ class BirdsEyePlot(SimulationPlot):
         dy = self._camera_cfg[1,1]-self._camera_cfg[0,1]
         dz = self._camera_cfg[1,2]-self._camera_cfg[0,2]
         A = np.array([np.arctan2(dy,d*dx),np.arctan2(-dz,d*dx),0]) # Rotations of camera for the given configuration
-        self._camera_cfg[2,:] = _transformPoints(np.array([0,0,1]),A=A) # Rotate camera viewup from [0,0,1] to the configured viewup
+        self._camera_cfg[2,:] = _transformPoints(np.array([[0,0,1]],np.float64),A=A) # Rotate camera viewup from [0,0,1] to the configured viewup
 
     def plot(self):
         super().plot()
@@ -411,7 +450,7 @@ class TimeChartPlot(_PlotterView):
     Base class for all 2D time chart plots.
     """
 
-    def __init__(self,p,lines=None,patches=None,ylabel="",cached_vehicles=None):
+    def __init__(self,p,lines=None,patches=None,value_cb=None,ylabel="",cached_vehicles=None):
         super().__init__(p)
         # This view will keep track of the last data for all vehicles in the simulation
         # such that we can switch the active vehicle at a later point without information
@@ -424,8 +463,9 @@ class TimeChartPlot(_PlotterView):
         if patches is None:
             patches = {}
         self._patches = patches
+        self._values = value_cb if value_cb is not None else lambda veh: {}
         if cached_vehicles is None:
-            cached_vehicles = [i for i in range(len(self._sim.vehicles))]
+            cached_vehicles = [p.V]
         self._cvIds = cached_vehicles
 
         self._memory = []
@@ -436,16 +476,16 @@ class TimeChartPlot(_PlotterView):
             }
             for field in self._lines.keys():
                 veh_memory["lines"][field] = {
-                    "data": np.full(self._MEMORY_SIZE,np.nan),
-                    "length": np.zeros(self._MEMORY_SIZE)
+                    "data": CyclicBuffer(self._MEMORY_SIZE,np.nan),
+                    "length": CyclicBuffer(self._MEMORY_SIZE)
                 }
             for field in self._patches.keys():
                 veh_memory["patches"][field] = {
-                    "upper": np.full(self._MEMORY_SIZE,np.nan),
-                    "lower": np.full(self._MEMORY_SIZE,np.nan)
+                    "upper": CyclicBuffer(self._MEMORY_SIZE,np.nan),
+                    "lower": CyclicBuffer(self._MEMORY_SIZE,np.nan)
                 }
             self._memory.append(veh_memory)
-        self._time = np.full(self._MEMORY_SIZE,np.nan)
+        self._time = CyclicBuffer(self._MEMORY_SIZE,np.nan)
         self._updateMemory()
         for i in self._cvIds:
             for field in self._lines.keys():
@@ -455,15 +495,15 @@ class TimeChartPlot(_PlotterView):
         p.enable_parallel_projection()
         # Create patch meshes:
         for field, patch in self._patches.items():
-            upper = np.stack((self._time,self._memory[self.V]["patches"][field]["upper"],np.zeros(self._MEMORY_SIZE)),axis=1)
-            lower = np.stack((self._time,self._memory[self.V]["patches"][field]["lower"],np.zeros(self._MEMORY_SIZE)),axis=1)
+            upper = np.zeros((self._MEMORY_SIZE,3))
+            lower = np.zeros((self._MEMORY_SIZE,3))
             patch["mesh"] = _polygonalMesh(upper,lower)
             p.add_mesh(patch["mesh"],color=patch["color"])
         # Create line actors:
         for field, line in self._lines.items():
-            points = np.stack((self._time,self._memory[self.V]["lines"][field]["data"],np.zeros(self._MEMORY_SIZE)),axis=1)
+            points = np.zeros((self._MEMORY_SIZE,3))
             line["mesh"] = pv.lines_from_points(points)
-            line["mesh"].t_coords = np.stack((self._memory[self.V]["lines"][field]["length"],np.zeros(self._MEMORY_SIZE)),axis=1)
+            line["mesh"].t_coords = np.zeros((self._MEMORY_SIZE,2))
             texture = _stippledTexture(1,1) if "stippled" in line and line["stippled"] else None
             p.add_mesh(line["mesh"],color=line["color"],line_width=3,texture=texture)
 
@@ -483,46 +523,43 @@ class TimeChartPlot(_PlotterView):
 
     def _updateMemory(self):
         dt = self._sim.k*self._sim.dt-self._time[-1]
-        self._time[:-1] = self._time[1:]
-        self._time[-1] = self._sim.k*self._sim.dt # Current simulation time
+        self._time.store(self._sim.k*self._sim.dt) # Current simulation time
         for V in self._cvIds:
             veh = self._sim.vehicles[V]
+            values, bounds = self._values(veh)
             for field, line in self._lines.items():
-                self._memory[V]["lines"][field]["data"][:-1] = self._memory[V]["lines"][field]["data"][1:]
-                self._memory[V]["lines"][field]["length"][:-1] = self._memory[V]["lines"][field]["length"][1:]
-                newVal = line["getValue"](veh)
+                newVal = values[field] if field in values else np.nan
                 dv = newVal-self._memory[V]["lines"][field]["data"][-1]
-                self._memory[V]["lines"][field]["data"][-1] = newVal # Current value
-                self._memory[V]["lines"][field]["length"][-1] += np.linalg.norm(np.array([dt,dv]))
+                L = self._memory[V]["lines"][field]["length"][-1]
+                self._memory[V]["lines"][field]["data"].store(newVal) # Current value
+                self._memory[V]["lines"][field]["length"].store(L+np.sqrt(dt*dt+dv*dv))
             for field, patch in self._patches.items():
-                self._memory[V]["patches"][field]["upper"][:-1] = self._memory[V]["patches"][field]["upper"][1:]
-                self._memory[V]["patches"][field]["lower"][:-1] = self._memory[V]["patches"][field]["lower"][1:]
-                lower, upper = patch["getBounds"](veh) # Current upper and lower bounds
-                self._memory[V]["patches"][field]["upper"][-1] = upper
-                self._memory[V]["patches"][field]["lower"][-1] = lower
+                lower, upper = bounds[field] if field in bounds else (np.nan, np.nan) # Current upper and lower bounds
+                self._memory[V]["patches"][field]["upper"].store(upper)
+                self._memory[V]["patches"][field]["lower"].store(lower)
 
     def plot(self):
         self._updateMemory()
         for field, line in self._lines.items():
             points = line["mesh"].points
-            points[:,0] = self._time
-            points[:,1] = self._memory[self.V]["lines"][field]["data"]
+            points[:,0] = self._time.view()
+            points[:,1] = self._memory[self.V]["lines"][field]["data"].view()
             line["mesh"].points = points # Using a full assignment calls the setter, which forces the updated data to be redrawn
             t_coords = line["mesh"].t_coords
-            t_coords[:,0] = self._memory[self.V]["lines"][field]["length"] # TODO: incorporate screen size
+            t_coords[:,0] = self._memory[self.V]["lines"][field]["length"].view() # TODO: incorporate screen size
             line["mesh"].t_coords = t_coords # Force update
         for field, patch in self._patches.items():
             # Lower points are in first half, upper points in second half:
             points = patch["mesh"].points
-            points[:self._MEMORY_SIZE,0] = self._time
-            points[:self._MEMORY_SIZE,1] = self._memory[self.V]["patches"][field]["lower"]
-            points[self._MEMORY_SIZE:,0] = self._time
-            points[self._MEMORY_SIZE:,1] = self._memory[self.V]["patches"][field]["upper"]
+            points[:self._MEMORY_SIZE,0] = self._time.view()
+            points[:self._MEMORY_SIZE,1] = self._memory[self.V]["patches"][field]["lower"].view()
+            points[self._MEMORY_SIZE:,0] = self._time.view()
+            points[self._MEMORY_SIZE:,1] = self._memory[self.V]["patches"][field]["upper"].view()
             patch["mesh"].points = points
         data_bounds = np.array(self._r.bounds) # x_min,x_max,y_min,y_max,z_min,z_max
         # TODO: x_min is always 0 instead of the minimum value in memory?
         # TODO: zooming is wrong when render_height >> render_width?
-        data_bounds[0] = np.nanmin(self._time)
+        data_bounds[0] = np.nanmin(self._time.view())
         render_width, render_height = self._r.GetSize()
         # Below code is same as
         # self._r.set_scale(xscale=render_width/(data_bounds[1]-data_bounds[0]),
@@ -554,8 +591,8 @@ class TimeChartPlot(_PlotterView):
 class ActionsPlot(TimeChartPlot):
 
     def __init__(self,p,actions=None,show_bounds=True,**kwargs):
-        lines, patches, labels = self.get_config(actions, show_bounds)
-        super().__init__(p,lines=lines,patches=patches,ylabel=" ; ".join(labels),**kwargs)
+        lines, patches, value_cb, labels = self.get_config(actions, show_bounds)
+        super().__init__(p,lines=lines,patches=patches,value_cb=value_cb,ylabel=" ; ".join(labels),**kwargs)
 
     @staticmethod
     def get_config(actions=None, show_bounds=True):
@@ -565,39 +602,42 @@ class ActionsPlot(TimeChartPlot):
         patches = {}
         labels = []
         if "long" in actions:
-            lines["long"] = {
-                "color": [0,0,1],
-                "getValue": lambda veh: veh.s["vel"][0]
-            }
+            lines["long"] = {"color": [0,0,1]}
             lines["long_ref"] = {
                 "color": [1,0,0],
-                "stippled": True,
-                "getValue": ActionsPlot.long_ref
+                "stippled": True
             }
             if show_bounds:
-                patches["long"] = {
-                    "color": [0.2,0.9,0.2,0.5],
-                    "getBounds": ActionsPlot.long_bounds
-                }
+                patches["long"] = {"color": [0.2,0.9,0.2,0.5]}
             labels.append("velocity (m/s)")
         if "lat" in actions:
-            lines["lat"] = {
-                "color": [0,0,1],
-                "getValue": lambda veh: veh.s["gapB"][0]
-            }
+            lines["lat"] = {"color": [0,0,1]}
             lines["lat_ref"] = {
                 "color": [1,0,0],
-                "stippled": True,
-                "getValue": ActionsPlot.lat_ref
+                "stippled": True
             }
             if show_bounds:
-                patches["lat"] = {
-                    "color": [0.2,0.9,0.2,0.5],
-                    "getBounds": ActionsPlot.lat_bounds
-                }
+                patches["lat"] = {"color": [0.2,0.9,0.2,0.5]}
             labels.append("offset (m)")
-        return lines, patches, labels
-    
+        return lines, patches, ActionsPlot.value_cb, labels
+
+    @staticmethod
+    def value_cb(veh):
+        s = veh.s
+        a = veh.a
+        a_b = veh.a_bounds
+        values = {
+            "long": s["vel"][0],
+            "long_ref": ActionsPlot.convert_long(veh, a["long"]),
+            "lat": s["gapB"][0],
+            "lat_ref": ActionsPlot.convert_lat(veh, a["lat"])
+        }
+        bounds = {
+            "long": [ActionsPlot.convert_long(veh,a_b["long"][0]), ActionsPlot.convert_long(veh,a_b["long"][1])],
+            "lat": [ActionsPlot.convert_lat(veh,a_b["lat"][0]), ActionsPlot.convert_lat(veh,a_b["lat"][1])]
+        }
+        return values, bounds
+
     @staticmethod
     def convert_long(veh, a):
         if veh.policy.LONG_ACTION==ActionType.REL_VEL:
@@ -605,14 +645,6 @@ class ActionsPlot(TimeChartPlot):
         # TODO: think about what to plot for ActionType ACC
         return a
 
-    @staticmethod
-    def long_ref(veh):
-        return ActionsPlot.convert_long(veh, veh.a["long"])
-    
-    @staticmethod
-    def long_bounds(veh):
-        return [ActionsPlot.convert_long(veh,bound) for bound in veh.a_bounds["long"]]
-    
     @staticmethod
     def convert_lat(veh, a):
         if veh.policy.LAT_ACTION==ActionType.REL_OFF:
@@ -627,19 +659,12 @@ class ActionsPlot(TimeChartPlot):
         # TODO: think about what to plot for ActionType DELTA
         return a
 
-    @staticmethod
-    def lat_ref(veh):
-        return ActionsPlot.convert_lat(veh, veh.a["lat"])
-    
-    @staticmethod
-    def lat_bounds(veh):
-        return [ActionsPlot.convert_lat(veh,bound) for bound in veh.a_bounds["lat"]]
 
 class InputsPlot(TimeChartPlot):
 
     def __init__(self,p,inputs=None,show_bounds=True,**kwargs):
-        lines, labels = self.get_config(inputs, show_bounds)
-        super().__init__(p,lines=lines,ylabel=" ; ".join(labels),**kwargs)
+        lines, value_cb, labels = self.get_config(inputs, show_bounds)
+        super().__init__(p,lines=lines,value_cb=value_cb,ylabel=" ; ".join(labels),**kwargs)
 
     @staticmethod
     def get_config(inputs=None,show_bounds=True):
@@ -648,40 +673,44 @@ class InputsPlot(TimeChartPlot):
         lines = {}
         labels = []
         if "acc" in inputs:
-            lines["acc"] = {
-                "color": [0,0,1],
-                "getValue": lambda veh: veh.u["acc"]
-            }
+            lines["acc"] = {"color": [0,0,1]}
             if show_bounds:
                 lines["acc_lower"] = {
                     "color": [0,0,0],
-                    "stippled": True,
-                    "getValue": lambda veh: veh.u_bounds["acc"][0]
+                    "stippled": True
                 }
                 lines["acc_upper"] = {
                     "color": [0,0,0],
-                    "stippled": True,
-                    "getValue": lambda veh: veh.u_bounds["acc"][1]
+                    "stippled": True
                 }
             labels.append("acceleration (m/s^2)")
         if "delta" in inputs:
-            lines["delta"] = {
-                "color": [0,0,1],
-                "getValue": lambda veh: veh.u["delta"]
-            }
+            lines["delta"] = {"color": [0,0,1]}
             if show_bounds:
                 lines["delta_lower"] = {
                     "color": [0,0,0],
-                    "stippled": True,
-                    "getValue": lambda veh: veh.u_bounds["delta"][0]
+                    "stippled": True
                 }
                 lines["delta_upper"] = {
                     "color": [0,0,0],
-                    "stippled": True,
-                    "getValue": lambda veh: veh.u_bounds["delta"][1]
+                    "stippled": True
                 }
             labels.append("steering angle (rad)")
-        return lines, labels
+        return lines, InputsPlot.value_cb, labels
+
+    @staticmethod
+    def value_cb(veh):
+        u = veh.u
+        u_b = veh.u_bounds
+        values = {
+            "acc": u["acc"],
+            "acc_lower": u_b["acc"][0],
+            "acc_upper": u_b["acc"][1],
+            "delta": u["delta"],
+            "delta_lower": u_b["delta"][0],
+            "delta_upper": u_b["delta"][1]
+        }
+        return values,{}
 
 
 class LabelPlot(_PlotterView):
@@ -958,7 +987,7 @@ class Plotter(pv.Plotter):
                     self.show(self._title,auto_close=close,interactive_update=update)
                 if sleep_time>0:
                     time.sleep(sleep_time)
-        
+
         if self._mode & Plotter.Mode.MP4: # MP4 mode enabled
             self.write_frame()
         # t_draw = timeit.default_timer()-t_draw

@@ -503,4 +503,9 @@ extern "C"{
         bounds[2] = veh->safetyBounds[1].x;
         bounds[3] = veh->safetyBounds[1].y;
     }
+
+    LIB_PUBLIC
+    void utils_transformPoints(const double* points, double* out, const unsigned int N, const double* C, const double* S, const double* A){
+        Plotting::Utils::transformPoints(Eigen::Matrix3Xd::Map(points,3,N), Eigen::Matrix3Xd::Map(out,3,N), Eigen::Vector3d::Map(C), Eigen::Vector3d::Map(S), Eigen::Vector3d::Map(A));
+    }
 }
