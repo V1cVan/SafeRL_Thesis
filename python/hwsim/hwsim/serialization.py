@@ -21,10 +21,10 @@ class Serializable(object):
         fully restore this object later on (using decode). """
         return None # Uses default serialization of the subclass (see BaseSerializer.encode_serializable)
 
-    @staticmethod
-    def decode(data=None):
+    @classmethod
+    def decode(cls, data=None):
         """ If the object construction from the data dictionary is non-trivial, subclasses
-        can override this static method. It should return an instance of the class, initialized
+        can override this class method. It should return an instance of the class, initialized
         from the data dictionary. """
         return None # Uses default construction of the subclass (see BaseSerializer.decode_serializable)
 
@@ -72,13 +72,13 @@ class BaseSerializer(object):
 
     @classmethod
     def encode(cls, obj):
-        if isinstance(obj,typing.Mapping):
+        if isinstance(obj, typing.Mapping):
             return {key: cls.encode(value) for key,value in obj.items()}
-        elif isinstance(obj,typing.List):
+        elif isinstance(obj, typing.List) or isinstance(obj, typing.Tuple):
             return [cls.encode(el) for el in obj]
-        elif isinstance(obj,Serializable):
+        elif isinstance(obj, Serializable):
             return cls.encode_serializable(obj)
-        elif isinstance(obj,(int,float,str)) or obj is None:
+        elif isinstance(obj, (int,float,str)) or obj is None:
             return obj
         else:
             raise TypeError(f"Objects of type {type(obj)} are not supported by BaseSerializer.")
