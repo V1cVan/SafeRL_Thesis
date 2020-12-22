@@ -5,7 +5,7 @@ from hwsim._utils import hybridmethod
 
 class Vehicle(object):
 
-    def __init__(self,sim,id,model,policy):
+    def __init__(self,sim,id,model,policy,metrics):
         self._sim = sim
         self.id = id
         self._h = c_void_p(simLib.sim_getVehicle(sim._h,id))
@@ -18,6 +18,8 @@ class Vehicle(object):
         #  custom ones will still have to be passed along though
         self.model = model
         self.policy = policy
+        self._metrics = metrics
+        self.metrics = dict((field, None) for metric in metrics for field in metric.fields)
         # Save some constant vehicle properties:
         self.size = np.empty(3,np.float64)
         simLib.veh_size(self._h,self.size.ctypes.data_as(POINTER(c_double)))
@@ -57,8 +59,10 @@ class Vehicle(object):
             ("rightGap",np.float64),
             ("leftGap",np.float64)
         ])
-        # Call initialization code of custom policies:
+        # Call initialization code of custom policies and metrics:
         self.policy.init_vehicle(self)
+        for metric in self._metrics:
+            metric.init_vehicle(self)
         # Cache manual overrides of next actions:
         self._next_a = None
 
@@ -206,3 +210,16 @@ class Vehicle(object):
         rs = np.empty(4,np.float64)
         simLib.veh_getReducedState(self._h,rs.ctypes.data_as(POINTER(c_double)))
         return rs.view(self._rs_dt)[0]
+
+    @property
+    def col_status(self):
+        """
+        Collision status of this vehicle:
+        0:      No collision
+        -1:     Collision with left road boundary (veh.s["gapB"][1]<=0)
+        -2:     Collision with right road boundary (veh.s["gapB"][0]<=0)
+        N>0:    Collision with other vehicle with id N (rls[0]<=0 and rls[1]<=0
+                for any rls in {ls["relF"][0],ls["relB"][0]} and any ls in
+                {veh.s["laneC"],veh.s["laneR"][0],veh.s["laneL"][0]})
+        """
+        return simLib.veh_getColStatus(self._h)

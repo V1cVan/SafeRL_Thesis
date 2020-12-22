@@ -13,8 +13,8 @@ int main(){
     const unsigned int kbmType = 1;
     const unsigned int basicPolicyType = 2;
     unsigned char normalBasicType[1], fastBasicType[1];
-    pbp_basic(normalBasicType,1);
-    pbp_basic(fastBasicType,2);
+    pbp_basicT(normalBasicType,1);
+    pbp_basicT(fastBasicType,2);
     vType vTypes[2] = {
         {5,{kbmType,NULL,basicPolicyType,normalBasicType,1,1,50.0},{minProps,maxProps}},
         {5,{kbmType,NULL,basicPolicyType,fastBasicType,1,1,50.0},{minProps,maxProps}}

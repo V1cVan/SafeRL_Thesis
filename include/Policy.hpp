@@ -40,7 +40,7 @@ namespace Policy{
             }
 
             // Deserializes the policy's state
-            virtual void loadState(Utils::sdata_t){}
+            virtual void loadState(Utils::sdata_t&){}
     };
 
     #ifdef COMPAT
@@ -61,7 +61,7 @@ namespace Policy{
             CustomPolicy(const ActionType& tx = DEFAULT_TYPE_X, const ActionType& ty = DEFAULT_TYPE_Y)
             : Base(tx, ty){}
 
-            CustomPolicy(const sdata_t args) : CustomPolicy(parseArgs(args)){}
+            CustomPolicy(const sdata_t& args) : CustomPolicy(parseArgs(args)){}
 
             inline Action getAction(const VehicleBase& vb){
                 return {std::nan(""),std::nan("")};
@@ -73,7 +73,7 @@ namespace Policy{
             }
         
         private:
-            static inline std::vector<ActionType> parseArgs(const sdata_t args){
+            static inline std::vector<ActionType> parseArgs(const sdata_t& args){
                 std::vector<ActionType> types = {DEFAULT_TYPE_X, DEFAULT_TYPE_Y};
                 if(!args.empty()){
                     types[0] = static_cast<ActionType>(args[0]);
@@ -85,7 +85,7 @@ namespace Policy{
 
 
     // --- StepPolicy ---
-    class StepPolicy : public Serializable<PolicyBase,PolicyBase::factory,StepPolicy,1>{
+    class StepPolicy : public Serializable<PolicyBase,PolicyBase::factory,StepPolicy,1,16>{
         // Stepping driving policy, used to examine the step response of the dynamical systems
         private:
             static constexpr double DEFAULT_MIN_REL_VEL = 0;
@@ -99,10 +99,14 @@ namespace Policy{
 
             const ActionType tx = ActionType::ABS_VEL, ty = ActionType::REL_OFF;
 
-            // Policy specific properties
-            const double minRelVel, maxRelVel;
+            // Policy configuration
+            struct Config{
+                double minRelVel;
+                double maxRelVel;
+            };
+            const Config cfg;
 
-            // Vehicle specific properties
+            // Policy state
             struct PolicyState{
                 unsigned int kStep = 10*10;// Step after X calls to getAction
                 unsigned int k = -2;// getAction counter (-2 to force new actions in first call to getAction)
@@ -110,11 +114,14 @@ namespace Policy{
             };
             PolicyState ps;
 
-            StepPolicy(const double minVel = DEFAULT_MIN_REL_VEL, const double maxVel = DEFAULT_MAX_REL_VEL)
-            : Base(ActionType::ABS_VEL, ActionType::ABS_OFF), velDis(minVel,maxVel), offDis(MIN_REL_OFF,MAX_REL_OFF)
-            , minRelVel(minVel), maxRelVel(maxVel){}
+            StepPolicy(const Config& cfg)
+            : Base(ActionType::ABS_VEL, ActionType::ABS_OFF), velDis(cfg.minRelVel, cfg.maxRelVel)
+            , offDis(MIN_REL_OFF, MAX_REL_OFF), cfg(cfg){}
 
-            StepPolicy(const sdata_t) : StepPolicy(){}
+            StepPolicy(const double minVel = DEFAULT_MIN_REL_VEL, const double maxVel = DEFAULT_MAX_REL_VEL)
+            : StepPolicy(Config{minVel, maxVel}){}
+
+            StepPolicy(const sdata_t& args) : StepPolicy(Utils::deserialize<Config>(args)){}
 
             inline Action getAction(const VehicleBase& vb){
                 ps.k += 1;
@@ -127,18 +134,22 @@ namespace Policy{
                 return {vel,off};
             }
 
-            inline Utils::sdata_t saveState() const{
+            inline void serialize(sdata_t& data) const{
+                Utils::serialize(cfg, data);
+            }
+
+            inline sdata_t saveState() const{
                 return Utils::serialize(ps);
             }
 
-            inline void loadState(Utils::sdata_t data){
+            inline void loadState(sdata_t& data){
                 ps = Utils::deserialize<PolicyState>(data);
             }
     };
 
 
     // --- BasicPolicy ---
-    class BasicPolicy : public Serializable<PolicyBase,PolicyBase::factory,BasicPolicy,2,1>{
+    class BasicPolicy : public Serializable<PolicyBase,PolicyBase::factory,BasicPolicy,2,24>{
         // Basic driving policy, trying to mimic human driver behaviour using a decision-tree state to action mapping
         private:
             static constexpr double DEFAULT_MIN_VEL[] = {-5,-2,1};// SLOW, NORMAL, FAST
@@ -150,6 +161,12 @@ namespace Policy{
             static constexpr double ADAPT_GAP = 120;// When the gap (in meters) between us and the vehicle in front is lower, we will adapt our speed
             static constexpr double EPS = 1e-2;// Lateral epsilon (in meters)
             static constexpr double TTC = 6;// Minimum time-to-collision we want to ensure (in seconds)
+
+            struct Config{
+                double overtakeGap; // Driver will try to overtake a vehicle in front of it if the gap becomes smaller than this value
+                double minVelDiff; // See desVelDiff below
+                double maxVelDiff;
+            };
 
             enum class Type{
                 SLOW=0,
@@ -168,21 +185,27 @@ namespace Policy{
             };
             #endif
             
-            // Policy specific properties
-            const Type type;// Driver type
+            // Policy configuration
+            Config cfg;
             const double desVelDiff;// Difference between the desired velocity of this driver and the maximum allowed speed (in m/s)
-            const double overtakeGap;// Driver will try to overtake a vehicle in front of it if the gap becomes smaller than this value
             ROI roi;
 
-            // Vehicle specific properties
+            // Policy state
             bool overtaking;// Flag denoting whether we are currently overtaking or not
 
-            BasicPolicy(const Type& t)
-            : Base(ActionType::ABS_VEL, ActionType::REL_OFF), type(t), desVelDiff(getDesVelDiff(t))
-            , overtakeGap(DEFAULT_OVERTAKE_GAP[static_cast<int>(t)]), roi({{SAFETY_GAP,std::max(SAFETY_GAP,overtakeGap)}
-            ,{0.1,0.1},TTC,TTC}), overtaking(false){}
+            BasicPolicy(const Config& cfg)
+            : Base(ActionType::ABS_VEL, ActionType::REL_OFF), desVelDiff(getDesVelDiff(cfg.minVelDiff, cfg.maxVelDiff))
+            , cfg(cfg), roi({{SAFETY_GAP,std::max(SAFETY_GAP,cfg.overtakeGap)},{0.1,0.1},TTC,TTC}), overtaking(false){}
 
-            BasicPolicy(const sdata_t args) : BasicPolicy(parseArgs(args)){}
+            BasicPolicy(const double overtakeGap, const double minVelDiff, const double maxVelDiff)
+            : BasicPolicy(Config{overtakeGap, minVelDiff, maxVelDiff}){}
+
+            BasicPolicy(const double overtakeGap, const double velDiff) : BasicPolicy(overtakeGap, velDiff, velDiff){}
+
+            BasicPolicy(const Type& t)
+            : BasicPolicy(DEFAULT_OVERTAKE_GAP[static_cast<int>(t)], DEFAULT_MIN_VEL[static_cast<int>(t)], DEFAULT_MAX_VEL[static_cast<int>(t)]){}
+
+            BasicPolicy(const sdata_t& args) : BasicPolicy(Utils::deserialize<Config>(args)){}
 
             inline Action getAction(const VehicleBase& vb){
                 //TODO: condition to go to the right lane should match with condition to start new overtaking,
@@ -200,7 +223,7 @@ namespace Policy{
                 }
                 const bool rightFree = std::abs(vb.s.laneR[0].off-vb.s.laneC.off)>EPS && rs.rightGap-vb.s.laneC.off>vb.s.laneR[0].width-EPS;// Right lane is free if there is a lane and the right offset is larger than the lane width
                 const bool leftFree = std::abs(vb.s.laneL[0].off-vb.s.laneC.off)>EPS && rs.leftGap+vb.s.laneC.off>vb.s.laneL[0].width-EPS;// Left lane is free if there is a lane and the left offset is larger than the lane width
-                const bool shouldOvertake = leftFree && rs.frontGap<overtakeGap && rs.frontVel<0.9*desVel;// Overtaking condition
+                const bool shouldOvertake = leftFree && rs.frontGap<cfg.overtakeGap && rs.frontVel<0.9*desVel;// Overtaking condition
                 if(shouldOvertake && !overtaking){
                     overtaking = true;// Start overtaking if it is not already the case
                 }
@@ -224,42 +247,27 @@ namespace Policy{
             }
 
             inline void serialize(sdata_t& data) const{
-                data.push_back(std::byte{static_cast<uint8_t>(type)});
+                Utils::serialize(cfg, data);
             }
 
-            inline Utils::sdata_t saveState() const{
-                Utils::sdata_t data;
+            inline sdata_t saveState() const{
+                sdata_t data;
                 data.push_back(std::byte{static_cast<uint8_t>(overtaking)});
                 return data;
             }
 
-            inline void loadState(Utils::sdata_t data){
+            inline void loadState(sdata_t& data){
                 overtaking = static_cast<bool>(data[0]);
             }
 
         private:
-            static inline double getDesVelDiff(const Type& t){
-                const double minVel = DEFAULT_MIN_VEL[static_cast<int>(t)];
-                const double maxVel = DEFAULT_MAX_VEL[static_cast<int>(t)];
+            static inline double getDesVelDiff(const double minVel, const double maxVel){
                 std::uniform_real_distribution<double> dis(minVel,maxVel);
                 return dis(Utils::rng);
             }
 
-            static inline Type parseArgs(const sdata_t args){
-                Type bType = BasicPolicy::Type::NORMAL;
-                if(!args.empty()){
-                    if(typeMap.count(args[0])==0){
-                        std::ostringstream err;
-                        err << "Unrecognized basic policy type: " << static_cast<uint8_t>(args[0]) << std::endl;
-                        err << "Allowed basic policy types: ";
-                        for(const auto& pair : typeMap){
-                            err << static_cast<uint8_t>(pair.first) << ",";
-                        }
-                        throw std::invalid_argument(err.str());
-                    }
-                    bType = typeMap.at(args[0]);
-                }
-                return bType;
+            static inline Config parseArgs(const sdata_t& args){
+                return Utils::deserialize<Config>(args);
             }
     };
 
@@ -304,7 +312,7 @@ namespace Policy{
             // Policy specific properties
             const double desVelDiff;// Difference between the desired velocity of this driver and the maximum allowed speed (in m/s)
 
-            IMPolicy(const sdata_t = sdata_t()) : Base(ActionType::ACC, ActionType::LANE), desVelDiff(getDesVelDiff()){}
+            IMPolicy(const sdata_t& = sdata_t()) : Base(ActionType::ACC, ActionType::LANE), desVelDiff(getDesVelDiff()){}
 
             inline Action getAction(const VehicleBase& vb){
                 double desVel = vb.s.maxVel+desVelDiff;// Vehicle's desired velocity, based on the current maximum allowed speed

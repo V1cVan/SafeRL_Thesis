@@ -1,4 +1,5 @@
 from functools import wraps
+import timeit
 
 
 class hybridmethod:
@@ -90,3 +91,29 @@ class conditional(object):
     @staticmethod
     def AND(cond1,cond2):
         return lambda *f_args,**f_kwargs: cond1(*f_args,**f_kwargs) and cond2(*f_args,**f_kwargs)
+
+
+class timing(object):
+    """
+    This decorator will time how long it takes to call the
+    wrapped function and print it out after every call.
+    """
+    enabled = True # Global flag to disable all timings
+
+    def __init__(self, name=None, enabled=__debug__):
+        # Creates the timer
+        self._name = name
+        self._enabled = enabled
+
+    def __call__(self, func):
+        # Applies the timer as a decorator
+        if self._name is None:
+            self._name = func.__name__
+
+        @wraps(func)
+        def wrapper(*f_args,**f_kwargs):
+            start = timeit.default_timer()
+            result = func(*f_args,**f_kwargs)
+            print(f"{self._name}: {(timeit.default_timer()-start)*1000}ms")
+            return result
+        return wrapper if timing.enabled and self._enabled else func

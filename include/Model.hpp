@@ -68,7 +68,7 @@ namespace Model{
     // --- Custom model ---
     struct CustomModel : public Serializable<ModelBase,ModelBase::factory,CustomModel,0>{
         
-        CustomModel(const sdata_t = sdata_t()){}
+        CustomModel(const sdata_t& = sdata_t()){}
 
         inline State derivatives_(const VehicleBase& vb, const State& x, const Input& u) const{
             return {
@@ -88,7 +88,7 @@ namespace Model{
     // --- Kinematic bicycle model ---
     struct KinematicBicycleModel : public Serializable<ModelBase,ModelBase::factory,KinematicBicycleModel,1>{
         
-        KinematicBicycleModel(const sdata_t = sdata_t()){}
+        KinematicBicycleModel(const sdata_t& = sdata_t()){}
 
         inline State derivatives_(const VehicleBase& vb, const State& x, const Input& u) const{
             // Calculate slip angle (beta) and total velocity
@@ -121,7 +121,7 @@ namespace Model{
     // --- Dynamic bicycle model ---
     struct DynamicBicycleModel : public Serializable<ModelBase,ModelBase::factory,DynamicBicycleModel,2>{
         
-        DynamicBicycleModel(const sdata_t = sdata_t()){}
+        DynamicBicycleModel(const sdata_t& = sdata_t()){}
 
         inline State derivatives_(const VehicleBase& vb, const State& x, const Input& u) const{
             // TODO

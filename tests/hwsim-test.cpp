@@ -18,14 +18,16 @@ TEST_CASE("Blueprints"){
         CHECK(kbm.args.empty());
     }
     SUBCASE("Check custom blueprint args"){
-        Policy::BasicPolicy::Type bpt = Policy::BasicPolicy::Type::FAST;
-        BaseFactory::BluePrint bp = Policy::BasicPolicy(bpt).blueprint();
-        CHECK(bp.id == Policy::BasicPolicy::ID);
-        CHECK(Policy::BasicPolicy(bp.args).type == bpt);
+        Policy::ActionType tx = Policy::ActionType::ACC;
+        Policy::ActionType ty = Policy::ActionType::LANE;
+        BaseFactory::BluePrint bp = Policy::CustomPolicy(tx, ty).blueprint();
+        CHECK(bp.id == Policy::CustomPolicy::ID);
+        CHECK(Policy::CustomPolicy(bp.args).tx == tx);
+        CHECK(Policy::CustomPolicy(bp.args).ty == ty);
     }
     SUBCASE("Check factory registration"){
         // Check if registration also occurs without any code calling blueprint()
-        BaseFactory::BluePrint bp = {1,BaseFactory::data_t()};
+        BaseFactory::BluePrint bp = {1,BaseFactory::data_t(16, std::byte{0})};
         CHECK_NOTHROW(Policy::PolicyBase::factory.create(bp));
         // Check invalid id
         bp = {99,BaseFactory::data_t()};

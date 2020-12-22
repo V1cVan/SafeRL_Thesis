@@ -75,15 +75,22 @@ extern "C"{
     }
 
     LIB_PUBLIC
-    void pbp_step(unsigned char* args){
-        BaseFactory::BluePrint bp = Policy::StepPolicy().blueprint();
+    void pbp_step(unsigned char* args, const double minVel, const double maxVel){
+        BaseFactory::BluePrint bp = Policy::StepPolicy(minVel, maxVel).blueprint();
         std::byte* bytes = reinterpret_cast<std::byte*>(args);
         std::copy(bp.args.begin(),bp.args.end(),bytes);
     }
 
     LIB_PUBLIC
-    void pbp_basic(unsigned char* args, const uint8_t type){
+    void pbp_basicT(unsigned char* args, const uint8_t type){
         BaseFactory::BluePrint bp = Policy::BasicPolicy(static_cast<Policy::BasicPolicy::Type>(type)).blueprint();
+        std::byte* bytes = reinterpret_cast<std::byte*>(args);
+        std::copy(bp.args.begin(),bp.args.end(),bytes);
+    }
+
+    LIB_PUBLIC
+    void pbp_basicC(unsigned char* args, const double overtakeGap, const double minVelDiff, const double maxVelDiff){
+        BaseFactory::BluePrint bp = Policy::BasicPolicy(overtakeGap, minVelDiff, maxVelDiff).blueprint();
         std::byte* bytes = reinterpret_cast<std::byte*>(args);
         std::copy(bp.args.begin(),bp.args.end(),bytes);
     }
@@ -502,6 +509,11 @@ extern "C"{
         bounds[1] = veh->safetyBounds[0].y;
         bounds[2] = veh->safetyBounds[1].x;
         bounds[3] = veh->safetyBounds[1].y;
+    }
+    
+    LIB_PUBLIC
+    int veh_getColStatus(const Vehicle* veh){
+        return veh->colStatus;
     }
 
     LIB_PUBLIC

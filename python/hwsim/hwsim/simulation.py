@@ -7,15 +7,13 @@ import json
 import yaml
 import time
 from warnings import warn
-from hwsim._utils import conditional
+from hwsim._utils import conditional, timing
 from hwsim._wrapper import simLib, SimConfig, VehConfig, VehProps, VehInitialState, VehType, VehDef
 from hwsim.scenario import Scenario
 from hwsim.vehicle import Vehicle
 from hwsim.policy import _Policy, BasicPolicy, CustomPolicy
 from hwsim.model import _Model, KBModel, CustomModel
 from hwsim.serialization import JSONDecoder, JSONEncoder
-
-import timeit
 
 class Simulation(object):
 
@@ -42,6 +40,7 @@ class Simulation(object):
         L:              Default value for state parameter L (see Vehicle)
         N_OV:           Default value for state parameter N_OV (see Vehicle)
         D_MAX:          Default value for state parameter D_MAX (see Vehicle)
+        metrics:        Metrics added to each vehicle
         vehicles:       Configuration for all vehicles in this simulation (see add_vehicles)
         """
         # Create simulation configuration and internal variables
@@ -59,6 +58,7 @@ class Simulation(object):
             "scenario": "", # Scenario name
             "types": [], # Types of vehicles that will be created
             "defs": [], # Definitions of vehicles that will be created
+            "metrics": [], # Common metrics for all vehicles
             "vehicles": [] # Configuration of vehicles that will be created (used for JSON serialization and python Vehicle object creation)
         }
         self._h = None
@@ -81,6 +81,7 @@ class Simulation(object):
             "minMass": 1500,
             "maxMass": 3000
         }
+        self.metrics.extend(sConfig.get("metrics",[]))
         input_dir = sConfig.get("input_dir", "")
         k0 = sConfig.get("k0", 0)
         replay = sConfig.get("replay", False)
@@ -210,6 +211,10 @@ class Simulation(object):
     @conditional(_inactive)
     def scenario(self, val):
         self._simCfg["scenario"] = str(val)
+
+    @property
+    def metrics(self):
+        return self._simCfg["metrics"]
 
     @conditional(_inactive)
     def clear_vehicles(self):
@@ -356,8 +361,8 @@ class Simulation(object):
         # Create vehicle instances:
         V = simLib.sim_getNbVehicles(self._h)
         self._adjust_entries(V)
-        vGen = enumerate((vEntry["model"],vEntry["policy"]) for vEntry in self._simCfg["vehicles"] for _ in range(vEntry.get("amount",1)))
-        self.vehicles = [Vehicle(self,v_id,model,policy) for v_id,(model,policy) in vGen]
+        vGen = enumerate((vEntry["model"],vEntry["policy"],vEntry.get("metrics",[])) for vEntry in self._simCfg["vehicles"] for _ in range(vEntry.get("amount",1)))
+        self.vehicles = [Vehicle(self,v_id,model,policy,[*self._simCfg["metrics"],*metrics]) for v_id,(model,policy,metrics) in vGen]
         # Initialize step and mode:
         self._mode = simLib.sim_getMode(self._h)
         self._k = simLib.sim_getStep(self._h)
@@ -375,10 +380,12 @@ class Simulation(object):
         self._k = -1
 
     #region: Active simulation methods and properties
+    @timing("Custom models", False)
     def _applyCustomModels(self):
         # TODO: call custom models here
         return False
 
+    @timing("Custom policies", False)
     def _applyCustomPolicies(self):
         # Check all vehicle policies and see whether they want to override
         # the default actions:
@@ -389,23 +396,28 @@ class Simulation(object):
                 veh._next_a = None
         return False
 
+    @timing("Custom controllers", False)
     def _applyCustomControllers(self):
         # TODO: call custom controllers here
         return False
 
+    @timing("Metric updates", False)
+    def _updateMetrics(self):
+        # Update all vehicle metrics:
+        for veh in self.vehicles:
+            for metric in veh._metrics:
+                veh.metrics.update(metric.fetch(veh))
+
+    @timing("Step from B", False)
     def _stepFromB(self):
-        # start = timeit.default_timer()
         stop = self._applyCustomPolicies() if self._mode==0 else False
-        # print(f"Custom policies: {(timeit.default_timer()-start)*1000}ms")
-        # start = timeit.default_timer()
         stop |= simLib.sim_stepC(self._h)
-        # print(f"Step C: {(timeit.default_timer()-start)*1000}ms")
         stop |= self._applyCustomControllers() if self._mode==0 else False
-        # start = timeit.default_timer()
         stop |= simLib.sim_stepD(self._h)
-        # print(f"Step D: {(timeit.default_timer()-start)*1000}ms")
+        self._updateMetrics()
         return stop
 
+    @timing("Step", False)
     def step(self):
         """
         Perform one simulation step
@@ -413,15 +425,9 @@ class Simulation(object):
         if self.stopped:
             raise RuntimeError("Cannot continue simulation as the simulation was stopped previously.")
         # Perform one simulation step
-        # start = timeit.default_timer()
         stop = simLib.sim_stepA(self._h)
-        # print(f"Step A: {(timeit.default_timer()-start)*1000}ms")
-        # start = timeit.default_timer()
         stop |= self._applyCustomModels() if self._mode==0 else False
-        # print(f"Custom models: {(timeit.default_timer()-start)*1000}ms")
-        # start = timeit.default_timer()
         stop |= simLib.sim_stepB(self._h)
-        # print(f"Step B: {(timeit.default_timer()-start)*1000}ms")
         stop |= self._stepFromB()
         self._collision = stop
         self._k += 1

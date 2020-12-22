@@ -98,18 +98,22 @@ extern "C"{
     LIB_PUBLIC
     void mbp_kbm(unsigned char* args);
 
-    // Create BluePrint for the CustomPolicy ; args should be a byte array of size 0
+    // Create BluePrint for the CustomPolicy ; args should be a byte array of size 2
     LIB_PUBLIC
     void pbp_custom(unsigned char* args, const uint8_t tx, const uint8_t ty);
 
-    // Create BluePrint for the StepPolicy ; args should be a byte array of size 0
+    // Create BluePrint for the StepPolicy ; args should be a byte array of size 16
     LIB_PUBLIC
-    void pbp_step(unsigned char* args);
+    void pbp_step(unsigned char* args, const double minVel, const double maxVel);
 
-    // Create BluePrint for the BasicPolicy ; args should be a byte array of size 1
+    // Create BluePrint for the BasicPolicy ; args should be a byte array of size 24
     // type (0 => SLOW ; 1 => NORMAL ; 2 => FAST)
     LIB_PUBLIC
-    void pbp_basic(unsigned char* args, const uint8_t type);
+    void pbp_basicT(unsigned char* args, const uint8_t type);
+
+    // Create BluePrint for the BasicPolicy ; args should be a byte array of size 24
+    LIB_PUBLIC
+    void pbp_basicC(unsigned char* args, const double overtakeGap, const double minVelDiff, const double maxVelDiff);
 
     // Create a new simulation with the given vehicle types configuration
     LIB_PUBLIC
@@ -285,6 +289,10 @@ extern "C"{
     // Get the safety bounds for the given vehicle
     LIB_PUBLIC
     void veh_getSafetyBounds(const Vehicle* veh, double* bounds);
+
+    // Get the collision status for the given vehicle
+    LIB_PUBLIC
+    int veh_getColStatus(const Vehicle* veh);
 
     // --- Plotting ---
     LIB_PUBLIC

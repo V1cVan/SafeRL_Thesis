@@ -131,13 +131,18 @@ struct Utils{
         return result;
     }
 
-    // Default serializer
+    // Default serializer (to existing data vector)
+    template<class C>
+    static inline void serialize(const C& obj, sdata_t& data){
+        const std::byte* bytes = reinterpret_cast<const std::byte*>(&obj);
+        data.insert(data.end(),bytes,bytes+sizeof(C));
+    }
+
+    // Default serializer (to new data vector)
     template<class C>
     static inline sdata_t serialize(const C& obj){
         sdata_t data;
-        data.reserve(sizeof(C));
-        const std::byte* bytes = reinterpret_cast<const std::byte*>(&obj);
-        data.insert(data.end(),bytes,bytes+sizeof(C));
+        serialize(obj, data);
         return data;
     }
 
