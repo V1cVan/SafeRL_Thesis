@@ -54,10 +54,14 @@ class Vehicle(object):
         ])
         self.a_dt = np.dtype([("long",np.float64),("lat",np.float64)])
         self._rs_dt = np.dtype([
-            ("frontGap",np.float64),
-            ("frontVel",np.float64),
-            ("rightGap",np.float64),
-            ("leftGap",np.float64)
+            ("pfGap",np.float64), ("pfVel",np.float64),
+            ("plGap",np.float64), ("plVel",np.float64),
+            ("cfGap",np.float64), ("cfVel",np.float64),
+            ("clGap",np.float64), ("clVel",np.float64),
+            ("rfGap",np.float64), ("rfVel",np.float64),
+            ("rlGap",np.float64), ("rlVel",np.float64),
+            ("lfGap",np.float64), ("lfVel",np.float64),
+            ("llGap",np.float64), ("llVel",np.float64),
         ])
         # Call initialization code of custom policies and metrics:
         self.policy.init_vehicle(self)
@@ -207,7 +211,16 @@ class Vehicle(object):
 
     @property
     def reduced_state(self):
-        rs = np.empty(4,np.float64)
+        """
+        The reduced state is calculated from the current augmented state s, taking only
+        the nearest and slowest leading (l) and nearest and fastest following (f) vehicles
+        with current or future lateral overlap (after safety.TL seconds) at the current
+        lateral position (p), the current lane center (c), the right lane center (r) and
+        left lane center (l) into account. The gap is the smallest gap out of all vehicles
+        with lateral overlap. The velocity is the lowest (or highest) velocity out of all
+        vehicles with lateral overlap AND a gap within 5 meters of the smallest gap.
+        """
+        rs = np.empty(16,np.float64)
         simLib.veh_getReducedState(self._h,rs.ctypes.data_as(POINTER(c_double)))
         return rs.view(self._rs_dt)[0]
 

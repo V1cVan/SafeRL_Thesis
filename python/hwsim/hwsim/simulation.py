@@ -40,6 +40,7 @@ class Simulation(object):
         L:              Default value for state parameter L (see Vehicle)
         N_OV:           Default value for state parameter N_OV (see Vehicle)
         D_MAX:          Default value for state parameter D_MAX (see Vehicle)
+        safety:         Default values for safety parameters Mvel, Moff, Gth & TL
         metrics:        Metrics added to each vehicle
         vehicles:       Configuration for all vehicles in this simulation (see add_vehicles)
         """
@@ -74,8 +75,9 @@ class Simulation(object):
         self.kM = sConfig.get("kM", 1000)
         self._vehCfgDefaults = {
             "L": sConfig.get("L", 1),
-            "N_OV": sConfig.get("N_OV", 1),
+            "N_OV": sConfig.get("N_OV", 2),
             "D_MAX": sConfig.get("D_MAX", 150.0),
+            "safety": sConfig.get("safety", {}), # Uses defaults in _wrapper
             "minSize": [4,1.6,1.5],
             "maxSize": [5,2.1,2],
             "minMass": 1500,
@@ -271,7 +273,8 @@ class Simulation(object):
         L = vEntry.setdefault("L", self._vehCfgDefaults["L"])
         N_OV = vEntry.setdefault("N_OV", self._vehCfgDefaults["N_OV"])
         D_MAX = vEntry.setdefault("D_MAX", self._vehCfgDefaults["D_MAX"])
-        vehConfig = VehConfig(model,policy,L,N_OV,D_MAX)
+        safety = vEntry.setdefault("safety", self._vehCfgDefaults["safety"])
+        vehConfig = VehConfig(model,policy,L,N_OV,D_MAX,safety)
         # Based on isDef, create a VehDef or VehType structure
         if isDef:
             vehDef = VehDef()

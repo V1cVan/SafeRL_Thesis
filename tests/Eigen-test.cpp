@@ -74,5 +74,14 @@ int main(){
 
     Derived<BaseA> d;
     std::cout << d.a << " ; " << d.b << std::endl;
+
+    Eigen::Matrix<double,3,1> v{1,2,3};
+    Eigen::Ref<Eigen::Array<double,1,1>> v1 = v.block<1,1>(1,0);
+    std::cout << v << std::endl;
+    double tmp = 4.5;
+    v1 = v1+tmp;
+    std::cout << v << std::endl;
+    double tmp2 = v1.value();
+    std::cout << tmp2 << std::endl;
     return 0;
 }

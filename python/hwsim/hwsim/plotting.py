@@ -228,6 +228,7 @@ class SimulationPlot(_PlotterView):
                     idFollower = vtk.vtkFollower()
                     idFollower.SetMapper(mapper)
                     idFollower.GetProperty().SetColor((1,1,1))
+                    idFollower.SetCamera(self._r.camera)
                     p.add_actor(idFollower)
                 self._vehicles.append({"mesh": mesh, "actor": actor, "id": idFollower})
         self._marker = None
@@ -412,8 +413,8 @@ class BirdsEyePlot(SimulationPlot):
         FRONT = auto()
         REAR = auto()
 
-    def __init__(self,p,view=View.FRONT,vehicle_type="cuboid3D",coloring=None):
-        super().__init__(p,vehicle_type=vehicle_type,coloring=coloring)
+    def __init__(self,p,view=View.FRONT,vehicle_type="cuboid3D",coloring=None,show_ids=False):
+        super().__init__(p,vehicle_type=vehicle_type,coloring=coloring,show_ids=show_ids)
         self._view = view
         self._calc_camera_cfg()
 
@@ -579,8 +580,9 @@ class TimeChartPlot(_PlotterView):
         viewup = [0,1,0]
         pos = focus+[0,0,1]
         self._r.camera_position = (pos,focus,viewup)
-        self._r.ResetCamera() # Zooms out to see all actors, but too much, so zoom back in a little
-        self._r.camera.Zoom(1.9)
+        # self._r.ResetCamera() # Zooms out to see all actors, but too much, so zoom back in a little
+        self._r.ResetCamera(data_bounds)
+        # self._r.camera.Zoom(1.9)
 
     def _handle_V_change(self,oldV):
         super()._handle_V_change(oldV)
@@ -984,7 +986,7 @@ class Plotter(pv.Plotter):
                 update = not close and self._state==Plotter.State.PLAY # interactive update only in play state
                 if not update or self._first_time or close:
                     # Simulation is stepped or stopped on its own -> show one more frame
-                    self.show(self._title,auto_close=close,interactive_update=update)
+                    self.show(self._title,auto_close=close,interactive=not update,interactive_update=update)
                 if sleep_time>0:
                     time.sleep(sleep_time)
 

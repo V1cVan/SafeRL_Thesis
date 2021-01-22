@@ -2,6 +2,19 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 
+// Types used in (de)serialization tests:
+struct A{
+    int a, b, c;
+    bool d;
+};
+struct B{
+    double a, b;
+    int c;
+};
+template<size_t N>
+using Str = std::array<char,N>;
+
+// Test cases
 TEST_CASE("Scenario creation"){
     const std::string path = "../scenarios/scenarios.h5";
     const std::string scenario = "CLOVERLEAF_RAW";
@@ -12,6 +25,22 @@ TEST_CASE("Scenario creation"){
     CHECK_THROWS_AS(Scenario sc("foo"),std::invalid_argument);
 }
 TEST_CASE("Blueprints"){
+    SUBCASE("Check (de)serialization"){
+        const A foo{0,1,2,true}; A foo_rec;
+        const B bla{3,4,5}; B bla_rec;
+        const Str<11> str = {'F','o','o','_','B','l','a','_','S','t','r'}; Str<11> str_rec;
+        Utils::sdata_t serialized = Utils::serialize(str);
+        CHECK(str == Utils::deserialize<Str<11>>(serialized));
+        serialized = Utils::serialize(bla, str);
+        std::tie(bla_rec, str_rec) = Utils::deserialize<B,Str<11>>(serialized);
+        CHECK(str == str_rec);
+        CHECK(std::tie(bla.a, bla.b, bla.c) == std::tie(bla_rec.a, bla_rec.b, bla_rec.c));
+        serialized = Utils::serialize(foo, bla, str);
+        std::tie(foo_rec, bla_rec, str_rec) = Utils::deserialize<A,B,Str<11>>(serialized);
+        CHECK(str == str_rec);
+        CHECK(std::tie(bla.a, bla.b, bla.c) == std::tie(bla_rec.a, bla_rec.b, bla_rec.c));
+        CHECK(std::tie(foo.a, foo.b, foo.c, foo.d) == std::tie(foo_rec.a, foo_rec.b, foo_rec.c, foo_rec.d));
+    }
     SUBCASE("Check default blueprint"){
         BaseFactory::BluePrint kbm = Model::KinematicBicycleModel().blueprint();
         CHECK(kbm.id == Model::KinematicBicycleModel::ID);
@@ -27,7 +56,7 @@ TEST_CASE("Blueprints"){
     }
     SUBCASE("Check factory registration"){
         // Check if registration also occurs without any code calling blueprint()
-        BaseFactory::BluePrint bp = {1,BaseFactory::data_t(16, std::byte{0})};
+        BaseFactory::BluePrint bp = {1,BaseFactory::data_t(sizeof(Policy::Config::Step), std::byte{0})};
         CHECK_NOTHROW(Policy::PolicyBase::factory.create(bp));
         // Check invalid id
         bp = {99,BaseFactory::data_t()};

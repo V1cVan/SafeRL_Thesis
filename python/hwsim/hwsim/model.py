@@ -40,6 +40,12 @@ class _Model(Blueprint):
         return None
 
 
+class CustomModel(_Model):
+
+    def __init__(self):
+        super().__init__(0)
+
+
 class KBModel(_Model,enc_name="kbm"):
     """
     Kinematic bicycle model
@@ -56,9 +62,3 @@ class DBModel(_Model,enc_name="dbm"):
 
     def __init__(self):
         super().__init__(2)
-
-
-class CustomModel(_Model):
-
-    def __init__(self):
-        super().__init__(0)

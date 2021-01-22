@@ -171,14 +171,22 @@ struct dtypes : public fixedBase{
 
     struct vehicle_config : public fixedBase{
         struct C{// type definition used in C
+            // Model
             unsigned int model;
             std::byte modelArgs[HWSIM_MAX_SERIALIZED_LENGTH];
+            // Policy
             unsigned int policy;
             std::byte policyArgs[HWSIM_MAX_SERIALIZED_LENGTH];
             // TODO: controller types and args
+            // Config
             unsigned int L;
             unsigned int N_OV;
             double D_MAX;
+            double Mvel;
+            double Moff;
+            double Gth;
+            double TL;
+            // Props
             double size[3];
             double mass;
         };
@@ -198,6 +206,10 @@ struct dtypes : public fixedBase{
             H5Tinsert(M,"L",HOFFSET(C,L),H5T_NATIVE_UINT32);
             H5Tinsert(M,"N_OV",HOFFSET(C,N_OV),H5T_NATIVE_UINT32);
             H5Tinsert(M,"D_MAX",HOFFSET(C,D_MAX),H5T_NATIVE_DOUBLE);
+            H5Tinsert(M,"Mvel",HOFFSET(C,Mvel),H5T_NATIVE_DOUBLE);
+            H5Tinsert(M,"Moff",HOFFSET(C,Moff),H5T_NATIVE_DOUBLE);
+            H5Tinsert(M,"Gth",HOFFSET(C,Gth),H5T_NATIVE_DOUBLE);
+            H5Tinsert(M,"TL",HOFFSET(C,TL),H5T_NATIVE_DOUBLE);
             H5Tinsert(M,"size",HOFFSET(C,size),sM);
             H5Tinsert(M,"mass",HOFFSET(C,mass),H5T_NATIVE_DOUBLE);
         }

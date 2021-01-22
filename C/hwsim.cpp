@@ -27,6 +27,10 @@ inline std::tuple<BaseFactory::BluePrint,BaseFactory::BluePrint> convertBluePrin
     return {model,policy};
 }
 
+inline Policy::SafetyConfig convertSafetyConfig(const vSafety& cfg){
+    return *reinterpret_cast<const Policy::SafetyConfig*>(&cfg);
+}
+
 inline void copyLaneInfo(const Policy::laneInfo& lane, double* state, unsigned int& off){
     state[off++] = lane.off;
     state[off++] = lane.width;
@@ -75,8 +79,8 @@ extern "C"{
     }
 
     LIB_PUBLIC
-    void pbp_step(unsigned char* args, const double minVel, const double maxVel){
-        BaseFactory::BluePrint bp = Policy::StepPolicy(minVel, maxVel).blueprint();
+    void pbp_step(unsigned char* args, const unsigned int period, const double minVel, const double maxVel){
+        BaseFactory::BluePrint bp = Policy::StepPolicy(period, minVel, maxVel).blueprint();
         std::byte* bytes = reinterpret_cast<std::byte*>(args);
         std::copy(bp.args.begin(),bp.args.end(),bytes);
     }
@@ -91,6 +95,16 @@ extern "C"{
     LIB_PUBLIC
     void pbp_basicC(unsigned char* args, const double overtakeGap, const double minVelDiff, const double maxVelDiff){
         BaseFactory::BluePrint bp = Policy::BasicPolicy(overtakeGap, minVelDiff, maxVelDiff).blueprint();
+        std::byte* bytes = reinterpret_cast<std::byte*>(args);
+        std::copy(bp.args.begin(),bp.args.end(),bytes);
+    }
+
+    LIB_PUBLIC
+    void pbp_im(unsigned char* args, const IDMConfig* idm, const MOBILConfig* mobil){
+        BaseFactory::BluePrint bp = Policy::IMPolicy(
+            *reinterpret_cast<const Policy::Config::IDM*>(idm),
+            *reinterpret_cast<const Policy::Config::MOBIL*>(mobil)
+        ).blueprint();
         std::byte* bytes = reinterpret_cast<std::byte*>(args);
         std::copy(bp.args.begin(),bp.args.end(),bytes);
     }
@@ -125,7 +139,7 @@ extern "C"{
                 std::copy(vTypesArr[t].pBounds[0].size,vTypesArr[t].pBounds[0].size+3,minSize.begin());
                 std::copy(vTypesArr[t].pBounds[1].size,vTypesArr[t].pBounds[1].size+3,maxSize.begin());
                 Simulation::VehicleType vType{vTypesArr[t].amount,
-                                                {model, policy, vTypesArr[t].cfg.L, vTypesArr[t].cfg.N_OV, vTypesArr[t].cfg.D_MAX},
+                                                {model, policy, vTypesArr[t].cfg.L, vTypesArr[t].cfg.N_OV, vTypesArr[t].cfg.D_MAX, convertSafetyConfig(vTypesArr[t].cfg.safety)},
                                                 {{{minSize, vTypesArr[t].pBounds[0].mass},{maxSize, vTypesArr[t].pBounds[1].mass}}}, {0.7, 1}};
                 vehicleTypes.push_back(vType);
             }
@@ -152,7 +166,7 @@ extern "C"{
                 BaseFactory::BluePrint model, policy;
                 std::tie(model, policy) = convertBluePrints(vDefsArr[d].cfg);
                 // Create vehicle configuration, properties and initial state structures:
-                Vehicle::Config cfg{model, policy, vDefsArr[d].cfg.L, vDefsArr[d].cfg.N_OV, vDefsArr[d].cfg.D_MAX};
+                Vehicle::Config cfg{model, policy, vDefsArr[d].cfg.L, vDefsArr[d].cfg.N_OV, vDefsArr[d].cfg.D_MAX, convertSafetyConfig(vDefsArr[d].cfg.safety)};
                 std::array<double,3> size;
                 std::copy(vDefsArr[d].props.size,vDefsArr[d].props.size+3,size.begin());
                 Vehicle::Props props{size, vDefsArr[d].props.mass};
@@ -497,10 +511,22 @@ extern "C"{
 
     LIB_PUBLIC
     void veh_getReducedState(const Vehicle* veh, double* state){
-        state[0] = veh->r.frontGap;
-        state[1] = veh->r.frontVel;
-        state[2] = veh->r.rightGap;
-        state[3] = veh->r.leftGap;
+        state[0] = veh->r.pfGap;
+        state[1] = veh->r.pfVel;
+        state[2] = veh->r.plGap;
+        state[3] = veh->r.plVel;
+        state[4] = veh->r.cfGap;
+        state[5] = veh->r.cfVel;
+        state[6] = veh->r.clGap;
+        state[7] = veh->r.clVel;
+        state[8] = veh->r.rfGap;
+        state[9] = veh->r.rfVel;
+        state[10] = veh->r.rlGap;
+        state[11] = veh->r.rlVel;
+        state[12] = veh->r.lfGap;
+        state[13] = veh->r.lfVel;
+        state[14] = veh->r.llGap;
+        state[15] = veh->r.llVel;
     }
 
     LIB_PUBLIC

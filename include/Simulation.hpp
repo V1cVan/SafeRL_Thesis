@@ -217,7 +217,7 @@ class Simulation{
                         std::vector<std::byte> policyArgs(std::begin(data.policyArgs),std::next(std::begin(data.policyArgs),N));
                         std::array<double,3> size;
                         std::copy(std::begin(data.size),std::begin(data.size)+3,size.begin());
-                        Vehicle::Config cfg = {{data.model,modelArgs},{data.policy,policyArgs},data.L,data.N_OV,data.D_MAX};
+                        Vehicle::Config cfg = {{data.model,modelArgs},{data.policy,policyArgs},data.L,data.N_OV,data.D_MAX,{data.Mvel,data.Moff,data.Gth,data.TL}};
                         Vehicle::Props props{size,data.mass};
                         Vehicle::InitialState is = Vehicle::getDefaultInitialState(sc);
                         vDefs.push_back({cfg,props,is});
@@ -545,6 +545,8 @@ class Simulation{
                         relLanes.push_back(-nIt->dL);
                     }
                     if(vehicles[Vo].roadInfo.laneChange!=0 && static_cast<unsigned int>(std::abs(-nIt->dL+vehicles[Vo].roadInfo.laneChange))<=v.L){
+                        // Also add rs to target lane's info
+                        // Proper safety bound calculation depends on this when N_OV==1 or L==1!!
                         relLanes.push_back(-nIt->dL+vehicles[Vo].roadInfo.laneChange);
                     }
                     for(int lane : relLanes){
@@ -670,8 +672,9 @@ class Simulation{
         static inline std::vector<Vehicle> createVehicles(const Scenario& sc, const std::vector<VehicleDef>& vDefs){
             std::vector<Vehicle> vehicles = std::vector<Vehicle>();
             vehicles.reserve(vDefs.size());
-            for(const auto& def : vDefs){
-                vehicles.emplace_back(sc,def.cfg,def.props,def.is);
+            for(size_t ID=0; ID<vDefs.size(); ID++){
+                const VehicleDef& def = vDefs[ID];
+                vehicles.emplace_back(ID,sc,def.cfg,def.props,def.is);
             }
             return vehicles;
         }
@@ -729,7 +732,7 @@ class Simulation{
                     Utils::transform([sDis](double sMin, double sMax)mutable{return sMin+sDis(Utils::rng)*(sMax-sMin);},size.begin(),size.end(),vType.propsBounds[0].size.begin(),vType.propsBounds[1].size.begin());
                     double mass = vType.propsBounds[0].mass + sDis(Utils::rng)*(vType.propsBounds[1].mass-vType.propsBounds[0].mass);
                     Vehicle::Config vCfg{vType.cfg.model,vType.cfg.policy,
-                                            vType.cfg.L,vType.cfg.N_OV,vType.cfg.D_MAX};
+                                            vType.cfg.L,vType.cfg.N_OV,vType.cfg.D_MAX,vType.cfg.safety};
                     Vehicle::Props vProps{size,mass};
                     Vehicle::InitialState vIs(R,s,l,0,vDis(Utils::rng)*v);
                     vDefs.push_back({vCfg,vProps,vIs});

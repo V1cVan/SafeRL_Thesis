@@ -64,12 +64,14 @@ def simulate(sim):
         p.subplot(1,1)
         p.add_text("Actions")
         lines = {
-            "rel_vel": {
-                "color": [0, 0, 0],
-                "getValue": lambda veh: veh.rel_vel
-            }
+            "rel_vel": {"color": [0, 0, 0]}
         }
-        TimeChartPlot(p, lines, None, "rel_vel", [0])
+        def value_cb(veh):
+            values = {
+                "rel_vel": veh.rel_vel
+            }
+            return values, {}
+        TimeChartPlot(p, lines, None, value_cb, "rel_vel", [0])
         p.subplot(2,1)
         ActionsPlot(p,actions="long")
         p.subplot(3,1)

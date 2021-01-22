@@ -11,6 +11,7 @@
 #include "eigenHelper.hpp"
 #include <array>
 #include <random>
+#include <cmath>
 
 class Vehicle : public VehicleBase{
     public:
@@ -20,6 +21,7 @@ class Vehicle : public VehicleBase{
             unsigned int L;
             unsigned int N_OV;
             double D_MAX;
+            Policy::SafetyConfig safety;
         };
 
         struct Props{
@@ -62,28 +64,11 @@ class Vehicle : public VehicleBase{
             std::array<double,2> gapE;// Gap w.r.t. the rightmost and leftmost lane edge of the 'visible' lanes in laneR and laneL
         };
 
-        struct RoadStateInterface{
-            static constexpr unsigned int SIZE = 2+Model::State::SIZE;
-            using Base = Eigen::Matrix<double,SIZE,1>;
-
-            Eigen::Ref<Eigen::Vector2d> roadPos;
-            Eigen::Ref<Model::State> modelState;
-
-            // Constructor is needed because otherwise GCC complains (no aggregate initialization possible)
-            RoadStateInterface(Eigen::Ref<Eigen::Vector2d> roadPos, Eigen::Ref<Model::State::Base> modelState)
-            : roadPos(roadPos), modelState(modelState){}
-        };
-        EIGEN_NAMED_BASE(RoadState,(this->template segment<2>(0),this->template segment<Model::State::SIZE>(2)))
-        struct RoadState : public EIGEN_NAMED_MATRIX_BASE(RoadState){
-
-            RoadState(const Eigen::Vector2d& roadPos, const Model::State& modelState)
-            : RoadState(){
-                this->roadPos = roadPos;
-                this->modelState = modelState;
-            }
-
-            EIGEN_NAMED_MATRIX_IMPL(RoadState)
-        };
+        #define ROADSTATE_REFS(R,_)\
+            R((Eigen::Vector2d),roadPos,0,0) _\
+            R((Model::State),modelState,2,0)
+        EIGEN_NAMED_BASE(RoadState,(Eigen::Matrix<double,2+Model::State::SIZE,1>),ROADSTATE_REFS)
+        EIGEN_NAMED_MATRIX(RoadState,ROADSTATE_REFS)
 
         static constexpr int COL_NONE = 0;// No collision
         static constexpr int COL_LEFT = -1;// Collision with left road boundary
@@ -96,8 +81,8 @@ class Vehicle : public VehicleBase{
         RoadInfo roadInfo;// Augmented state information of the vehicle w.r.t. the road
         int colStatus;// Collision status
 
-        Vehicle(const Scenario& vSc, const Config& vCfg, const Props& vProps, const InitialState& vIs)
-        : VehicleBase(createVehicleBase(vProps, vCfg)), sc(vSc), model(Model::ModelBase::factory.create(vCfg.model))
+        Vehicle(const size_t ID, const Scenario& vSc, const Config& vCfg, const Props& vProps, const InitialState& vIs)
+        : VehicleBase(createVehicleBase(ID, vProps, vCfg)), sc(vSc), model(Model::ModelBase::factory.create(vCfg.model))
         , policy(Policy::PolicyBase::factory.create(vCfg.policy)), longCtrl(3.5), latCtrl(0.08), roadInfo()
         , colStatus(COL_NONE){
             // TODO: below initializations can all be moved to initializer list or static initializer methods
@@ -112,16 +97,9 @@ class Vehicle : public VehicleBase{
             if(policy->ty==Policy::ActionType::DELTA){
                 std::cout << "Warning: Safetybounds are not correctly implemented yet for lateral DELTA action type." << std::endl;
             }
-            // sc.roads[vIs.R].globalPose({vIs.pos[0],vIs.pos[1],vIs.gamma},x.pos,x.ang);
-            // x.vel = vIs.vel;
-            // x.ang_vel = vIs.ang_vel;
-            // // Calculate road info
-            // roadInfo.R = vIs.R;
-            // roadInfo.pos = vIs.pos;
-            // updateRoadInfo(vIs);// TODO: static getRoadInfo and move to initializer list?
         }
 
-        Vehicle(const Scenario& vSc, const Config& vCfg, const Props& vProps) : Vehicle(vSc,vCfg,vProps,getDefaultInitialState(vSc)){}
+        Vehicle(const size_t ID, const Scenario& vSc, const Config& vCfg, const Props& vProps) : Vehicle(ID, vSc,vCfg,vProps,getDefaultInitialState(vSc)){}
 
         // Copy constructor and assignment is automatically deleted (because we have unique_ptr members)
         // Keep default move constructor and assignment:
@@ -312,14 +290,16 @@ class Vehicle : public VehicleBase{
                 roadInfo.laneL[i].width = sc.roads[is.R].lanes[Nl].width(is.pos[0]);
                 roadInfo.laneL[i].maxVel = sc.roads[is.R].lanes[Nl].speed(is.pos[0]);
             }
+            // TODO: maybe communicate gapE to augmented state vector as well?
             roadInfo.gapE[0] = dir*(is.pos[1]-sc.roads[is.R].lanes[Nr].offset(is.pos[0]))+sc.roads[is.R].lanes[Nr].width(is.pos[0])/2-roadInfo.size[1]/2;
             roadInfo.gapE[1] = -dir*(is.pos[1]-sc.roads[is.R].lanes[Nl].offset(is.pos[0]))+sc.roads[is.R].lanes[Nl].width(is.pos[0])/2-roadInfo.size[1]/2;
-            const double TL = 1.5;// Lookahead time
-            if(roadInfo.laneC.off + std::min(0.0,roadInfo.vel[1]*TL) - roadInfo.size[1]/2<-roadInfo.laneC.width/2){
+            // const double TL = 1.5;// Lookahead time
+            const double TL = safety.TL;
+            if(roadInfo.laneC.off + std::fmin(0.0,roadInfo.vel[1]*TL) - roadInfo.size[1]/2<-roadInfo.laneC.width/2){
                 // If current right boundary of the vehicle OR the future estimated right boundary of the vehicle
                 // (after TL seconds) crosses the current lane's edge, set lane change flag to -1
                 roadInfo.laneChange = -1;
-            }else if(roadInfo.laneC.off + std::min(0.0,roadInfo.vel[1]*TL) + roadInfo.size[1]/2>roadInfo.laneC.width/2){
+            }else if(roadInfo.laneC.off + std::fmax(0.0,roadInfo.vel[1]*TL) + roadInfo.size[1]/2>roadInfo.laneC.width/2){
                 // Else if current left boundary of the vehicle OR the future estimated left boundary of the vehicle
                 // (after TL seconds) crosses the current lane's edge, set lane change flag to 1
                 roadInfo.laneChange = 1;
@@ -335,28 +315,209 @@ class Vehicle : public VehicleBase{
             }
         }
 
+        inline std::tuple<std::array<double,2>,std::array<double,2>> calcSafetyBounds(){
+            // Calculates maximum longitudinal velocity and lateral safety bounds
+            // for tx==ABS_VEL and ty==REL_OFF.
+            // DO NOT USE THIS IN PRODUCTION! See crash notes below.
+
+            // 0) Initialization of reduced state and velGaps (working memory to determine min/max velocity within VEL_GAP meters of smallest gap)
+            const double Gd = D_MAX-size[0];// Default gap
+            // Default reduced state is other vehicle at detection horizon and maximum
+            // velocity for leading vehicles and zero velocity for following vehicles
+            r = {Gd,0,Gd,s.maxVel,Gd,0,Gd,s.maxVel,Gd,0,Gd,s.maxVel,Gd,0,Gd,s.maxVel};
+            Policy::redState velGaps{Gd,0,Gd,0,Gd,0,Gd,0,Gd,0,Gd,0,Gd,0,Gd,0};
+
+            // 1) Calculate velocity, inner & outer bounds and update the reduced state:
+            std::array<double,2> velBounds = {0,s.maxVel+safety.Mvel};
+            std::array<double,2> outerBounds = {-roadInfo.gapE[0], roadInfo.gapE[1]};
+            std::array<double,2> innerBounds = {std::nan(""),std::nan("")};
+            for(int Lr=-static_cast<int>(L);Lr<=static_cast<int>(L);Lr++){
+                // Loop over all visible lanes
+                for(int side=-1;side<=1;side+=2){
+                    // Loop over the front and back side
+                    for(unsigned int Nr=0;Nr<N_OV;Nr++){
+                        // Loop over all visible neighbours
+                        const Policy::relState& ov = s.lane(Lr).rel(side)[Nr];
+                        // Update bounds and reduced state for current relative state:
+                        updateSafetyBounds(ov, velBounds, outerBounds, innerBounds);
+                        updateReducedState(ov, velGaps);
+                        // Update bounds and reduced state for future relative state (with lookahead):
+                        Policy::relState ovt = ov;// Altered relative state
+                        ovt.off[0] = ov.off[0]+safety.TL*ov.vel[0];
+                        //ovt.off[1] = ov.off[1]+safety.TL*ov.vel[1];
+                        ovt.off[1] = ov.off[1]+safety.TL*(s.vel[1]-ov.vel[1]);// Less oscillatory safety bounds when neglecting own lateral velocity in lookahead
+                        ovt.gap[0] = ov.gap[0]+std::abs(ovt.off[0])-std::abs(ov.off[0]);
+                        ovt.gap[1] = ov.gap[1]+std::abs(ovt.off[1])-std::abs(ov.off[1]);
+                        updateSafetyBounds(ovt, velBounds, outerBounds, innerBounds);
+                        updateReducedState(ovt, velGaps);
+                        if(Nr==N_OV-1){
+                            // Extra safety measure: Last visible vehicle can potentially hide other vehicles
+                            // (because there was no more space in the state vector). Hence we have to be conservative,
+                            // as otherwise the bounds could abruptly tighten once the hidden vehicles become visible,
+                            // possibly causing a crash if the vehicle cannot adapt to the new bounds in time.
+                            // To do so, we will insert a dummy vehicle: travelling at the center of the lane,
+                            // occupying the whole lane and travelling at Hvel times the speed of ov.
+                            Policy::relState ovd = ov;// Dummy relative state
+                            ovd.off[1] = s.lane(Lr).off;
+                            ovd.gap[1] = std::abs(ovd.off[1])-s.lane(Lr).width/2-roadInfo.size[1]/2;
+                            ovd.vel[0] *= safety.Hvel;
+                            ovd.vel[1] = 0;
+                            updateSafetyBounds(ovd, velBounds, outerBounds, innerBounds);
+                            updateReducedState(ovd, velGaps);
+                        }
+                    }
+                }
+            }
+
+            // 2: Calculate lateral bounds from inner and outer bounds:
+            std::array<double,2> offBounds;
+            if(!std::isnan(innerBounds[0])){
+                // There is a vehicle in front that we have to avoid crashing into
+                const double rightSpace = innerBounds[0]-outerBounds[0];// Available lateral space to the right
+                const double leftSpace = outerBounds[1]-innerBounds[1];// and left
+                int side = 0;// -1 = go right ; 1 = go left ; 0 = crash :(
+                if(rightSpace>0 && leftSpace>0){// 2*safety.Moff
+                    // Default: go to the nearest side
+                    int side = (-innerBounds[0]<=innerBounds[1]) ? -1 : 1;// -1 = go right ; 1 = go left
+                    if(innerBounds[0]+innerBounds[1]<(innerBounds[1]-innerBounds[0])/4){
+                        // But if we are less than 1/8 away from 'middle overlap', go to
+                        // the side with the largest 'free lateral space'.
+                        side = (rightSpace>=leftSpace) ? -1 : 1;
+                    }
+                }else if(rightSpace>0){// 2*safety.Moff
+                    side = -1;
+                }else if(leftSpace>0){// 2*safety.Moff
+                    side = 1;
+                }// else side==0 and crash is imminent
+
+                if(side==0){
+                    // --- CRASH IMMINENT ---
+                    // For simulation purposes, we set the bounds to 0, possibly leading to
+                    // a frontal crash. In realistic setups, please call dedicated safety
+                    // modules to determine the least damaging escape route/crash course.
+                    // DO NOT USE THIS IN PRODUCTION!
+                    offBounds[0] = 0;
+                    offBounds[1] = 0;
+                }else{
+                    offBounds[0] = (side<0) ? outerBounds[0] : innerBounds[1];
+                    offBounds[1] = (side<0) ? innerBounds[0] : outerBounds[1];
+                }
+            }else{
+                // No frontal vehicles that we have to avoid crashing into
+                offBounds[0] = outerBounds[0];
+                offBounds[1] = outerBounds[1];
+            }
+            assert(offBounds[0]<=offBounds[1]);
+
+            // 3) Apply safety margins:
+            if(velBounds[1]>safety.Mvel){
+                velBounds[1] -= safety.Mvel;
+            }else{
+                velBounds[1] = 0;
+            }
+            if(offBounds[1]-offBounds[0]>2*safety.Moff){
+                offBounds[0] += safety.Moff;
+                offBounds[1] -= safety.Moff;
+            }else{
+                offBounds[0] = (offBounds[1]+offBounds[0])/2;
+                offBounds[1] = (offBounds[1]+offBounds[0])/2;
+            }
+            return {velBounds, offBounds};
+        }
+
+        inline void updateSafetyBounds(const Policy::relState& ov, std::array<double,2>& velBounds, std::array<double,2>& outerBounds, std::array<double,2>& innerBounds) const{
+            // Updates the velocity, inner and outer bounds by taking the relative vehicle state ov into account.
+            const double vL = (ov.off[0]>0) ? s.vel[0] : s.vel[0]-ov.vel[0];// Determine leading and following velocities
+            const double vF = (ov.off[0]>0) ? s.vel[0]-ov.vel[0] : s.vel[0];
+            const bool brakeCrit = minBrakeGap(vL, vF, ov.gap[0]) >= safety.Gth;// Braking criterion
+            const bool overlapCrit = ov.gap[1] < safety.Moff;// Overlap criterion: True if vehicles overlap laterally, False otherwise
+            if(!overlapCrit && !brakeCrit){
+                // There is no lateral overlap and the BRAKING_GAP threshold cannot be guaranteed => bound lateral movement
+                if(ov.off[1]>0){
+                    // And the other vehicle is to the right => update right outer bound to be the overall leftmost bound
+                    outerBounds[0] = std::fmax(outerBounds[0],-ov.gap[1]);
+                }else{
+                    // And the other vehicle is to the left => update left outer bound to be the overall rightmost bound
+                    outerBounds[1] = std::fmin(outerBounds[1],ov.gap[1]);
+                }
+                assert(outerBounds[0]<=outerBounds[1]);
+            }
+            if(overlapCrit && ov.off[0]<0){
+                // There is lateral overlap between both vehicles and the other vehicle is in front of us
+                // => Calculate new velocity upper bound and update it to be the overall lowest bound
+                velBounds[1] = std::fmin(velBounds[1], maxBrakeVel(vL, ov.gap[0]));
+                if(!brakeCrit){
+                    // BRAKING_GAP threshold cannot be guaranteed => we should move away from lateral overlap
+                    // Calculate right- and leftmost offset required to avoid overlap
+                    const double rightOff = -ov.off[1]-std::abs(ov.off[1])+ov.gap[1];
+                    const double leftOff = -ov.off[1]+std::abs(ov.off[1])-ov.gap[1];
+                    // And update the right/left inner bounds to be the overall rightmost/leftmost bound
+                    innerBounds[0] = std::fmin(innerBounds[0], rightOff);// std::nan is ignored by fmin/fmax
+                    innerBounds[1] = std::fmax(innerBounds[1], leftOff);
+                    assert(innerBounds[0]<=innerBounds[1]);
+                }
+            }
+        }
+
+        inline void updateReducedState(const Policy::relState& ov, Policy::redState& velGaps){
+            // Updates the reduced state by taking the relative vehicle state ov into account.
+            static constexpr double VEL_GAP = 10;// Take minimum (maximum) velocity from vehicles within VEL_GAP meters of the minimum gap
+            const double ovVel = s.vel[0]-ov.vel[0];
+            const int side = (ov.off[0]>0) ? -1 : 1;// 1 if ov is leading (-1 if following)
+            using POS = Policy::redState::POS;
+            static constexpr std::array<POS,4> positions = {POS::P,POS::C,POS::R,POS::L};
+            for(const POS pos : positions){
+                double latGap = ov.gap[1];
+                if(pos==POS::C){// Lateral gap if we were at the current lane's center
+                    latGap += std::abs(ov.off[1]-s.laneC.off)-std::abs(ov.off[1]);
+                }else if(pos==POS::R){// Lateral gap if we were at the right lane's center
+                    latGap += std::abs(ov.off[1]-s.laneR[0].off)-std::abs(ov.off[1]);
+                }else if(pos==POS::L){// Lateral gap if we were at the left lane's center
+                    latGap += std::abs(ov.off[1]-s.laneL[0].off)-std::abs(ov.off[1]);
+                }
+                const bool overlapCrit = latGap < safety.Moff;// Overlap criterion: True if vehicles overlap laterally, False otherwise
+                if(overlapCrit){
+                    if((ov.gap[0]<r.gap(pos,side)+VEL_GAP && side*ovVel<side*r.vel(pos,side)) || ov.gap[0]<=velGaps.gap(pos,side)-VEL_GAP){
+                        // If either ovVel is lower (higher) than the current lowest (highest) value and
+                        // the gap is within the allowed range, OR the gap is more than VEL_GAP below
+                        // the current velGap:
+                        // Update the minimum (maximum) velocity and velGap
+                        velGaps.gap(pos,side) = ov.gap[0];
+                        r.vel(pos,side) = ovVel;
+                    }
+                    // Retrieve the smallest gap:
+                    r.gap(pos,side) = std::fmin(r.gap(pos,side), ov.gap[0]);
+                }
+            }
+        }
+
+        inline double minBrakeGap(const double vL, const double vF, const double gap) const{
+            // Calculates the minimum longitudinal gap between leading vehicle (with
+            // velocity vL) and following vehicle (with velocity vF) after both start
+            // braking until fully stopped for the given current gap between both.
+            const double MAX_DEC = -model->inputBounds[0].longAcc;
+            const double xL = vL*vL/2/MAX_DEC;// Travelled distance of leading vehicle before full stop
+            const double xF = vF*vF/2/MAX_DEC;// Travelled distance of following vehicle before full stop
+            return std::fmin(gap, gap + xL - xF);
+        }
+
+        inline double maxBrakeVel(const double vL, const double gap) const{
+            // Calculates the maximum longitudinal velocity for which we can still
+            // guarantee the minimum braking gap (see above) 'gap' for the given
+            // velocity 'vL' of the leading vehicle.
+            const double MAX_DEC = -model->inputBounds[0].longAcc;
+            return std::sqrt(std::fmax(0.0,2*MAX_DEC*(gap-safety.Gth)+vL*vL));
+        }
+
         inline void updateSafetyBounds(){
-            const double maxBrakeAcc = -model->inputBounds[0].longAcc;
-            // Calculate the minimum distance we have to ensure between us and the vehicle
-            // in front such that we can always fully brake from our current velocity to 0.
-            //double minBrakeDist = s.vel[0]*s.vel[0]/maxBrakeAcc/2;// Travelled distance to fully brake
-            // Default is a vehicle in front far ahead and driving at the maximum
-            // allowed speed. And the right and left road (or lane edge) boundaries.
-            // TODO: maybe communicate gapE to augmented state vector as well?
-            Policy::redState def = {D_MAX,s.maxVel,std::min(s.gapB[0],roadInfo.gapE[0]),std::min(s.gapB[1],roadInfo.gapE[1])};
-            r = safetyROI.getReducedState(s, def);
-            // Update minBrakeDist to incorporate current speed of vehicle in front:
-            //double brakeGap = r.frontGap+r.frontVel*r.frontVel/maxBrakeAcc/2-minBrakeDist;
-            // Linearly adapt maximum speed based on distance to vehicle in front (ensuring a minimal SAFETY_GAP)
-            // double alpha = (r.frontGap-SAFETY_GAP)/(minBrakeDist-SAFETY_GAP);
-            // double maxVel = (1-alpha)*r.frontVel+alpha*s.maxVel;
-            // Maximum allowed velocity if both vehicles start max braking:
-            double maxVel = std::sqrt(std::max(0.0,2*maxBrakeAcc*(r.frontGap-SAFETY_GAP)+r.frontVel*r.frontVel));
-            maxVel = std::clamp(maxVel, 0.0, s.maxVel);// And clip between [0;maxRoadVel]
+            // Calculate safety bounds and new reduced state
+            std::array<double,2> velBounds;
+            std::array<double,2> latBounds;
+            std::tie(velBounds, latBounds) = calcSafetyBounds();
 
             // SafetyBounds for ABS_VEL and REL_OFF action types
-            safetyBounds[0] = {0.0,-r.rightGap};
-            safetyBounds[1] = {maxVel,r.leftGap};
+            safetyBounds[0] = {velBounds[0],latBounds[0]};
+            safetyBounds[1] = {velBounds[1],latBounds[1]};
 
             if(policy->tx==Policy::ActionType::REL_VEL){
                 safetyBounds[0].x -= s.vel[0];
@@ -368,11 +529,11 @@ class Vehicle : public VehicleBase{
             }
 
             if(policy->ty==Policy::ActionType::ABS_OFF){
-                safetyBounds[0].y += r.rightGap;
-                safetyBounds[1].y += r.rightGap;
+                safetyBounds[0].y += s.gapB[0];
+                safetyBounds[1].y += s.gapB[0];
             }else if(policy->ty==Policy::ActionType::LANE){
-                safetyBounds[0].y = r.rightGap>s.laneR[0].off ? -1.0 : 0.0;
-                safetyBounds[1].y = r.leftGap>-s.laneL[0].off ? 1.0 : 0.0;
+                safetyBounds[0].y = -safetyBounds[0].y-s.laneC.off>s.laneR[0].width ? -1.0 : 0.0;
+                safetyBounds[1].y = safetyBounds[1].y+s.laneC.off>s.laneL[0].width ? 1.0 : 0.0;
             }else if(policy->ty==Policy::ActionType::DELTA){
                 // TODO: change bounds when ActionType is DELTA
                 safetyBounds[0].y = model->inputBounds[0].delta;
@@ -397,9 +558,9 @@ class Vehicle : public VehicleBase{
             return {{ds,dl},dModel};
         }
 
-        static inline VehicleBase createVehicleBase(const Props& props, const Config& cfg){
+        static inline VehicleBase createVehicleBase(const size_t ID, const Props& props, const Config& cfg){
             std::array<double,3> relCgLoc = {0.45,0.5,0.3};
-            return VehicleBase(props.size,VehicleBase::calcCg(props.size,relCgLoc),props.mass,cfg.L,cfg.N_OV,cfg.D_MAX);
+            return VehicleBase(ID, props.size,VehicleBase::calcCg(props.size,relCgLoc),props.mass,cfg.L,cfg.N_OV,cfg.D_MAX,cfg.safety);
         }
 };
 

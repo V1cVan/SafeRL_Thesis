@@ -40,6 +40,15 @@ extern "C"{
         char* output_log;
     };
 
+    struct vSafety{
+        // Vehicle safety configuration
+        double Mvel;// Safety margin on velocity bounds
+        double Moff;// Safety margin on offset bounds
+        double Gth;// Minimum longitudinal gap
+        double TL;// Lookahead time
+        double Hvel;// Relative longitudinal velocity for hidden vehicles
+    };
+
     struct vConfig{
         // Vehicle configuration
         unsigned int model;// Model type
@@ -49,6 +58,7 @@ extern "C"{
         unsigned int L;// Number of lanes the vehicle 'can see' to the left and right
         unsigned int N_OV;// Number of neighbouring vehicles the vehicle 'can detect' in front and behind in each visible lane
         double D_MAX;// Maximum detection horizon
+        vSafety safety;
     };
 
     struct vProps{
@@ -80,6 +90,26 @@ extern "C"{
         vIs is;
     };
 
+    struct IDMConfig{
+        // IDM configuration
+        double s0;  // Jam distance [m]
+        double s1;  // Jam distance [m]
+        double a;   // Maximum acceleration [m/s^2]
+        double b;   // Desired deceleration [m/s^2]
+        double T;   // Safe time headway [s]
+        int delta;  // Acceleration exponent [-]
+    };
+
+    struct MOBILConfig{
+        // MOBIL configuration
+        double p;       // Politeness factor [-]
+        double b_safe;  // Maximum safe deceleration [m/s^2]
+        double a_th;    // Changing threshold [m/s^2]
+        double a_bias;  // Bias for right lane [m/s^2]
+        double v_crit;  // Critical velocity for congested traffic [m/s]
+        bool sym;       // True for symmetric passing rules, False for asymmetric (right priority) passing rules
+    };
+
     // --- Configuration ---
     // Get the seed of the random number generator
     LIB_PUBLIC
@@ -104,7 +134,7 @@ extern "C"{
 
     // Create BluePrint for the StepPolicy ; args should be a byte array of size 16
     LIB_PUBLIC
-    void pbp_step(unsigned char* args, const double minVel, const double maxVel);
+    void pbp_step(unsigned char* args, const unsigned int period, const double minVel, const double maxVel);
 
     // Create BluePrint for the BasicPolicy ; args should be a byte array of size 24
     // type (0 => SLOW ; 1 => NORMAL ; 2 => FAST)
@@ -114,6 +144,10 @@ extern "C"{
     // Create BluePrint for the BasicPolicy ; args should be a byte array of size 24
     LIB_PUBLIC
     void pbp_basicC(unsigned char* args, const double overtakeGap, const double minVelDiff, const double maxVelDiff);
+
+    // Create BluePrint for the IMPolicy ; arg should be a byte array of size `sizeof(IDMConfig)+sizeof(MOBILConfig)`
+    LIB_PUBLIC
+    void pbp_im(unsigned char* args, const IDMConfig* idm, const MOBILConfig* mobil);
 
     // Create a new simulation with the given vehicle types configuration
     LIB_PUBLIC
