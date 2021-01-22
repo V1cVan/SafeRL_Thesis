@@ -117,7 +117,7 @@ class libBasicPolicy(_Policy):
 
     def __init__(self):
         if self._type is None:
-            super().__init__(simLib.pbp_basicC, (self._overtakeGap, self._dv_min, self._dv_max))
+            super().__init__(simLib.pbp_basicC, (self._overtake_gap, self._dv_min, self._dv_max))
         else:
             super().__init__(simLib.pbp_basicT, (self._type,))
 
@@ -133,7 +133,7 @@ class pyBasicPolicy(CustomPolicy):
     def __init__(self):
         super().__init__()
         if self._type is not None:
-            self._overtakeGap = self.DEFAULT_OVERTAKE_GAP[self._type]
+            self._overtake_gap = self.DEFAULT_OVERTAKE_GAP[self._type]
             self._dv_min = self.DEFAULT_MIN_VEL[self._type]
             self._dv_max = self.DEFAULT_MAX_VEL[self._type]
 
@@ -173,7 +173,7 @@ class pyBasicPolicy(CustomPolicy):
         return actions
 
     def overtake_crit(self, lVel, desVel, lGap):
-        return lGap<self._overtakeGap and lVel<0.9*desVel
+        return lGap<self._overtake_gap and lVel<0.9*desVel
 
 
 class BasicPolicy(libBasicPolicy if USE_LIB_POLICIES else pyBasicPolicy,enc_name="basic"):
