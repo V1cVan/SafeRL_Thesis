@@ -122,14 +122,14 @@ class Vehicle : public VehicleBase{
             model->postIntegration(*this,rs.modelState);
             // Wrap integrated road state to a valid new road id and road position:
             Road::id_t R = roadInfo.R;
-            double s = roadInfo.pos[0];
-            double l = roadInfo.pos[1];
-            sc.updateRoadState(R,s,l,rs.roadPos[0]-s,rs.roadPos[1]-l);
+            double Rs = roadInfo.pos[0];
+            double Rl = roadInfo.pos[1];
+            sc.updateRoadState(R,Rs,Rl,rs.roadPos[0]-Rs,rs.roadPos[1]-Rl);
             rs.modelState.ang[0] = Utils::wrapAngle(rs.modelState.ang[0]);
             // Note that from here on we have an updated AND VALID new road state
             // as otherwise an out_of_range exception would have been thrown.
-            double gamma = Utils::wrapAngle(rs.modelState.ang[0]-sc.roads[R].heading(s,l));
-            updateState({R,s,l,gamma,rs.modelState.vel,rs.modelState.ang_vel});
+            double gamma = Utils::wrapAngle(rs.modelState.ang[0]-sc.roads[R].heading(Rs,Rl));
+            updateState({R,Rs,Rl,gamma,rs.modelState.vel,rs.modelState.ang_vel});
         }
 
         // To get new driving actions based on the updated local states of all other vehicles in the 
@@ -182,12 +182,12 @@ class Vehicle : public VehicleBase{
         inline Policy::augState getDefaultAugmentedState() const noexcept{
             // Defaults are equally sized vehicles at the end of the detection horizon and the
             // center of their lane, travelling at the maximum velocity.
-            auto& size = roadInfo.size;// To prevent stupid GCC bug (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66735)
-            auto& vel = roadInfo.vel;
-            auto getLaneInfo = [N_OV=N_OV,D_MAX=D_MAX,&size,&vel](LaneInfo lane){
+            auto& Rsize = roadInfo.size;// To prevent stupid GCC bug (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66735)
+            auto& Rvel = roadInfo.vel;
+            auto getLaneInfo = [N_OV=N_OV,D_MAX=D_MAX,&Rsize,&Rvel](LaneInfo lane){
                 return Policy::laneInfo{lane.off,lane.width,
-                std::vector<Policy::relState>(N_OV,{{D_MAX,lane.off},{D_MAX-size[0],std::abs(lane.off)-size[1]},{vel[0]-lane.maxVel,vel[1]-0}}),
-                std::vector<Policy::relState>(N_OV,{{-D_MAX,lane.off},{D_MAX-size[0],std::abs(lane.off)-size[1]},{vel[0]-lane.maxVel,vel[1]-0}})};
+                std::vector<Policy::relState>(N_OV,{{D_MAX,lane.off},{D_MAX-Rsize[0],std::abs(lane.off)-Rsize[1]},{Rvel[0]-lane.maxVel,Rvel[1]-0}}),
+                std::vector<Policy::relState>(N_OV,{{-D_MAX,lane.off},{D_MAX-Rsize[0],std::abs(lane.off)-Rsize[1]},{Rvel[0]-lane.maxVel,Rvel[1]-0}})};
             };
             Policy::laneInfo laneC = getLaneInfo(roadInfo.laneC);
             std::vector<Policy::laneInfo> laneR, laneL;
@@ -378,7 +378,7 @@ class Vehicle : public VehicleBase{
                 int side = 0;// -1 = go right ; 1 = go left ; 0 = crash :(
                 if(rightSpace>0 && leftSpace>0){// 2*safety.Moff
                     // Default: go to the nearest side
-                    int side = (-innerBounds[0]<=innerBounds[1]) ? -1 : 1;// -1 = go right ; 1 = go left
+                    side = (-innerBounds[0]<=innerBounds[1]) ? -1 : 1;
                     if(innerBounds[0]+innerBounds[1]<(innerBounds[1]-innerBounds[0])/4){
                         // But if we are less than 1/8 away from 'middle overlap', go to
                         // the side with the largest 'free lateral space'.
@@ -546,14 +546,14 @@ class Vehicle : public VehicleBase{
             Model::State dModel = model->derivatives(*this,rs.modelState,u);
             // Extract old road id and road position from roadInfo
             Road::id_t R = roadInfo.R;
-            double s = roadInfo.pos[0];
-            double l = roadInfo.pos[1];
+            double Rs = roadInfo.pos[0];
+            double Rl = roadInfo.pos[1];
             // And get updated values based on the changes w.r.t. the integrated road state (whose R,s and l values are not wrapped in case of a lane connection)
-            int dirSwitch = sc.updateRoadState(R,s,l,rs.roadPos[0]-s,rs.roadPos[1]-l);
+            int dirSwitch = sc.updateRoadState(R,Rs,Rl,rs.roadPos[0]-Rs,rs.roadPos[1]-Rl);
             // Calculate derivatives of the road position:
-            double psi = sc.roads[R].heading(s);
-            double kappa = sc.roads[R].curvature(s,0);
-            double ds = dirSwitch*(std::cos(psi)*dModel.pos[0]+std::sin(psi)*dModel.pos[1])/(1-l*kappa);
+            double psi = sc.roads[R].heading(Rs);
+            double kappa = sc.roads[R].curvature(Rs,0);
+            double ds = dirSwitch*(std::cos(psi)*dModel.pos[0]+std::sin(psi)*dModel.pos[1])/(1-Rl*kappa);
             double dl = dirSwitch*(-std::sin(psi)*dModel.pos[0]+std::cos(psi)*dModel.pos[1]);
             return {{ds,dl},dModel};
         }

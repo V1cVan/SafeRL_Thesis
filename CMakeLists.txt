@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.15)
 project(hwsim VERSION 0.1.0 LANGUAGES CXX)
 
 include(CTest)
@@ -24,17 +24,22 @@ message(STATUS "Installing python wrapper? ${HWSIM_INSTALL_PYTHON}")
 message(STATUS "Installing MATLAB wrapper? ${HWSIM_INSTALL_MATLAB}")
 message(STATUS "Installing example executables? ${HWSIM_INSTALL_EXAMPLES}")
 
-# Display all warnings if in debug mode:
+# Display all warnings as errors if in debug mode:
+if(MSVC)
+  set(WARNING_OPTS /W4) # W4 produced unreferenced/unused parameter warnings
+  set(ERROR_OPTS /WX)
+else()
+  set(WARNING_OPTS -Wall -Wextra -Wpedantic)
+  set(ERROR_OPTS -Werror)
+endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  if(MSVC)
-    add_compile_options(/W3) # W4 produced unreferenced/unused parameter warnings
-  else()
-    add_compile_options(-Wall -Wextra -pedantic)
-  endif()
+  set(COMPILE_OPTS ${WARNING_OPTS} ${ERROR_OPTS})
   set(DEBUG_CONFIG ON)
 else()
+  set(COMPILE_OPTS ${WARNING_OPTS})
   set(DEBUG_CONFIG OFF)
 endif()
+message(STATUS "Compile options: ${COMPILE_OPTS}")
 
 # ----- OpenMP -----
 find_package(OpenMP)
@@ -62,6 +67,7 @@ if(HWSIM_COMPAT)
   target_compile_definitions(hwsim INTERFACE COMPAT)
 endif()
 target_compile_definitions(hwsim INTERFACE HWSIM_MAX_SERIALIZED_LENGTH=${HWSIM_MAX_SERIALIZED_LENGTH})
+target_compile_options(hwsim INTERFACE ${COMPILE_OPTS})
 
 
 # Add C library wrapper:
@@ -97,6 +103,11 @@ file(GENERATE
   OUTPUT python/hwsim/hwsim/_wrapper.py
   INPUT ${CMAKE_CURRENT_BINARY_DIR}/conf/_wrapper.py.mid
 ) # File generate replaces all $<GENERATOR> expressions
+# Configure python setup:
+configure_file(
+  python/hwsim/setup.py.in
+  python/hwsim/setup.py
+)
 
 # Tests:
 add_subdirectory(tests)

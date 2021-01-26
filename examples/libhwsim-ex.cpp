@@ -4,8 +4,8 @@
 
 int main(){
     std::cout << "Start of main" << std::endl;
-    char* path = "../scenarios/scenarios.h5";
-    char* scenario = "CLOVERLEAF_RAW";
+    const char* path = "../scenarios/scenarios.h5";
+    const char* scenario = "CLOVERLEAF_RAW";
     cfg_scenariosPath(path);
     sConfig sConf = {0.1,NULL};
     vProps minProps = {{3,2,3}, 1500};// size, mass

@@ -31,6 +31,8 @@ namespace Policy{
 
             PolicyBase(const ActionType& tx, const ActionType& ty) : tx(tx), ty(ty){}
 
+            virtual ~PolicyBase() = default;
+
             // Get new driving actions based on the current augmented state vector
             virtual Action getAction(const VehicleBase& vb) = 0;
 
@@ -64,7 +66,7 @@ namespace Policy{
             CustomPolicy(const sdata_t& args)
             : CustomPolicy(Utils::deserialize<ActionType,ActionType>(args)){}
 
-            inline Action getAction(const VehicleBase& vb){
+            inline Action getAction(const VehicleBase& /*vb*/){
                 return {std::nan(""),std::nan("")};
             }
 
@@ -81,7 +83,7 @@ namespace Policy{
             double minRelVel;
             double maxRelVel;
         };
-    };
+    }
 
     class StepPolicy : public Serializable<PolicyBase,PolicyBase::factory,StepPolicy,1,sizeof(Config::Step)>{
         // Stepping driving policy, used to examine the step response of the dynamical systems
@@ -101,14 +103,14 @@ namespace Policy{
 
             // Policy state
             struct PolicyState{
-                unsigned int k = -2;// getAction counter (-2 to force new actions in first call to getAction)
+                unsigned int k;// getAction counter
                 Action curActions;// relative current actions
             };
             PolicyState ps;
 
             StepPolicy(const Config::Step& cfg)
             : Base(ActionType::ABS_VEL, ActionType::ABS_OFF), velDis(cfg.minRelVel, cfg.maxRelVel)
-            , offDis(MIN_REL_OFF, MAX_REL_OFF), cfg(cfg){}
+            , offDis(MIN_REL_OFF, MAX_REL_OFF), cfg(cfg), ps({cfg.period-1,{0,0}}){}
 
             StepPolicy(const unsigned int period = DEFAULT_PERIOD, const double minVel = DEFAULT_MIN_REL_VEL, const double maxVel = DEFAULT_MAX_REL_VEL)
             : StepPolicy(Config::Step{period, minVel, maxVel}){}
@@ -147,7 +149,7 @@ namespace Policy{
             double minVelDiff; // Minimum and maximum bounds for the desVelDiff
             double maxVelDiff;
         };
-    };
+    }
 
     class BasicPolicy : public Serializable<PolicyBase,PolicyBase::factory,BasicPolicy,2,sizeof(Config::Basic)>{
         // Basic driving policy, trying to mimic human driver behaviour using a decision-tree state to action mapping
@@ -186,8 +188,8 @@ namespace Policy{
             bool overtaking;// Flag denoting whether we are currently overtaking or not
 
             BasicPolicy(const Config::Basic& cfg)
-            : Base(ActionType::ABS_VEL, ActionType::REL_OFF), desVelDiff(getDesVelDiff(cfg.minVelDiff, cfg.maxVelDiff))
-            , cfg(cfg), overtaking(false){}
+            : Base(ActionType::ABS_VEL, ActionType::REL_OFF), cfg(cfg), desVelDiff(getDesVelDiff(cfg.minVelDiff, cfg.maxVelDiff))
+            , overtaking(false){}
 
             BasicPolicy(const double overtakeGap, const double minVelDiff, const double maxVelDiff)
             : BasicPolicy(Config::Basic{overtakeGap, minVelDiff, maxVelDiff}){}
@@ -298,7 +300,7 @@ namespace Policy{
             double v_crit = 15; // Critical velocity for congested traffic [m/s]
             bool sym = false;   // True for symmetric passing rules, false for asymmetric (right priority) passing rules
         };
-    };
+    }
 
     class IMPolicy : public Serializable<PolicyBase,PolicyBase::factory,IMPolicy,3,sizeof(Config::IDM)+sizeof(Config::MOBIL)>{
         // Basic driving policy, trying to mimic human driver behaviour using the IDM and MOBIL models.
@@ -399,6 +401,6 @@ namespace Policy{
             }
     };
 
-};
+}
 
 #endif

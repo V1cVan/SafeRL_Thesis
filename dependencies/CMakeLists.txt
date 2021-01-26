@@ -12,27 +12,37 @@ ELSE()
   SET( CLOTHOIDS_LIB Clothoids_win_${BITS}_static${DEBUG_SUFFIX} )
 ENDIF()
 # Find library and build from source if not found
-set(CLOTHOIDS_ARCHIVE ${CMAKE_CURRENT_SOURCE_DIR}/Clothoids.tar.gz)
+set(CLOTHOIDS_NAME Clothoids)
+set(CLOTHOIDS_ARCHIVE ${CMAKE_CURRENT_SOURCE_DIR}/${CLOTHOIDS_NAME}.tar.gz)
+set(CLOTHOIDS_HASH "" CACHE STRING "") # Default hash value in cache (overwritten after extraction of archive)
 set(CLOTHOIDS_SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/Clothoids/source)
-if(NOT EXISTS ${CLOTHOIDS_SOURCE_DIR})
-  message(STATUS "No source files for the Clothoids library found. Extracting archive ${CLOTHOIDS_ARCHIVE}")
-  execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/Clothoids)
-  execute_process(
-    COMMAND ${CMAKE_COMMAND} -E tar xzf ${CLOTHOIDS_ARCHIVE}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Clothoids
-  )
-  execute_process(COMMAND ${CMAKE_COMMAND} -E rename ${CMAKE_CURRENT_BINARY_DIR}/Clothoids/Clothoids ${CLOTHOIDS_SOURCE_DIR})
-  if(NOT EXISTS ${CLOTHOIDS_SOURCE_DIR})
-    message(FATAL_ERROR "Error while extracting source files for the Clothoids library :(")
-  endif()
-endif()
+set(CLOTHOIDS_DEBUG_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/Clothoids/install-debug)
+set(CLOTHOIDS_RELEASE_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/Clothoids/install)
 if(DEBUG_CONFIG)
   # In debug configuration, set Clothoids' install directory to special debug folder
   # This is to be able to differentiate between the debug and release binaries
   # (If installed in the same directory find_library returns the wrong one)
-  set(CLOTHOIDS_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/Clothoids/install-debug)
+  set(CLOTHOIDS_INSTALL_DIR ${CLOTHOIDS_DEBUG_INSTALL_DIR})
 else()
-  set(CLOTHOIDS_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/Clothoids/install)
+  set(CLOTHOIDS_INSTALL_DIR ${CLOTHOIDS_RELEASE_INSTALL_DIR})
+endif()
+file(SHA256 ${CLOTHOIDS_ARCHIVE} HASH)
+if((NOT EXISTS ${CLOTHOIDS_SOURCE_DIR}) OR (NOT CLOTHOIDS_HASH STREQUAL HASH))
+  message(STATUS "New source files for the Clothoids library found. Extracting archive ${CLOTHOIDS_ARCHIVE}")
+  execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/Clothoids)
+  file(REMOVE_RECURSE ${CLOTHOIDS_SOURCE_DIR}) # First remove old source files
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} -E tar xzf ${CLOTHOIDS_ARCHIVE}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Clothoids
+  )
+  execute_process(COMMAND ${CMAKE_COMMAND} -E rename ${CMAKE_CURRENT_BINARY_DIR}/Clothoids/${CLOTHOIDS_NAME} ${CLOTHOIDS_SOURCE_DIR})
+  if(NOT EXISTS ${CLOTHOIDS_SOURCE_DIR})
+    message(FATAL_ERROR "Error while extracting source files for the Clothoids library :(")
+  endif()
+  # Delete previous install_dir and store new hash in cache
+  file(REMOVE_RECURSE ${CLOTHOIDS_DEBUG_INSTALL_DIR})
+  file(REMOVE_RECURSE ${CLOTHOIDS_RELEASE_INSTALL_DIR})
+  set(CLOTHOIDS_HASH ${HASH} CACHE STRING "" FORCE)
 endif()
 message(STATUS "Looking for ${CLOTHOIDS_LIB} in ${CLOTHOIDS_INSTALL_DIR}/lib")
 unset(ClothoidsLib CACHE) # Force find_library every time (otherwise cached library is used)
@@ -118,19 +128,24 @@ install(DIRECTORY ${CLOTHOIDS_INSTALL_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX}/
 
 # ----- Eigen library -----
 # Include Eigen library and extract source if not found
-set(EIGEN_ARCHIVE ${CMAKE_CURRENT_SOURCE_DIR}/eigen-3.3.7.tar.gz)
+set(EIGEN_NAME eigen-3.3.9)
+set(EIGEN_ARCHIVE ${CMAKE_CURRENT_SOURCE_DIR}/${EIGEN_NAME}.tar.gz)
+set(EIGEN_HASH "" CACHE STRING "") # Default hash value in cache (overwritten after extraction of archive)
 set(EIGEN_SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/eigen/source)
-if(NOT EXISTS ${EIGEN_SOURCE_DIR})
-  message(STATUS "No source files for the Eigen library found. Extracting archive ${EIGEN_ARCHIVE}")
+file(SHA256 ${EIGEN_ARCHIVE} HASH)
+if((NOT EXISTS ${EIGEN_SOURCE_DIR}) OR (NOT EIGEN_HASH STREQUAL HASH))
+  message(STATUS "New source files for the Eigen library found. Extracting archive ${EIGEN_ARCHIVE}")
   execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/eigen)
+  file(REMOVE_RECURSE ${EIGEN_SOURCE_DIR}) # First remove old source files
   execute_process(
     COMMAND ${CMAKE_COMMAND} -E tar xzf ${EIGEN_ARCHIVE}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/eigen
   )
-  execute_process(COMMAND ${CMAKE_COMMAND} -E rename ${CMAKE_CURRENT_BINARY_DIR}/eigen/eigen-3.3.7 ${EIGEN_SOURCE_DIR})
+  execute_process(COMMAND ${CMAKE_COMMAND} -E rename ${CMAKE_CURRENT_BINARY_DIR}/eigen/${EIGEN_NAME} ${EIGEN_SOURCE_DIR})
   if(NOT EXISTS ${EIGEN_SOURCE_DIR})
     message(FATAL_ERROR "Error while extracting source files for the Eigen library :(")
   endif()
+  set(EIGEN_HASH ${HASH} CACHE STRING "" FORCE)
 endif()
 # The Eigen library is header only, so we can just add an imported interface
 # library and set the include directory appropriately.
@@ -146,27 +161,37 @@ target_include_directories(Eigen
 
 # ----- HDF5 library -----
 # Find HDF5 library and build from source if not found
-set(HDF5_ARCHIVE ${CMAKE_CURRENT_SOURCE_DIR}/hdf5-1.12.0.tar.gz)
+set(HDF5_NAME hdf5-1.12.0)
+set(HDF5_ARCHIVE ${CMAKE_CURRENT_SOURCE_DIR}/${HDF5_NAME}.tar.gz)
+set(HDF5_HASH "" CACHE STRING "") # Default hash value in cache (overwritten after extraction of archive)
 set(HDF5_SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/hdf5/source)
-if(NOT EXISTS ${HDF5_SOURCE_DIR})
-  message(STATUS "No source files for the HDF5 library found. Extracting archive ${HDF5_ARCHIVE}")
-  execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/hdf5)
-  execute_process(
-    COMMAND ${CMAKE_COMMAND} -E tar xzf ${HDF5_ARCHIVE}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/hdf5
-  )
-  execute_process(COMMAND ${CMAKE_COMMAND} -E rename ${CMAKE_CURRENT_BINARY_DIR}/hdf5/hdf5-1.12.0 ${HDF5_SOURCE_DIR})
-  if(NOT EXISTS ${HDF5_SOURCE_DIR})
-    message(FATAL_ERROR "Error while extracting source files for the HDF5 library :(")
-  endif()
-endif()
+set(HDF5_DEBUG_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/hdf5/install-debug)
+set(HDF5_RELEASE_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/hdf5/install)
 if(DEBUG_CONFIG)
   # In debug configuration, set HDF5 install directory to special debug folder
   # This is to be able to differentiate between the debug and release binaries
   # (If installed in the same directory find_library returns the wrong one)
-  set(HDF5_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/hdf5/install-debug)
+  set(HDF5_INSTALL_DIR ${HDF5_DEBUG_INSTALL_DIR})
 else()
-  set(HDF5_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/hdf5/install)
+  set(HDF5_INSTALL_DIR ${HDF5_RELEASE_INSTALL_DIR})
+endif()
+file(SHA256 ${HDF5_ARCHIVE} HASH)
+if((NOT EXISTS ${HDF5_SOURCE_DIR}) OR (NOT HDF5_HASH STREQUAL HASH))
+  message(STATUS "New source files for the HDF5 library found. Extracting archive ${HDF5_ARCHIVE}")
+  execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/hdf5)
+  file(REMOVE_RECURSE ${HDF5_SOURCE_DIR}) # First remove old source files
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} -E tar xzf ${HDF5_ARCHIVE}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/hdf5
+  )
+  execute_process(COMMAND ${CMAKE_COMMAND} -E rename ${CMAKE_CURRENT_BINARY_DIR}/hdf5/${HDF5_NAME} ${HDF5_SOURCE_DIR})
+  if(NOT EXISTS ${HDF5_SOURCE_DIR})
+    message(FATAL_ERROR "Error while extracting source files for the HDF5 library :(")
+  endif()
+  # Delete previous install_dir and store new hash in cache
+  file(REMOVE_RECURSE ${HDF5_DEBUG_INSTALL_DIR})
+  file(REMOVE_RECURSE ${HDF5_RELEASE_INSTALL_DIR})
+  set(HDF5_HASH ${HASH} CACHE STRING "" FORCE)
 endif()
 message(STATUS "Looking for hdf5 in ${HDF5_INSTALL_DIR}/cmake/hdf5 and ${HDF5_INSTALL_DIR}/share/cmake/hdf5")
 unset(HDF5Package CACHE) # Force find_package every time (otherwise cached package is used)

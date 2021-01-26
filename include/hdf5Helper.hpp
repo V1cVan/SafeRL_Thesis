@@ -21,7 +21,7 @@ struct dtypes : public fixedBase{
         static constexpr const char* names[N] = {"CYCLIC","AUTO","FIXED"};// Enum names
         bc_type(){// Initialize memory type
             M = H5Tenum_create(H5T_NATIVE_UINT8);
-            for(int i=0;i<N;i++){
+            for(unsigned int i=0;i<N;i++){
                 C val = static_cast<C>(i);
                 H5Tenum_insert(M,names[i],&val);
             }

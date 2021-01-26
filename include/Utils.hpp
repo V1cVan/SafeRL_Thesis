@@ -137,7 +137,9 @@ class Utils{
             // Can be replaced by std::partial_sum in C++20
             using Arr = std::array<size_t,N>;
             Arr s = arr;
+            #ifdef COMPAT
             const Arr& const_s = static_cast<const Arr&>(s);
+            #endif
             for(size_t i=1;i<N;i++){
                 #ifndef COMPAT
                 s[i] += s[i-1];
@@ -160,7 +162,8 @@ class Utils{
             (serialize(data, objs),...);
             #else
             // Expander trick: https://stackoverflow.com/a/30563282
-            int unused[] = {0, ((void)serialize(data, objs), 0)...};
+            using expander = int[];
+            (void) expander {0, ((void)serialize(data, objs), 0)...};
             #endif
         }
 
@@ -350,7 +353,7 @@ struct Serializable : public T{// T inherits from ISerializable
     template<class... Args>
     Serializable(Args&&... args) : T(std::forward<Args>(args)...){
         // Forward constructor arguments to Base constructor (T)
-        ID; // Prevent ID (and hence the class registration) from being removed by compiler optimizations
+        (void) ID; // Prevent ID (and hence the class registration) from being removed by compiler optimizations
     }
 
     inline typename BaseFactory::BluePrint blueprint() const{

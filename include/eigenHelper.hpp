@@ -18,7 +18,7 @@ namespace Eigen{
     template<class T> struct remove_ref{using type=typename std::remove_const<T>::type;};
     template<class T> struct remove_ref<Ref<T>>{using type=typename std::remove_const<T>::type;};
     template<class _Scalar> using Scalar = Array<_Scalar,1,1>;
-};
+}
 
 
 /*
@@ -31,7 +31,7 @@ EIGEN NAMED REF below.
 // Helper macros:
 #define EIGEN_NAMED_BASE_REF_DECL(Type, Name, RowOff, ColOff) Eigen::Ref<UNPACK Type> Name;
 #define EIGEN_NAMED_BASE_REF_SIZE(Type, Name, RowOff, ColOff) UNPACK Type::SizeAtCompileTime
-#define EIGEN_NAMED_BASE_REF_INIT(Type, Name, RowOff, ColOff) Name ## (this->template block<UNPACK Type::RowsAtCompileTime,UNPACK Type::ColsAtCompileTime>(RowOff,ColOff))
+#define EIGEN_NAMED_BASE_REF_INIT(Type, Name, RowOff, ColOff) Name(this->template block<UNPACK Type::RowsAtCompileTime,UNPACK Type::ColsAtCompileTime>(RowOff,ColOff))
 
 // Base declaration: Note that the Core type (C) should be passed with extra brackets:
 #define EIGEN_NAMED_BASE_DECL(Name, C) template<typename B=UNPACK C> struct Name ## Base : public B
@@ -92,8 +92,7 @@ Name() : Name(Base::Zero()){} /* Default constructor */\
 Name(Refs(OP_ARG,COMMA)) : Name(){\
 Refs(OP_ASSIGN,)\
 }\
-/* Redefine implicitly deleted copy and move constructors */\
-Name(const Name& other) : Name ## Base(other){}\
+/* Redefine implicitly deleted move constructor */\
 Name(Name&& other) : Name ## Base(std::move(other)){}\
 /* This constructor allows you to construct Name from Eigen expressions */\
 template<typename OtherDerived>\
@@ -107,7 +106,7 @@ Name& operator=(const Eigen::MatrixBase<OtherDerived>& other)\
     this->Base::operator=(other);\
     return *this;\
 }\
-/* This method redefines the implicitly deleted assignment operator */\
+/* This method redefines the implicitly deleted copy constructor and assignment operator */\
 EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Name)
 
 // Default matrix class (no custom members or methods):
@@ -139,19 +138,19 @@ namespace Eigen{\
     template<>\
     struct Ref<Name> : public EIGEN_NAMED_REF_BASE(Name){\
         template<typename Derived>\
-        Ref(DenseBase<Derived>& expr)\
+        Ref(const DenseBase<Derived>& expr)\
         : EIGEN_NAMED_REF_BASE(Name)(expr){}\
 \
-        EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Ref<Name>)\
+        EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Ref)\
     };\
     /* Specialization of Eigen::Ref for const Name */\
     template<>\
     struct Ref<const Name> : public EIGEN_NAMED_CONSTREF_BASE(Name){\
         template<typename Derived>\
-        Ref(DenseBase<Derived>& expr)\
+        Ref(const DenseBase<Derived>& expr)\
         : EIGEN_NAMED_CONSTREF_BASE(Name)(expr){}\
     };\
-};
+}
 
 
 /* Macro's that simplify the creation of a named Eigen vector: */

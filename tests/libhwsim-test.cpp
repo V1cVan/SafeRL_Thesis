@@ -3,8 +3,8 @@
 #include "doctest.h"
 
 TEST_CASE("Checking the hwsim wrapper library"){
-    char* path = "../scenarios/scenarios.h5";
-    char* scenario = "CLOVERLEAF_RAW";
+    const char* path = "../scenarios/scenarios.h5";
+    const char* scenario = "CLOVERLEAF_RAW";
     Simulation* null_sim = NULL;
     SUBCASE("Scenario creation"){
         sConfig sConf = {0.1,NULL};

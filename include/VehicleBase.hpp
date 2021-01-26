@@ -55,8 +55,7 @@ namespace Model{
 
         State() : State(Base::Zero()){}
 
-        // Redefine implicitly deleted copy and move constructors
-        State(const State& other) : StateBase(other){}
+        // Redefine implicitly deleted move constructor
         State(State&& other) : StateBase(std::move(other)){}
 
         // This constructor allows you to construct State from Eigen expressions
@@ -72,6 +71,7 @@ namespace Model{
             return *this;
         }
 
+        // Redefine implicitly deleted copy constructor and assignment operator
         EIGEN_INHERIT_ASSIGNMENT_OPERATORS(State)
     };
     #else
@@ -96,7 +96,7 @@ namespace Model{
     };
     static constexpr unsigned int INPUT_SIZE = 2;
 
-};
+}
 
 // --- Specialization of Eigen reference to Model::State ---
 #ifndef NDEBUG
@@ -104,12 +104,12 @@ namespace Eigen{
     template<>
     struct Ref<Model::State> : public Model::StateBase<Ref<Model::StateBase<>::Core>>{
         template<typename Derived>
-        Ref(DenseBase<Derived>& expr)
+        Ref(const DenseBase<Derived>& expr)
         : Model::StateBase<Ref<Model::StateBase<>::Core>>(expr){}
 
-        EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Ref<Model::State>)
+        EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Ref)
     };
-};
+}
 #else
 EIGEN_NAMED_REF(Model::State)
 #endif
@@ -237,10 +237,10 @@ namespace Policy{
         double x;// Longitudinal action
         double y;// Lateral action
     };
-    // #define ACTION_REFS(R,_)\
-    // R((Eigen::Scalar<double>),x) _\
-    // R((Eigen::Scalar<double>),y)
-    // EIGEN_NAMED_VEC(Action,ACTION_REFS)
+    /* #define ACTION_REFS(R,_)\
+    R((Eigen::Scalar<double>),x) _\
+    R((Eigen::Scalar<double>),y)
+    EIGEN_NAMED_VEC(Action,ACTION_REFS) */
 
 
     // --- Action types ---
@@ -267,7 +267,7 @@ namespace Policy{
         double Hvel = 0.0;// Relative (mutliplicative) longitudinal velocity of dummy relative states (accounting for hidden vehicles). 0 for absolute safety but conservative bounds, 1 for less conservatism. [-]
     };
 
-};
+}
 
 
 // --- Base Vehicle definition (which can be accessed by Models and Policies) ---
