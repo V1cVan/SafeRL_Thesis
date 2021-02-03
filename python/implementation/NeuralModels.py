@@ -38,6 +38,9 @@ class ActorCriticNetDiscrete(keras.Model):
         # Critic net:
         self.denseCriticLayer1 = layers.Dense(modelParam["n_nodes"][0], activation=act_func,
                                               name="denseCriticLayer1")(self.inputLayer)
+
+        # TODO look at batch normalisation
+
         self.outputLayerCritic = layers.Dense(1,
                                               name="outputCriticLayer")(self.denseCriticLayer1)
 
@@ -88,6 +91,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         off_action_choice = np.random.choice(3, p=np.squeeze(action_off_probs))
         return vel_action_choice, off_action_choice
 
+    @tf.function
     def get_expected_returns(self, rewards: tf.Tensor) -> tf.Tensor:
         """
         Computes expected returns per timestep.
@@ -111,6 +115,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         returns = ((returns - tf.math.reduce_mean(returns))/(tf.math.reduce_std(returns) + eps))
         return returns
 
+    @tf.function
     def compute_loss(
             self,
             action_vel_probs: tf.Tensor,
@@ -147,10 +152,21 @@ class GradAscentTrainerDiscrete(keras.models.Model):
                 action_vel = tf.TensorArray(dtype=tf.float32, size=tf.size(timesteps))
                 action_off = tf.TensorArray(dtype=tf.float32, size=tf.size(timesteps))
 
+                # TODO tf.print to check values for nans in weights
+                tf.print(self.actor_critic_net.weights)
+
                 # Forward Pass - (Re)Calculation of actions that caused saved states
                 # TODO log the values from ACPolicy class to ensure actions+critic correspond to calculations done here (indices etc.)
                 action_vel_probs, action_off_probs, critic_values = self.actor_critic_net(sim_states)
                 critic_values = tf.squeeze(critic_values)
+                tf.print("states: ")
+                tf.print(sim_states)
+                tf.print("action_vel_probs: ")
+                tf.print(action_vel_probs)
+                tf.print("action_off_probs: ")
+                tf.print(action_off_probs)
+                tf.print("critic_values: ")
+                tf.print(critic_values)
 
                 # Choose actions based on what was previously (randomly) sampled during simulation
                 for t in timesteps-1:
@@ -158,6 +174,9 @@ class GradAscentTrainerDiscrete(keras.models.Model):
                     off_choice = sim_action_off_choices[t,0]
                     action_vel.write(t, action_vel_probs[t, vel_choice])
                     action_off.write(t, action_off_probs[t, off_choice])
+
+                action_vel = action_vel.stack()
+                action_off = action_off.stack()
 
                 # Calculate expected returns
                 returns = self.get_expected_returns(rewards)
@@ -169,6 +188,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
             for x in self.actor_critic_net.weights:
                 if tf.reduce_any(tf.math.is_nan(x)):
                     print("NAN detected in network weight")
+
 
             # Compute the gradients from the loss
             grads = tape.gradient(loss, self.actor_critic_net.trainable_variables)
