@@ -1,0 +1,6 @@
+CRITICAL:root:Using seed 216953966.000000
+CRITICAL:root:Model Parameters:
+CRITICAL:root:{'n_nodes': [400, 0], 'n_layers': 2, 'n_inputs': 30, 'activation_function': <function relu at 0x0000026B7D788CA8>, 'n_actions': 2, 'weights_file_path': './python/implementation/trained_models/model_weights', 'seed': 216953966}
+CRITICAL:root:Training param:
+CRITICAL:root:{'max_steps_per_episode': 300, 'final_return': 1000, 'show_plots_when_training': True, 'plot_freq': 5, 'simulation_timesteps': 100, 'gamma': 0.99, 'adam_optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x0000026B0311C788>, 'huber_loss': <tensorflow.python.keras.losses.Huber object at 0x0000026B03314148>, 'seed': 216953966, 'reward_weights': array([0.3, 0.3, 0.3])}
+CRITICAL:root:Episode number: 1.00
