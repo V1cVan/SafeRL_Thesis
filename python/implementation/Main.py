@@ -12,7 +12,9 @@ from RL_Policies import *
 from RL_Policies import *
 from HelperClasses import *
 import logging
+import os
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 physical_devices = tf.config.list_physical_devices('GPU')
 # tf.config.experimental.set_memory_growth(physical_devices[0], True)
 print(physical_devices)
@@ -135,7 +137,7 @@ if __name__=="__main__":
     # Logging
     logging.basicConfig(level=logging.INFO, filename="./logfiles/main.log")
     # TODO Enable TF warnings and query with Bram
-    # logging.disable(logging.ERROR) # Temporarily disable error tf logs.
+    logging.disable(logging.ERROR) # Temporarily disable error tf logs.
     with open('./logfiles/main.log', 'w'):
         pass  # Clear the log file of previous run
 
