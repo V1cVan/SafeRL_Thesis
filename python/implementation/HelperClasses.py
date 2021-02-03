@@ -128,24 +128,41 @@ class Buffer(object):
         self.rewards.append(reward)
         self.critic.append(critic)
 
-    def get_experience_at_timestep(self, timestep: int):
+    def get_experience(self, timestep: int = None):
         """ Returns the experience at the provided timestep. """
-        index = timestep-1
-        actions = {
-            "vel_model": self.actions["vel_model"][index],
-            "offset_model": self.actions["offset_model"][index],
-            "vel_simulator": self.actions["vel_simulator"][index],
-            "offset_simulator": self.actions["offset_simulator"][index],
-            "vel_choice": self.actions["vel_choice"][index],
-            "offset_choice": self.actions["offset_choice"][index],
-        }
-        output_dict = {
-            "timestep": self.timesteps[index],
-            "action": actions,
-            "state": self.states[index],
-            "reward": self.rewards[index],
-            "critic": self.critic[index]
-        }
+        if timestep is not None:
+            index = timestep-1
+            actions = {
+                "vel_model": self.actions["vel_model"][index],
+                "offset_model": self.actions["offset_model"][index],
+                "vel_simulator": self.actions["vel_simulator"][index],
+                "offset_simulator": self.actions["offset_simulator"][index],
+                "vel_choice": self.actions["vel_choice"][index],
+                "offset_choice": self.actions["offset_choice"][index],
+            }
+            output_dict = {
+                "timestep": self.timesteps[index],
+                "action": actions,
+                "state": self.states[index],
+                "reward": self.rewards[index],
+                "critic": self.critic[index]
+            }
+        else:
+            actions = {
+                "vel_model": self.actions["vel_model"],
+                "offset_model": self.actions["offset_model"],
+                "vel_simulator": self.actions["vel_simulator"],
+                "offset_simulator": self.actions["offset_simulator"],
+                "vel_choice": self.actions["vel_choice"],
+                "offset_choice": self.actions["offset_choice"],
+            }
+            output_dict = {
+                "timestep": self.timesteps,
+                "action": actions,
+                "state": self.states,
+                "reward": self.rewards,
+                "critic": self.critic
+            }
         return output_dict
 
     def set_tf_experience_for_episode_training(self):

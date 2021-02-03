@@ -180,7 +180,7 @@ if __name__=="__main__":
 
     # Initialise network/model architecture:
     actor_critic_net = ActorCriticNetDiscrete(model_param)
-    actor_critic_net.display_overview()
+    # actor_critic_net.display_overview()
     trainer = GradAscentTrainerDiscrete(actor_critic_net, training_param)  # training method used
 
     # Simulation configuration and settings
