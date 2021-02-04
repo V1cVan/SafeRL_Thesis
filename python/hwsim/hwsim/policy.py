@@ -148,13 +148,6 @@ class pyBasicPolicy(CustomPolicy):
         desVel = s["maxVel"] + veh.dv
         actions = np.array([desVel,-s["laneC"]["off"]])
 
-        if rs["plGap"] < self.SAFETY_GAP:
-            alpha = rs["plGap"]/self.SAFETY_GAP
-            actions[0] = np.clip(alpha*alpha*rs["plVel"],0,desVel)
-        elif rs["plGap"] < self.ADAPT_GAP:
-            alpha = (rs["plGap"]-self.SAFETY_GAP)/(self.ADAPT_GAP-self.SAFETY_GAP)
-            actions[0] = np.clip((1-alpha)*rs["plVel"] + alpha*desVel,0,desVel)
-
         rightFree = np.abs(s["laneR"][0]["off"]-s["laneC"]["off"]) > self.EPS and -bounds["lat"][0]-s["laneC"]["off"] > s["laneR"][0]["width"]-self.EPS
         leftFree = np.abs(s["laneL"][0]["off"]-s["laneC"]["off"]) > self.EPS and bounds["lat"][1]+s["laneC"]["off"] > s["laneL"][0]["width"]-self.EPS
         shouldOvertake = leftFree and rs["lfGap"]>self.SAFETY_GAP and rs["llGap"]>self.SAFETY_GAP and self.overtake_crit(rs["clVel"], desVel, rs["clGap"])
@@ -169,6 +162,20 @@ class pyBasicPolicy(CustomPolicy):
                 actions[1] = -s["laneL"][0]["off"]
         elif shouldReturn:
             actions[1] = -s["laneR"][0]["off"]
+
+        if rs["plGap"] < self.SAFETY_GAP:
+            alpha = rs["plGap"]/self.SAFETY_GAP
+            lVel = rs["plVel"]
+            if veh.overtaking or shouldReturn:
+                lVel = max(lVel, 5.0)
+            actions[0] = np.clip(alpha*alpha*lVel,0,desVel)
+        elif rs["plGap"] < self.ADAPT_GAP:
+            alpha = (rs["plGap"]-self.SAFETY_GAP)/(self.ADAPT_GAP-self.SAFETY_GAP)
+            actions[0] = np.clip((1-alpha)*rs["plVel"] + alpha*desVel,0,desVel)
+
+        maxVel = desVel if bounds["long"][1]>=s["maxVel"] else s["maxVel"]
+        actions[0] = np.clip(actions[0], bounds["long"][0], maxVel)
+        actions[1] = np.clip(actions[1], bounds["lat"][0], bounds["lat"][1])
 
         return actions
 

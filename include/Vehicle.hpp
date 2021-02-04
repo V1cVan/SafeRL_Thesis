@@ -360,7 +360,7 @@ class Vehicle : public VehicleBase{
                             Policy::relState ovd = ov;// Dummy relative state
                             ovd.off[1] = s.lane(Lr).off;
                             ovd.gap[1] = std::abs(ovd.off[1])-s.lane(Lr).width/2-roadInfo.size[1]/2;
-                            ovd.vel[0] *= safety.Hvel;
+                            ovd.vel[0] = s.vel[0] - safety.Hvel*(s.vel[0]-ovd.vel[0]);
                             ovd.vel[1] = 0;
                             updateSafetyBounds(ovd, velBounds, outerBounds, innerBounds);
                             updateReducedState(ovd, velGaps);
@@ -430,8 +430,10 @@ class Vehicle : public VehicleBase{
             const double vL = (ov.off[0]>0) ? s.vel[0] : s.vel[0]-ov.vel[0];// Determine leading and following velocities
             const double vF = (ov.off[0]>0) ? s.vel[0]-ov.vel[0] : s.vel[0];
             const bool brakeCrit = minBrakeGap(vL, vF, ov.gap[0]) >= safety.Gth;// Braking criterion
+            // TODO: use max(EPS,safety.Moff) to ensure some slack between the no-overlap and overlap cases
             const bool overlapCrit = ov.gap[1] < safety.Moff;// Overlap criterion: True if vehicles overlap laterally, False otherwise
-            if(!overlapCrit && !brakeCrit){
+            const bool noOverlapCrit = ov.gap[1] > -safety.Moff;// No-overlap criterion (ensuring some extra slack between overlap and no-overlap)
+            if(noOverlapCrit && !brakeCrit){
                 // There is no lateral overlap and the BRAKING_GAP threshold cannot be guaranteed => bound lateral movement
                 if(ov.off[1]>0){
                     // And the other vehicle is to the right => update right outer bound to be the overall leftmost bound

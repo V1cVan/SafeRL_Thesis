@@ -413,9 +413,9 @@ class Simulation(object):
 
     @timing("Step from B", False)
     def _stepFromB(self):
-        stop = self._applyCustomPolicies() if self._mode==0 else False
+        stop = self._applyCustomPolicies() if (self._mode==0 or not self._simCfg["fast_replay"]) else False
         stop |= simLib.sim_stepC(self._h)
-        stop |= self._applyCustomControllers() if self._mode==0 else False
+        stop |= self._applyCustomControllers() if (self._mode==0 or not self._simCfg["fast_replay"]) else False
         stop |= simLib.sim_stepD(self._h)
         self._updateMetrics()
         return stop
@@ -429,7 +429,7 @@ class Simulation(object):
             raise RuntimeError("Cannot continue simulation as the simulation was stopped previously.")
         # Perform one simulation step
         stop = simLib.sim_stepA(self._h)
-        stop |= self._applyCustomModels() if self._mode==0 else False
+        stop |= self._applyCustomModels() if (self._mode==0 or not self._simCfg["fast_replay"]) else False
         stop |= simLib.sim_stepB(self._h)
         stop |= self._stepFromB()
         self._collision = stop

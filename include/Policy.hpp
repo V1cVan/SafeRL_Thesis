@@ -205,18 +205,6 @@ namespace Policy{
                 const double desVel = vb.s.maxVel+desVelDiff;// Vehicle's desired velocity, based on the current maximum allowed speed
                 Action a = {desVel,-vb.s.laneC.off};// Default action is driving at desired velocity and going towards the middle of the lane
 
-                // Velocity:
-                if(vb.r.plGap < SAFETY_GAP){
-                    // If we are closer than the SAFETY_GAP we have to drive considerably slower than the vehicle in front
-                    // => Quadratic interpolation between 0 and clVel (velocity of leading vehicle at current position)
-                    const double alpha = vb.r.plGap/SAFETY_GAP;
-                    a.x = std::clamp(alpha*alpha*vb.r.plVel, 0.0, desVel);
-                }else if(vb.r.plGap < ADAPT_GAP){
-                    // If there is a larger gap w.r.t. the vehicle in front of us, linearly adapt speed to match clVel
-                    const double alpha = (vb.r.plGap-SAFETY_GAP)/(ADAPT_GAP-SAFETY_GAP);
-                    a.x = std::clamp((1-alpha)*vb.r.plVel+alpha*desVel, 0.0, desVel);// And clip between [0;desVel]
-                }
-
                 // Offset:
                 const bool rightFree = std::abs(vb.s.laneR[0].off-vb.s.laneC.off)>EPS && -vb.safetyBounds[0].y-vb.s.laneC.off>vb.s.laneR[0].width-EPS;// Right lane is free if there is a lane and the right offset is larger than the lane width
                 const bool leftFree = std::abs(vb.s.laneL[0].off-vb.s.laneC.off)>EPS && vb.safetyBounds[1].y+vb.s.laneC.off>vb.s.laneL[0].width-EPS;// Left lane is free if there is a lane and the left offset is larger than the lane width
@@ -241,6 +229,30 @@ namespace Policy{
                     // Otherwise if we are not overtaking and the right lane is free, go there
                     a.y = -vb.s.laneR[0].off;
                 }
+
+                // Velocity:
+                if(vb.r.plGap < SAFETY_GAP){
+                    // If we are closer than the SAFETY_GAP we have to drive considerably slower than the vehicle in front
+                    // => Quadratic interpolation between 0 and lVel (velocity of leading vehicle at current position)
+                    const double alpha = vb.r.plGap/SAFETY_GAP;
+                    double lVel = vb.r.plVel;
+                    if(overtaking || shouldReturn){
+                        // Allow a higher velocity in case we can change lanes and the vehicle
+                        // in front is almost standing still (otherwise we would be standing
+                        // still indefinitely as well).
+                        lVel = std::fmax(lVel,5.0);
+                    }
+                    a.x = std::clamp(alpha*alpha*lVel, 0.0, desVel);
+                }else if(vb.r.plGap < ADAPT_GAP){
+                    // If there is a larger gap w.r.t. the vehicle in front of us, linearly adapt speed to match clVel
+                    const double alpha = (vb.r.plGap-SAFETY_GAP)/(ADAPT_GAP-SAFETY_GAP);
+                    a.x = std::clamp((1-alpha)*vb.r.plVel+alpha*desVel, 0.0, desVel);// And clip between [0;desVel]
+                }
+
+                // Clamp between safety bounds:
+                const double maxVel = (vb.safetyBounds[1].x>=vb.s.maxVel) ? desVel : vb.s.maxVel;
+                a.x = std::clamp(a.x, vb.safetyBounds[0].x, maxVel);
+                a.y = std::clamp(a.y, vb.safetyBounds[0].y, vb.safetyBounds[1].y);
                 return a;
             }
 
