@@ -10,4 +10,4 @@ matlab_add_mex(NAME mexSim MODULE SRC mexSim.cpp LINK_TO hwsim Clothoids ${Matla
 
 # Install Matlab library:
 install(TARGETS mexRoad mexSim DESTINATION ${CMAKE_INSTALL_PREFIX}/matlab/+hwsim)
-install(DIRECTORY files/ DESTINATION ${CMAKE_INSTALL_PREFIX}/matlab/+hwsim)
+install(DIRECTORY +hwsim/ DESTINATION ${CMAKE_INSTALL_PREFIX}/matlab/+hwsim)

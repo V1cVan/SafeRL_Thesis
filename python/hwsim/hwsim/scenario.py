@@ -69,6 +69,8 @@ class Road(object):
         return simLib.road_length(self._sc._h,self.R)
 
     def _road2glob(self,s,l):
+        s = np.array(s, np.float64, copy=False)
+        l = np.array(l, np.float64, copy=False)
         assert(s.size==l.size)
         C = np.empty((s.size,3),np.float64)
         simLib.sc_road2glob(self._sc._h,self.R,
@@ -101,7 +103,7 @@ class Lane(object):
     def __validate_s(self,s):
         # Only return valid s values, i.e. for which this lane is valid
         if not isinstance(s,np.ndarray):
-            s = np.array(s,np.float64)
+            s = np.array(s,np.float64,copy=False)
         return s[(s>=self.val[0]) & (s<=self.val[1])]
 
     def __eval_prop(self,simLibMethod,s):

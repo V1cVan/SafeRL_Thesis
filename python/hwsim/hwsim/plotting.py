@@ -124,6 +124,19 @@ def _stippledTexture(pixels_on,pixels_off):
     texture[pixels_on:,0,3] = 0 # Add stipples (fully transparent part)
     return pv.Texture(texture)
 
+def _textFollower(text, pos=None, camera=None):
+    vText = vtk.vtkVectorText()
+    vText.SetText(text)
+    mapper = vtk.vtkPolyDataMapper()
+    mapper.SetInputConnection(vText.GetOutputPort())
+    vFollower = vtk.vtkFollower()
+    vFollower.SetMapper(mapper)
+    if pos is not None:
+        vFollower.SetPosition(pos)
+    if camera is not None:
+        vFollower.SetCamera(camera)
+    return vFollower, vText
+
 class CyclicBuffer(object):
 
     def __init__(self, size, fill_value=0, dtype=np.float64):
@@ -187,6 +200,107 @@ class _PlotterView(object):
         self._handle_V_change(oldV)
 
 
+class ScenarioPlot(object):
+    """
+    Helper class to statically render a scenario from a fixed camera position.
+    """
+
+    @classmethod
+    def plot(cls, p, sc, scale_markings=False, show_ids=False):
+        # Plot the scenario:
+        for road in sc.roads:
+            cls._plotRoad(p, road, scale_markings, show_ids)
+
+    @classmethod
+    def _plotRoad(cls,p,road,scale_markings=False,show_ids=False):
+        # Plot the given road on the given plotter
+        s = road._CA_grid
+        width = 2 if scale_markings else None
+
+        for lane in road.lanes:
+            right,left = lane.edges(s)
+            # Plot lane bodies
+            body = _polygonalMesh(
+                road._road2glob(left["pos"][0],left["pos"][1]),
+                road._road2glob(right["pos"][0],right["pos"][1])
+            )
+            p.add_mesh(body,color=[0.3,0.3,0.3])
+            if show_ids:
+                for s_id in (lane.val[0]+2,np.sum(lane.val)/2,lane.val[1]-2):
+                    idPos = road._road2glob(s_id,lane.offset(s_id))[0,:] + [0,0,0.1] # Elevate slightly
+                    idFollower, _ = _textFollower(f"R{road.R}_L{lane.L}",camera=p.renderer.camera,pos=idPos)
+                    idFollower.GetProperty().SetColor((0.9,0.3,0.1))
+                    p.add_actor(idFollower)
+
+            # Plot lane edges
+            for (d,edge) in ((-1,right),(1,left)): # For each edge of the lane,
+                for i in range(edge["spans"].shape[0]): # iterate over all edge spans
+                    bType = edge["spans"][i,0]
+                    N = edge["spans"][i,1]
+                    f = edge["spans"][i,2]
+                    t = edge["spans"][i,3]+1 # +1 because end of range f:t is otherwise not included
+
+                    span_s = edge["pos"][0][f:t]
+                    span_l = edge["pos"][1][f:t]
+                    draw_shared = (N<0 or N!=lane.merge) and (N<lane.L or N in road._merges[lane.L])
+                    # Only draw shared edge span if it is not an edge shared with a lane we merge with AND
+                    # it is an edge shared with a lane with lower id (or -1 for an edge without a neighbour)
+                    # or (in case it is an edge shared with a lane with higher id) if the neighbouring lane
+                    # will merge with us.
+                    if bType==0:
+                        # Full line
+                        cls._drawLaneMarking(p,road,span_s,span_l,width=width)
+                    elif draw_shared:
+                        if bType==1:
+                            # Dashed line, in combination with a full line
+                            off = d*lane.dir*road._LANE_MARKING_SIZE[1]*2/3
+                            cls._drawLaneMarking(p,road,span_s,span_l+off,width=width)
+                            cls._drawLaneMarking(p,road,span_s,span_l-off,width=width,stippled=True)
+                        elif bType==2:
+                            # Full line, in combination with a dashed line
+                            off = d*lane.dir*road._LANE_MARKING_SIZE[1]*2/3
+                            cls._drawLaneMarking(p,road,span_s,span_l-off,width=width)
+                            cls._drawLaneMarking(p,road,span_s,span_l+off,width=width,stippled=True)
+                        elif bType==3:
+                            # Shared dashed line
+                            cls._drawLaneMarking(p,road,span_s,span_l,width=width,stippled=True)
+
+    @staticmethod
+    def _drawLaneMarking(p,road,s,l,width=None,stippled=False):
+        """
+        Draw the lane marking centered around the polyline defined through road coordinates
+        (s,l) on the given pv plot.
+        """
+        assert(s.size==l.size)
+        ELEVATION = 0 # 0.001
+
+        ts = (s-s[0])/(road._LANE_MARKING_SIZE[0]+road._LANE_MARKING_SKIP)
+        if width is None:
+            # Draw line as mesh with fixed real-world width
+            pts_left = road._road2glob(s,l+road._LANE_MARKING_SIZE[1]/2)
+            pts_right = road._road2glob(s,l-road._LANE_MARKING_SIZE[1]/2)
+            pts_left[:,2] += ELEVATION
+            pts_right[:,2] += ELEVATION
+            line = _polygonalMesh(pts_left,pts_right)
+            # Texture coordinates:
+            tx,ty = np.meshgrid(ts,np.array([0,0]))
+            line.t_coords = np.stack((tx.ravel(),ty.ravel()),axis=1)
+        else:
+            # Draw line as mesh with scaled pixel width
+            pts = road._road2glob(s,l)
+            line = pv.lines_from_points(pts)
+            # Texture coordinates:
+            line.t_coords = np.stack((ts,np.zeros(s.size)),axis=1)
+
+        # Create texture:
+        if stippled:
+            # Note that the below texture is only accurate up to 0.01 meters
+            texture = _stippledTexture(int(100*road._LANE_MARKING_SIZE[0]),int(100*road._LANE_MARKING_SKIP))
+        else:
+            texture = None
+        p.add_mesh(line,color=[1,1,1],texture=texture,line_width=width)
+
+
 class SimulationPlot(_PlotterView):
     """
     Base class for all simulation plotter views. This class renders the scenario and
@@ -197,8 +311,8 @@ class SimulationPlot(_PlotterView):
         super().__init__(p)
 
         # Plot the scenario:
-        for road in self._sim.sc.roads:
-            self._plotRoad(p,road,scale_markings)
+        ScenarioPlot.plot(p, self._sim.sc, scale_markings, show_ids)
+
         # Plot the vehicles:
         self._vehicles = None
         if vehicle_type is not None:
@@ -221,14 +335,8 @@ class SimulationPlot(_PlotterView):
                 actor = p.add_mesh(mesh,color=self._vehicleColoring(veh),edge_color=ec,show_edges=(veh.id==self.V))
                 idFollower = None
                 if show_ids:
-                    idText = vtk.vtkVectorText()
-                    idText.SetText(f"{veh.id}")
-                    mapper = vtk.vtkPolyDataMapper()
-                    mapper.SetInputConnection(idText.GetOutputPort())
-                    idFollower = vtk.vtkFollower()
-                    idFollower.SetMapper(mapper)
+                    idFollower, _ = _textFollower(f"{veh.id}", camera=self._r.camera)
                     idFollower.GetProperty().SetColor((1,1,1))
-                    idFollower.SetCamera(self._r.camera)
                     p.add_actor(idFollower)
                 self._vehicles.append({"mesh": mesh, "actor": actor, "id": idFollower})
         self._marker = None
@@ -274,89 +382,6 @@ class SimulationPlot(_PlotterView):
         if self._marker is not None:
             self._p._unregister_veh(self._marker["M"], oldV)
             self._p._register_veh(self._marker["M"], self.V)
-
-    @staticmethod
-    def _plotRoad(p,road,scale_markings=False):
-        # Plot the given road on the given plotter
-        s = road._CA_grid
-        width = 2 if scale_markings else None
-
-        for lane in road.lanes:
-            right,left = lane.edges(s)
-            # Plot lane bodies
-            body = _polygonalMesh(
-                road._road2glob(left["pos"][0],left["pos"][1]),
-                road._road2glob(right["pos"][0],right["pos"][1])
-            )
-            p.add_mesh(body,color=[0.3,0.3,0.3])
-
-            # Plot lane edges
-            for (d,edge) in ((-1,right),(1,left)): # For each edge of the lane,
-                for i in range(edge["spans"].shape[0]): # iterate over all edge spans
-                    bType = edge["spans"][i,0]
-                    N = edge["spans"][i,1]
-                    f = edge["spans"][i,2]
-                    t = edge["spans"][i,3]+1 # +1 because end of range f:t is otherwise not included
-
-                    span_s = edge["pos"][0][f:t]
-                    span_l = edge["pos"][1][f:t]
-                    draw_shared = (N<0 or N!=lane.merge) and (N<lane.L or N in road._merges[lane.L])
-                    # Only draw shared edge span if it is not an edge shared with a lane we merge with AND
-                    # it is an edge shared with a lane with lower id (or -1 for an edge without a neighbour)
-                    # or (in case it is an edge shared with a lane with higher id) if the neighbouring lane
-                    # will merge with us.
-                    if bType==0:
-                        # Full line
-                        SimulationPlot._drawLaneMarking(p,road,span_s,span_l,width=width)
-                    elif draw_shared:
-                        if bType==1:
-                            # Dashed line, in combination with a full line
-                            off = d*lane.dir*road._LANE_MARKING_SIZE[1]*2/3
-                            SimulationPlot._drawLaneMarking(p,road,span_s,span_l+off,width=width)
-                            SimulationPlot._drawLaneMarking(p,road,span_s,span_l-off,width=width,stippled=True)
-                        elif bType==2:
-                            # Full line, in combination with a dashed line
-                            off = d*lane.dir*road._LANE_MARKING_SIZE[1]*2/3
-                            SimulationPlot._drawLaneMarking(p,road,span_s,span_l-off,width=width)
-                            SimulationPlot._drawLaneMarking(p,road,span_s,span_l+off,width=width,stippled=True)
-                        elif bType==3:
-                            # Shared dashed line
-                            SimulationPlot._drawLaneMarking(p,road,span_s,span_l,width=width,stippled=True)
-
-    @staticmethod
-    def _drawLaneMarking(p,road,s,l,width=None,stippled=False):
-        """
-        Draw the lane marking centered around the polyline defined through road coordinates
-        (s,l) on the given pv plot.
-        """
-        assert(s.size==l.size)
-        ELEVATION = 0 # 0.001
-
-        ts = (s-s[0])/(road._LANE_MARKING_SIZE[0]+road._LANE_MARKING_SKIP)
-        if width is None:
-            # Draw line as mesh with fixed real-world width
-            pts_left = road._road2glob(s,l+road._LANE_MARKING_SIZE[1]/2)
-            pts_right = road._road2glob(s,l-road._LANE_MARKING_SIZE[1]/2)
-            pts_left[:,2] += ELEVATION
-            pts_right[:,2] += ELEVATION
-            line = _polygonalMesh(pts_left,pts_right)
-            # Texture coordinates:
-            tx,ty = np.meshgrid(ts,np.array([0,0]))
-            line.t_coords = np.stack((tx.ravel(),ty.ravel()),axis=1)
-        else:
-            # Draw line as mesh with scaled pixel width
-            pts = road._road2glob(s,l)
-            line = pv.lines_from_points(pts)
-            # Texture coordinates:
-            line.t_coords = np.stack((ts,np.zeros(s.size)),axis=1)
-
-        # Create texture:
-        if stippled:
-            # Note that the below texture is only accurate up to 0.01 meters
-            texture = _stippledTexture(int(100*road._LANE_MARKING_SIZE[0]),int(100*road._LANE_MARKING_SKIP))
-        else:
-            texture = None
-        p.add_mesh(line,color=[1,1,1],texture=texture,line_width=width)
 
 
 class DetailPlot(SimulationPlot):
@@ -451,7 +476,7 @@ class TimeChartPlot(_PlotterView):
     Base class for all 2D time chart plots.
     """
 
-    def __init__(self,p,lines=None,patches=None,value_cb=None,ylabel="",cached_vehicles=None):
+    def __init__(self,p,lines=None,patches=None,value_cb=None,ylabel="",zoom=1.0,cached_vehicles=None):
         super().__init__(p)
         # This view will keep track of the last data for all vehicles in the simulation
         # such that we can switch the active vehicle at a later point without information
@@ -465,6 +490,7 @@ class TimeChartPlot(_PlotterView):
             patches = {}
         self._patches = patches
         self._values = value_cb if value_cb is not None else lambda veh: {}
+        self.zoom = zoom
         if cached_vehicles is None:
             cached_vehicles = [p.V]
         self._cvIds = cached_vehicles
@@ -580,9 +606,8 @@ class TimeChartPlot(_PlotterView):
         viewup = [0,1,0]
         pos = focus+[0,0,1]
         self._r.camera_position = (pos,focus,viewup)
-        # self._r.ResetCamera() # Zooms out to see all actors, but too much, so zoom back in a little
-        self._r.ResetCamera(data_bounds)
-        # self._r.camera.Zoom(1.9)
+        self._r.ResetCamera() # Zooms out to see all actors, but too much, so zoom back in a little
+        self._r.camera.Zoom(self.zoom)
 
     def _handle_V_change(self,oldV):
         super()._handle_V_change(oldV)
@@ -991,6 +1016,7 @@ class Plotter(pv.Plotter):
                     time.sleep(sleep_time)
 
         if self._mode & Plotter.Mode.MP4: # MP4 mode enabled
+            self.render() # Necessary until https://github.com/pyvista/pyvista/issues/1098 is fixed
             self.write_frame()
         # t_draw = timeit.default_timer()-t_draw
         # print(f"Redrawing took {t_draw*1000}ms")

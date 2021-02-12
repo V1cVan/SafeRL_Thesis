@@ -78,7 +78,7 @@ classdef Property
                 P = [P;P2(:,1:3),a2*P2(:,4:5)];
             end
             if nargin>4
-                P = Property.simplify(P,s_res,p_res);
+                P = hwsim.Property.simplify(P,s_res,p_res);
             end
         end
         
@@ -152,9 +152,9 @@ classdef Property
             % value pt at f and staying at this value till t, without
             % changing the values of the other step transitions before f
             % and after t.
-            Pb = Property.select(P,2,f,-1,false);% All step transitions before (and including at) f
-            Pa = Property.select(P,2,t,1,false);% All step transitions after (and including at) t
-            po = Property.evaluate(P,f);% Original property value at f
+            Pb = hwsim.Property.select(P,2,f,-1,false);% All step transitions before (and including at) f
+            Pa = hwsim.Property.select(P,2,t,1,false);% All step transitions after (and including at) t
+            po = hwsim.Property.evaluate(P,f);% Original property value at f
             dp = pt-po;
             I = P(:,2)==f;
             if any(I)
@@ -162,11 +162,11 @@ classdef Property
             end
             I = P(:,2)==t;
             if ~any(I)
-                Pa = Property.combine([t,t,0,0,0],Pa,1,1);% If there is not yet a step transition at t, insert a dummy one
+                Pa = hwsim.Property.combine([t,t,0,0,0],Pa,1,1);% If there is not yet a step transition at t, insert a dummy one
             end
-            Pb = Property.combine(Pb,[f,f,0,0,dp],1,1);% Include step transition to reach pt
-            Pa = Property.shift(Pa,-dp);% Shift all transitions after (and including at) t by -dp
-            P = Property.combine(Pb,Pa,1,1);% Recombine Pb and Pa
+            Pb = hwsim.Property.combine(Pb,[f,f,0,0,dp],1,1);% Include step transition to reach pt
+            Pa = hwsim.Property.shift(Pa,-dp);% Shift all transitions after (and including at) t by -dp
+            P = hwsim.Property.combine(Pb,Pa,1,1);% Recombine Pb and Pa
         end
     end
 end
