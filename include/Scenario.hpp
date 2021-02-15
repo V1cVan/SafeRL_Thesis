@@ -134,9 +134,9 @@ class Scenario{
             // Update the given road state (R,s,l) to a new valid road state, given the updates ds and dl.
             // Note that (R,s,l) should be a VALID starting state!
             Road::id_t L = *roads[R].laneId(s,l);
-            std::optional<std::pair<Road::id_t,Road::id_t>> conn = roads[R].lanes[L].to;
             std::array<double,2> val = roads[R].lanes[L].validity;
             int dirF = static_cast<int>(roads[R].lanes[L].direction);
+            std::optional<std::pair<Road::id_t,Road::id_t>> conn = (dirF>0) ? roads[R].lanes[L].to : roads[R].lanes[L].from;
             int dirShift = 1;
             if(s+ds<roads[R].lanes[L].validity[0] || s+ds>roads[R].lanes[L].validity[1]){
                 // We cross the end of the current lane
