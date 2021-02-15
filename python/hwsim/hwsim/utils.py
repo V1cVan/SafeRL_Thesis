@@ -3,6 +3,9 @@ import pathlib
 from scipy.io.matlab import loadmat
 import h5py
 
+# Numpy random number Generator
+RNG = None # Will be (re)set by hwsim.config.seed
+
 def convert_scenarios(input_path, output_path):
     """
     Converts scenarios designed through the scenario designer provided in the Matlab
