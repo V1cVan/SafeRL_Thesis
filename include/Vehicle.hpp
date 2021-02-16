@@ -267,18 +267,16 @@ class Vehicle : public VehicleBase{
             roadInfo.size[1] = std::sin(std::abs(is.gamma))*size[0]+std::cos(is.gamma)*size[1];
             roadInfo.vel[0] = std::cos(is.gamma)*x.vel[0]-std::sin(is.gamma)*x.vel[1];
             roadInfo.vel[1] = std::sin(is.gamma)*x.vel[0]+std::cos(is.gamma)*x.vel[1];
-            // Get lane ids of the right and left boundary lanes
-            const Road::id_t Br = *(sc.roads[is.R].roadBoundary(is.pos[0],roadInfo.L,Road::Side::RIGHT));
-            const Road::id_t Bl = *(sc.roads[is.R].roadBoundary(is.pos[0],roadInfo.L,Road::Side::LEFT));
             // Calculate road geometry properties
             roadInfo.laneC.off = dir*(is.pos[1]-sc.roads[is.R].lanes[roadInfo.L].offset(is.pos[0]));
             roadInfo.laneC.width = sc.roads[is.R].lanes[roadInfo.L].width(is.pos[0]);
             roadInfo.laneC.maxVel = sc.roads[is.R].lanes[roadInfo.L].speed(is.pos[0]);
-            roadInfo.gapB[0] = dir*(is.pos[1]-sc.roads[is.R].lanes[Br].offset(is.pos[0]))+sc.roads[is.R].lanes[Br].width(is.pos[0])/2-roadInfo.size[1]/2;
-            roadInfo.gapB[1] = -dir*(is.pos[1]-sc.roads[is.R].lanes[Bl].offset(is.pos[0]))+sc.roads[is.R].lanes[Bl].width(is.pos[0])/2-roadInfo.size[1]/2;
+            roadInfo.gapB[0] = calcBoundaryGap(sc, is.R, is.pos[0], is.pos[1], roadInfo.L, Road::Side::RIGHT, roadInfo.size[1]);
+            roadInfo.gapB[1] = calcBoundaryGap(sc, is.R, is.pos[0], is.pos[1], roadInfo.L, Road::Side::LEFT, roadInfo.size[1]);
             Road::id_t Nr = roadInfo.L;
             Road::id_t Nl = roadInfo.L;
             for(Road::id_t i=0;i<L;i++){
+                // TODO: no check whether crossability is ok?
                 auto N = sc.roads[is.R].laneBoundary(is.pos[0],Nr,Road::Side::RIGHT);
                 Nr = N.second ? *N.second : Nr;
                 roadInfo.laneR[i].off = dir*(is.pos[1]-sc.roads[is.R].lanes[Nr].offset(is.pos[0]));
@@ -315,6 +313,24 @@ class Vehicle : public VehicleBase{
             }
         }
 
+        static inline double calcBoundaryGap(const Scenario& sc, const Road::id_t R, const double s, const double l, const Road::id_t L, const Road::Side side, const double latSize){
+            const int dir = static_cast<int>(sc.roads[R].lanes[L].direction);
+            const int S = static_cast<int>(side);
+            Road::id_t B = *(sc.roads[R].roadBoundary(s,L,side));
+            double gap = -S*dir*(l-sc.roads[R].lanes[B].offset(s))+sc.roads[R].lanes[B].width(s)/2-latSize/2;
+            if(gap<=0){
+                // We have overlap with the boundary.
+                auto N = sc.roads[R].laneBoundary(s,B,side);
+                if(N.first && *N.first!=Road::BoundaryCrossability::NONE){
+                    // We are on a crossable lane boundary => find next road boundary and recalculate the gap
+                    B = *(sc.roads[R].roadBoundary(s,*N.second,side));
+                    gap = -S*dir*(l-sc.roads[R].lanes[B].offset(s))+sc.roads[R].lanes[B].width(s)/2-latSize/2;
+                }
+                // Otherwise we crashed into the road boundary, so leave the gap<=0
+            }
+            return gap;
+        }
+
         inline std::tuple<std::array<double,2>,std::array<double,2>> calcSafetyBounds(){
             // Calculates maximum longitudinal velocity and lateral safety bounds
             // for tx==ABS_VEL and ty==REL_OFF.
@@ -329,7 +345,7 @@ class Vehicle : public VehicleBase{
 
             // 1) Calculate velocity, inner & outer bounds and update the reduced state:
             std::array<double,2> velBounds = {0,s.maxVel+safety.Mvel};
-            std::array<double,2> outerBounds = {-roadInfo.gapE[0], roadInfo.gapE[1]};
+            std::array<double,2> outerBounds = {-std::fmin(roadInfo.gapE[0],roadInfo.gapB[0]), std::fmin(roadInfo.gapE[1],roadInfo.gapB[1])};
             std::array<double,2> innerBounds = {std::nan(""),std::nan("")};
             for(int Lr=-static_cast<int>(L);Lr<=static_cast<int>(L);Lr++){
                 // Loop over all visible lanes
