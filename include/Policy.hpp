@@ -206,8 +206,9 @@ namespace Policy{
                 Action a = {desVel,-vb.s.laneC.off};// Default action is driving at desired velocity and going towards the middle of the lane
 
                 // Offset:
-                const bool rightFree = std::abs(vb.s.laneR[0].off-vb.s.laneC.off)>EPS && -vb.safetyBounds[0].y-vb.s.laneC.off>vb.s.laneR[0].width-EPS;// Right lane is free if there is a lane and the right offset is larger than the lane width
-                const bool leftFree = std::abs(vb.s.laneL[0].off-vb.s.laneC.off)>EPS && vb.safetyBounds[1].y+vb.s.laneC.off>vb.s.laneL[0].width-EPS;// Left lane is free if there is a lane and the left offset is larger than the lane width
+                // TODO: make sure lane width is large enough to fit our vehicle in the right/left lane
+                const bool rightFree = std::abs(vb.s.laneR[0].off-vb.s.laneC.off)>EPS && -vb.safetyBounds[0].y+EPS>vb.s.laneR[0].off;// Right lane is free if there is a lane and the right offset is larger than the lane width
+                const bool leftFree = std::abs(vb.s.laneL[0].off-vb.s.laneC.off)>EPS && vb.safetyBounds[1].y+EPS>vb.s.laneL[0].off;// Left lane is free if there is a lane and the left offset is larger than the lane width
                 const bool shouldOvertake = leftFree && vb.r.lfGap>SAFETY_GAP && vb.r.llGap>SAFETY_GAP && overtakeCrit(vb.r.clVel, desVel, vb.r.clGap);// Overtaking condition
                 const bool shouldReturn = rightFree && vb.r.rfGap>SAFETY_GAP && vb.r.rlGap>SAFETY_GAP && !overtakeCrit(vb.r.rlVel, desVel, vb.r.rlGap);// Returning condition
                 if(shouldOvertake && !overtaking){

@@ -196,7 +196,7 @@ class Vehicle : public VehicleBase{
                 laneR.push_back(getLaneInfo(roadInfo.laneR[i]));
                 laneL.push_back(getLaneInfo(roadInfo.laneL[i]));
             }
-            return {roadInfo.gapB,roadInfo.laneC.maxVel,roadInfo.vel,laneC,laneR,laneL};
+            return {roadInfo.gapB,roadInfo.laneC.maxVel,roadInfo.vel,roadInfo.gamma,roadInfo.size,laneC,laneR,laneL};
         }
 
         inline dtypes::vehicle_data::C saveState() const noexcept{

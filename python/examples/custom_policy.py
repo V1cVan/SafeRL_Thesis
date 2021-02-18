@@ -71,11 +71,11 @@ def simulate(sim):
                 "rel_vel": veh.rel_vel
             }
             return values, {}
-        TimeChartPlot(p, lines, None, value_cb, "rel_vel", [0])
+        TimeChartPlot(p, lines, None, value_cb, "rel_vel", zoom=1.7, cached_vehicles=[0])
         p.subplot(2,1)
-        ActionsPlot(p,actions="long")
+        ActionsPlot(p,actions="long",zoom=1.7)
         p.subplot(3,1)
-        ActionsPlot(p,actions="lat")
+        ActionsPlot(p,actions="lat",zoom=1.7)
         p.plot() # Initial plot
 
         while not sim.stopped and not p.closed:

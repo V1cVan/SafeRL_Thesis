@@ -110,6 +110,13 @@ extern "C"{
         bool sym;       // True for symmetric passing rules, False for asymmetric (right priority) passing rules
     };
 
+    struct vRoadPos{
+        unsigned int R; // Road id
+        unsigned int L; // Lane id
+        double s;       // Longitudinal road coordinate
+        double l;       // Lateral road coordinate
+    };
+
     // --- Configuration ---
     // Get the seed of the random number generator
     LIB_PUBLIC
@@ -327,6 +334,10 @@ extern "C"{
     // Get the collision status for the given vehicle
     LIB_PUBLIC
     int veh_getColStatus(const Vehicle* veh);
+
+    // Get the road position for the given vehicle
+    LIB_PUBLIC
+    void veh_getRoadPos(const Vehicle* veh, vRoadPos* roadPos);
 
     // --- Plotting ---
     LIB_PUBLIC

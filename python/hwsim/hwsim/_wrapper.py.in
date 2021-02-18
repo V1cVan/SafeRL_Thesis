@@ -134,6 +134,12 @@ class MOBILConfig(BaseStructure):
                 ("sym",c_bool)]      # True for symmetric passing rules, False for asymmetric (right priority) passing rules
     _defaults_ = {"p": 0.4, "b_safe": 4, "a_th": 0.1, "a_bias": 0.3, "v_crit": 15, "sym": False}
 
+class VehRoadPos(Structure):
+    _fields_ = [("R",c_uint),
+                ("L",c_uint),
+                ("s",c_double),
+                ("l",c_double)]
+
 class Blueprint(Serializable):
 
     def __init__(self,method_or_id,args=None):
@@ -354,6 +360,9 @@ simLib.veh_getSafetyBounds.restype = None
 
 simLib.veh_getColStatus.argtypes = [c_void_p]
 simLib.veh_getColStatus.restype = c_int
+
+simLib.veh_getRoadPos.argtypes = [c_void_p,POINTER(VehRoadPos)]
+simLib.veh_getRoadPos.restype = None
 
 # Plotting methods:
 simLib.utils_transformPoints.argtypes = [ndpointer(dtype=np.float64), ndpointer(dtype=np.float64), c_uint, ndpointer(dtype=np.float64,shape=(3,),flags='C_CONTIGUOUS'), ndpointer(dtype=np.float64,shape=(3,),flags='C_CONTIGUOUS'), ndpointer(dtype=np.float64,shape=(3,),flags='C_CONTIGUOUS')]

@@ -63,9 +63,9 @@ if __name__=="__main__":
         BirdsEyePlot(p,vehicle_type=vehicle_type,view=BirdsEyePlot.View.REAR)
         # p.subplot(2,0)
         # p.add_text("Actions")
-        # ActionsPlot(p,actions="long")
+        # ActionsPlot(p,actions="long",zoom=1.7)
         # p.subplot(3,0)
-        # ActionsPlot(p,actions="lat")
+        # ActionsPlot(p,actions="lat",zoom=1.7)
         # p.subplot(2,1)
         # p.subplot(3,1)
         p.plot() # Initial plot

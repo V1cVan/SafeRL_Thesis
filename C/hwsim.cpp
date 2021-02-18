@@ -480,7 +480,9 @@ extern "C"{
         std::copy(veh->s.gapB.begin(),veh->s.gapB.end(),state);
         state[2] = veh->s.maxVel;
         std::copy(veh->s.vel.begin(),veh->s.vel.end(),state+3);
-        unsigned int off = 5;
+        state[5] = veh->s.gamma;
+        std::copy(veh->s.size.begin(),veh->s.size.end(),state+6);
+        unsigned int off = 8;
         copyLaneInfo(veh->s.laneC,state,off);
         for(const auto& laneInfo : veh->s.laneR){
             copyLaneInfo(laneInfo,state,off);
@@ -488,13 +490,6 @@ extern "C"{
         for(const auto& laneInfo : veh->s.laneL){
             copyLaneInfo(laneInfo,state,off);
         }
-        // off = 11;
-        // for(const auto& relState : veh->s.rel){
-        //     std::copy(relState.off.begin(),relState.off.end(),state+off);
-        //     std::copy(relState.gap.begin(),relState.gap.end(),state+off+2);
-        //     std::copy(relState.vel.begin(),relState.vel.end(),state+off+4);
-        //     off += 6;
-        // }
     }
     
     LIB_PUBLIC
@@ -540,6 +535,14 @@ extern "C"{
     LIB_PUBLIC
     int veh_getColStatus(const Vehicle* veh){
         return veh->colStatus;
+    }
+
+    LIB_PUBLIC
+    void veh_getRoadPos(const Vehicle* veh, vRoadPos* roadPos){
+        roadPos->R = veh->roadInfo.R;
+        roadPos->L = veh->roadInfo.L;
+        roadPos->s = veh->roadInfo.pos[0];
+        roadPos->l = veh->roadInfo.pos[1];
     }
 
     LIB_PUBLIC

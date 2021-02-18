@@ -35,14 +35,14 @@ if __name__=="__main__":
         BirdsEyePlot(p,view=BirdsEyePlot.View.FRONT,vehicle_type="car")
         p.subplot(2,0)
         p.add_text("Actions")
-        ActionsPlot(p,actions="long")
+        ActionsPlot(p,actions="long",zoom=1.7)
         p.subplot(3,0)
-        ActionsPlot(p,actions="lat")
+        ActionsPlot(p,actions="lat",zoom=1.7)
         p.subplot(2,1)
         p.add_text("Inputs")
-        InputsPlot(p,inputs="acc")
+        InputsPlot(p,inputs="acc",zoom=1.7)
         p.subplot(3,1)
-        InputsPlot(p,inputs="delta")
+        InputsPlot(p,inputs="delta",zoom=1.7)
         p.plot() # Initial plot
 
         while not sim.stopped and not p.closed:

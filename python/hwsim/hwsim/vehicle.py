@@ -1,6 +1,6 @@
 from ctypes import c_void_p, c_double, POINTER, byref
 import numpy as np
-from hwsim._wrapper import simLib, VehConfig
+from hwsim._wrapper import simLib, VehConfig, VehRoadPos
 from hwsim._utils import hybridmethod
 
 class Vehicle(object):
@@ -48,6 +48,8 @@ class Vehicle(object):
             ("gapB",np.float64,2),
             ("maxVel",np.float64),
             ("vel",np.float64,2),
+            ("gamma",np.float64),
+            ("size",np.float64,2),
             ("laneC",lane_info_dt),
             ("laneR",lane_info_dt,(self.L,)),
             ("laneL",lane_info_dt,(self.L,))
@@ -62,6 +64,12 @@ class Vehicle(object):
             ("rlGap",np.float64), ("rlVel",np.float64),
             ("lfGap",np.float64), ("lfVel",np.float64),
             ("llGap",np.float64), ("llVel",np.float64),
+        ])
+        self._rp_dt = np.dtype([
+            ("R",np.uint),
+            ("L",np.uint),
+            ("s",np.float64),
+            ("l",np.float64)
         ])
         # Call initialization code of custom policies and metrics:
         self.policy.init_vehicle(self)
@@ -128,7 +136,7 @@ class Vehicle(object):
     # Policy specific properties
     @hybridmethod
     def S_DIM(L,N_OV):
-        return 5+(2*L+1)*(2+2*N_OV*6)
+        return 8+(2*L+1)*(2+2*N_OV*6)
 
     @S_DIM.instancegetter
     def S_DIM(self):
@@ -161,6 +169,8 @@ class Vehicle(object):
         gapB:   available space w.r.t. the right and left road edge
         maxVel: maximum allowed velocity on the current road segment
         vel:    current longitudinal and lateral speed
+        gamma:  vehicle's heading angle w.r.t. the current lane's heading
+        size:   vehicle's current size on the road (taking gamma into account)
         laneC:  lane information of the current lane
         laneR:  lane information of all visible (L) lanes to the right
         laneL:  lane information of all visible (L) lanes to the left
@@ -236,3 +246,21 @@ class Vehicle(object):
                 {veh.s["laneC"],veh.s["laneR"][0],veh.s["laneL"][0]})
         """
         return simLib.veh_getColStatus(self._h)
+
+    @property
+    def road_pos(self):
+        """
+        Road position of this vehicle:
+        R:  road id
+        L:  lane id
+        s:  longitudinal road coordinate
+        l:  lateral road coordinate
+        """
+        rp = np.empty(1,self._rp_dt)[0]
+        vrp = VehRoadPos()
+        simLib.veh_getRoadPos(self._h, vrp)
+        rp["R"] = vrp.R
+        rp["L"] = vrp.L
+        rp["s"] = vrp.s
+        rp["l"] = vrp.l
+        return rp

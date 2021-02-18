@@ -146,10 +146,12 @@ namespace Policy{
         }
     };
     struct augState{
-        // size = 5 + (2*L+1)*laneInfo::size
+        // size = 8 + (2*L+1)*laneInfo::size
         std::array<double,2> gapB;// Gap w.r.t. right and left road boundary
         double maxVel;// Maximum allowed speed
         std::array<double,2> vel;// Vehicle's velocity in both longitudinal and lateral direction of the lane
+        double gamma;// Heading angle of the vehicle w.r.t. current lane's heading
+        std::array<double,2> size;// Vehicle's current size on the road (takes gamma into account)
         laneInfo laneC;// Lane information about the current lane (vehicle's CG within the lane bounds),
         std::vector<laneInfo> laneR;// the lanes directly to the right and
         std::vector<laneInfo> laneL;// left
