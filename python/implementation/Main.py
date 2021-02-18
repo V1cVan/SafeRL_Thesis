@@ -12,9 +12,12 @@ from RL_Policies import *
 from RL_Policies import *
 from HelperClasses import *
 import logging
+
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+
+
 physical_devices = tf.config.list_physical_devices('GPU')
 # tf.config.experimental.set_memory_growth(physical_devices[0], True)
 print(physical_devices)
@@ -137,10 +140,11 @@ if __name__=="__main__":
     # Logging
     logging.basicConfig(level=logging.INFO, filename="./logfiles/main.log")
     # TODO Enable TF warnings and query with Bram
+
     logging.disable(logging.ERROR) # Temporarily disable error tf logs.
+
     with open('./logfiles/main.log', 'w'):
         pass  # Clear the log file of previous run
-
 
     config.scenarios_path = str(SC_PATH)
     print_output = "Using seed %f" % config.seed
@@ -171,7 +175,7 @@ if __name__=="__main__":
         "simulation_timesteps": 100,
         "gamma": 0.99,  # Discount factor
         # TODO Check results of different learning rates
-        "adam_optimiser": keras.optimizers.Adam(learning_rate=0.01),
+        "adam_optimiser": keras.optimizers.Adam(learning_rate=0.0005),
         # TODO Check results of different loss functions sum/mse
         "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM),
         "seed": seed,
