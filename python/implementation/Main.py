@@ -1,4 +1,4 @@
-from hwsim import Simulation, BasicPolicy, KBModel, CustomPolicy, config
+from hwsim import Simulation, BasicPolicy, StepPolicy, SwayPolicy, IMPolicy, KBModel, CustomPolicy, config
 from hwsim.plotting import Plotter, SimulationPlot, DetailPlot, BirdsEyePlot, TimeChartPlot, ActionsPlot
 
 import pathlib
@@ -28,7 +28,7 @@ class Main(object):
         # ...
         self.sim = Simulation(sim_config)
         self.pol = [{  # List of autonomous policies
-            "ids": [0],  # Vehicle IDs of vehicles equiped with this autonomous policy
+            "ids": [0],  # Vehicle IDs of vehicles equipped with this autonomous policy
             "policy": sim_config["vehicles"][0]["policy"],  # Reference to the policy
             "metrics": {}  # Extra metrics we calculate for each autonomous policy
         }]
@@ -87,7 +87,7 @@ class Main(object):
                             self.sim.step()  # Calls AcPolicy.customAction method.
                             if self.sim._collision:
                                 logging.critical("Collision. At episode %f" % episode_count)
-                                policy.trainer.set_neg_collision_reward(t, -5)
+                                policy.trainer.set_neg_collision_reward(t, -0.5)
                                 break
 
                 # Batch policy update
@@ -120,11 +120,14 @@ class Main(object):
         self.pol[0]["policy"].trainer.training = False
         with self.sim:
             self.create_plot()
-            for t in np.arange(simulation_timesteps):
-                if not self.sim.stopped and not self.p.closed:
-                    self.sim.step()
-                    self.p.plot()
-            self.p.close()
+            t = 1
+            while not self.sim.stopped and not self.p.closed:
+                self.sim.step()
+                self.p.plot()
+                t += 1
+                if t == simulation_timesteps:
+                    self.p.close()
+
         self.pol[0]["policy"].trainer.training = True
 
 if __name__=="__main__":
@@ -132,7 +135,7 @@ if __name__=="__main__":
     ID = -1  # ID of simulation to replay or -1 to create a new one
     PLOT_MODE = Plotter.Mode.LIVE
     OFF_SCREEN = False
-    FANCY_CARS = True
+    FANCY_CARS = False
     LOG_DIR = "logs"
     ROOT = pathlib.Path(__file__).resolve().parents[2]
     SC_PATH = ROOT.joinpath("scenarios/scenarios.h5")
@@ -159,7 +162,7 @@ if __name__=="__main__":
     model_param = {
         "n_nodes": [400, 0],  # Number of hidden nodes in each layer
         "n_layers": 2,  # Number of layers
-        "n_inputs": 30,  # Standard size of S
+        "n_inputs": 54,  # Standard size of S
         "activation_function": tf.nn.relu,  # activation function of hidden nodes
         "n_actions": 2,
         "weights_file_path": "./python/implementation/trained_models/model_weights",
@@ -168,15 +171,13 @@ if __name__=="__main__":
     logging.critical("Model Parameters:")
     logging.critical(model_param)
     training_param = {
-        "max_steps_per_episode": 300,  # TODO kM - max value of k
+        "max_steps_per_episode": 5000,
         "final_return": 1000,
         "show_plots_when_training": True,
-        "plot_freq": 5,  # TODO Reimplement plot freq (debug why crash)
-        "simulation_timesteps": 100,
+        "plot_freq": 5,
+        "simulation_timesteps": 1000,
         "gamma": 0.99,  # Discount factor
-        # TODO Check results of different learning rates
         "adam_optimiser": keras.optimizers.Adam(learning_rate=0.0005),
-        # TODO Check results of different loss functions sum/mse
         "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM),
         "seed": seed,
         "reward_weights": np.array([0.3, 0.3, 0.3])  # (rew_vel, rew_lat_position, rew_fol_dist)
@@ -191,11 +192,19 @@ if __name__=="__main__":
 
     # Simulation configuration and settings
     # TODO Move to randomly initialising vehicles infront of ego vehicle to learn more complex actions than staying in lane
+    safetyCfg = {
+        "Mvel": 1.0,
+        "Gth": 2.0
+    }
+
     veh_types = [
-        {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)},
-        {"amount": 60, "model": KBModel(), "policy": BasicPolicy("slow")},
-        {"amount": 20, "model": KBModel(), "policy": BasicPolicy("normal")},
-        {"amount": 20, "model": KBModel(), "policy": BasicPolicy("fast")}
+        {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer), "N_OV": 2},
+        {"amount": 2, "model": KBModel(), "policy": StepPolicy(10, [0.1, 0.5])},
+        {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
+        {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
+        {"amount": 3, "model": KBModel(), "policy": BasicPolicy("slow")},
+        {"amount": 25, "model": KBModel(), "policy": BasicPolicy("normal")},
+        {"amount": 7, "model": KBModel(), "policy": BasicPolicy("fast")}
     ]
     # veh_types = [
     #     {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)}
