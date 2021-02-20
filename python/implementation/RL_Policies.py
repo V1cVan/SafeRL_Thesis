@@ -82,36 +82,43 @@ class AcPolicyDiscrete(CustomPolicy):
         # Normalise states and remove unnecessary states:
         lane_width = veh.s["laneC"]["width"]  # Excluded
         gap_to_road_edge = veh.s["gapB"]/(lane_width*3)  # Normalised
-        max_vel = veh.s["maxVel"]  # Excluded
-        curr_vel = veh.s["vel"][0]/max_vel  # Normalised and lateral component exluded
+        max_vel = veh.s["maxVel"]           # Excluded
+        curr_vel = veh.s["vel"][0]/max_vel  # Normalised longitudinal component and lateral component excluded
 
 
         # Current Lane:
-        offset_current_lane_center = np.squeeze(veh.s["laneC"]["off"])/(lane_width)  # Normalised
-        rel_offset_back_center_lane = np.hstack((np.squeeze(veh.s["laneC"]["relB"]["off"])[0]/150,
-                                                 np.squeeze(veh.s["laneC"]["relB"]["off"])[1]/(lane_width)))  # Normalised to Dmax default
-        rel_vel_back_center_lane = np.squeeze(veh.s["laneC"]["relB"]["vel"])/max_vel  # Normalised
-        rel_offset_front_center_lane = np.hstack((np.squeeze(veh.s["laneC"]["relF"]["off"])[0]/150,
-                                                  np.squeeze(veh.s["laneC"]["relF"]["off"])[1]/(lane_width)))  # Normalised to Dmax default
-        rel_vel_front_center_lane = np.squeeze(veh.s["laneC"]["relF"]["vel"])/max_vel  # Normalised
+        offset_current_lane_center = veh.s["laneC"]["off"] / lane_width  # Normalised
+        rel_offset_back_center_lane = np.hstack((veh.s["laneC"]["relB"]["off"][:, 0] / 150,
+                                                 veh.s["laneC"]["relB"]["off"][:, 1] / lane_width))  # Normalised to Dmax default
+        rel_vel_back_center_lane = np.matrix.flatten(veh.s["laneC"]["relB"]["vel"]) / max_vel  # Normalised
+
+        rel_offset_front_center_lane = np.hstack((veh.s["laneC"]["relF"]["off"][:, 0] / 150,
+                                                  veh.s["laneC"]["relF"]["off"][:, 1] / lane_width))  # Normalised to Dmax default
+        rel_vel_front_center_lane = np.matrix.flatten(veh.s["laneC"]["relF"]["vel"]) / max_vel  # Normalised
 
         # Left Lane:
-        offset_left_lane_center = np.squeeze(veh.s["laneL"]["off"])/(lane_width)  # Normalised
-        rel_offset_back_left_lane = np.hstack((np.squeeze(veh.s["laneL"]["relB"]["off"])[0]/150,
-                                               np.squeeze(veh.s["laneL"]["relB"]["off"])[1]/(lane_width)))  # Normalised to Dmax default
-        rel_vel_back_left_lane = np.squeeze(veh.s["laneL"]["relB"]["vel"])/max_vel  # Normalised
-        rel_offset_front_left_lane = np.hstack((np.squeeze(veh.s["laneL"]["relF"]["off"])[0]/150,
-                                                np.squeeze(veh.s["laneL"]["relF"]["off"])[1]/(lane_width)))  # Normalised to Dmax default
-        rel_vel_front_left_lane = np.squeeze(veh.s["laneL"]["relF"]["vel"])/max_vel  # Normalised
+        offset_left_lane_center = veh.s["laneL"]["off"] / lane_width  # Normalised
+        rel_offset_back_left_lane = np.hstack((veh.s["laneL"]["relB"]["off"][:, 0] / 150,
+                                               veh.s["laneL"]["relB"]["off"][:, 1] / lane_width))  # Normalised to Dmax default
+        rel_offset_back_left_lane = np.squeeze(rel_offset_back_left_lane)
+        rel_vel_back_left_lane = np.matrix.flatten(veh.s["laneL"]["relB"]["vel"]) / max_vel  # Normalised
+
+        rel_offset_front_left_lane = np.hstack((veh.s["laneL"]["relF"]["off"][:, 0] / 150,
+                                                veh.s["laneL"]["relF"]["off"][:, 1] / lane_width))  # Normalised to Dmax default
+        rel_offset_front_left_lane = np.squeeze(rel_offset_front_left_lane)
+        rel_vel_front_left_lane = np.matrix.flatten(veh.s["laneL"]["relF"]["vel"]) / max_vel  # Normalised
 
         # Right Lane:
-        offset_right_lane_center = np.squeeze(veh.s["laneR"]["off"])/(lane_width)  # Normalised
-        rel_offset_back_right_lane = np.hstack((np.squeeze(veh.s["laneR"]["relB"]["off"])[0]/150,
-                                                np.squeeze(veh.s["laneR"]["relB"]["off"])[1]/(lane_width)))  # Normalised to Dmax default
-        rel_vel_back_right_late = np.squeeze(veh.s["laneR"]["relB"]["vel"])/max_vel  # Normalised
-        rel_offset_front_right_lane = np.hstack((np.squeeze(veh.s["laneR"]["relB"]["off"])[0]/150,
-                                                 np.squeeze(veh.s["laneR"]["relB"]["off"])[1]/(lane_width)))  # Normalised to Dmax default
-        rel_vel_front_right_late = np.squeeze(veh.s["laneR"]["relB"]["vel"])/max_vel  # Normalised
+        offset_right_lane_center = veh.s["laneR"]["off"] / lane_width  # Normalised
+        rel_offset_back_right_lane = np.hstack((veh.s["laneR"]["relB"]["off"][:, 0] / 150,
+                                                veh.s["laneR"]["relB"]["off"][:, 1] / lane_width))  # Normalised to Dmax default
+        rel_offset_back_right_lane = np.squeeze(rel_offset_back_right_lane)
+        rel_vel_back_right_late = np.matrix.flatten(veh.s["laneR"]["relB"]["vel"]) / max_vel  # Normalised
+
+        rel_offset_front_right_lane = np.hstack((veh.s["laneR"]["relB"]["off"][:, 0] / 150,
+                                                 veh.s["laneR"]["relB"]["off"][:, 1] / lane_width))  # Normalised to Dmax default
+        rel_offset_front_right_lane = np.squeeze(rel_offset_front_right_lane)
+        rel_vel_front_right_late = np.matrix.flatten(veh.s["laneR"]["relB"]["vel"]) / max_vel  # Normalised
 
         # Assemble state vector
         state = np.hstack((gap_to_road_edge, curr_vel,
@@ -187,17 +194,18 @@ class AcPolicyDiscrete(CustomPolicy):
             # Collision??
             # TODO check collision punishment with Bram
 
-            # TODO remove lane centre reward when acting with discrete lane changes
-            # Lane center reward:
-            lane_offset = np.squeeze(veh.s["laneC"]["off"])
-            r_off = np.exp(-(lane_offset) ** 2 / 3.6)
+            # # TODO remove lane centre reward when acting with discrete lane changes
+            # # Lane center reward:
+            # lane_offset = np.squeeze(veh.s["laneC"]["off"])
+            # r_off = np.exp(-(lane_offset) ** 2 / 3.6)
 
             # Following distance:
-            d_gap = np.squeeze(veh.s["laneC"]["relF"]["gap"])[0]
+            d_gap = np.squeeze(veh.s["laneC"]["relF"]["gap"])[0, 0]
             d_lim = 10
             r_follow = -np.exp(-(d_lim - d_gap) ** 2 / 20)
 
-            reward = w_vel*r_vel + w_off*r_off + w_dist*r_follow
+            # reward = w_vel*r_vel + w_off*r_off + w_dist*r_follow
+            reward = w_vel * r_vel + w_dist * r_follow
         else:
             reward = 0
         return reward
