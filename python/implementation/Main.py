@@ -91,7 +91,7 @@ class Main(object):
                             self.sim.step()  # Calls AcPolicy.customAction method.
                             if self.sim._collision:
                                 logging.critical("Collision. At episode %f" % episode_count)
-                                # policy.trainer.set_neg_collision_reward(t, 0)
+                                #policy.trainer.set_neg_collision_reward(t, -1)
                                 break
 
                 # Batch policy update
@@ -151,8 +151,8 @@ def sim_types(sim_num):
             {"amount": 2, "model": KBModel(), "policy": StepPolicy(10, [0.1, 0.5])},
             {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
             {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
-            {"amount": 3, "model": KBModel(), "policy": BasicPolicy("slow")},
-            {"amount": 25, "model": KBModel(), "policy": BasicPolicy("normal")},
+            {"amount": 10, "model": KBModel(), "policy": BasicPolicy("slow")},
+            {"amount": 18, "model": KBModel(), "policy": BasicPolicy("normal")},
             {"amount": 7, "model": KBModel(), "policy": BasicPolicy("fast")}
         ]
     }
@@ -177,8 +177,8 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": AcPolicyDiscrete(trainer), "R": 0, "l": 0, "s": 0, "v": random.randint(25,30)},
-            {"model": KBModel(), "policy": FixedLanePolicy(), "R": 0, "l": 0, "s": 200, "v": 20}
+            {"model": KBModel(), "policy": AcPolicyDiscrete(trainer), "R": 0, "l": 0, "s": 0, "v": random.randint(27,30)},
+            {"model": KBModel(), "policy": FixedLanePolicy(), "R": 0, "l": 0, "s": 200, "v": 15}
         ]
     }
 
@@ -226,13 +226,14 @@ if __name__=="__main__":
         "activation_function": tf.nn.relu,  # activation function of hidden nodes
         "n_actions": 2,
         "weights_file_path": "./python/implementation/trained_models/model_weights",
+        "trained_model_file_path": "./python/implementation/trained_models/trained_model",
         "seed": seed
     }
     logging.critical("Model Parameters:")
     logging.critical(model_param)
     training_param = {
         "max_steps_per_episode": 3000,
-        "final_return": 1000,
+        "final_return": 290,
         "show_plots_when_training": False,
         "plot_freq": 10,
         "simulation_timesteps": 1000,
@@ -241,7 +242,7 @@ if __name__=="__main__":
         "adam_optimiser": keras.optimizers.Adam(learning_rate=0.0001),
         "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM),
         "seed": seed,
-        "reward_weights": np.array([1, 0, 1])  # (rew_vel, rew_lat_position, rew_fol_dist)
+        "reward_weights": np.array([0.5, 0, 0.5])  # (rew_vel, rew_lat_position, rew_fol_dist)
     }
     logging.critical("Training param:")
     logging.critical(training_param)
@@ -271,7 +272,7 @@ if __name__=="__main__":
     main = Main(sim_types(0))
 
     # Train model:
-    main.train_policy()
+    # main.train_policy()
 
     # Simulate model:
     main.pol[0]["policy"].trainer.actor_critic_net.load_weights(model_param["weights_file_path"])
