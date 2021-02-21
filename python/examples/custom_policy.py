@@ -42,7 +42,7 @@ class FixedLanePolicy(CustomPolicy, enc_name="fixed_lane"):
         v = min(v_max,bounds["long"][1])
         v = max(0,v)
         # Final actions are: the target velocity and negating the offset towards the lane center
-        return np.array([v,-s["laneC"]["off"]])
+        return np.array([v, -s["laneC"]["off"]])
         # Alternatively (with LANE actionType):
         # return np.array([v,0]) # Lane reference is 0 => remain in (center of) current lane
 

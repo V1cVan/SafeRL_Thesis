@@ -208,7 +208,7 @@ class AcPolicyDiscrete(CustomPolicy):
             # Following distance:
             d_gap = np.squeeze(veh.s["laneC"]["relF"]["gap"])[0, 0]
             d_lim = 0
-            r_follow = -np.exp(-(d_lim - d_gap) ** 2 / 5)
+            r_follow = -np.exp(-(d_lim - d_gap) ** 2 / 10)
 
             reward = w_vel*r_vel + w_off*r_off + w_dist*r_follow
 
