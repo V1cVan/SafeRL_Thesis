@@ -1,6 +1,7 @@
 from hwsim import CustomPolicy, ActionType
 import tensorflow as tf
 import numpy as np
+import random
 
 class AcPolicyDiscrete(CustomPolicy):
     """
@@ -12,13 +13,14 @@ class AcPolicyDiscrete(CustomPolicy):
     def __init__(self, trainer):
         super(AcPolicyDiscrete, self).__init__()
         self.trainer = trainer  # trainer = f(NN_model)
+        self.STEP_TIME = self.trainer.training_param["STEP_TIME"]
 
 
     def init_vehicle(self, veh):
         # Book-keeping of last states and actions
         # s0, a0, c0 = previous vehicle state and action-critic pair
         # s1, a1, c0 = current vehicle state action-critic pair
-
+        veh.counter = 0
         veh.s0 = None
         veh.s0_mod = None
         veh.s1 = veh.s_raw
@@ -35,7 +37,10 @@ class AcPolicyDiscrete(CustomPolicy):
     def custom_action(self, veh):
         # s0, a0 = previous vehicle state action pair
         # s1, a1 = current vehicle state action pair
+        veh.counter -= 1
 
+        # if veh.counter <= 0:
+        veh.counter = self.STEP_TIME
         # Set current vehicle state and action pair
         veh.s1 = veh.s_raw
         veh.s1_mod = self.convert_state(veh)
@@ -69,9 +74,10 @@ class AcPolicyDiscrete(CustomPolicy):
         veh.a0_choice = veh.a1_choice
         veh.c0 = veh.c1
 
-        LONG_ACTION = veh.a1[0]
-        LAT_ACTION = veh.a1[1]
-        return np.array([LONG_ACTION, LAT_ACTION], dtype=np.float64)  # The hwsim library uses double precision floats
+        return np.array([veh.a1[0], veh.a1[1]], dtype=np.float64)  # The hwsim library uses double precision floats
+
+
+
 
     def convert_state(self, veh):
         """
@@ -150,11 +156,11 @@ class AcPolicyDiscrete(CustomPolicy):
         # Compute safe velocity action:
         vel_bounds = veh.a_bounds["long"]  # [min_rel_vel, max_rel_vel]
         if vel_actions == 0:  # Slow down
-            vel_controller = np.maximum(vel_bounds[0], -3)
+            vel_controller = np.maximum(vel_bounds[0], -5)
         elif vel_actions == 1:  # Constant speed
             vel_controller = 0
         elif vel_actions == 2:  # Speed up
-            vel_controller = np.minimum(vel_bounds[1], +3)
+            vel_controller = np.minimum(vel_bounds[1], +5)
         else:
             print("Error with setting vehicle velocity!")
         sim_action[0] = vel_controller
@@ -189,23 +195,23 @@ class AcPolicyDiscrete(CustomPolicy):
             # Velocity reward:
             v = np.squeeze(veh.s["vel"])[0]
             v_lim = 120 / 3.6
-            r_vel = np.exp(-(v_lim - v) ** 2 / 140) - np.exp(-(v) ** 2 / 70)
+            r_vel = np.exp(-(v_lim - v) ** 2 / 140) #- np.exp(-(v) ** 2 / 70)
 
             # Collision??
             # TODO check collision punishment with Bram
 
             # # TODO remove lane centre reward when acting with discrete lane changes
             # # Lane center reward:
-            # lane_offset = np.squeeze(veh.s["laneC"]["off"])
-            # r_off = np.exp(-(lane_offset) ** 2 / 3.6)
+            lane_offset = np.squeeze(veh.s["laneC"]["off"])
+            r_off = np.exp(-(lane_offset) ** 2 / 3.6)
 
             # Following distance:
             d_gap = np.squeeze(veh.s["laneC"]["relF"]["gap"])[0, 0]
-            d_lim = 10
-            r_follow = -np.exp(-(d_lim - d_gap) ** 2 / 20)
+            d_lim = 0
+            r_follow = -np.exp(-(d_lim - d_gap) ** 2 / 5)
 
-            # reward = w_vel*r_vel + w_off*r_off + w_dist*r_follow
-            reward = w_vel * r_vel + w_dist * r_follow
+            reward = w_vel*r_vel + w_off*r_off + w_dist*r_follow
+
         else:
             reward = 0
         return reward
@@ -232,3 +238,45 @@ class AcPolicyDiscrete(CustomPolicy):
     #     veh.s["laneR"]["relF"]["vel"] = np.squeeze(veh.s["laneC"]["relF"]["vel"])
     #
     #     return veh.s
+
+
+class FixedLanePolicy(CustomPolicy, enc_name="fixed_lane"):
+    """ Simple policy where each vehicle will stay in its initial lane with a certain target
+    velocity (relative to the maximum allowed speed). The actual velocity is always upper
+    bounded by the safety bounds (taking vehicles in front into account)."""
+    LONG_ACTION = ActionType.ABS_VEL
+    LAT_ACTION = ActionType.REL_OFF # Alternatively: ActionType.LANE
+
+    def __init__(self):
+        super().__init__()
+        self.STEP_TIME = 100 # Change reference velocity every 100 iterations (10s)
+
+    def init_vehicle(self, veh):
+        """ Policy objects are shared over many different vehicles so to associate
+        attributes to specific vehicles, we can use this method (which is called
+        during Vehicle instantiation) """
+        veh.rel_vel = 0
+        veh.counter = 0
+
+    def _set_rel_vel(self, veh):
+        veh.rel_vel = 0.95-random.random()*0.3
+
+    def custom_action(self, veh):
+        """ This method is called at every iteration and the returned numpy arrary
+        will be used as the new reference actions (passed to the lower level controllers
+        who will set up proper model inputs to track the new reference) """
+        # Start with updating the counter and setting a new reference if necessary
+        veh.counter -= 1
+        if veh.counter<=0:
+            veh.counter = self.STEP_TIME
+            self._set_rel_vel(veh)
+        # Then calculate proper actions from the current reference
+        s = veh.s # Current augmented state
+        bounds = veh.a_bounds # Current safety bounds on the actions (calculated from the current augmented state). Vehicle operation remains 'safe' as long as we respect these bounds.
+        v_max = veh.rel_vel*(s["maxVel"])
+        v = min(v_max,bounds["long"][1])
+        v = max(0,v)
+        # Final actions are: the target velocity and negating the offset towards the lane center
+        return np.array([v,-s["laneC"]["off"]])
+        # Alternatively (with LANE actionType):
+        # return np.array([v,0]) # Lane reference is 0 => remain in (center of) current lane

@@ -1,19 +1,37 @@
-CRITICAL:root:Using seed 1038992323.000000
+CRITICAL:root:Using seed 2178087461.000000
 CRITICAL:root:Model Parameters:
-CRITICAL:root:{'n_nodes': [400, 0], 'n_layers': 2, 'n_inputs': 54, 'activation_function': <function relu at 0x000002381F56AE58>, 'n_actions': 2, 'weights_file_path': './python/implementation/trained_models/model_weights', 'seed': 1038992323}
+CRITICAL:root:{'n_nodes': [160, 80], 'n_layers': 2, 'n_inputs': 54, 'activation_function': <function relu at 0x000001B0FEDE2288>, 'n_actions': 2, 'weights_file_path': './python/implementation/trained_models/model_weights', 'seed': 2178087461}
 CRITICAL:root:Training param:
-CRITICAL:root:{'max_steps_per_episode': 5000, 'final_return': 1000, 'show_plots_when_training': True, 'plot_freq': 5, 'simulation_timesteps': 100, 'gamma': 0.99, 'adam_optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x0000023824F02C08>, 'huber_loss': <tensorflow.python.keras.losses.Huber object at 0x0000023829356108>, 'seed': 1038992323, 'reward_weights': array([0.3, 0.3, 0.3])}
+CRITICAL:root:{'max_steps_per_episode': 3000, 'final_return': 1000, 'show_plots_when_training': True, 'plot_freq': 10, 'simulation_timesteps': 1000, 'STEP_TIME': 10, 'gamma': 0.99, 'adam_optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x000001B084C78408>, 'huber_loss': <tensorflow.python.keras.losses.Huber object at 0x000001B0866B4348>, 'seed': 2178087461, 'reward_weights': array([1, 0, 1])}
 CRITICAL:root:Episode number: 1.00
 CRITICAL:root:Episode number: 2.00
 CRITICAL:root:Collision. At episode 2.000000
 CRITICAL:root:Episode number: 3.00
-CRITICAL:root:Collision. At episode 3.000000
 CRITICAL:root:Episode number: 4.00
-CRITICAL:root:Collision. At episode 4.000000
-CRITICAL:root:Running reward = 24.74 at episode 5
+CRITICAL:root:Running reward = 19.41 at episode 5
 CRITICAL:root:Episode number: 5.00
 CRITICAL:root:Episode number: 6.00
-CRITICAL:root:Collision. At episode 6.000000
 CRITICAL:root:Episode number: 7.00
-CRITICAL:root:Collision. At episode 7.000000
 CRITICAL:root:Episode number: 8.00
+CRITICAL:root:Episode number: 9.00
+CRITICAL:root:Running reward = 144.47 at episode 10
+CRITICAL:root:Episode number: 10.00
+CRITICAL:root:Episode number: 11.00
+CRITICAL:root:Episode number: 12.00
+CRITICAL:root:Episode number: 13.00
+CRITICAL:root:Episode number: 14.00
+CRITICAL:root:Running reward = 291.05 at episode 15
+CRITICAL:root:Episode number: 15.00
+CRITICAL:root:Episode number: 16.00
+CRITICAL:root:Episode number: 17.00
+CRITICAL:root:Episode number: 18.00
+CRITICAL:root:Episode number: 19.00
+CRITICAL:root:Running reward = 365.57 at episode 20
+CRITICAL:root:Episode number: 20.00
+CRITICAL:root:Episode number: 21.00
+CRITICAL:root:Episode number: 22.00
+CRITICAL:root:Episode number: 23.00
+CRITICAL:root:Episode number: 24.00
+CRITICAL:root:Running reward = 480.31 at episode 25
+CRITICAL:root:Episode number: 25.00
+CRITICAL:root:Episode number: 26.00
