@@ -178,7 +178,10 @@ def sim_types(sim_num):
         "replay": False,
         "vehicles": [
             {"model": KBModel(), "policy": AcPolicyDiscrete(trainer), "R": 0, "l": 0, "s": 0, "v": random.randint(27,30)},
-            {"model": KBModel(), "policy": FixedLanePolicy(), "R": 0, "l": 0, "s": 200, "v": 15}
+            {"model": KBModel(), "policy": FixedLanePolicy(), "R": 0, "l": 0, "s": 50, "v": 15},
+            {"model": KBModel(), "policy": FixedLanePolicy(), "R": 0, "l": 3.6, "s": 150, "v": 15},
+            {"model": KBModel(), "policy": FixedLanePolicy(), "R": 0, "l": 0, "s": 300, "v": 15},
+            {"model": KBModel(), "policy": FixedLanePolicy(), "R": 0, "l": -3.6, "s": 450, "v": 15}
         ]
     }
 
@@ -276,9 +279,9 @@ if __name__=="__main__":
 
     # Simulate model:
     main.pol[0]["policy"].trainer.actor_critic_net.load_weights(model_param["weights_file_path"])
-    for i in range(2):
+    for i in range(1):
         main = Main(sim_types(2))
-        main.simulate(5000)
+        main.simulate(6000)
 
     print("EOF")
 

@@ -158,7 +158,7 @@ class AcPolicyDiscrete(CustomPolicy):
         if vel_actions == 0:  # Slow down
             vel_controller = np.maximum(vel_bounds[0], -5)
         elif vel_actions == 1:  # Constant speed
-            vel_controller = 0
+            vel_controller = np.minimum(vel_bounds[1], 0)
         elif vel_actions == 2:  # Speed up
             vel_controller = np.minimum(vel_bounds[1], +5)
         else:
@@ -259,7 +259,7 @@ class FixedLanePolicy(CustomPolicy, enc_name="fixed_lane"):
         veh.counter = 0
 
     def _set_rel_vel(self, veh):
-        veh.rel_vel = 0.95-random.random()*0.3
+        veh.rel_vel = 0.7-random.random()*0.3
 
     def custom_action(self, veh):
         """ This method is called at every iteration and the returned numpy arrary
