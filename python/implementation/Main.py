@@ -1,4 +1,4 @@
-from hwsim import Simulation, BasicPolicy, StepPolicy, SwayPolicy, IMPolicy, KBModel, CustomPolicy, config
+from hwsim import Simulation, BasicPolicy, StepPolicy, SwayPolicy, IMPolicy, KBModel, TrackPolicy, CustomPolicy, config
 from hwsim.plotting import Plotter, SimulationPlot, DetailPlot, BirdsEyePlot, TimeChartPlot, ActionsPlot
 
 import pathlib
@@ -8,7 +8,6 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from NeuralModels import *
-from RL_Policies import *
 from RL_Policies import *
 from HelperClasses import *
 import logging
@@ -38,8 +37,9 @@ class Main(object):
         shape = (4, 2)
         groups = [([0, 2], 0)]
         vehicle_type = "car" if FANCY_CARS else "cuboid3D"
-        self.p = Plotter(self.sim, "Multi car simulation", mode=PLOT_MODE, shape=shape, groups=groups, off_screen=OFF_SCREEN)
-        self.p.V = 0
+        # self.p = Plotter(self.sim, "Multi car simulation", mode=PLOT_MODE, shape=shape, groups=groups, off_screen=OFF_SCREEN)
+        self.p = Plotter(self.sim, "Multi car simulation", mode=Plotter.Mode.MP4, shape=shape, groups=groups,
+                         V=0, state=Plotter.State.PLAY)
         self.p.subplot(0, 0)
         self.p.add_text("Detail view")
         DetailPlot(self.p, show_ids=True)
@@ -51,12 +51,16 @@ class Main(object):
         self.p.subplot(1, 1)
         self.p.add_text("Rear view")
         BirdsEyePlot(self.p, vehicle_type=vehicle_type, view=BirdsEyePlot.View.REAR)
-        self.p.subplot(2,1)
+        self.p.subplot(2, 1)
         self.p.add_text("Actions")
-        ActionsPlot(self.p,actions="long")
-        self.p.subplot(3,1)
-        ActionsPlot(self.p,actions="lat")
+        ActionsPlot(self.p, actions="long")
+        self.p.subplot(3, 1)
+        ActionsPlot(self.p, actions="lat")
+        self.p.subplot(3, 0)
+        self.p.add_text("Rewards")
+        # self.p.TimeChartPlot(self.p, lines=self.pol[0]["policy"].buffer.rewards)
         self.p.plot()  # Initial plot
+
 
     def train_policy(self):
         running_reward = 0
@@ -87,13 +91,14 @@ class Main(object):
                             self.sim.step()  # Calls AcPolicy.customAction method.
                             if self.sim._collision:
                                 logging.critical("Collision. At episode %f" % episode_count)
-                                policy.trainer.set_neg_collision_reward(t, -0.5)
+                                # policy.trainer.set_neg_collision_reward(t, 0)
                                 break
 
                 # Batch policy update
                 with trainerTimer:
                     policy.trainer.buffer.set_tf_experience_for_episode_training()
                     episode_reward = policy.trainer.train_step()
+
                     # Clear loss values and reward history
                     policy.trainer.buffer.clear_experience()
 
@@ -113,7 +118,7 @@ class Main(object):
                 break
 
             # Save intermediate policies
-            if episode_count % 50 == 0:
+            if episode_count % 100 == 0:
                 policy.trainer.actor_critic_net.save_weights(model_param["weights_file_path"])
 
     def simulate(self, simulation_timesteps):
@@ -130,10 +135,65 @@ class Main(object):
 
         self.pol[0]["policy"].trainer.training = True
 
+
+
+
+def sim_types(sim_num):
+    # Randomised highway
+    sim_config_0 = {
+        "name": "AC_policy_dense_highway",
+        "scenario": "CIRCUIT",
+        # "kM": 0,  # Max timesteps per episode enforced by simulator
+        "k0": 0,
+        "replay": False,
+        "vehicles": [
+            {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)},
+            {"amount": 2, "model": KBModel(), "policy": StepPolicy(10, [0.1, 0.5])},
+            {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
+            {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
+            {"amount": 3, "model": KBModel(), "policy": BasicPolicy("slow")},
+            {"amount": 25, "model": KBModel(), "policy": BasicPolicy("normal")},
+            {"amount": 7, "model": KBModel(), "policy": BasicPolicy("fast")}
+        ]
+    }
+
+    # Empty highway without cars
+    sim_config_1 = {
+        "name": "AC_policy_no_cars",
+        "scenario": "CIRCUIT",
+        # "kM": 0,  # Max timesteps per episode enforced by simulator
+        "k0": 0,
+        "replay": False,
+        "vehicles": [
+            {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)}
+        ]
+    }
+
+    # Single car overtake
+    sim_config_2 = {
+        "name": "AC_policy_single_overtake",
+        "scenario": "CIRCUIT",
+        # "kM": 0,  # Max timesteps per episode enforced by simulator
+        "k0": 0,
+        "replay": False,
+        "vehicles": [
+            {"model": KBModel(), "policy": AcPolicyDiscrete(trainer), "R": 0, "l": 0, "s": 0, "v": random.randint(25,30)},
+            {"model": KBModel(), "policy": FixedLanePolicy(), "R": 0, "l": 0, "s": 200, "v": 20}
+        ]
+    }
+
+    sim_config = [
+        sim_config_0,
+        sim_config_1,
+        sim_config_2,
+    ]
+
+    return sim_config[sim_num]
+
 if __name__=="__main__":
     # Initial configuration
     ID = -1  # ID of simulation to replay or -1 to create a new one
-    PLOT_MODE = Plotter.Mode.LIVE
+    PLOT_MODE = Plotter.Mode.MP4
     OFF_SCREEN = False
     FANCY_CARS = False
     LOG_DIR = "logs"
@@ -160,7 +220,7 @@ if __name__=="__main__":
 
     # Model configuration and settings
     model_param = {
-        "n_nodes": [400, 0],  # Number of hidden nodes in each layer
+        "n_nodes": [160, 80],  # Number of hidden nodes in each layer
         "n_layers": 2,  # Number of layers
         "n_inputs": 54,  # Standard size of S
         "activation_function": tf.nn.relu,  # activation function of hidden nodes
@@ -171,23 +231,24 @@ if __name__=="__main__":
     logging.critical("Model Parameters:")
     logging.critical(model_param)
     training_param = {
-        "max_steps_per_episode": 5000,
+        "max_steps_per_episode": 3000,
         "final_return": 1000,
-        "show_plots_when_training": True,
-        "plot_freq": 5,
+        "show_plots_when_training": False,
+        "plot_freq": 10,
         "simulation_timesteps": 1000,
+        "STEP_TIME": 10,  # Currently not implemented
         "gamma": 0.99,  # Discount factor
-        "adam_optimiser": keras.optimizers.Adam(learning_rate=0.0005),
+        "adam_optimiser": keras.optimizers.Adam(learning_rate=0.0001),
         "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM),
         "seed": seed,
-        "reward_weights": np.array([0.3, 0.3, 0.3])  # (rew_vel, rew_lat_position, rew_fol_dist)
+        "reward_weights": np.array([1, 0, 1])  # (rew_vel, rew_lat_position, rew_fol_dist)
     }
     logging.critical("Training param:")
     logging.critical(training_param)
 
     # Initialise network/model architecture:
     actor_critic_net = ActorCriticNetDiscrete(model_param)
-    # actor_critic_net.display_overview()
+    actor_critic_net.display_overview()
     trainer = GradAscentTrainerDiscrete(actor_critic_net, training_param)  # training method used
 
     # Simulation configuration and settings
@@ -197,27 +258,6 @@ if __name__=="__main__":
         "Gth": 2.0
     }
 
-    veh_types = [
-        {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer), "N_OV": 2},
-        {"amount": 2, "model": KBModel(), "policy": StepPolicy(10, [0.1, 0.5])},
-        {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
-        {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
-        {"amount": 3, "model": KBModel(), "policy": BasicPolicy("slow")},
-        {"amount": 25, "model": KBModel(), "policy": BasicPolicy("normal")},
-        {"amount": 7, "model": KBModel(), "policy": BasicPolicy("fast")}
-    ]
-    # veh_types = [
-    #     {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)}
-    # ]
-    sim_config = {
-        "name": "AC_policy",
-        "scenario": "CIRCUIT",
-        #"kM": 0,  # Max timesteps per episode enforced by simulator
-        "k0": 0,
-        "replay": False,
-        "vehicles": veh_types
-    }
-
     plotTimer = Timer("Plotting")
     trainerTimer = Timer("the Trainer")
     episodeTimer = Timer("Episode")
@@ -225,17 +265,19 @@ if __name__=="__main__":
     # Create object for data logging and visualisation
     data_logger = DataLogger(seed, model_param, training_param)
 
-    sim = Simulation(sim_config)
+    sim = Simulation(sim_types(0))
 
     # Set up main class for running simulations:
-    main = Main(sim_config)
+    main = Main(sim_types(0))
 
     # Train model:
     main.train_policy()
 
     # Simulate model:
     main.pol[0]["policy"].trainer.actor_critic_net.load_weights(model_param["weights_file_path"])
-    main.simulate(training_param["simulation_timesteps"])
+    for i in range(2):
+        main = Main(sim_types(2))
+        main.simulate(5000)
 
     print("EOF")
 
