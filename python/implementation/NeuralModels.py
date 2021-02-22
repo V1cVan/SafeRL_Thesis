@@ -5,18 +5,20 @@ import numpy as np
 from HelperClasses import Buffer
 
 
-class ActorCriticNetDiscrete(keras.Model):
+class ActorCriticNetDiscrete_1(keras.Model):
     """
-    Neural network architecture for the actor.
+    Neural network architecture for the actor and critic.
+    Here actions do NOT feed into critic network.
+    Actor and critic networks are separate.
     """
     def __init__(self, modelParam):
-        super(ActorCriticNetDiscrete, self).__init__()
+        super(ActorCriticNetDiscrete_1, self).__init__()
         tf.random.set_seed(modelParam["seed"])
         np.random.seed(modelParam["seed"])
         act_func = modelParam["activation_function"]
 
-        initializer_relu = tf.keras.initializers.HeNormal()
-        initializer_softmax = tf.keras.initializers.GlorotNormal()
+        initializer_relu = tf.keras.initializers.HeUniform()
+        initializer_softmax = tf.keras.initializers.GlorotUniform()
 
         # TODO Add variability in depth.
         # Actor net:
@@ -69,7 +71,7 @@ class ActorCriticNetDiscrete(keras.Model):
 
         self.model = keras.Model(inputs=self.inputLayer,
                                  outputs=[self.outputLayerVel, self.outputLayerOff, self.outputLayerCritic],
-                                 name="ActorCriticNetwork")
+                                 name="ActorCriticNetwork_basic")
 
     def call(self, inputs: tf.Tensor):
         """ Returns the output of the model given an input. """
@@ -81,6 +83,81 @@ class ActorCriticNetDiscrete(keras.Model):
         self.model.summary()
         keras.utils.plot_model(self.model, show_shapes=True, show_layer_names=True)
 
+
+class ActorCriticNetDiscrete_2(keras.Model):
+    """
+    Neural network architecture for the actor and critic.
+    Here actions DO feed into critic network.
+    Actor and critic networks are separate.
+    """
+    def __init__(self, modelParam):
+        super(ActorCriticNetDiscrete_2, self).__init__()
+        tf.random.set_seed(modelParam["seed"])
+        np.random.seed(modelParam["seed"])
+        act_func = modelParam["activation_function"]
+
+        initializer_relu = tf.keras.initializers.HeUniform()
+        initializer_softmax = tf.keras.initializers.GlorotUniform()
+
+        if modelParam["n_nodes"][1] == 0:  # if no depth in network:
+            print("Warning: Model not correctly implemented without a depth in the network!")
+
+        # TODO Add variability in depth.
+        # Actor net:
+        inputLayer = layers.Input(shape=(modelParam["n_inputs"],),
+                                  name="inputStateLayer")
+
+        denseActorLayer1 = layers.Dense(modelParam["n_nodes"][0],
+                                        activation=act_func,
+                                        kernel_initializer=initializer_relu,
+                                        name="denseActorLayer1")(inputLayer)
+        denseActorLayer2 = layers.Dense(modelParam["n_nodes"][1],
+                                        activation=act_func,
+                                        kernel_initializer=initializer_relu,
+                                        name="denseActorLayer2")(denseActorLayer1)
+        outputLayerVel = layers.Dense(3, activation=tf.nn.softmax,
+                                      kernel_initializer=initializer_softmax,
+                                      name="outputActorLayerVel")(denseActorLayer2)
+        outputLayerOff = layers.Dense(3, activation=tf.nn.softmax,
+                                      kernel_initializer=initializer_softmax,
+                                      name="outputActorLayerOff")(denseActorLayer2)
+        combined_actions = layers.concatenate([outputLayerVel, outputLayerOff])
+
+
+        # Critic net:
+        denseCriticLayer1 = layers.Dense(modelParam["n_nodes"][0],
+                                         activation=act_func,
+                                         kernel_initializer=initializer_relu,
+                                         name="denseCriticLayer1")(inputLayer)
+
+        denseCriticLayer2 = layers.Dense(modelParam["n_nodes"][1],
+                                         activation=act_func,
+                                         kernel_initializer=initializer_relu,
+                                         name="denseCriticLayer2")(layers.concatenate([outputLayerVel,
+                                                                                       outputLayerOff,
+                                                                                       denseCriticLayer1]))
+        outputLayerCritic = layers.Dense(1,
+                                         name="outputCriticLayer")(denseCriticLayer2)
+
+
+
+        # TODO look at batch normalisation
+
+
+
+        self.model = keras.Model(inputs=inputLayer,
+                                 outputs=[outputLayerVel, outputLayerOff, outputLayerCritic],
+                                 name="ActorCriticNetwork_advanced")
+
+    def call(self, inputs: tf.Tensor):
+        """ Returns the output of the model given an input. """
+        y = self.model(inputs)
+        return y
+
+    def display_overview(self):
+        """ Displays an overview of the model. """
+        self.model.summary()
+        keras.utils.plot_model(self.model, show_shapes=True, show_layer_names=True)
 
 
 class GradAscentTrainerDiscrete(keras.models.Model):

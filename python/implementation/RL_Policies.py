@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 import random
 
-class AcPolicyDiscrete(CustomPolicy):
+class DiscreteStochasticGradAscent(CustomPolicy):
     """
     Actor-critic on-policy RL controller for highway decision making.
     """
@@ -11,7 +11,7 @@ class AcPolicyDiscrete(CustomPolicy):
     LAT_ACTION = ActionType.LANE
 
     def __init__(self, trainer):
-        super(AcPolicyDiscrete, self).__init__()
+        super(DiscreteStochasticGradAscent, self).__init__()
         self.trainer = trainer  # trainer = f(NN_model)
         self.STEP_TIME = self.trainer.training_param["STEP_TIME"]
 

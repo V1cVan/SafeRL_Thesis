@@ -147,7 +147,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)},
+            {"amount": 1, "model": KBModel(), "policy": DiscreteStochasticGradAscent(trainer)},
             {"amount": 2, "model": KBModel(), "policy": StepPolicy(10, [0.1, 0.5])},
             {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
             {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
@@ -167,7 +167,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"amount": 1, "model": KBModel(), "policy": AcPolicyDiscrete(trainer)}
+            {"amount": 1, "model": KBModel(), "policy": DiscreteStochasticGradAscent(trainer)}
         ]
     }
 
@@ -179,7 +179,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": AcPolicyDiscrete(trainer), "R": 0, "l": 0, "s": 0,
+            {"model": KBModel(), "policy": DiscreteStochasticGradAscent(trainer), "R": 0, "l": 0, "s": 0,
              "v": random.randint(25,28)},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 50, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 150, "v": 24},
@@ -196,7 +196,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": AcPolicyDiscrete(trainer), "R": 0, "l": 3.6, "s": 0,
+            {"model": KBModel(), "policy": DiscreteStochasticGradAscent(trainer), "R": 0, "l": 3.6, "s": 0,
              "v": random.randint(25,28)},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 40, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 50, "v": 24},
@@ -213,7 +213,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": AcPolicyDiscrete(trainer), "R": 0, "l": 3.6, "s": 0,
+            {"model": KBModel(), "policy": DiscreteStochasticGradAscent(trainer), "R": 0, "l": 3.6, "s": 0,
              "v": random.randint(25,28)},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 0, "v": 24}
@@ -228,7 +228,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": AcPolicyDiscrete(trainer), "R": 0, "l": -3.6, "s": 0,
+            {"model": KBModel(), "policy": DiscreteStochasticGradAscent(trainer), "R": 0, "l": -3.6, "s": 0,
              "v": random.randint(25, 28)},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 10, "v": 24}
@@ -243,7 +243,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": AcPolicyDiscrete(trainer), "R": 0, "l": 0, "s": 0,
+            {"model": KBModel(), "policy": DiscreteStochasticGradAscent(trainer), "R": 0, "l": 0, "s": 0,
              "v": random.randint(25, 28)},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 20, "v": 24},
@@ -295,20 +295,20 @@ if __name__=="__main__":
 
     # Model configuration and settings
     model_param = {
-        "n_nodes": [160, 80],  # Number of hidden nodes in each layer
+        "n_nodes": [300, 200],  # Number of hidden nodes in each layer
         "n_layers": 2,  # Number of layers
         "n_inputs": 54,  # Standard size of S
         "activation_function": tf.nn.relu,  # activation function of hidden nodes
         "n_actions": 2,
-        "weights_file_path": "./python/implementation/trained_models/model_weights_overnight",
-        "trained_model_file_path": "./python/implementation/trained_models/trained_model",
+        "weights_file_path": "./trained_models/model_weights_overnight",
+        "trained_model_file_path": "./trained_models/trained_model",
         "seed": seed
     }
     logging.critical("Model Parameters:")
     logging.critical(model_param)
     training_param = {
-        "max_steps_per_episode":  00,
-        "final_return": 1000,
+        "max_steps_per_episode":  3000,
+        "final_return": 350,
         "show_plots_when_training": False,
         "plot_freq": 10,
         "simulation_timesteps": 1000,
@@ -323,7 +323,7 @@ if __name__=="__main__":
     logging.critical(training_param)
 
     # Initialise network/model architecture:
-    actor_critic_net = ActorCriticNetDiscrete(model_param)
+    actor_critic_net = ActorCriticNetDiscrete_2(model_param)
     actor_critic_net.display_overview()
     trainer = GradAscentTrainerDiscrete(actor_critic_net, training_param)  # training method used
 
@@ -347,13 +347,13 @@ if __name__=="__main__":
     main = Main(sim_types(0))
 
     # Train model:
-    # main.train_policy()
+    main.train_policy()
 
     # Simulate model:
     main.pol[0]["policy"].trainer.actor_critic_net.load_weights(model_param["weights_file_path"])
-    for i in range(1,5):
-        main = Main(sim_types(6))
-        main.simulate(6000)
+    for i in range(0,5):
+        main = Main(sim_types(i))
+        main.simulate(4000)
         # print("Simulation number %d complete" % i)
         # main.p.close()
 
