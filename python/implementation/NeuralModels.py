@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np
-from HelperClasses import Buffer
+from HelperClasses import Buffer, DataLogger
 
 
 class ActorCriticNetDiscrete_1(keras.Model):
@@ -121,21 +121,19 @@ class ActorCriticNetDiscrete_2(keras.Model):
         outputLayerOff = layers.Dense(3, activation=tf.nn.softmax,
                                       kernel_initializer=initializer_softmax,
                                       name="outputActorLayerOff")(denseActorLayer2)
-        combined_actions = layers.concatenate([outputLayerVel, outputLayerOff])
 
 
         # Critic net:
         denseCriticLayer1 = layers.Dense(modelParam["n_nodes"][0],
                                          activation=act_func,
                                          kernel_initializer=initializer_relu,
-                                         name="denseCriticLayer1")(inputLayer)
-
+                                         name="denseCriticLayer1")(layers.concatenate([outputLayerVel,
+                                                                                       outputLayerOff,
+                                                                                       inputLayer]))
         denseCriticLayer2 = layers.Dense(modelParam["n_nodes"][1],
                                          activation=act_func,
                                          kernel_initializer=initializer_relu,
-                                         name="denseCriticLayer2")(layers.concatenate([outputLayerVel,
-                                                                                       outputLayerOff,
-                                                                                       denseCriticLayer1]))
+                                         name="denseCriticLayer2")(denseCriticLayer1)
         outputLayerCritic = layers.Dense(1,
                                          name="outputCriticLayer")(denseCriticLayer2)
 
@@ -175,8 +173,8 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         # TODO implement data logging class for debugging training
         self.training = True
         self.training_param = training_param
-        self.timestep = 1
         self.buffer = Buffer()
+        self.temperature = 1
 
     def set_neg_collision_reward(self, timestep, punishment):
         """ Sets a negative reward if a collision occurs. """
@@ -186,11 +184,18 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         """ Randomly choose from the available actions."""
         action_vel_probs, action_off_probs = action_probs
 
-        # TODO add some random actions to improve exploration
+        action_vel_log_probs = np.log(action_vel_probs) / self.temperature
+        action_off_log_probs = np.log(action_off_probs) / self.temperature
+
+        action_vel = np.exp(action_vel_log_probs) / np.sum(np.exp(action_vel_log_probs))
+        action_off = np.exp(action_off_log_probs) / np.sum(np.exp(action_off_log_probs))
+
+        if np.isnan(action_vel).any() or np.isnan(action_off).any():
+            x = 10
 
         # np.random.choice accepts probabilities
-        vel_action_choice = np.random.choice(3, p=np.squeeze(action_vel_probs))
-        off_action_choice = np.random.choice(3, p=np.squeeze(action_off_probs))
+        vel_action_choice = np.random.choice(3, p=np.squeeze(action_vel))
+        off_action_choice = np.random.choice(3, p=np.squeeze(action_off))
         return vel_action_choice, off_action_choice
 
     #@tf.function
@@ -287,9 +292,9 @@ class GradAscentTrainerDiscrete(keras.models.Model):
                 loss = self.compute_loss(action_vel, action_off, critic_values, returns)
 
 
-            # for x in self.actor_critic_net.weights:
-            #     if tf.reduce_any(tf.math.is_nan(x)):
-            #         print("NAN detected in network weight")
+            for x in self.actor_critic_net.weights:
+                if tf.reduce_any(tf.math.is_nan(x)):
+                    print("NAN detected in network weight")
 
 
             # Compute the gradients from the loss
@@ -302,6 +307,9 @@ class GradAscentTrainerDiscrete(keras.models.Model):
                 zip(grads, self.actor_critic_net.trainable_variables))
 
             episode_reward = tf.math.reduce_sum(rewards)
+
+            self.buffer.add_training_variables(loss, returns, grads, self.actor_critic_net.weights)
+
             return episode_reward
 
 

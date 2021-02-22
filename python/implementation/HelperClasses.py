@@ -13,16 +13,17 @@ import tensorflow as tf
         Timer - for timing of python tasks.
 """
 
-
 class DataLogger(object):
     """
     Data logging class for debugging and monitoring of training results of RL algorithms.
     Seed: random seed
     global_variables: "seed": seed for random variables reproducibility
+    episodes - list of all the data of an episode
     episode_variables:
                         "ep": episode number
                         "timesteps": timestep of episode
                         "states": veh state variables
+                        "network_outputs": raw network outputs
                         "sim_actions": actions taken by simulator for each state array
                         "pol_actions": actions taken by policy for each state array
                         "rewards": rewards received
@@ -43,23 +44,25 @@ class DataLogger(object):
 
     def __init__(self, seed: int, model_parameters: Dict, training_parameters: Dict):
         self.global_variables = {
-            "seed": seed
+            "seed": seed,
+            "training_parameters": training_parameters,
+            "model_parameters": model_parameters,
+            "model_summary": ""
         }
+        self.episodes = []
         self.episode_variables = {
             "ep": [],
-            "timestamps": [],
+            "timesteps": [],
             "states": [],
+            "network_outputs": [],
             "sim_actions": [],
             "pol_actions": [],
             "ep_rewards": []
         }
         self.model_variables = {
-            "parameters": model_parameters,
-            "summary": "",
             "weights": []
         }
         self.training_variables = {
-            "parameters": training_parameters,
             "returns": [],
             "losses": [],
             "grad": [],
@@ -74,11 +77,12 @@ class DataLogger(object):
                              sim_actions: List, pol_actions: List, rewards: List):
         """ Sets the training data for a complete episode. """
         self.training_variables["episode"].append(episode)
-        self.training_variables["timestamps"] = timestamps
+        self.training_variables["timesteps"] = timestamps
         self.training_variables["states"] = states
         self.training_variables["sim_actions"] = sim_actions
         self.training_variables["pol_actions"] = pol_actions
         self.training_variables["ep_rewards"] = rewards
+
 
     def display_model_overview(self, keras_summary):
         """ Displays keras model summary, model parameters, and weights for each layer. """
@@ -104,6 +108,7 @@ class Buffer(object):
     """
 
     def __init__(self):
+        self.episode = 1
         self.timesteps = []
         self.states = []
         self.actions = {
@@ -116,6 +121,10 @@ class Buffer(object):
         }
         self.critic = []
         self.rewards = []
+        self.loss = []
+        self.returns = []
+        self.grads = []
+        self.model_weights = []
         self.experience = None
 
     def add_experience(self, timestep, state, vel_model_action, off_model_action,
@@ -131,6 +140,12 @@ class Buffer(object):
         self.actions["offset_choice"].append(off_choice)
         self.rewards.append(reward)
         self.critic.append(critic)
+
+    def add_training_variables(self, losses, returns, gradients, model_weights):
+        self.loss = losses
+        self.returns = returns
+        self.grads = gradients
+        self.model_weights = model_weights
 
     def get_experience(self, timestep: int = None):
         """ Returns the experience at the provided timestep. """

@@ -92,7 +92,7 @@ class Vehicle : public VehicleBase{
             updateState(vIs);
             // TODO: Extra notice until safetyBounds are fixed
             if(policy->tx==Policy::ActionType::ACC){
-                std::cout << "Warning: Safetybounds are not correctly implemented yet for longitudinal ACC action type." << std::endl;
+                // std::cout << "Warning: Safetybounds are not correctly implemented yet for longitudinal ACC action type." << std::endl;
             }
             if(policy->ty==Policy::ActionType::DELTA){
                 std::cout << "Warning: Safetybounds are not correctly implemented yet for lateral DELTA action type." << std::endl;
