@@ -1,5 +1,5 @@
-CRITICAL:root:Using seed 3049538775.000000
+CRITICAL:root:Using seed 142028439.000000
 CRITICAL:root:Model Parameters:
-CRITICAL:root:{'n_nodes': [160, 80], 'n_layers': 2, 'n_inputs': 54, 'activation_function': <function relu at 0x0000026C0B4F2168>, 'n_actions': 2, 'weights_file_path': './python/implementation/trained_models/model_weights', 'trained_model_file_path': './python/implementation/trained_models/trained_model', 'seed': 3049538775}
+CRITICAL:root:{'n_nodes': [160, 80], 'n_layers': 2, 'n_inputs': 54, 'activation_function': <function relu at 0x0000028243762288>, 'n_actions': 2, 'weights_file_path': './python/implementation/trained_models/model_weights_overnight', 'trained_model_file_path': './python/implementation/trained_models/trained_model', 'seed': 142028439}
 CRITICAL:root:Training param:
-CRITICAL:root:{'max_steps_per_episode': 3000, 'final_return': 290, 'show_plots_when_training': False, 'plot_freq': 10, 'simulation_timesteps': 1000, 'STEP_TIME': 10, 'gamma': 0.99, 'adam_optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x0000026C10E01948>, 'huber_loss': <tensorflow.python.keras.losses.Huber object at 0x0000026C1526F448>, 'seed': 3049538775, 'reward_weights': array([0.5, 0. , 0.5])}
+CRITICAL:root:{'max_steps_per_episode': 0, 'final_return': 1000, 'show_plots_when_training': False, 'plot_freq': 10, 'simulation_timesteps': 1000, 'STEP_TIME': 10, 'gamma': 0.99, 'adam_optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x0000028249BF4208>, 'huber_loss': <tensorflow.python.keras.losses.Huber object at 0x0000028249EFEE88>, 'seed': 142028439, 'reward_weights': array([0.5, 0. , 0.5])}
