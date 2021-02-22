@@ -31,6 +31,8 @@ class Main(object):
             "policy": sim_config["vehicles"][0]["policy"],  # Reference to the policy
             "metrics": {}  # Extra metrics we calculate for each autonomous policy
         }]
+        # Create object for data logging and visualisation
+        self.data_logger = DataLogger(seed, model_param, training_param)
 
     # ...
     def create_plot(self):
@@ -61,7 +63,6 @@ class Main(object):
         # self.p.TimeChartPlot(self.p, lines=self.pol[0]["policy"].buffer.rewards)
         self.p.plot()  # Initial plot
 
-
     def train_policy(self):
         running_reward = 0
         episode_count = 1
@@ -69,9 +70,14 @@ class Main(object):
         show_plots = training_param["show_plots_when_training"]
         max_timesteps_episode = training_param["max_steps_per_episode"]
         policy = self.pol[0]["policy"]
+        is_batch_training = training_param["is_batch_training"]
+
+        temperatures = np.linspace(training_param["init_temperature"], 1, training_param["max_episodes"])
 
         # Run until all episodes are completed (reward reached).
-        while True:
+        while episode_count <= training_param["max_episodes"]:
+            policy.trainer.buffer.episode = episode_count
+            policy.trainer.temperature = temperatures[episode_count-1]
             if episode_count % plot_freq == 0 and show_plots:
                 self.simulate(training_param["simulation_timesteps"])
 
@@ -92,25 +98,30 @@ class Main(object):
                             if self.sim._collision:
                                 logging.critical("Collision. At episode %f" % episode_count)
                                 #policy.trainer.set_neg_collision_reward(t, -1)
-                                break
+                            if not is_batch_training:  # Instance-based policy update:
+                                policy.trainer.buffer.set_tf_experience_for_episode_training()
+                                episode_reward = policy.trainer.train_step()
 
-                # Batch policy update
-                with trainerTimer:
-                    policy.trainer.buffer.set_tf_experience_for_episode_training()
-                    episode_reward = policy.trainer.train_step()
+                if is_batch_training:  # Batch policy update
+                    with trainerTimer:
+                        policy.trainer.buffer.set_tf_experience_for_episode_training()
+                        episode_reward = policy.trainer.train_step()
 
-                    # Clear loss values and reward history
-                    policy.trainer.buffer.clear_experience()
+
+
+                # Clear loss values and reward history
+                policy.trainer.buffer.clear_experience()
 
             # Running reward smoothing effect
             running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
             episode_count += 1
-            if episode_count % 5 == 0:
+            if episode_count % 2 == 0:
                 print_template = "Running reward = {:.2f} at episode {}"
                 print_output = print_template.format(running_reward, episode_count)
                 print(print_output)
                 logging.critical(print_output)
-            if running_reward >= training_param["final_return"]:
+            if running_reward >= training_param["final_return"] \
+                    or episode_count == training_param["max_episodes"]:
                 print_output = "Solved at episode {}!".format(episode_count)
                 print(print_output)
                 logging.critical(print_output)
@@ -135,9 +146,6 @@ class Main(object):
 
         self.pol[0]["policy"].trainer.training = True
 
-
-
-
 def sim_types(sim_num):
     # Randomised highway
     sim_config_0 = {
@@ -148,9 +156,9 @@ def sim_types(sim_num):
         "replay": False,
         "vehicles": [
             {"amount": 1, "model": KBModel(), "policy": DiscreteStochasticGradAscent(trainer)},
-            {"amount": 2, "model": KBModel(), "policy": StepPolicy(10, [0.1, 0.5])},
-            {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
-            {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
+            # {"amount": 2, "model": KBModel(), "policy": StepPolicy(10, [0.1, 0.5])},
+            # {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
+            # {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
             {"amount": 10, "model": KBModel(), "policy": BasicPolicy("slow")},
             {"amount": 18, "model": KBModel(), "policy": BasicPolicy("normal")},
             {"amount": 7, "model": KBModel(), "policy": BasicPolicy("fast")}
@@ -308,16 +316,19 @@ if __name__=="__main__":
     logging.critical(model_param)
     training_param = {
         "max_steps_per_episode":  3000,
-        "final_return": 350,
+        "max_episodes": 100,
+        "final_return": 1000,
         "show_plots_when_training": False,
         "plot_freq": 10,
         "simulation_timesteps": 1000,
+        "init_temperature": 1000,
+        "is_batch_training": True,  # TODO instance based training
         "STEP_TIME": 10,  # Currently not implemented
         "gamma": 0.99,  # Discount factor
-        "adam_optimiser": keras.optimizers.Adam(learning_rate=0.0005),
+        "adam_optimiser": keras.optimizers.Adam(learning_rate=0.00005),
         "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM),
         "seed": seed,
-        "reward_weights": np.array([0.5, 0, 0.5])  # (rew_vel, rew_lat_position, rew_fol_dist)
+        "reward_weights": np.array([0.7, 0, 0.3])  # (rew_vel, rew_lat_position, rew_fol_dist)
     }
     logging.critical("Training param:")
     logging.critical(training_param)
@@ -337,9 +348,6 @@ if __name__=="__main__":
     plotTimer = Timer("Plotting")
     trainerTimer = Timer("the Trainer")
     episodeTimer = Timer("Episode")
-
-    # Create object for data logging and visualisation
-    data_logger = DataLogger(seed, model_param, training_param)
 
     sim = Simulation(sim_types(0))
 
