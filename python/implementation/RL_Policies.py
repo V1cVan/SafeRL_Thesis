@@ -208,7 +208,7 @@ class AcPolicyDiscrete(CustomPolicy):
             # Following distance:
             d_gap = np.squeeze(veh.s["laneC"]["relF"]["gap"])[0, 0]
             d_lim = 0
-            r_follow = -np.exp(-(d_lim - d_gap) ** 2 / 10)
+            r_follow = -np.exp(-(d_lim - d_gap) ** 2 / 5)
 
             reward = w_vel*r_vel + w_off*r_off + w_dist*r_follow
 
@@ -247,19 +247,20 @@ class FixedLanePolicy(CustomPolicy, enc_name="fixed_lane"):
     LONG_ACTION = ActionType.ABS_VEL
     LAT_ACTION = ActionType.REL_OFF # Alternatively: ActionType.LANE
 
-    def __init__(self):
+    def __init__(self, speed):
         super().__init__()
         self.STEP_TIME = 100 # Change reference velocity every 100 iterations (10s)
+        self.speed = speed
 
     def init_vehicle(self, veh):
         """ Policy objects are shared over many different vehicles so to associate
         attributes to specific vehicles, we can use this method (which is called
         during Vehicle instantiation) """
-        veh.rel_vel = 0
+        veh.abs_vel = self.speed
         veh.counter = 0
 
     def _set_rel_vel(self, veh):
-        veh.rel_vel = 0.7-random.random()*0.3
+        veh.rel_vel = 0
 
     def custom_action(self, veh):
         """ This method is called at every iteration and the returned numpy arrary
@@ -277,6 +278,6 @@ class FixedLanePolicy(CustomPolicy, enc_name="fixed_lane"):
         v = min(v_max,bounds["long"][1])
         v = max(0,v)
         # Final actions are: the target velocity and negating the offset towards the lane center
-        return np.array([v,-s["laneC"]["off"]])
+        return np.array([self.speed,-s["laneC"]["off"]])
         # Alternatively (with LANE actionType):
         # return np.array([v,0]) # Lane reference is 0 => remain in (center of) current lane

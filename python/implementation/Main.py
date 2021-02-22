@@ -157,6 +157,8 @@ def sim_types(sim_num):
         ]
     }
 
+    # TODO Add additional randomness to fixedlane policy
+
     # Empty highway without cars
     sim_config_1 = {
         "name": "AC_policy_no_cars",
@@ -177,11 +179,77 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": AcPolicyDiscrete(trainer), "R": 0, "l": 0, "s": 0, "v": random.randint(27,30)},
-            {"model": KBModel(), "policy": FixedLanePolicy(), "R": 0, "l": 0, "s": 50, "v": 15},
-            {"model": KBModel(), "policy": FixedLanePolicy(), "R": 0, "l": 3.6, "s": 150, "v": 15},
-            {"model": KBModel(), "policy": FixedLanePolicy(), "R": 0, "l": 0, "s": 300, "v": 15},
-            {"model": KBModel(), "policy": FixedLanePolicy(), "R": 0, "l": -3.6, "s": 450, "v": 15}
+            {"model": KBModel(), "policy": AcPolicyDiscrete(trainer), "R": 0, "l": 0, "s": 0,
+             "v": random.randint(25,28)},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 50, "v": 24},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 150, "v": 24},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 300, "v": 24},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 450, "v": 24}
+        ]
+    }
+
+    # Double car overtake
+    sim_config_3 = {
+        "name": "AC_policy_double_overtake",
+        "scenario": "CIRCUIT",
+        # "kM": 0,  # Max timesteps per episode enforced by simulator
+        "k0": 0,
+        "replay": False,
+        "vehicles": [
+            {"model": KBModel(), "policy": AcPolicyDiscrete(trainer), "R": 0, "l": 3.6, "s": 0,
+             "v": random.randint(25,28)},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 40, "v": 24},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 50, "v": 24},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 150, "v": 24},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 125, "v": 24}
+        ]
+    }
+
+    # Slow down car overtake right
+    sim_config_4 = {
+        "name": "AC_policy_slow_down_overtake_right",
+        "scenario": "CIRCUIT",
+        # "kM": 0,  # Max timesteps per episode enforced by simulator
+        "k0": 0,
+        "replay": False,
+        "vehicles": [
+            {"model": KBModel(), "policy": AcPolicyDiscrete(trainer), "R": 0, "l": 3.6, "s": 0,
+             "v": random.randint(25,28)},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 20, "v": 24},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 0, "v": 24}
+        ]
+    }
+
+    # Slow down car overtake left
+    sim_config_5 = {
+        "name": "AC_policy_slow_down_overtake_left",
+        "scenario": "CIRCUIT",
+        # "kM": 0,  # Max timesteps per episode enforced by simulator
+        "k0": 0,
+        "replay": False,
+        "vehicles": [
+            {"model": KBModel(), "policy": AcPolicyDiscrete(trainer), "R": 0, "l": -3.6, "s": 0,
+             "v": random.randint(25, 28)},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 20, "v": 24},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 10, "v": 24}
+        ]
+    }
+
+    # Boxed in performance
+    sim_config_6 = {
+        "name": "AC_policy_boxed_in",
+        "scenario": "CIRCUIT",
+        # "kM": 0,  # Max timesteps per episode enforced by simulator
+        "k0": 0,
+        "replay": False,
+        "vehicles": [
+            {"model": KBModel(), "policy": AcPolicyDiscrete(trainer), "R": 0, "l": 0, "s": 0,
+             "v": random.randint(25, 28)},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 20, "v": 24},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 20, "v": 24},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 20, "v": 24},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": -5, "v": 24},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 0, "v": 24},
         ]
     }
 
@@ -189,6 +257,10 @@ def sim_types(sim_num):
         sim_config_0,
         sim_config_1,
         sim_config_2,
+        sim_config_3,
+        sim_config_4,
+        sim_config_5,
+        sim_config_6
     ]
 
     return sim_config[sim_num]
@@ -228,21 +300,21 @@ if __name__=="__main__":
         "n_inputs": 54,  # Standard size of S
         "activation_function": tf.nn.relu,  # activation function of hidden nodes
         "n_actions": 2,
-        "weights_file_path": "./python/implementation/trained_models/model_weights",
+        "weights_file_path": "./python/implementation/trained_models/model_weights_overnight",
         "trained_model_file_path": "./python/implementation/trained_models/trained_model",
         "seed": seed
     }
     logging.critical("Model Parameters:")
     logging.critical(model_param)
     training_param = {
-        "max_steps_per_episode": 3000,
-        "final_return": 290,
+        "max_steps_per_episode":  00,
+        "final_return": 1000,
         "show_plots_when_training": False,
         "plot_freq": 10,
         "simulation_timesteps": 1000,
         "STEP_TIME": 10,  # Currently not implemented
         "gamma": 0.99,  # Discount factor
-        "adam_optimiser": keras.optimizers.Adam(learning_rate=0.0001),
+        "adam_optimiser": keras.optimizers.Adam(learning_rate=0.0005),
         "huber_loss": keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM),
         "seed": seed,
         "reward_weights": np.array([0.5, 0, 0.5])  # (rew_vel, rew_lat_position, rew_fol_dist)
@@ -279,9 +351,11 @@ if __name__=="__main__":
 
     # Simulate model:
     main.pol[0]["policy"].trainer.actor_critic_net.load_weights(model_param["weights_file_path"])
-    for i in range(1):
-        main = Main(sim_types(2))
+    for i in range(1,5):
+        main = Main(sim_types(6))
         main.simulate(6000)
+        # print("Simulation number %d complete" % i)
+        # main.p.close()
 
     print("EOF")
 
