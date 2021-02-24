@@ -114,7 +114,7 @@ class Main(object):
                 self.data_logger.set_complete_episode(policy.trainer.buffer.get_experience())
 
 
-                self.data_logger.plot_training_data(plot_items)
+
 
 
 
@@ -129,13 +129,16 @@ class Main(object):
                 print_output = print_template.format(running_reward, episode_count)
                 print(print_output)
                 logging.critical(print_output)
+                self.data_logger.plot_training_data(plot_items)
+                self.data_logger.save_xls("./trained_models/training_variables.xls")
             if running_reward >= training_param["final_return"] \
                     or episode_count == training_param["max_episodes"]:
                 print_output = "Solved at episode {}!".format(episode_count)
                 print(print_output)
                 logging.critical(print_output)
                 policy.trainer.actor_critic_net.save_weights(model_param["weights_file_path"])
-                self.data_logger.save_training_data()
+                self.data_logger.save_training_data("./trained_models/training_variables.p")
+
                 break
 
             # Save intermediate policies
@@ -328,12 +331,12 @@ if __name__=="__main__":
     logging.critical(model_param)
     training_param = {
         "max_steps_per_episode":  3000,
-        "max_episodes": 100,
+        "max_episodes": 50,
         "final_return": 1000,
         "show_plots_when_training": False,
         "plot_freq": 10,
         "simulation_timesteps": 1000,
-        "init_temperature": 1000,
+        "init_temperature": 100,
         "is_batch_training": True,  # TODO instance based training
         "STEP_TIME": 10,  # Currently not implemented
         "gamma": 0.99,  # Discount factor

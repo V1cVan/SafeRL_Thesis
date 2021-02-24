@@ -79,7 +79,65 @@ class DataLogger(object):
         """ Sets the training data for a complete episode. """
         self.episodes.append(episode_data)
 
-    def save_training_data(self):
+    def save_xls(self, xls_path):
+        timesteps = []
+        vel_model = []
+        offset_model = []
+        vel_simulator = []
+        offset_simulator = []
+        vel_choice = []
+        offset_choice = []
+        rewards = []
+        critic = []
+        advantage = []
+        losses = []
+        returns = []
+        gradients = []
+        for ep in self.episodes:
+            timesteps.append(ep["timestep"])
+            vel_model.append(ep["action"]["vel_model"])
+            offset_model.append(ep["action"]["offset_model"])
+            vel_simulator.append(ep["action"]["vel_simulator"])
+            offset_simulator.append(ep["action"]["offset_simulator"])
+            vel_choice.append(ep["action"]["vel_choice"])
+            offset_choice.append(ep["action"]["offset_choice"])
+            rewards.append(ep["reward"])
+            critic.append(ep["critic"])
+            advantage.append(ep["advantage"])
+            losses.append(ep["losses"])
+            gradients.append(ep["gradients"])
+        timesteps = pd.DataFrame(timesteps).transpose()
+        vel_model = pd.DataFrame(vel_model).transpose()
+        offset_model = pd.DataFrame(offset_model).transpose()
+        vel_simulator = pd.DataFrame(vel_simulator).transpose()
+        offset_simulator = pd.DataFrame(offset_simulator).transpose()
+        vel_choice = pd.DataFrame(vel_choice).transpose()
+        offset_choice = pd.DataFrame(offset_choice).transpose()
+        rewards = pd.DataFrame(rewards).transpose()
+        critic = pd.DataFrame(critic).transpose()
+        advantage = pd.DataFrame(advantage).transpose()
+        losses = pd.DataFrame(losses).transpose()
+        returns = pd.DataFrame(returns).transpose()
+        gradients = pd.DataFrame(gradients).transpose()
+        episodes = [timesteps,
+                    vel_model,
+                    offset_model,
+                    vel_simulator,
+                    offset_simulator,
+                    vel_choice,
+                    offset_choice,
+                    rewards,
+                    critic,
+                    advantage,
+                    losses,
+                    returns]
+
+        with pd.ExcelWriter(xls_path) as writer:
+            for n, df in enumerate(episodes):
+                df.to_excel(writer, 'sheet%s' % n)
+            writer.save()
+
+    def save_training_data(self, file_dir):
         """"
         Pickles the all the variables during training for all the episodes in a file that can be opened later.
         """
@@ -88,7 +146,7 @@ class DataLogger(object):
             "episode_variables": self.episodes,
             "timers": self.execution_timers
         }
-        pic.dump(training_variables, open("trained_models/training_variables.p", "rb"))
+        pic.dump(training_variables, open(file_dir, "wb"))
 
     def load_training_data(self, file_dir):
         """"
@@ -102,11 +160,7 @@ class DataLogger(object):
         print()
 
     def init_training_plot(self):
-        fig = plt.figure(0)
-        fig_size = plt.rcParams["figure.figsize"]
-        fig_size[0] = 16
-        fig_size[1] = 16
-        plt.rcParams["figure.figsize"] = fig_size
+        fig = plt.figure(0,figsize=(18,12))
 
         rewards_graph = fig.add_subplot(221)
         rewards_graph.set_autoscale_on(True) # enable autoscale
@@ -199,6 +253,7 @@ class DataLogger(object):
             grad_graph.autoscale_view(True, True, True)  # Autoscale
         plt.pause(0.001)
         plt.draw()
+        plt.savefig('Training_plots.png')
 
 
 class EpisodeBuffer(object):
