@@ -60,7 +60,7 @@ class DiscreteStochasticGradAscent(CustomPolicy):
                 # Save to buffer from the Buffer class in HelperClasses.py module
                 # add_experience expects (timestep, state, vel_model_action, off_model_action,
                 #                         vel_action_sim, offset_action_sim, vel_choice, off_choice, reward, critic)
-                self.trainer.buffer.add_experience(self.trainer.timestep, np.squeeze(veh.s0_mod),
+                self.trainer.buffer.set_experience(self.trainer.timestep, np.squeeze(veh.s0_mod),
                                                    np.array(action[0]), np.array(action[1]),
                                                    veh.a0[0], veh.a0[1],
                                                    veh.a0_choice[0], veh.a0_choice[1],

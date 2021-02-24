@@ -11,6 +11,7 @@ from NeuralModels import *
 from RL_Policies import *
 from HelperClasses import *
 import logging
+from matplotlib import pyplot as plt
 
 import os
 
@@ -32,7 +33,7 @@ class Main(object):
             "metrics": {}  # Extra metrics we calculate for each autonomous policy
         }]
         # Create object for data logging and visualisation
-        self.data_logger = DataLogger(seed, model_param, training_param)
+        self.data_logger = DataLogger(model_param, training_param)
 
     # ...
     def create_plot(self):
@@ -74,13 +75,16 @@ class Main(object):
 
         temperatures = np.linspace(training_param["init_temperature"], 1, training_param["max_episodes"])
 
+        plot_items = self.data_logger.init_training_plot()
+
         # Run until all episodes are completed (reward reached).
         while episode_count <= training_param["max_episodes"]:
-            policy.trainer.buffer.episode = episode_count
+            policy.trainer.episode = episode_count
             policy.trainer.temperature = temperatures[episode_count-1]
             if episode_count % plot_freq == 0 and show_plots:
                 self.simulate(training_param["simulation_timesteps"])
 
+            print("Episode number: %0.2f" % episode_count)
             logging.critical("Episode number: %0.2f" % episode_count)
 
             # Set simulation environment
@@ -107,6 +111,11 @@ class Main(object):
                         policy.trainer.buffer.set_tf_experience_for_episode_training()
                         episode_reward = policy.trainer.train_step()
 
+                self.data_logger.set_complete_episode(policy.trainer.buffer.get_experience())
+
+
+                self.data_logger.plot_training_data(plot_items)
+
 
 
                 # Clear loss values and reward history
@@ -114,8 +123,8 @@ class Main(object):
 
             # Running reward smoothing effect
             running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
-            episode_count += 1
-            if episode_count % 2 == 0:
+
+            if episode_count % 5 == 0:
                 print_template = "Running reward = {:.2f} at episode {}"
                 print_output = print_template.format(running_reward, episode_count)
                 print(print_output)
@@ -126,11 +135,14 @@ class Main(object):
                 print(print_output)
                 logging.critical(print_output)
                 policy.trainer.actor_critic_net.save_weights(model_param["weights_file_path"])
+                self.data_logger.save_training_data()
                 break
 
             # Save intermediate policies
             if episode_count % 100 == 0:
                 policy.trainer.actor_critic_net.save_weights(model_param["weights_file_path"])
+
+            episode_count += 1
 
     def simulate(self, simulation_timesteps):
         self.pol[0]["policy"].trainer.training = False
