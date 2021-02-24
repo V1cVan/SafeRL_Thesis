@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np
-from HelperClasses import Buffer, DataLogger
+from HelperClasses import EpisodeBuffer, DataLogger
 
 
 class ActorCriticNetDiscrete_1(keras.Model):
@@ -173,7 +173,8 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         # TODO implement data logging class for debugging training
         self.training = True
         self.training_param = training_param
-        self.buffer = Buffer()
+        self.episode = 1
+        self.buffer = EpisodeBuffer()
         self.temperature = 1
 
     def set_neg_collision_reward(self, timestep, punishment):
@@ -243,7 +244,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
 
         # TODO look at a critic receiving actions directly in the model structure?
 
-        return loss
+        return loss, advantage
 
 
     #@tf.function
@@ -289,7 +290,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
                 returns = self.get_expected_returns(rewards)
 
                 # Calculating loss values to update our network
-                loss = self.compute_loss(action_vel, action_off, critic_values, returns)
+                loss, advantage = self.compute_loss(action_vel, action_off, critic_values, returns)
 
 
             for x in self.actor_critic_net.weights:
@@ -308,7 +309,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
 
             episode_reward = tf.math.reduce_sum(rewards)
 
-            self.buffer.add_training_variables(loss, returns, grads, self.actor_critic_net.weights)
+            self.buffer.set_training_variables(self.episode, loss, advantage, returns, np.squeeze(grads), self.actor_critic_net.weights)
 
             return episode_reward
 

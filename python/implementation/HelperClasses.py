@@ -5,6 +5,8 @@ from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
 import tensorflow as tf
+import pickle as pic
+
 
 """
     HelperClasses.py module contains:
@@ -42,69 +44,166 @@ class DataLogger(object):
                         "training": average time taken for training
     """
 
-    def __init__(self, seed: int, model_parameters: Dict, training_parameters: Dict):
-        self.global_variables = {
-            "seed": seed,
+    def __init__(self, model_parameters: Dict, training_parameters: Dict):
+        self.global_parameters = {
+            "seed": training_parameters["seed"],
             "training_parameters": training_parameters,
             "model_parameters": model_parameters,
             "model_summary": ""
         }
         self.episodes = []
-        self.episode_variables = {
-            "ep": [],
-            "timesteps": [],
-            "states": [],
-            "network_outputs": [],
-            "sim_actions": [],
-            "pol_actions": [],
-            "ep_rewards": []
-        }
-        self.model_variables = {
-            "weights": []
-        }
-        self.training_variables = {
-            "returns": [],
-            "losses": [],
-            "grad": [],
-            "error": []
-        }
+        # self.episode_variables = {
+        #     "ep": [],
+        #     "timesteps": [],
+        #     "states": [],
+        #     "network_outputs": [],
+        #     "sim_actions": [],
+        #     "pol_actions": [],
+        #     "ep_rewards": []
+        # }
+        # self.model_variables = {
+        #     "weights": []
+        # }
+        # self.training_variables = {
+        #     "returns": [],
+        #     "losses": [],
+        #     "grad": [],
+        #     "error": []
+        # }
         self.execution_timers = {
             "plotting": [],
             "training": []
         }
 
-    def set_complete_episode(self, episode: int, timestamps: List, states: List,
-                             sim_actions: List, pol_actions: List, rewards: List):
+    def set_complete_episode(self, episode_data):
         """ Sets the training data for a complete episode. """
-        self.training_variables["episode"].append(episode)
-        self.training_variables["timesteps"] = timestamps
-        self.training_variables["states"] = states
-        self.training_variables["sim_actions"] = sim_actions
-        self.training_variables["pol_actions"] = pol_actions
-        self.training_variables["ep_rewards"] = rewards
+        self.episodes.append(episode_data)
 
+    def save_training_data(self):
+        """"
+        Pickles the all the variables during training for all the episodes in a file that can be opened later.
+        """
+        training_variables = {
+            "parameters": self.global_parameters,
+            "episode_variables": self.episodes,
+            "timers": self.execution_timers
+        }
+        pic.dump(training_variables, open("trained_models/training_variables.p", "rb"))
+
+    def load_training_data(self, file_dir):
+        """"
+        Loads past training data.
+        """
+        training_variables = pic.load(open(file_dir, "rb"))
+        return training_variables
 
     def display_model_overview(self, keras_summary):
         """ Displays keras model summary, model parameters, and weights for each layer. """
         print()
 
-    def plot_training_rewards(self):
-        """ Plots the mean reward per episode during training. """
-        plt.figure()
-        # Calculate mean reward per episode
-        mean_reward = [np.mean(x) for x in self.training_variables["rewards"]]
-        sns.tsplot(time=self.training_variables["episode"], data=mean_reward,
-                   linestyle='-', linewidth=2)
-        plt.grid(True)
-        plt.title("Total reward per episode.")
-        plt.xlabel("Episode number")
+    def init_training_plot(self):
+        fig = plt.figure(0)
+        fig_size = plt.rcParams["figure.figsize"]
+        fig_size[0] = 16
+        fig_size[1] = 16
+        plt.rcParams["figure.figsize"] = fig_size
+
+        rewards_graph = fig.add_subplot(221)
+        rewards_graph.set_autoscale_on(True) # enable autoscale
+        rewards_graph.autoscale_view(True,True,True)
+        r_lines, = rewards_graph.plot([],[],'r.-')
+        plt.title("Total rewards per episode.")
+        plt.xlabel("Episode")
         plt.ylabel("Reward")
+        plt.grid(True)
+        plt.pause(0.001)
+        advantage_graph = fig.add_subplot(222)
+        advantage_graph.set_autoscale_on(True)  # enable autoscale
+        advantage_graph.autoscale_view(True, True, True)
+        a_lines, = advantage_graph.plot([], [], 'b.-')
+        plt.title("Average advantage (Temporal Diff.) per episode.")
+        plt.xlabel("Episode")
+        plt.ylabel("Advantage")
+        plt.grid(True)
+        plt.pause(0.001)
+        losses_graph = fig.add_subplot(223)
+        losses_graph.set_autoscale_on(True)  # enable autoscale
+        losses_graph.autoscale_view(True, True, True)
+        l_lines, = losses_graph.plot([], [], 'g.-')
+        plt.title("Average loss (objective scalar) per episode.")
+        plt.xlabel("Episode")
+        plt.ylabel("Loss")
+        plt.grid(True)
+        plt.pause(0.001)
+        grad_graph = fig.add_subplot(224)
+        grad_graph.set_autoscale_on(True)  # enable autoscale
+        grad_graph.autoscale_view(True, True, True)
+        g_lines, = grad_graph.plot([], [], '.-')
+        plt.title("Average gradient value per set of gradients per episode.")
+        plt.xlabel("Episode")
+        plt.ylabel("Gradients.")
+        plt.grid(True)
+        plt.pause(0.001)
+        plt.ion()
 
 
+        lines = [r_lines, a_lines, l_lines, g_lines]
+        axes = [rewards_graph, advantage_graph, losses_graph, grad_graph]
 
-class Buffer(object):
+        return [fig, axes, lines]
+
+    def plot_training_data(self, plot_items):
+        """ Plots the training data."""
+
+        fig, axes, lines = tuple(plot_items)
+        rewards_graph, advantage_graph, losses_graph, grad_graph = tuple(axes)
+        r_lines, a_lines, l_lines, g_lines = tuple(lines)
+
+        num_episodes = len(self.episodes)
+        ep = np.arange(1, num_episodes+1)
+
+        # TODO confidence intervals?
+
+        rewards_sum = []
+        advantage_mean = []
+        losses = []
+        gradients_mean = []
+
+        for i in ep:
+            rewards_sum.append(np.sum(self.episodes[i - 1]["reward"]))
+            advantage_mean.append(np.mean(self.episodes[i - 1]["advantage"]))
+            losses.append(self.episodes[i-1]["losses"])
+            grad_layers_mean = []
+            for j in np.arange(len(self.episodes[i-1]["gradients"][0])):
+                grad_layers_mean.append(np.mean(self.episodes[i-1]["gradients"][0][j]))
+            gradients_mean.append(grad_layers_mean)
+
+        # fig.canvas.flush_events()
+
+        r_lines.set_data(ep, rewards_sum)
+        rewards_graph.relim()  # Recalculate limits
+        rewards_graph.autoscale_view(True, True, True)  # Autoscale
+        plt.pause(0.001)
+        a_lines.set_data(ep, advantage_mean)
+        advantage_graph.relim()  # Recalculate limits
+        advantage_graph.autoscale_view(True, True, True)  # Autoscale
+        plt.pause(0.001)
+        l_lines.set_data(ep, losses)
+        losses_graph.relim()  # Recalculate limits
+        losses_graph.autoscale_view(True, True, True)  # Autoscale
+        plt.pause(0.001)
+        gradients_mean = np.array(gradients_mean)
+        for i in range(len(gradients_mean[0])):
+            g_lines.set_data(ep, gradients_mean[:, i])
+            grad_graph.relim()  # Recalculate limits
+            grad_graph.autoscale_view(True, True, True)  # Autoscale
+        plt.pause(0.001)
+        plt.draw()
+
+
+class EpisodeBuffer(object):
     """
-    Buffer class (temporarily) saves and handles the experiences per episode during training.
+    EpisodeBuffer class (temporarily) saves and handles the experiences per episode during training.
     """
 
     def __init__(self):
@@ -120,6 +219,7 @@ class Buffer(object):
             "offset_choice": []
         }
         self.critic = []
+        self.advantage = []
         self.rewards = []
         self.loss = []
         self.returns = []
@@ -127,7 +227,7 @@ class Buffer(object):
         self.model_weights = []
         self.experience = None
 
-    def add_experience(self, timestep, state, vel_model_action, off_model_action,
+    def set_experience(self, timestep, state, vel_model_action, off_model_action,
                        vel_action_sim, offset_action_sim, vel_choice, off_choice, reward, critic):
         """ Adds the most recent experience to the buffer. """
         self.timesteps.append(timestep)
@@ -141,11 +241,13 @@ class Buffer(object):
         self.rewards.append(reward)
         self.critic.append(critic)
 
-    def add_training_variables(self, losses, returns, gradients, model_weights):
-        self.loss = losses
-        self.returns = returns
-        self.grads = gradients
-        self.model_weights = model_weights
+    def set_training_variables(self, episode_num, losses, advantage, returns, gradients, model_weights):
+        self.episode = episode_num
+        self.loss.append(losses)
+        self.advantage.append(advantage)
+        self.returns.append(returns)
+        self.grads.append(gradients)
+        self.model_weights.append(model_weights)
 
     def get_experience(self, timestep: int = None):
         """ Returns the experience at the provided timestep. """
@@ -160,11 +262,17 @@ class Buffer(object):
                 "offset_choice": self.actions["offset_choice"][index],
             }
             output_dict = {
+                "episode_num": self.episode,
                 "timestep": self.timesteps[index],
                 "action": actions,
                 "state": self.states[index],
                 "reward": self.rewards[index],
-                "critic": self.critic[index]
+                "critic": self.critic[index],
+                "advantage": self.advantage[index],
+                "losses": None,
+                "returns": self.returns[index],
+                "gradients": self.grads[index],
+                "model_weights": self.model_weights[index]
             }
         else:
             actions = {
@@ -176,11 +284,17 @@ class Buffer(object):
                 "offset_choice": self.actions["offset_choice"],
             }
             output_dict = {
-                "timestep": self.timesteps,
-                "action": actions,
-                "state": self.states,
-                "reward": self.rewards,
-                "critic": self.critic
+                "episode_num": self.episode,
+                "timestep": self.timesteps,             # 1000
+                "action": actions,                      # 1000x...
+                "state": self.states,                   # 1000,54
+                "reward": self.rewards,                 # 1000
+                "critic": self.critic,                  # 1000
+                "advantage": self.advantage,
+                "losses": self.loss,                    # 2
+                "returns": self.returns,                # 2,1000
+                "gradients": self.grads,                # 2,14
+                "model_weights": self.model_weights     # 2,14
             }
         return output_dict
 
@@ -201,16 +315,21 @@ class Buffer(object):
 
     def clear_experience(self):
         """ Clears all the experiences in the episode. """
-        self.timesteps.clear()
-        self.states.clear()
-        self.actions["vel_model"].clear()
-        self.actions["offset_model"].clear()
-        self.actions["vel_simulator"].clear()
-        self.actions["offset_simulator"].clear()
-        self.actions["vel_choice"].clear()
-        self.actions["offset_choice"].clear()
-        self.rewards.clear()
-        self.critic.clear()
+        self.timesteps = []
+        self.states = []
+        self.actions["vel_model"] = []
+        self.actions["offset_model"] = []
+        self.actions["vel_simulator"] = []
+        self.actions["offset_simulator"] = []
+        self.actions["vel_choice"] = []
+        self.actions["offset_choice"] = []
+        self.rewards = []
+        self.critic = []
+        self.loss = []
+        self.returns = []
+        self.grads = []
+        self.model_weights = []
+
 
 
 
