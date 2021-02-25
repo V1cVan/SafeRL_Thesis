@@ -51,6 +51,9 @@ class DataLogger(object):
             "model_parameters": model_parameters,
             "model_summary": ""
         }
+
+        # TODO Change variables to dataframes from start of usage in Datalogger class!
+
         self.episodes = []
         # self.episode_variables = {
         #     "ep": [],
@@ -80,6 +83,7 @@ class DataLogger(object):
         self.episodes.append(episode_data)
 
     def save_xls(self, xls_path):
+        """ Not useful """
         timesteps = []
         vel_model = []
         offset_model = []

@@ -114,10 +114,6 @@ class Main(object):
                 self.data_logger.set_complete_episode(policy.trainer.buffer.get_experience())
 
 
-
-
-
-
                 # Clear loss values and reward history
                 policy.trainer.buffer.clear_experience()
 
@@ -130,7 +126,7 @@ class Main(object):
                 print(print_output)
                 logging.critical(print_output)
                 self.data_logger.plot_training_data(plot_items)
-                self.data_logger.save_xls("./trained_models/training_variables.xls")
+                # self.data_logger.save_xls("./trained_models/training_variables.xls")
             if running_reward >= training_param["final_return"] \
                     or episode_count == training_param["max_episodes"]:
                 print_output = "Solved at episode {}!".format(episode_count)
@@ -318,7 +314,7 @@ if __name__=="__main__":
 
     # Model configuration and settings
     model_param = {
-        "n_nodes": [300, 200],  # Number of hidden nodes in each layer
+        "n_nodes": [200, 100],  # Number of hidden nodes in each layer
         "n_layers": 2,  # Number of layers
         "n_inputs": 54,  # Standard size of S
         "activation_function": tf.nn.relu,  # activation function of hidden nodes
@@ -331,7 +327,7 @@ if __name__=="__main__":
     logging.critical(model_param)
     training_param = {
         "max_steps_per_episode":  3000,
-        "max_episodes": 50,
+        "max_episodes": 300,
         "final_return": 1000,
         "show_plots_when_training": False,
         "plot_freq": 10,
