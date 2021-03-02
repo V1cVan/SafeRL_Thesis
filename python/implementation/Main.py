@@ -1,6 +1,6 @@
-# import os
-# os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # specify which GPU(s) to be used
+import os
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # specify which GPU(s) to be used
 
 from hwsim import Simulation, BasicPolicy, StepPolicy, SwayPolicy, IMPolicy, KBModel, TrackPolicy, CustomPolicy, config
 from hwsim.plotting import Plotter, SimulationPlot, DetailPlot, BirdsEyePlot, TimeChartPlot, ActionsPlot
@@ -17,7 +17,7 @@ from HelperClasses import *
 import logging
 from matplotlib import pyplot as plt
 
-# tf.config.experimental.set_visible_devices([], "GPU")
+# tf.config.experimental.set_visible_devices([0], "GPU")
 
 class Main(object):
 
@@ -100,14 +100,11 @@ class Main(object):
                                 policy.trainer.set_neg_collision_reward(np.int(t/training_param["STEP_TIME"]),
                                                                         training_param["reward_weights"][4])
 
-
-
                 with trainerTimer:
                     policy.trainer.buffer.set_tf_experience_for_episode_training()
                     episode_reward = policy.trainer.train_step()
 
                 self.data_logger.set_complete_episode(policy.trainer.buffer.get_experience())
-
 
                 # Clear loss values and reward history
                 policy.trainer.buffer.clear_experience()
@@ -321,20 +318,32 @@ if __name__=="__main__":
     }
     logging.critical("Model Parameters:")
     logging.critical(model_param)
+
     STEP_TIME = 10
+    optimiser = "ADAM"
+    learning_rate = 0.00008
+    if optimiser == "ADAM":
+        optimiser_name = optimiser
+        optimiser = tf.optimizers.Adam(learning_rate=learning_rate)
+    elif optimiser == "RMS":
+        optimiser_name = optimiser
+        optimiser = tf.optimizers.RMSprop(learning_rate=learning_rate)
+
     training_param = {
-        "max_steps_per_episode":  3000,
-        "max_episodes": 500,
+        "max_steps_per_episode": 3000,
+        "max_episodes": 5, #500,
         "final_return": 4000,
         "show_plots_when_training": False,
         "plot_freq": 20,
         "simulation_timesteps": 500,
         "STEP_TIME": STEP_TIME,  # Currently not implemented
         "gamma": 0.99,
-        # "clip_gradients": False,
-        # "clip_norm": 2,
-        "adam_optimiser": keras.optimizers.Adam(learning_rate=0.00008),
-        "huber_loss": keras.losses.Huber(),
+        "clip_gradients": False,
+        "clip_norm": 2,
+        "learning_rate": learning_rate,
+        "optimiser_name": optimiser_name,
+        "optimiser": optimiser,
+        "loss_func": tf.losses.Huber(),
         "seed": seed,
         "reward_weights": np.array([1.1, 0., 0., 0.6, -5])  # (rew_vel, rew_lat_position, rew_fol_dist, collision penalty)
     }

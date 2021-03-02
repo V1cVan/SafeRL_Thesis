@@ -213,7 +213,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         actor_vel_loss = tf.math.reduce_sum(tf.math.multiply(-action_vel_log_probs, advantage))
         actor_off_loss = tf.math.reduce_sum(tf.math.multiply(-action_off_log_probs, advantage))
 
-        critic_loss = self.training_param["huber_loss"](critic_values, returns)
+        critic_loss = self.training_param["loss_func"](critic_values, returns)
 
         loss = critic_loss + actor_vel_loss + actor_off_loss
 
@@ -273,14 +273,14 @@ class GradAscentTrainerDiscrete(keras.models.Model):
             # Compute the gradients from the loss
             grads = tape.gradient(loss, self.actor_critic_net.trainable_variables)
 
-            # # Clip gradients
-            # if self.training_param["clip_gradients"]:
-            #     norm = self.training_param["clip_norm"]
-            #     grads = [tf.clip_by_norm(g, norm)
-            #              for g in grads]
+            # Clip gradients
+            if self.training_param["clip_gradients"]:
+                norm = self.training_param["clip_norm"]
+                grads = [tf.clip_by_norm(g, norm)
+                         for g in grads]
 
             # Apply the gradients to the model's parameters
-            self.training_param["adam_optimiser"].apply_gradients(
+            self.training_param["optimiser"].apply_gradients(
                 zip(grads, self.actor_critic_net.trainable_variables))
 
             episode_reward = tf.math.reduce_sum(rewards)

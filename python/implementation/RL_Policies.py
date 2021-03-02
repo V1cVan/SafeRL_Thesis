@@ -79,11 +79,11 @@ class DiscreteStochasticGradAscent(CustomPolicy):
             output = np.array([veh.a1[0], veh.a1[1]], dtype=np.float64)  # The hwsim library uses double precision floats
             veh.prev_action = [action_choice_vel, action_choice_off]
             return output
+
         else:
             discrete_actions = self.convert_action_discrete(veh, veh.prev_action)
             output = np.array([discrete_actions[0], discrete_actions[1]], dtype=np.float64)
             veh.rew_buffer.append(self.get_reward(veh))
-
             return output
 
 
