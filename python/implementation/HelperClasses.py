@@ -224,20 +224,19 @@ class DataLogger(object):
         # TODO confidence intervals?
 
         rewards_sum = []
-        advantage_mean = []
+        advantage_mean = [np.mean(j) for j in self.episodes[0]["advantage"]]
         losses = []
         gradients_mean = []
 
         for i in ep:
-            rewards_sum.append(np.sum(self.episodes[i - 1]["reward"]))
-            advantage_mean.append(np.mean(self.episodes[i - 1]["advantage"]))
+            rewards_sum.append( self.episodes[i-1]["episode_reward"])
             losses.append(self.episodes[i-1]["losses"])
             grad_layers_mean = []
             for j in np.arange(len(self.episodes[i-1]["gradients"][0])):
                 grad_layers_mean.append(np.mean(self.episodes[i-1]["gradients"][0][j]))
             gradients_mean.append(grad_layers_mean)
 
-        # fig.canvas.flush_events()
+        fig.canvas.flush_events()
 
         r_lines.set_data(ep, rewards_sum)
         rewards_graph.relim()  # Recalculate limits
@@ -281,19 +280,20 @@ class EpisodeBuffer(object):
         self.critic = []
         self.advantage = []
         self.rewards = []
+        self.episode_reward = []
         self.loss = []
         self.returns = []
         self.grads = []
         self.model_weights = []
         self.experience = None
 
-    def set_experience(self, timestep, state, vel_model_action, off_model_action,
+    def set_experience(self, timestep, state, vel_action_model, off_action_model,
                        vel_action_sim, offset_action_sim, vel_choice, off_choice, reward, critic):
         """ Adds the most recent experience to the buffer. """
         self.timesteps.append(timestep)
         self.states.append(state)
-        self.actions["vel_model"].append(vel_model_action)
-        self.actions["offset_model"].append(off_model_action)
+        self.actions["vel_model"].append(vel_action_model)
+        self.actions["offset_model"].append(off_action_model)
         self.actions["vel_simulator"].append(vel_action_sim)
         self.actions["offset_simulator"].append(offset_action_sim)
         self.actions["vel_choice"].append(vel_choice)
@@ -301,8 +301,9 @@ class EpisodeBuffer(object):
         self.rewards.append(reward)
         self.critic.append(critic)
 
-    def set_training_variables(self, episode_num, losses, advantage, returns, gradients, model_weights):
+    def set_training_variables(self, episode_num, episode_reward, losses, advantage, returns, gradients, model_weights):
         self.episode = episode_num
+        self.episode_reward = episode_reward
         self.loss.append(losses)
         self.advantage.append(advantage)
         self.returns.append(returns)
@@ -349,6 +350,7 @@ class EpisodeBuffer(object):
                 "action": actions,                      # 1000x...
                 "state": self.states,                   # 1000,54
                 "reward": self.rewards,                 # 1000
+                "episode_reward": self.episode_reward,
                 "critic": self.critic,                  # 1000
                 "advantage": self.advantage,
                 "losses": self.loss,                    # 2
