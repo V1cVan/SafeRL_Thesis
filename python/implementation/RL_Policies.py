@@ -28,11 +28,8 @@ class DiscreteStochasticGradAscent(CustomPolicy):
         veh.a0 = None
         veh.a0_mod = None
         veh.a0_choice = None
-<<<<<<< HEAD
         veh.prev_action = None
         veh.rew_buffer = []
-=======
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
         veh.c0 = None
         veh.a1_mod = None
         veh.a1_choice = None
@@ -44,7 +41,6 @@ class DiscreteStochasticGradAscent(CustomPolicy):
         # s1, a1 = current vehicle state action pair
         veh.counter -= 1
 
-<<<<<<< HEAD
         if veh.counter <= 0:
             veh.counter = self.STEP_TIME
             # Set current vehicle state and action pair
@@ -89,46 +85,6 @@ class DiscreteStochasticGradAscent(CustomPolicy):
             veh.rew_buffer.append(self.get_reward(veh))
 
             return output
-=======
-        # if veh.counter <= 0:
-        veh.counter = self.STEP_TIME
-        # Set current vehicle state and action pair
-        veh.s1 = veh.s_raw
-        veh.s1_mod = self.convert_state(veh)
-        action_vel_probs, action_off_probs, veh.c1 = self.get_action_and_critic(veh.s1_mod)
-        veh.a1_mod = [action_vel_probs, action_off_probs]
-        action_choice_vel, action_choice_off = self.trainer.get_action_choice([action_vel_probs, action_off_probs])
-        veh.a1_choice = [action_choice_vel, action_choice_off]
-        veh.a1 = self.convert_action_discrete(veh, [action_choice_vel, action_choice_off])
-
-        # Save experience
-        if veh.a0_mod is not None:
-            # Calculate reward at current state (if action was taken previously)
-            veh.reward = self.get_reward(veh)
-            if self.trainer is not None and self.trainer.training is True:
-                # Save action taken previously on previous state value
-                action = veh.a0_mod[0][0, veh.a0_choice[0]], veh.a0_mod[1][0, veh.a0_choice[1]]
-                # Save to buffer from the Buffer class in HelperClasses.py module
-                # add_experience expects (timestep, state, vel_model_action, off_model_action,
-                #                         vel_action_sim, offset_action_sim, vel_choice, off_choice, reward, critic)
-                self.trainer.buffer.set_experience(self.trainer.timestep, np.squeeze(veh.s0_mod),
-                                                   np.array(action[0]), np.array(action[1]),
-                                                   veh.a0[0], veh.a0[1],
-                                                   veh.a0_choice[0], veh.a0_choice[1],
-                                                   veh.reward, np.squeeze(veh.c0))
-
-        # Set past vehicle state and action pair
-        veh.s0 = veh.s1
-        veh.s0_mod = veh.s1_mod
-        veh.a0 = veh.a1
-        veh.a0_mod = veh.a1_mod
-        veh.a0_choice = veh.a1_choice
-        veh.c0 = veh.c1
-
-        return np.array([veh.a1[0], veh.a1[1]], dtype=np.float64)  # The hwsim library uses double precision floats
-
-
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
 
 
     def convert_state(self, veh):
@@ -146,26 +102,16 @@ class DiscreteStochasticGradAscent(CustomPolicy):
 
         # Current Lane:
         offset_current_lane_center = veh.s["laneC"]["off"] / lane_width  # Normalised
-<<<<<<< HEAD
         rel_offset_back_center_lane = np.hstack((veh.s["laneC"]["relB"]["gap"][:, 0] / 150,
                                                  veh.s["laneC"]["relB"]["gap"][:, 1] / lane_width))  # Normalised to Dmax default
         rel_vel_back_center_lane = np.matrix.flatten(veh.s["laneC"]["relB"]["vel"]) / max_vel  # Normalised
 
         rel_offset_front_center_lane = np.hstack((veh.s["laneC"]["relF"]["gap"][:, 0] / 150,
                                                   veh.s["laneC"]["relF"]["gap"][:, 1] / lane_width))  # Normalised to Dmax default
-=======
-        rel_offset_back_center_lane = np.hstack((veh.s["laneC"]["relB"]["off"][:, 0] / 150,
-                                                 veh.s["laneC"]["relB"]["off"][:, 1] / lane_width))  # Normalised to Dmax default
-        rel_vel_back_center_lane = np.matrix.flatten(veh.s["laneC"]["relB"]["vel"]) / max_vel  # Normalised
-
-        rel_offset_front_center_lane = np.hstack((veh.s["laneC"]["relF"]["off"][:, 0] / 150,
-                                                  veh.s["laneC"]["relF"]["off"][:, 1] / lane_width))  # Normalised to Dmax default
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
         rel_vel_front_center_lane = np.matrix.flatten(veh.s["laneC"]["relF"]["vel"]) / max_vel  # Normalised
 
         # Left Lane:
         offset_left_lane_center = veh.s["laneL"]["off"] / lane_width  # Normalised
-<<<<<<< HEAD
         rel_offset_back_left_lane = np.hstack((veh.s["laneL"]["relB"]["gap"][0][:, 0] / 150,
                                                veh.s["laneL"]["relB"]["gap"][0][:, 1] / lane_width))  # Normalised to Dmax default
         rel_offset_back_left_lane = np.squeeze(rel_offset_back_left_lane)
@@ -173,21 +119,11 @@ class DiscreteStochasticGradAscent(CustomPolicy):
 
         rel_offset_front_left_lane = np.hstack((veh.s["laneL"]["relF"]["gap"][0][:, 0] / 150,
                                                 veh.s["laneL"]["relF"]["gap"][0][:, 1] / lane_width))  # Normalised to Dmax default
-=======
-        rel_offset_back_left_lane = np.hstack((veh.s["laneL"]["relB"]["off"][:, 0] / 150,
-                                               veh.s["laneL"]["relB"]["off"][:, 1] / lane_width))  # Normalised to Dmax default
-        rel_offset_back_left_lane = np.squeeze(rel_offset_back_left_lane)
-        rel_vel_back_left_lane = np.matrix.flatten(veh.s["laneL"]["relB"]["vel"]) / max_vel  # Normalised
-
-        rel_offset_front_left_lane = np.hstack((veh.s["laneL"]["relF"]["off"][:, 0] / 150,
-                                                veh.s["laneL"]["relF"]["off"][:, 1] / lane_width))  # Normalised to Dmax default
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
         rel_offset_front_left_lane = np.squeeze(rel_offset_front_left_lane)
         rel_vel_front_left_lane = np.matrix.flatten(veh.s["laneL"]["relF"]["vel"]) / max_vel  # Normalised
 
         # Right Lane:
         offset_right_lane_center = veh.s["laneR"]["off"] / lane_width  # Normalised
-<<<<<<< HEAD
         rel_offset_back_right_lane = np.hstack((veh.s["laneR"]["relB"]["gap"][0][:, 0] / 150,
                                                 veh.s["laneR"]["relB"]["gap"][0][:, 1] / lane_width))  # Normalised to Dmax default
         rel_offset_back_right_lane = np.squeeze(rel_offset_back_right_lane)
@@ -197,17 +133,6 @@ class DiscreteStochasticGradAscent(CustomPolicy):
                                                  veh.s["laneR"]["relF"]["gap"][0][:, 1] / lane_width))  # Normalised to Dmax default
         rel_offset_front_right_lane = np.squeeze(rel_offset_front_right_lane)
         rel_vel_front_right_late = np.matrix.flatten(veh.s["laneR"]["relF"]["vel"]) / max_vel  # Normalised
-=======
-        rel_offset_back_right_lane = np.hstack((veh.s["laneR"]["relB"]["off"][:, 0] / 150,
-                                                veh.s["laneR"]["relB"]["off"][:, 1] / lane_width))  # Normalised to Dmax default
-        rel_offset_back_right_lane = np.squeeze(rel_offset_back_right_lane)
-        rel_vel_back_right_late = np.matrix.flatten(veh.s["laneR"]["relB"]["vel"]) / max_vel  # Normalised
-
-        rel_offset_front_right_lane = np.hstack((veh.s["laneR"]["relB"]["off"][:, 0] / 150,
-                                                 veh.s["laneR"]["relB"]["off"][:, 1] / lane_width))  # Normalised to Dmax default
-        rel_offset_front_right_lane = np.squeeze(rel_offset_front_right_lane)
-        rel_vel_front_right_late = np.matrix.flatten(veh.s["laneR"]["relB"]["vel"]) / max_vel  # Normalised
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
 
         # Assemble state vector
         state = np.hstack((gap_to_road_edge, curr_vel,
@@ -215,11 +140,7 @@ class DiscreteStochasticGradAscent(CustomPolicy):
                           offset_left_lane_center, rel_offset_back_left_lane, rel_vel_back_left_lane, rel_offset_front_left_lane, rel_vel_front_left_lane,
                           offset_right_lane_center, rel_offset_back_right_lane, rel_vel_back_right_late, rel_offset_front_right_lane, rel_vel_front_right_late))
 
-<<<<<<< HEAD
         state = tf.convert_to_tensor(state, dtype=tf.float32, name="state_input")
-=======
-        state = tf.convert_to_tensor(state, dtype=tf.float32, name="state_input")  # 30 entries
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
         state = tf.expand_dims(state, 0)
         return state  # Can be overridden by subclasses
 
@@ -273,14 +194,9 @@ class DiscreteStochasticGradAscent(CustomPolicy):
         """
         # Reward function weightings:
         w_vel = self.trainer.reward_weights[0]  # Speed weight
-<<<<<<< HEAD
         w_off = self.trainer.reward_weights[1]  # Lane center
         w_dist = self.trainer.reward_weights[2]  # Following distance
         w_stay_right = self.trainer.reward_weights[3] # Staying in right lane
-=======
-        w_off = self.trainer.reward_weights[1]  # Lateral position
-        w_dist = self.trainer.reward_weights[2]  # Lateral position
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
 
         # Reward function declaration:
         reward = np.array([0], dtype=np.float32)
@@ -290,19 +206,12 @@ class DiscreteStochasticGradAscent(CustomPolicy):
             v_lim = 120 / 3.6
             r_vel = np.exp(-(v_lim - v) ** 2 / 140) #- np.exp(-(v) ** 2 / 70)
 
-<<<<<<< HEAD
-=======
-            # Collision??
-            # TODO check collision punishment with Bram
-
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
             # # TODO remove lane centre reward when acting with discrete lane changes
             # # Lane center reward:
             lane_offset = np.squeeze(veh.s["laneC"]["off"])
             r_off = np.exp(-(lane_offset) ** 2 / 3.6)
 
             # Following distance:
-<<<<<<< HEAD
             d_gap = veh.s["laneC"]["relF"]["gap"][0, 0]
             d_lim = 0
             r_follow = -np.exp(-(d_lim - d_gap) ** 2 / 100)
@@ -311,13 +220,6 @@ class DiscreteStochasticGradAscent(CustomPolicy):
             r_right = (1/(veh.s["laneC"]["width"]*3))*veh.s["gapB"][0]
 
             reward = w_vel*r_vel + w_off*r_off + w_dist*r_follow + w_stay_right*r_right
-=======
-            d_gap = np.squeeze(veh.s["laneC"]["relF"]["gap"])[0, 0]
-            d_lim = 0
-            r_follow = -np.exp(-(d_lim - d_gap) ** 2 / 5)
-
-            reward = w_vel*r_vel + w_off*r_off + w_dist*r_follow
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
 
         else:
             reward = 0

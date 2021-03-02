@@ -1,15 +1,10 @@
 import tensorflow as tf
 from tensorflow import keras
-<<<<<<< HEAD
 from tensorflow.keras import layers, Sequential
-=======
-from tensorflow.keras import layers
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
 import numpy as np
 from HelperClasses import EpisodeBuffer, DataLogger
 
 
-<<<<<<< HEAD
 class ActorCriticNetDiscrete(keras.Model):
     """
     Neural network architecture for the actor and critic.
@@ -67,79 +62,6 @@ class ActorCriticNetDiscrete(keras.Model):
     def call(self, inputs: tf.Tensor):
         """ Returns the output of the model given an input. """
         return self.model(inputs)
-=======
-class ActorCriticNetDiscrete_1(keras.Model):
-    """
-    Neural network architecture for the actor and critic.
-    Here actions do NOT feed into critic network.
-    Actor and critic networks are separate.
-    """
-    def __init__(self, modelParam):
-        super(ActorCriticNetDiscrete_1, self).__init__()
-        tf.random.set_seed(modelParam["seed"])
-        np.random.seed(modelParam["seed"])
-        act_func = modelParam["activation_function"]
-
-        initializer_relu = tf.keras.initializers.HeUniform()
-        initializer_softmax = tf.keras.initializers.GlorotUniform()
-
-        # TODO Add variability in depth.
-        # Actor net:
-        self.inputLayer = layers.Input(shape=(modelParam["n_inputs"],),
-                                       name="inputStateLayer")
-
-        self.denseActorLayer1 = layers.Dense(modelParam["n_nodes"][0],
-                                             activation=act_func,
-                                             kernel_initializer=initializer_relu,
-                                             name="denseActorLayer1")(self.inputLayer)
-        # Critic net:
-        self.denseCriticLayer1 = layers.Dense(modelParam["n_nodes"][0],
-                                              activation=act_func,
-                                              kernel_initializer=initializer_relu,
-                                              name="denseCriticLayer1")(self.inputLayer)
-
-        if modelParam["n_nodes"][1] == 0:  # if no depth in network:
-            self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax,
-                                               kernel_initializer=initializer_softmax,
-                                               name="outputActorLayerVel")(self.denseActorLayer1)
-            self.outputLayerOff = layers.Dense(3, activation=tf.nn.softmax,
-                                               kernel_initializer=initializer_softmax,
-                                               name="outputActorLayerOff")(self.denseActorLayer1)
-            self.outputLayerCritic = layers.Dense(1,
-                                                  name="outputCriticLayer")(self.denseCriticLayer1)
-        else:  # if depth in network exists
-            self.denseActorLayer2 = layers.Dense(modelParam["n_nodes"][1],
-                                                 activation=act_func,
-                                                 kernel_initializer=initializer_relu,
-                                                 name="denseActorLayer2")(self.denseActorLayer1)
-            self.outputLayerVel = layers.Dense(3, activation=tf.nn.softmax,
-                                               kernel_initializer=initializer_softmax,
-                                               name="outputActorLayerVel")(self.denseActorLayer2)
-            self.outputLayerOff = layers.Dense(3, activation=tf.nn.softmax,
-                                               kernel_initializer=initializer_softmax,
-                                               name="outputActorLayerOff")(self.denseActorLayer2)
-
-            self.denseCriticLayer2 = layers.Dense(modelParam["n_nodes"][1],
-                                                  activation=act_func,
-                                                  kernel_initializer=initializer_relu,
-                                                  name="denseCriticLayer2")(self.denseCriticLayer1)
-            self.outputLayerCritic = layers.Dense(1,
-                                                  name="outputCriticLayer")(self.denseCriticLayer2)
-
-
-
-        # TODO look at batch normalisation
-
-
-
-        self.model = keras.Model(inputs=self.inputLayer,
-                                 outputs=[self.outputLayerVel, self.outputLayerOff, self.outputLayerCritic],
-                                 name="ActorCriticNetwork_basic")
-
-    def call(self, inputs: tf.Tensor):
-        """ Returns the output of the model given an input. """
-        y = self.model(inputs)
-        return y
 
     def display_overview(self):
         """ Displays an overview of the model. """
@@ -147,82 +69,6 @@ class ActorCriticNetDiscrete_1(keras.Model):
         keras.utils.plot_model(self.model, show_shapes=True, show_layer_names=True)
 
 
-class ActorCriticNetDiscrete_2(keras.Model):
-    """
-    Neural network architecture for the actor and critic.
-    Here actions DO feed into critic network.
-    Actor and critic networks are separate.
-    """
-    def __init__(self, modelParam):
-        super(ActorCriticNetDiscrete_2, self).__init__()
-        tf.random.set_seed(modelParam["seed"])
-        np.random.seed(modelParam["seed"])
-        act_func = modelParam["activation_function"]
-
-        initializer_relu = tf.keras.initializers.HeUniform()
-        initializer_softmax = tf.keras.initializers.GlorotUniform()
-
-        if modelParam["n_nodes"][1] == 0:  # if no depth in network:
-            print("Warning: Model not correctly implemented without a depth in the network!")
-
-        # TODO Add variability in depth.
-        # Actor net:
-        inputLayer = layers.Input(shape=(modelParam["n_inputs"],),
-                                  name="inputStateLayer")
-
-        denseActorLayer1 = layers.Dense(modelParam["n_nodes"][0],
-                                        activation=act_func,
-                                        kernel_initializer=initializer_relu,
-                                        name="denseActorLayer1")(inputLayer)
-        denseActorLayer2 = layers.Dense(modelParam["n_nodes"][1],
-                                        activation=act_func,
-                                        kernel_initializer=initializer_relu,
-                                        name="denseActorLayer2")(denseActorLayer1)
-        outputLayerVel = layers.Dense(3, activation=tf.nn.softmax,
-                                      kernel_initializer=initializer_softmax,
-                                      name="outputActorLayerVel")(denseActorLayer2)
-        outputLayerOff = layers.Dense(3, activation=tf.nn.softmax,
-                                      kernel_initializer=initializer_softmax,
-                                      name="outputActorLayerOff")(denseActorLayer2)
-
-
-        # Critic net:
-        denseCriticLayer1 = layers.Dense(modelParam["n_nodes"][0],
-                                         activation=act_func,
-                                         kernel_initializer=initializer_relu,
-                                         name="denseCriticLayer1")(layers.concatenate([outputLayerVel,
-                                                                                       outputLayerOff,
-                                                                                       inputLayer]))
-        denseCriticLayer2 = layers.Dense(modelParam["n_nodes"][1],
-                                         activation=act_func,
-                                         kernel_initializer=initializer_relu,
-                                         name="denseCriticLayer2")(denseCriticLayer1)
-        outputLayerCritic = layers.Dense(1,
-                                         name="outputCriticLayer")(denseCriticLayer2)
-
-
-
-        # TODO look at batch normalisation
-
-
-
-        self.model = keras.Model(inputs=inputLayer,
-                                 outputs=[outputLayerVel, outputLayerOff, outputLayerCritic],
-                                 name="ActorCriticNetwork_advanced")
-
-    def call(self, inputs: tf.Tensor):
-        """ Returns the output of the model given an input. """
-        y = self.model(inputs)
-        return y
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
-
-    def display_overview(self):
-        """ Displays an overview of the model. """
-        self.model.summary()
-        keras.utils.plot_model(self.model, show_shapes=True, show_layer_names=True)
-
-
-<<<<<<< HEAD
 # class ActorCriticNetDiscrete(keras.Model):
 #     """
 #     Neural network architecture for the actor and critic.
@@ -292,8 +138,6 @@ class ActorCriticNetDiscrete_2(keras.Model):
 #         keras.utils.plot_model(self.model, show_shapes=True, show_layer_names=True)
 
 
-=======
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
 class GradAscentTrainerDiscrete(keras.models.Model):
     """
     Gradient ascent training algorithm.
@@ -311,10 +155,6 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         self.training_param = training_param
         self.episode = 1
         self.buffer = EpisodeBuffer()
-<<<<<<< HEAD
-=======
-        self.temperature = 1
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
 
     def set_neg_collision_reward(self, timestep, punishment):
         """ Sets a negative reward if a collision occurs. """
@@ -324,7 +164,6 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         """ Randomly choose from the available actions."""
         action_vel_probs, action_off_probs = action_probs
 
-<<<<<<< HEAD
         if np.isnan(action_vel_probs).any() or np.isnan(action_vel_probs).any():
             x = 10
 
@@ -336,23 +175,6 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         return vel_action_choice, off_action_choice
 
     # @tf.function
-=======
-        action_vel_log_probs = np.log(action_vel_probs) / self.temperature
-        action_off_log_probs = np.log(action_off_probs) / self.temperature
-
-        action_vel = np.exp(action_vel_log_probs) / np.sum(np.exp(action_vel_log_probs))
-        action_off = np.exp(action_off_log_probs) / np.sum(np.exp(action_off_log_probs))
-
-        if np.isnan(action_vel).any() or np.isnan(action_off).any():
-            x = 10
-
-        # np.random.choice accepts probabilities
-        vel_action_choice = np.random.choice(3, p=np.squeeze(action_vel))
-        off_action_choice = np.random.choice(3, p=np.squeeze(action_off))
-        return vel_action_choice, off_action_choice
-
-    #@tf.function
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
     def get_expected_returns(self, rewards: tf.Tensor) -> tf.Tensor:
         """
         Computes expected returns per timestep.
@@ -373,17 +195,10 @@ class GradAscentTrainerDiscrete(keras.models.Model):
             returns = returns.write(i, discounted_sum)
         returns = returns.stack()[::-1]
 
-<<<<<<< HEAD
         returns = ((returns - tf.math.reduce_mean(returns)) / (tf.math.reduce_std(returns) + eps))
         return returns
 
     # @tf.function
-=======
-        returns = ((returns - tf.math.reduce_mean(returns))/(tf.math.reduce_std(returns) + eps))
-        return returns
-
-    #@tf.function
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
     def compute_loss(
             self,
             action_vel_probs: tf.Tensor,
@@ -406,12 +221,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
 
         return loss, advantage
 
-<<<<<<< HEAD
     # @tf.function
-=======
-
-    #@tf.function
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
     def train_step(self):
         """ Performs a training step. """
         if self.training:
@@ -442,13 +252,8 @@ class GradAscentTrainerDiscrete(keras.models.Model):
 
                 # Choose actions based on what was previously (randomly) sampled during simulation
                 for t in range(0, len(timesteps)):
-<<<<<<< HEAD
                     vel_choice = sim_action_vel_choices[t, 0]
                     off_choice = sim_action_off_choices[t, 0]
-=======
-                    vel_choice = sim_action_vel_choices[t,0]
-                    off_choice = sim_action_off_choices[t,0]
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
                     action_vel.write(t, action_vel_probs[t, vel_choice])
                     action_off.write(t, action_off_probs[t, off_choice])
 
@@ -461,15 +266,10 @@ class GradAscentTrainerDiscrete(keras.models.Model):
                 # Calculating loss values to update our network
                 loss, advantage = self.compute_loss(action_vel, action_off, critic_values, returns)
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
             for x in self.actor_critic_net.weights:
                 if tf.reduce_any(tf.math.is_nan(x)):
                     print("NAN detected in network weight")
 
-<<<<<<< HEAD
             # Compute the gradients from the loss
             grads = tape.gradient(loss, self.actor_critic_net.trainable_variables)
 
@@ -478,13 +278,6 @@ class GradAscentTrainerDiscrete(keras.models.Model):
             #     norm = self.training_param["clip_norm"]
             #     grads = [tf.clip_by_norm(g, norm)
             #              for g in grads]
-=======
-
-            # Compute the gradients from the loss
-            grads = tape.gradient(loss, self.actor_critic_net.trainable_variables)
-
-
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
 
             # Apply the gradients to the model's parameters
             self.training_param["adam_optimiser"].apply_gradients(
@@ -492,17 +285,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
 
             episode_reward = tf.math.reduce_sum(rewards)
 
-<<<<<<< HEAD
             self.buffer.set_training_variables(self.episode, loss, advantage, returns, np.squeeze(grads),
                                                self.actor_critic_net.weights)
 
             return episode_reward
-=======
-            self.buffer.set_training_variables(self.episode, loss, advantage, returns, np.squeeze(grads), self.actor_critic_net.weights)
-
-            return episode_reward
-
-
-
-
->>>>>>> 3e009d148339af9b90fd5bc3e6092d76d2fc34b4
