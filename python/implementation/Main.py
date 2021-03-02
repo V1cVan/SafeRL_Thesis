@@ -81,7 +81,6 @@ class Main(object):
             # print("Episode number: %0.2f" % episode_count)
             logging.critical("Episode number: %0.2f" % episode_count)
 
-
             # Set simulation environment
             with self.sim:
                 # Loop through each timestep in episode.
@@ -120,7 +119,7 @@ class Main(object):
                 print_output = print_template.format(running_reward, episode_count, loss)
                 print(print_output)
                 logging.critical(print_output)
-                self.data_logger.plot_training_data(plot_items)
+
                 # self.data_logger.save_xls("./trained_models/training_variables.xls")
             if running_reward >= training_param["final_return"] \
                     or episode_count == training_param["max_episodes"]:
@@ -135,6 +134,11 @@ class Main(object):
                 break
 
             episode_count += 1
+
+            if episode_count % plot_freq == 0 and show_plots:
+                self.data_logger.plot_training_data(plot_items)
+
+
 
     def simulate(self, simulation_timesteps):
         self.pol[0]["policy"].trainer.training = False
@@ -308,9 +312,9 @@ if __name__=="__main__":
 
     # Model configuration and settings
     model_param = {
-        "n_units": (50, 50),
+        "n_units": (30, 20),
         "n_inputs": 54,  # Standard size of S
-        "activation_function": tf.nn.relu,  # activation function of hidden nodes
+        "activation_function": tf.nn.swish,  # activation function of hidden nodes
         "n_actions": 2,
         "weights_file_path": "./trained_models/model_weights",
         "trained_model_file_path": "./trained_models/trained_model",
@@ -319,9 +323,9 @@ if __name__=="__main__":
     logging.critical("Model Parameters:")
     logging.critical(model_param)
 
-    STEP_TIME = 10
+    STEP_TIME = 20
     optimiser = "ADAM"
-    learning_rate = 0.0001
+    learning_rate = 0.00005
     if optimiser == "ADAM":
         optimiser_name = optimiser
         optimiser = tf.optimizers.Adam(learning_rate=learning_rate)
@@ -333,12 +337,12 @@ if __name__=="__main__":
         "max_steps_per_episode": 3000,
         "max_episodes": 500,
         "final_return": 4000,
-        "show_plots_when_training": True,
+        "show_plots_when_training": False,
         "plot_freq": 50,
         "simulation_timesteps": 500,
         "STEP_TIME": STEP_TIME,  # Currently not implemented
         "gamma": 0.99,
-        "clip_gradients": False,
+        "clip_gradients": True,
         "clip_norm": 2,
         "standardise_returns": True,
         "learning_rate": learning_rate,

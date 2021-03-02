@@ -234,7 +234,7 @@ class DataLogger(object):
             grad_layers_mean = []
             for j in np.arange(len(self.episodes[i-1]["gradients"][0])):
                 grad_layers_mean.append(np.mean(self.episodes[i-1]["gradients"][0][j]))
-            gradients_mean.append(grad_layers_mean)
+            gradients_mean.append(np.array(grad_layers_mean))
 
         fig.canvas.flush_events()
 
@@ -251,8 +251,8 @@ class DataLogger(object):
         losses_graph.autoscale_view(True, True, True)  # Autoscale
         plt.pause(0.001)
         gradients_mean = np.array(gradients_mean)
-        for i in range(len(gradients_mean[0])):
-            g_lines.set_data(ep, gradients_mean[:, i])
+        if gradients_mean.all()!=np.NaN:
+            g_lines.set_data(ep, np.mean(gradients_mean, axis=1))
             grad_graph.relim()  # Recalculate limits
             grad_graph.autoscale_view(True, True, True)  # Autoscale
         plt.pause(0.001)

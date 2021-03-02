@@ -21,8 +21,8 @@ class ActorCriticNetDiscrete(keras.Model):
         n_inputs = modelParam["n_inputs"]
         n_actions = modelParam["n_actions"]
 
-        self.he = tf.keras.initializers.HeUniform()
-        glorot = tf.keras.initializers.GlorotUniform()
+        self.he = tf.keras.initializers.HeNormal()
+        glorot = tf.keras.initializers.GlorotNormal()
         normal = tf.keras.initializers.RandomUniform(minval=-0.03, maxval=0.03)
         var_scale = tf.keras.initializers.VarianceScaling(scale=2.0, mode='fan_in', distribution='truncated_normal')
 
@@ -86,37 +86,33 @@ class ActorCriticNetDiscrete(keras.Model):
 #         n_inputs = modelParam["n_inputs"]
 #         n_actions = modelParam["n_actions"]
 #
-#         # initializer_relu = tf.keras.initializers.HeUniform()
-#         # initializer_softmax = tf.keras.initializers.GlorotUniform()
+#         self.he = tf.keras.initializers.HeNormal()
+#         glorot = tf.keras.initializers.GlorotNormal()
+#         normal = tf.keras.initializers.RandomUniform(minval=-0.03, maxval=0.03)
+#         var_scale = tf.keras.initializers.VarianceScaling(scale=2.0, mode='fan_in', distribution='truncated_normal')
 #
 #         input_layer = layers.Input(shape=(n_inputs,),
 #                                    name="inputStateLayer")
 #
-#         # Actor net:
+#         # Actor net vel:
 #         dense_actor_layer1 = self.dense_layer(num_units=n_units[0], act_func=act_func)(input_layer)
 #         dense_actor_layer2 = self.dense_layer(num_units=n_units[1], act_func=act_func)(dense_actor_layer1)
 #         output_layer_vel = layers.Dense(3,
 #                                         name="OutputLayerVelocity",
 #                                         activation=tf.nn.softmax,
-#                                         kernel_initializer=tf.keras.initializers.RandomUniform(
-#                                             minval=-0.03, maxval=0.03),
+#                                         kernel_initializer=glorot,
 #                                         bias_initializer=tf.keras.initializers.Constant(0))(dense_actor_layer2)
 #         output_layer_steer = layers.Dense(3,
 #                                           name="OutputLayerSteering",
 #                                           activation=tf.nn.softmax,
-#                                           kernel_initializer=tf.keras.initializers.RandomUniform(
-#                                               minval=-0.03, maxval=0.03),
+#                                           kernel_initializer=glorot,
 #                                           bias_initializer=tf.keras.initializers.Constant(0))(dense_actor_layer2)
 #
 #         # Critic net:
 #         dense_critic_layer1 = self.dense_layer(num_units=n_units[0], act_func=act_func)(
 #             layers.concatenate([output_layer_vel, output_layer_steer, input_layer]))
 #         dense_critic_layer2 = self.dense_layer(num_units=n_units[1], act_func=act_func)(dense_critic_layer1)
-#         output_layer_critic = layers.Dense(1,
-#                                            name="OutputLayerCritic",
-#                                            kernel_initializer=tf.keras.initializers.RandomUniform(
-#                                                minval=-0.03, maxval=0.03),
-#                                            bias_initializer=tf.keras.initializers.Constant(0))(dense_critic_layer2)
+#         output_layer_critic = layers.Dense(1, name="OutputLayerCritic")(dense_critic_layer2)
 #
 #         self.model = keras.Model(inputs=input_layer,
 #                                  outputs=[output_layer_vel, output_layer_steer, output_layer_critic],
@@ -126,9 +122,9 @@ class ActorCriticNetDiscrete(keras.Model):
 #         return layers.Dense(
 #             num_units,
 #             activation=act_func,
-#             kernel_initializer=tf.keras.initializers.VarianceScaling(
-#                 scale=2.0, mode='fan_in', distribution='truncated_normal'))
+#             kernel_initializer=self.he)
 #
+#     @tf.function
 #     def call(self, inputs: tf.Tensor):
 #         """ Returns the output of the model given an input. """
 #         return self.model(inputs)
@@ -203,7 +199,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
             action_vel_probs: tf.Tensor,
             action_off_probs: tf.Tensor,
             critic_values: tf.Tensor,
-            returns: tf.Tensor) -> tf.Tensor:
+            returns: tf.Tensor):
         """ Computes the combined actor-critic loss."""
 
         # Advantage: How much better an action is given a state over a random action selected by the policy
@@ -228,6 +224,9 @@ class GradAscentTrainerDiscrete(keras.models.Model):
             timesteps, sim_states, rewards, sim_action_vel_choices, sim_action_off_choices \
                 = self.buffer.experience
 
+            sim_action_vel_choices = tf.keras.utils.to_categorical(sim_action_vel_choices)
+            sim_action_off_choices = tf.keras.utils.to_categorical(sim_action_off_choices)
+
             episode_reward, loss, advantage, grads, returns = self.run_tape(
                 sim_states=sim_states,
                 action_vel_choices=sim_action_vel_choices,
@@ -245,7 +244,7 @@ class GradAscentTrainerDiscrete(keras.models.Model):
 
             return episode_reward, loss
 
-    tf.function
+    @tf.function
     def run_tape(self,
                  sim_states: tf.Tensor,
                  action_vel_choices: tf.Tensor,
@@ -258,10 +257,8 @@ class GradAscentTrainerDiscrete(keras.models.Model):
             critic_values = tf.squeeze(critic_values)
 
             # Choose actions based on what was previously (randomly) sampled during simulation
-            one_hot = tf.keras.utils.to_categorical(action_vel_choices)
-            action_vel = tf.reduce_sum(one_hot * action_vel_probs, axis=1)
-            one_hot = tf.keras.utils.to_categorical(action_off_choices)
-            action_off = tf.reduce_sum(one_hot * action_off_probs, axis=1)
+            action_vel = tf.reduce_sum(action_vel_choices * action_vel_probs, axis=1)
+            action_off = tf.reduce_sum(action_off_choices * action_off_probs, axis=1)
 
             # Calculate expected returns
             returns = self.get_expected_returns(rewards=rewards)
