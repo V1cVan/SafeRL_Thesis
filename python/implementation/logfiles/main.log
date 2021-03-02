@@ -1,12 +1,166 @@
-CRITICAL:root:Using seed 1312556898.000000
+CRITICAL:root:Using seed 2961215904.000000
 CRITICAL:root:Model Parameters:
-CRITICAL:root:{'n_units': (150, 100), 'n_inputs': 54, 'activation_function': <function swish at 0x0000022B468D0AF8>, 'n_actions': 2, 'weights_file_path': './trained_models/model_weights', 'trained_model_file_path': './trained_models/trained_model', 'seed': 1312556898}
+CRITICAL:root:{'n_units': (50, 50), 'n_inputs': 54, 'activation_function': <function relu at 0x0000024EDCB1C948>, 'n_actions': 2, 'weights_file_path': './trained_models/model_weights', 'trained_model_file_path': './trained_models/trained_model', 'seed': 2961215904}
 CRITICAL:root:Training param:
-CRITICAL:root:{'max_steps_per_episode': 3000, 'max_episodes': 5, 'final_return': 4000, 'show_plots_when_training': False, 'plot_freq': 20, 'simulation_timesteps': 500, 'STEP_TIME': 10, 'gamma': 0.99, 'clip_gradients': False, 'clip_norm': 2, 'learning_rate': 8e-05, 'optimiser_name': 'ADAM', 'optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x0000022B4AA6EFC8>, 'loss_func': <tensorflow.python.keras.losses.Huber object at 0x0000022B4A7E3708>, 'seed': 1312556898, 'reward_weights': array([ 1.1,  0. ,  0. ,  0.6, -5. ])}
+CRITICAL:root:{'max_steps_per_episode': 3000, 'max_episodes': 500, 'final_return': 4000, 'show_plots_when_training': True, 'plot_freq': 50, 'simulation_timesteps': 500, 'STEP_TIME': 10, 'gamma': 0.99, 'clip_gradients': False, 'clip_norm': 2, 'standardise_returns': True, 'learning_rate': 0.0001, 'optimiser_name': 'ADAM', 'optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x0000024EE6BD9DC8>, 'loss_func': <tensorflow.python.keras.losses.Huber object at 0x0000024EE2DBFD48>, 'seed': 2961215904, 'reward_weights': array([ 1.1,  0. ,  0. ,  0.6, -5. ])}
 CRITICAL:root:Episode number: 1.00
 CRITICAL:root:Episode number: 2.00
 CRITICAL:root:Episode number: 3.00
 CRITICAL:root:Episode number: 4.00
 CRITICAL:root:Episode number: 5.00
-CRITICAL:root:Running reward = 211.47 at episode 5
-CRITICAL:root:Solved at episode 5!
+CRITICAL:root:Running reward = 165.80 at episode 5. Loss = -116.50
+CRITICAL:root:Episode number: 6.00
+CRITICAL:root:Episode number: 7.00
+CRITICAL:root:Episode number: 8.00
+CRITICAL:root:Episode number: 9.00
+CRITICAL:root:Episode number: 10.00
+CRITICAL:root:Running reward = 339.32 at episode 10. Loss = -101.85
+CRITICAL:root:Episode number: 11.00
+CRITICAL:root:Episode number: 12.00
+CRITICAL:root:Episode number: 13.00
+CRITICAL:root:Episode number: 14.00
+CRITICAL:root:Episode number: 15.00
+CRITICAL:root:Running reward = 473.16 at episode 15. Loss = -160.73
+CRITICAL:root:Episode number: 16.00
+CRITICAL:root:Episode number: 17.00
+CRITICAL:root:Episode number: 18.00
+CRITICAL:root:Episode number: 19.00
+CRITICAL:root:Episode number: 20.00
+CRITICAL:root:Running reward = 632.78 at episode 20. Loss = -72.30
+CRITICAL:root:Episode number: 21.00
+CRITICAL:root:Episode number: 22.00
+CRITICAL:root:Episode number: 23.00
+CRITICAL:root:Episode number: 24.00
+CRITICAL:root:Episode number: 25.00
+CRITICAL:root:Running reward = 719.94 at episode 25. Loss = -151.93
+CRITICAL:root:Episode number: 26.00
+CRITICAL:root:Episode number: 27.00
+CRITICAL:root:Episode number: 28.00
+CRITICAL:root:Episode number: 29.00
+CRITICAL:root:Episode number: 30.00
+CRITICAL:root:Running reward = 710.08 at episode 30. Loss = -163.19
+CRITICAL:root:Episode number: 31.00
+CRITICAL:root:Episode number: 32.00
+CRITICAL:root:Episode number: 33.00
+CRITICAL:root:Episode number: 34.00
+CRITICAL:root:Episode number: 35.00
+CRITICAL:root:Running reward = 795.54 at episode 35. Loss = -171.88
+CRITICAL:root:Episode number: 36.00
+CRITICAL:root:Episode number: 37.00
+CRITICAL:root:Episode number: 38.00
+CRITICAL:root:Episode number: 39.00
+CRITICAL:root:Episode number: 40.00
+CRITICAL:root:Running reward = 862.04 at episode 40. Loss = -204.09
+CRITICAL:root:Episode number: 41.00
+CRITICAL:root:Episode number: 42.00
+CRITICAL:root:Episode number: 43.00
+CRITICAL:root:Episode number: 44.00
+CRITICAL:root:Episode number: 45.00
+CRITICAL:root:Running reward = 959.34 at episode 45. Loss = -183.59
+CRITICAL:root:Episode number: 46.00
+CRITICAL:root:Episode number: 47.00
+CRITICAL:root:Episode number: 48.00
+CRITICAL:root:Episode number: 49.00
+CRITICAL:root:Episode number: 50.00
+CRITICAL:root:Running reward = 1030.57 at episode 50. Loss = -299.72
+CRITICAL:root:Episode number: 51.00
+CRITICAL:root:Episode number: 52.00
+CRITICAL:root:Episode number: 53.00
+CRITICAL:root:Episode number: 54.00
+CRITICAL:root:Episode number: 55.00
+CRITICAL:root:Running reward = 1088.12 at episode 55. Loss = -341.47
+CRITICAL:root:Episode number: 56.00
+CRITICAL:root:Episode number: 57.00
+CRITICAL:root:Episode number: 58.00
+CRITICAL:root:Episode number: 59.00
+CRITICAL:root:Episode number: 60.00
+CRITICAL:root:Running reward = 1137.77 at episode 60. Loss = -369.86
+CRITICAL:root:Episode number: 61.00
+CRITICAL:root:Episode number: 62.00
+CRITICAL:root:Episode number: 63.00
+CRITICAL:root:Episode number: 64.00
+CRITICAL:root:Episode number: 65.00
+CRITICAL:root:Running reward = 1139.19 at episode 65. Loss = -368.52
+CRITICAL:root:Episode number: 66.00
+CRITICAL:root:Episode number: 67.00
+CRITICAL:root:Episode number: 68.00
+CRITICAL:root:Episode number: 69.00
+CRITICAL:root:Episode number: 70.00
+CRITICAL:root:Running reward = 1187.25 at episode 70. Loss = -446.23
+CRITICAL:root:Episode number: 71.00
+CRITICAL:root:Episode number: 72.00
+CRITICAL:root:Episode number: 73.00
+CRITICAL:root:Episode number: 74.00
+CRITICAL:root:Episode number: 75.00
+CRITICAL:root:Running reward = 1180.78 at episode 75. Loss = -511.03
+CRITICAL:root:Episode number: 76.00
+CRITICAL:root:Episode number: 77.00
+CRITICAL:root:Episode number: 78.00
+CRITICAL:root:Episode number: 79.00
+CRITICAL:root:Episode number: 80.00
+CRITICAL:root:Running reward = 1220.78 at episode 80. Loss = -577.57
+CRITICAL:root:Episode number: 81.00
+CRITICAL:root:Episode number: 82.00
+CRITICAL:root:Episode number: 83.00
+CRITICAL:root:Episode number: 84.00
+CRITICAL:root:Episode number: 85.00
+CRITICAL:root:Running reward = 1240.42 at episode 85. Loss = -674.07
+CRITICAL:root:Episode number: 86.00
+CRITICAL:root:Episode number: 87.00
+CRITICAL:root:Episode number: 88.00
+CRITICAL:root:Episode number: 89.00
+CRITICAL:root:Episode number: 90.00
+CRITICAL:root:Running reward = 1237.29 at episode 90. Loss = -668.73
+CRITICAL:root:Episode number: 91.00
+CRITICAL:root:Episode number: 92.00
+CRITICAL:root:Episode number: 93.00
+CRITICAL:root:Episode number: 94.00
+CRITICAL:root:Episode number: 95.00
+CRITICAL:root:Running reward = 1263.09 at episode 95. Loss = -822.18
+CRITICAL:root:Episode number: 96.00
+CRITICAL:root:Episode number: 97.00
+CRITICAL:root:Episode number: 98.00
+CRITICAL:root:Episode number: 99.00
+CRITICAL:root:Episode number: 100.00
+CRITICAL:root:Running reward = 1292.79 at episode 100. Loss = -907.41
+CRITICAL:root:Episode number: 101.00
+CRITICAL:root:Episode number: 102.00
+CRITICAL:root:Episode number: 103.00
+CRITICAL:root:Episode number: 104.00
+CRITICAL:root:Episode number: 105.00
+CRITICAL:root:Running reward = 1310.62 at episode 105. Loss = -1035.07
+CRITICAL:root:Episode number: 106.00
+CRITICAL:root:Episode number: 107.00
+CRITICAL:root:Episode number: 108.00
+CRITICAL:root:Episode number: 109.00
+CRITICAL:root:Episode number: 110.00
+CRITICAL:root:Running reward = 1323.67 at episode 110. Loss = -1039.49
+CRITICAL:root:Episode number: 111.00
+CRITICAL:root:Episode number: 112.00
+CRITICAL:root:Episode number: 113.00
+CRITICAL:root:Episode number: 114.00
+CRITICAL:root:Episode number: 115.00
+CRITICAL:root:Running reward = 1328.95 at episode 115. Loss = -1351.18
+CRITICAL:root:Episode number: 116.00
+CRITICAL:root:Episode number: 117.00
+CRITICAL:root:Episode number: 118.00
+CRITICAL:root:Episode number: 119.00
+CRITICAL:root:Episode number: 120.00
+CRITICAL:root:Running reward = 1342.15 at episode 120. Loss = -1540.57
+CRITICAL:root:Episode number: 121.00
+CRITICAL:root:Episode number: 122.00
+CRITICAL:root:Episode number: 123.00
+CRITICAL:root:Episode number: 124.00
+CRITICAL:root:Episode number: 125.00
+CRITICAL:root:Running reward = 1341.76 at episode 125. Loss = -1529.03
+CRITICAL:root:Episode number: 126.00
+CRITICAL:root:Episode number: 127.00
+CRITICAL:root:Episode number: 128.00
+CRITICAL:root:Episode number: 129.00
+CRITICAL:root:Episode number: 130.00
+CRITICAL:root:Running reward = 1354.59 at episode 130. Loss = -1877.97
+CRITICAL:root:Episode number: 131.00
+CRITICAL:root:Episode number: 132.00
+CRITICAL:root:Episode number: 133.00
+CRITICAL:root:Episode number: 134.00
+CRITICAL:root:Episode number: 135.00

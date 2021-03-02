@@ -23,8 +23,8 @@ class DiscreteStochasticGradAscent(CustomPolicy):
         veh.counter = 0
         veh.s0 = None
         veh.s0_mod = None
-        veh.s1 = veh.s_raw
-        veh.s1_mod = self.convert_state(veh)
+        veh.s1 = None
+        veh.s1_mod = None
         veh.a0 = None
         veh.a0_mod = None
         veh.a0_choice = None
@@ -47,26 +47,37 @@ class DiscreteStochasticGradAscent(CustomPolicy):
             veh.s1 = veh.s_raw
             veh.s1_mod = self.convert_state(veh)
             action_vel_probs, action_off_probs, veh.c1 = self.get_action_and_critic(veh.s1_mod)
+            self.trainer.states.append(veh.s1_mod)
+            self.trainer.actions.append(action_vel_probs)
             veh.a1_mod = [action_vel_probs, action_off_probs]
             action_choice_vel, action_choice_off = self.trainer.get_action_choice([action_vel_probs, action_off_probs])
             veh.a1_choice = [action_choice_vel, action_choice_off]
             veh.a1 = self.convert_action_discrete(veh, [action_choice_vel, action_choice_off])
 
             # Save experience
-            if veh.a0_mod is not None:
+            if veh.a0_mod is not None:  # Check if the agent has taken an action that led to this reward...
+
                 # Calculate reward at current state (if action was taken previously)
                 veh.reward = self.get_reward(veh) + np.sum(veh.rew_buffer)
+                self.trainer.rewards.append(veh.reward)
                 if self.trainer is not None and self.trainer.training is True:
                     # Save action taken previously on previous state value
+                    # action = velocity action, lane_change action
                     action = veh.a0_mod[0][0, veh.a0_choice[0]], veh.a0_mod[1][0, veh.a0_choice[1]]
+
                     # Save to buffer from the Buffer class in HelperClasses.py module
                     # add_experience expects (timestep, state, vel_model_action, off_model_action,
                     #                         vel_action_sim, offset_action_sim, vel_choice, off_choice, reward, critic)
-                    self.trainer.buffer.set_experience(self.trainer.timestep, np.squeeze(veh.s0_mod),
-                                                       np.array(action[0]), np.array(action[1]),
-                                                       veh.a0[0], veh.a0[1],
-                                                       veh.a0_choice[0], veh.a0_choice[1],
-                                                       veh.reward, np.squeeze(veh.c0))
+                    self.trainer.buffer.set_experience(timestep=self.trainer.timestep,
+                                                       state=np.squeeze(veh.s0_mod),
+                                                       vel_action_model=np.array(action[0]),
+                                                       off_action_model=np.array(action[1]),
+                                                       vel_action_sim=veh.a0[0],
+                                                       offset_action_sim=veh.a0[1],
+                                                       vel_choice=veh.a0_choice[0],
+                                                       off_choice=veh.a0_choice[1],
+                                                       reward=veh.reward,
+                                                       critic=np.squeeze(veh.c0))
 
             # Set past vehicle state and action pair
             veh.s0 = veh.s1
@@ -75,14 +86,14 @@ class DiscreteStochasticGradAscent(CustomPolicy):
             veh.a0_mod = veh.a1_mod
             veh.a0_choice = veh.a1_choice
             veh.c0 = veh.c1
-            veh.rew_buffer= []
+            veh.rew_buffer = []
             output = np.array([veh.a1[0], veh.a1[1]], dtype=np.float64)  # The hwsim library uses double precision floats
             veh.prev_action = [action_choice_vel, action_choice_off]
             return output
 
         else:
             discrete_actions = self.convert_action_discrete(veh, veh.prev_action)
-            output = np.array([discrete_actions[0], discrete_actions[1]], dtype=np.float64)
+            output = np.array(discrete_actions, dtype=np.float64)
             veh.rew_buffer.append(self.get_reward(veh))
             return output
 

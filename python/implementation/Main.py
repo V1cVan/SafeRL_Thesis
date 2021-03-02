@@ -102,7 +102,7 @@ class Main(object):
 
                 with trainerTimer:
                     policy.trainer.buffer.set_tf_experience_for_episode_training()
-                    episode_reward = policy.trainer.train_step()
+                    episode_reward, loss = policy.trainer.train_step()
 
                 self.data_logger.set_complete_episode(policy.trainer.buffer.get_experience())
 
@@ -116,8 +116,8 @@ class Main(object):
             running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
 
             if episode_count % 5 == 0:
-                print_template = "Running reward = {:.2f} at episode {}"
-                print_output = print_template.format(running_reward, episode_count)
+                print_template = "Running reward = {:.2f} at episode {}. Loss = {:.2f}"
+                print_output = print_template.format(running_reward, episode_count, loss)
                 print(print_output)
                 logging.critical(print_output)
                 self.data_logger.plot_training_data(plot_items)
@@ -308,9 +308,9 @@ if __name__=="__main__":
 
     # Model configuration and settings
     model_param = {
-        "n_units": (150, 100),
+        "n_units": (50, 50),
         "n_inputs": 54,  # Standard size of S
-        "activation_function": tf.nn.swish,  # activation function of hidden nodes
+        "activation_function": tf.nn.relu,  # activation function of hidden nodes
         "n_actions": 2,
         "weights_file_path": "./trained_models/model_weights",
         "trained_model_file_path": "./trained_models/trained_model",
@@ -321,7 +321,7 @@ if __name__=="__main__":
 
     STEP_TIME = 10
     optimiser = "ADAM"
-    learning_rate = 0.00008
+    learning_rate = 0.0001
     if optimiser == "ADAM":
         optimiser_name = optimiser
         optimiser = tf.optimizers.Adam(learning_rate=learning_rate)
@@ -331,15 +331,16 @@ if __name__=="__main__":
 
     training_param = {
         "max_steps_per_episode": 3000,
-        "max_episodes": 5, #500,
+        "max_episodes": 500,
         "final_return": 4000,
-        "show_plots_when_training": False,
-        "plot_freq": 20,
+        "show_plots_when_training": True,
+        "plot_freq": 50,
         "simulation_timesteps": 500,
         "STEP_TIME": STEP_TIME,  # Currently not implemented
         "gamma": 0.99,
         "clip_gradients": False,
         "clip_norm": 2,
+        "standardise_returns": True,
         "learning_rate": learning_rate,
         "optimiser_name": optimiser_name,
         "optimiser": optimiser,
