@@ -18,7 +18,7 @@ int main(){
     BaseFactory::BluePrint kbm = Model::KinematicBicycleModel().blueprint();
     BaseFactory::BluePrint basic = Policy::BasicPolicy(Policy::BasicPolicy::Type::NORMAL).blueprint();
     std::vector<Simulation::VehicleType> vTypes = {
-        {N,{kbm,basic,1,1,150},{{{minSize,1500},{maxSize,3000}}},{0.7,1}}
+        {N,{kbm,basic,1,1,150,{}},{{{minSize,1500},{maxSize,3000}}},{0.7,1}}
     };
     Simulation sim(simConfig,sc,vTypes);
     bool stop = false;

@@ -143,6 +143,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // static storage duration object for table mapping handles to instances
     static instanceMap_type instanceTab;
 
+    // TODO: do proper nlhs check in each switch case
+    if(nlhs < 1)
+        mexErrMsgIdAndTxt("mexRoad:init","At least one output must be available.");
+
     if (nrhs < 1 || !mxIsChar(prhs[0]))
         mexErrMsgIdAndTxt("mexSim:init","First input must be an action string ('new', 'delete', or a method name).");
 
@@ -312,7 +316,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         try{
             const Vehicle& v = instance->getVehicle(id);
             double* result;
-            unsigned int off = 8;
+            // unsigned int off = 8;
             switch(vehicleInfoTypeMap.at(type)){
                 case VehicleInfoType::Model:
                     plhs[0] = mxCreateDoubleMatrix(12,1,mxREAL);

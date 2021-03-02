@@ -4,17 +4,16 @@ import typing
 import pathlib
 import random
 import json
+import yaml
 import time
 from warnings import warn
-from hwsim._utils import conditional
+from hwsim._utils import conditional, timing
 from hwsim._wrapper import simLib, SimConfig, VehConfig, VehProps, VehInitialState, VehType, VehDef
 from hwsim.scenario import Scenario
 from hwsim.vehicle import Vehicle
 from hwsim.policy import _Policy, BasicPolicy, CustomPolicy
 from hwsim.model import _Model, KBModel, CustomModel
 from hwsim.serialization import JSONDecoder, JSONEncoder
-
-import timeit
 
 class Simulation(object):
 
@@ -32,7 +31,7 @@ class Simulation(object):
         scenario:       Name of scenario to load
         name:           Name of this simulation
         output_dir:     Path to folder in which this simulation's data should be stored
-        output_mode:    Either '~' or 'none' to suppress all output; 'cfg' to only store the used configuration; or 'all' to also store the log files
+        output_mode:    Either '~' or 'none' to suppress all output; 'cfg' to only store the used configuration; 'log' to only store the log files; or 'all' to store everything
         input_dir:      Path to folder of previous simulation to load in
         k0:             Initial value for the current time step k
         replay:         True to replay the loaded simulation, False to continue simulating from k=k0
@@ -41,6 +40,8 @@ class Simulation(object):
         L:              Default value for state parameter L (see Vehicle)
         N_OV:           Default value for state parameter N_OV (see Vehicle)
         D_MAX:          Default value for state parameter D_MAX (see Vehicle)
+        safety:         Default values for safety parameters Mvel, Moff, Gth & TL
+        metrics:        Metrics added to each vehicle
         vehicles:       Configuration for all vehicles in this simulation (see add_vehicles)
         """
         # Create simulation configuration and internal variables
@@ -58,6 +59,7 @@ class Simulation(object):
             "scenario": "", # Scenario name
             "types": [], # Types of vehicles that will be created
             "defs": [], # Definitions of vehicles that will be created
+            "metrics": [], # Common metrics for all vehicles
             "vehicles": [] # Configuration of vehicles that will be created (used for JSON serialization and python Vehicle object creation)
         }
         self._h = None
@@ -73,13 +75,15 @@ class Simulation(object):
         self.kM = sConfig.get("kM", 1000)
         self._vehCfgDefaults = {
             "L": sConfig.get("L", 1),
-            "N_OV": sConfig.get("N_OV", 1),
+            "N_OV": sConfig.get("N_OV", 2),
             "D_MAX": sConfig.get("D_MAX", 150.0),
+            "safety": sConfig.get("safety", {}), # Uses defaults in _wrapper
             "minSize": [4,1.6,1.5],
             "maxSize": [5,2.1,2],
             "minMass": 1500,
             "maxMass": 3000
         }
+        self.metrics.extend(sConfig.get("metrics",[]))
         input_dir = sConfig.get("input_dir", "")
         k0 = sConfig.get("k0", 0)
         replay = sConfig.get("replay", False)
@@ -133,7 +137,7 @@ class Simulation(object):
     @output_mode.setter
     @conditional(_inactive)
     def output_mode(self, val):
-        modes = ["~", "none", "cfg", "all"]
+        modes = ["~", "none", "cfg", "log", "all"]
         val = str(val).lower()
         assert val in modes
         if val=="~" or val=="none":
@@ -171,7 +175,8 @@ class Simulation(object):
             sim_name = self._simCfg["name"]
         file_name = {
             "log": "log.h5",
-            "cfg": "sim_cfg.jsonc"
+            "cfg": "sim_cfg.yaml",
+            "cfg_old": "sim_cfg.json"
         }[file]
         path = self._sim_dir(dir,sim_name).joinpath(file_name) if dir else None
         return self._convert_path(path,dtype)
@@ -183,8 +188,11 @@ class Simulation(object):
         self.name = name
         if not config:
             if self._sim_file("cfg",input_dir).exists():
+                # Uncomment for older json configuration file support:
+                # with open(self._sim_file("cfg_old",input_dir),'rb') as f:
+                #     config = json.load(f,cls=JSONDecoder)["vehicles"]
                 with open(self._sim_file("cfg",input_dir),'rb') as f:
-                    config = json.load(f,cls=JSONDecoder)["vehicles"]
+                    config = yaml.safe_load(f)["vehicles"]
             else:
                 config = []
         self._simCfg["input_dir"] = str(input_dir)
@@ -205,6 +213,10 @@ class Simulation(object):
     @conditional(_inactive)
     def scenario(self, val):
         self._simCfg["scenario"] = str(val)
+
+    @property
+    def metrics(self):
+        return self._simCfg["metrics"]
 
     @conditional(_inactive)
     def clear_vehicles(self):
@@ -261,7 +273,8 @@ class Simulation(object):
         L = vEntry.setdefault("L", self._vehCfgDefaults["L"])
         N_OV = vEntry.setdefault("N_OV", self._vehCfgDefaults["N_OV"])
         D_MAX = vEntry.setdefault("D_MAX", self._vehCfgDefaults["D_MAX"])
-        vehConfig = VehConfig(model,policy,L,N_OV,D_MAX)
+        safety = vEntry.setdefault("safety", self._vehCfgDefaults["safety"])
+        vehConfig = VehConfig(model,policy,L,N_OV,D_MAX,safety)
         # Based on isDef, create a VehDef or VehType structure
         if isDef:
             vehDef = VehDef()
@@ -316,16 +329,22 @@ class Simulation(object):
     def __enter__(self):
         assert self._simCfg["input_dir"] or len(self._simCfg["types"])>0 or len(self._simCfg["defs"])>0
         # Make sure output directory exists:
+        output_dir = ""
         if self._simCfg["output_dir"] and self._simCfg["output_mode"]:
             self._sim_dir(self._simCfg["output_dir"]).mkdir(parents=True)
             # Save simulation configuration in output dir for later use
-            cfg = {key: val for key,val in self._simCfg.items() if key not in ["types","defs"]}
-            with open(self._sim_file("cfg",self._simCfg["output_dir"]),'w') as f:
-                json.dump(cfg, f, cls=JSONEncoder, indent=2)
+            if self._simCfg["output_mode"] in ("all","cfg"):
+                cfg = {key: val for key,val in self._simCfg.items() if key not in ["types","defs"]}
+                # with open(self._sim_file("cfg_old",self._simCfg["output_dir"]),'w') as f:
+                #     json.dump(cfg, f, cls=JSONEncoder, indent=2)
+                with open(self._sim_file("cfg",self._simCfg["output_dir"]),'w') as f:
+                    yaml.safe_dump(cfg, f, default_flow_style=None,sort_keys=False) # flow_style None will use flow style for inner lists/dicts
+            # Save log file in output dir for later replays
+            if self._simCfg["output_mode"] in ("all","log"):
+                output_dir = self._simCfg["output_dir"]
         # Create new simulation object
         simCfg = SimConfig()
         simCfg.dt = self._simCfg["dt"]
-        output_dir = self._simCfg["output_dir"] if self._simCfg["output_mode"]=="all" else ""
         simCfg.output_log = self._sim_file("log", output_dir, dtype='b')
         # Call proper constructor
         if self._simCfg["input_dir"]:
@@ -345,8 +364,8 @@ class Simulation(object):
         # Create vehicle instances:
         V = simLib.sim_getNbVehicles(self._h)
         self._adjust_entries(V)
-        vGen = enumerate((vEntry["model"],vEntry["policy"]) for vEntry in self._simCfg["vehicles"] for _ in range(vEntry.get("amount",1)))
-        self.vehicles = [Vehicle(self,v_id,model,policy) for v_id,(model,policy) in vGen]
+        vGen = enumerate((vEntry["model"],vEntry["policy"],vEntry.get("metrics",[])) for vEntry in self._simCfg["vehicles"] for _ in range(vEntry.get("amount",1)))
+        self.vehicles = [Vehicle(self,v_id,model,policy,[*self._simCfg["metrics"],*metrics]) for v_id,(model,policy,metrics) in vGen]
         # Initialize step and mode:
         self._mode = simLib.sim_getMode(self._h)
         self._k = simLib.sim_getStep(self._h)
@@ -364,10 +383,12 @@ class Simulation(object):
         self._k = -1
 
     #region: Active simulation methods and properties
+    @timing("Custom models", False)
     def _applyCustomModels(self):
         # TODO: call custom models here
         return False
 
+    @timing("Custom policies", False)
     def _applyCustomPolicies(self):
         # Check all vehicle policies and see whether they want to override
         # the default actions:
@@ -378,23 +399,28 @@ class Simulation(object):
                 veh._next_a = None
         return False
 
+    @timing("Custom controllers", False)
     def _applyCustomControllers(self):
         # TODO: call custom controllers here
         return False
 
+    @timing("Metric updates", False)
+    def _updateMetrics(self):
+        # Update all vehicle metrics:
+        for veh in self.vehicles:
+            for metric in veh._metrics:
+                veh.metrics.update(metric.fetch(veh))
+
+    @timing("Step from B", False)
     def _stepFromB(self):
-        # start = timeit.default_timer()
         stop = self._applyCustomPolicies() if self._mode==0 else False
-        # print(f"Custom policies: {(timeit.default_timer()-start)*1000}ms")
-        # start = timeit.default_timer()
         stop |= simLib.sim_stepC(self._h)
-        # print(f"Step C: {(timeit.default_timer()-start)*1000}ms")
         stop |= self._applyCustomControllers() if self._mode==0 else False
-        # start = timeit.default_timer()
         stop |= simLib.sim_stepD(self._h)
-        # print(f"Step D: {(timeit.default_timer()-start)*1000}ms")
+        self._updateMetrics()
         return stop
 
+    @timing("Step", False)
     def step(self):
         """
         Perform one simulation step
@@ -402,15 +428,9 @@ class Simulation(object):
         if self.stopped:
             raise RuntimeError("Cannot continue simulation as the simulation was stopped previously.")
         # Perform one simulation step
-        # start = timeit.default_timer()
         stop = simLib.sim_stepA(self._h)
-        # print(f"Step A: {(timeit.default_timer()-start)*1000}ms")
-        # start = timeit.default_timer()
         stop |= self._applyCustomModels() if self._mode==0 else False
-        # print(f"Custom models: {(timeit.default_timer()-start)*1000}ms")
-        # start = timeit.default_timer()
         stop |= simLib.sim_stepB(self._h)
-        # print(f"Step B: {(timeit.default_timer()-start)*1000}ms")
         stop |= self._stepFromB()
         self._collision = stop
         self._k += 1

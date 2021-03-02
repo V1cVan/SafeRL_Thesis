@@ -57,8 +57,8 @@ class Property{
             //  dv: Derivative of the transition values for the given x
             v = C;
             dv = 0;
-            for(int t=0;t<transitions.size();t++){
-                transitions[t].evaluate(x,v,dv);
+            for(const Transition& T : transitions){
+                T.evaluate(x,v,dv);
             }
         }
 

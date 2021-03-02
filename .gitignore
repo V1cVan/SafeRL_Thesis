@@ -1,2 +1,15 @@
 .vscode
 build
+.idea
+C
+dependencies
+examples
+include
+install
+matlab
+scenarios
+tests
+CMakeLists.txt
+readme.md
+python/examples/*
+python/hwsim/*

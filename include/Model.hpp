@@ -4,7 +4,6 @@
 #include "Utils.hpp"
 #include "VehicleBase.hpp"
 #include <array>
-//#include <valarray>
 #include <algorithm>
 #include <cmath>
 
@@ -33,12 +32,14 @@ namespace Model{
             ModelBase(const std::array<Input,2>& uBounds = DEFAULT_INPUT_BOUNDS)
             : inputBounds(uBounds){}
 
-            virtual void preIntegration(const VehicleBase& vb, State& x) const{
+            virtual ~ModelBase() = default;
+
+            virtual void preIntegration(const VehicleBase& /*vb*/, State& /*x*/) const{
                 // Subclasses can modify the current state vector right before the RK4 integration
                 // is performed on the model's derivatives.
             }
 
-            virtual void postIntegration(const VehicleBase& vb, Eigen::Ref<State> x) const{
+            virtual void postIntegration(const VehicleBase& /*vb*/, Eigen::Ref<State> /*x*/) const{
                 // Subclasses can modify the updated state vector right after the RK4 integration
                 // is performed on the model's derivatives.
             }
@@ -68,9 +69,9 @@ namespace Model{
     // --- Custom model ---
     struct CustomModel : public Serializable<ModelBase,ModelBase::factory,CustomModel,0>{
         
-        CustomModel(const sdata_t = sdata_t()){}
+        CustomModel(const sdata_t& = sdata_t()){}
 
-        inline State derivatives_(const VehicleBase& vb, const State& x, const Input& u) const{
+        inline State derivatives_(const VehicleBase& /*vb*/, const State& /*x*/, const Input& /*u*/) const{
             return {
                 {std::nan(""),std::nan(""),std::nan("")}, // pos
                 {std::nan(""),std::nan(""),std::nan("")}, // ang
@@ -79,7 +80,7 @@ namespace Model{
             };
         }
 
-        inline Input nominalInputs(const VehicleBase& vb, const State& x, const double gamma) const{
+        inline Input nominalInputs(const VehicleBase& /*vb*/, const State& /*x*/, const double /*gamma*/) const{
             return {std::nan(""),std::nan("")};
         }
     };
@@ -88,7 +89,7 @@ namespace Model{
     // --- Kinematic bicycle model ---
     struct KinematicBicycleModel : public Serializable<ModelBase,ModelBase::factory,KinematicBicycleModel,1>{
         
-        KinematicBicycleModel(const sdata_t = sdata_t()){}
+        KinematicBicycleModel(const sdata_t& = sdata_t()){}
 
         inline State derivatives_(const VehicleBase& vb, const State& x, const Input& u) const{
             // Calculate slip angle (beta) and total velocity
@@ -112,7 +113,7 @@ namespace Model{
             x.vel[1] = v*std::sin(beta);
         }
 
-        inline Input nominalInputs(const VehicleBase& vb, const State& x, const double gamma) const{
+        inline Input nominalInputs(const VehicleBase& vb, const State& /*x*/, const double gamma) const{
             return {0,std::atan(vb.size[0]/vb.cgLoc[0]*std::tan(-gamma))};
         }
     };
@@ -121,9 +122,9 @@ namespace Model{
     // --- Dynamic bicycle model ---
     struct DynamicBicycleModel : public Serializable<ModelBase,ModelBase::factory,DynamicBicycleModel,2>{
         
-        DynamicBicycleModel(const sdata_t = sdata_t()){}
+        DynamicBicycleModel(const sdata_t& = sdata_t()){}
 
-        inline State derivatives_(const VehicleBase& vb, const State& x, const Input& u) const{
+        inline State derivatives_(const VehicleBase& /*vb*/, const State& /*x*/, const Input& /*u*/) const{
             // TODO
             // Calculate state derivatives:
             State dx = {
@@ -135,11 +136,11 @@ namespace Model{
             return dx;
         }
 
-        inline Input nominalInputs(const VehicleBase& vb, const State& x, const double gamma) const{
+        inline Input nominalInputs(const VehicleBase& /*vb*/, const State& /*x*/, const double /*gamma*/) const{
             // TODO
             return {std::nan(""),std::nan("")};
         }
     };
-};
+}
 
 #endif

@@ -181,8 +181,8 @@ class Scenario{
             const std::vector<double> offsets = std::vector<double>(roads.size(),0);
             const std::vector<double> weights = std::vector<double>(roads.size(),1);
             double d = 0;
-            for(int r=0;r<roads.size();r++){
-                std::tuple<Property,Property,double> laneMappings = roads[r].linearLaneMapping(d);
+            for(const Road& road : roads){
+                std::tuple<Property,Property,double> laneMappings = road.linearLaneMapping(d);
                 MLv.push_back(std::get<0>(laneMappings));
                 Msv.push_back(std::get<1>(laneMappings));
                 MRv.push_back(Transition(0,d,d,0,1));// Step to next road id
@@ -351,7 +351,7 @@ class Scenario{
 
             G2lib::ClothoidList cl = G2lib::ClothoidList();
             cl.reserve(static_cast<int>(dims[0]));
-            for(int i=0;i<dims[0];i++){
+            for(hsize_t i=0;i<dims[0];i++){
                 cl.push_back(dCp[6*i],dCp[6*i+1],dCp[6*i+2],dCp[6*i+3],dCp[6*i+4],dCp[6*i+5]);
             }
 

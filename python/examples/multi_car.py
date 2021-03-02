@@ -9,6 +9,7 @@ if __name__=="__main__":
     PLOT_MODE = Plotter.Mode.LIVE
     OFF_SCREEN = False
     FANCY_CARS = True
+    V = 64 # Vehicle to focus on in plots
     LOG_DIR = "logs"
     ROOT = pathlib.Path(__file__).resolve().parents[2]
     SC_PATH = ROOT.joinpath("scenarios/scenarios.h5")
@@ -48,7 +49,7 @@ if __name__=="__main__":
         groups = [([0,1],0)]
         vehicle_type = "car" if FANCY_CARS else "cuboid3D"
         p = Plotter(sim,"Multi car simulation",mode=PLOT_MODE,shape=shape,groups=groups,off_screen=OFF_SCREEN)
-        p.V = 64
+        p.V = V
         p.subplot(0,0)
         p.add_text("Detail view")
         DetailPlot(p,show_ids=True)

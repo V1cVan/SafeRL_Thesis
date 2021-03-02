@@ -11,7 +11,7 @@ class FixedLanePolicy(CustomPolicy, enc_name="fixed_lane"):
     bounded by the safety bounds (taking vehicles in front into account)."""
     LONG_ACTION = ActionType.ABS_VEL
     LAT_ACTION = ActionType.REL_OFF # Alternatively: ActionType.LANE
-    
+
     def __init__(self):
         super().__init__()
         self.STEP_TIME = 100 # Change reference velocity every 100 iterations (10s)
@@ -42,7 +42,7 @@ class FixedLanePolicy(CustomPolicy, enc_name="fixed_lane"):
         v = min(v_max,bounds["long"][1])
         v = max(0,v)
         # Final actions are: the target velocity and negating the offset towards the lane center
-        return np.array([v,-s["laneC"]["off"]])
+        return np.array([v, -s["laneC"]["off"]])
         # Alternatively (with LANE actionType):
         # return np.array([v,0]) # Lane reference is 0 => remain in (center of) current lane
 
@@ -64,12 +64,14 @@ def simulate(sim):
         p.subplot(1,1)
         p.add_text("Actions")
         lines = {
-            "rel_vel": {
-                "color": [0, 0, 0],
-                "getValue": lambda veh: veh.rel_vel
-            }
+            "rel_vel": {"color": [0, 0, 0]}
         }
-        TimeChartPlot(p, lines, None, "rel_vel", [0])
+        def value_cb(veh):
+            values = {
+                "rel_vel": veh.rel_vel
+            }
+            return values, {}
+        TimeChartPlot(p, lines, None, value_cb, "rel_vel", [0])
         p.subplot(2,1)
         ActionsPlot(p,actions="long")
         p.subplot(3,1)

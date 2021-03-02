@@ -94,7 +94,7 @@ class Transition {
             }
         }
 
-        static inline void smooth_linear(double& u,double& du){}
+        static inline void smooth_linear(double& /*u*/, double& /*du*/){}
 
         static inline void smooth_quadratic(double& u, double& du){
             if(u<=0.5){

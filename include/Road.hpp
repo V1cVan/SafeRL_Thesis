@@ -255,7 +255,7 @@ class Road{
             const int dir = static_cast<int>(lanes[L].direction);
             const int delta = static_cast<int>(d)*dir;
             int N = L+delta;
-            while(!hasNeighbour && N>=0 && N<lanes.size()){
+            while(!hasNeighbour && N>=0 && static_cast<unsigned int>(N)<lanes.size()){
                 hasNeighbour = lanes[N].isValid(s) && s!=lanes[N].validity[(1+dir)/2];// TODO: maybe include lane end if it coincides with road end?
                 N += delta;
             }
@@ -382,40 +382,40 @@ class Road{
             Ms.reserve(1+2*lanes.size());
             double prev_s = 0, d = d0;
             std::array<double,2> val;
-            for(int L=0;L<lanes.size();L++){
-                val = lanes[L].validity;
-                if(lanes[L].width(val[0])==0){
+            for(const Lane& lane : lanes){
+                val = lane.validity;
+                if(lane.width(val[0])==0){
                     // If lane's width is zero at s=val[0], increase val[0] to the point where the lane is fully
                     // inserted (assuming there is a single transition responsible for the insertion)
                     double newVal = val[0];
-                    for(const Transition& T : lanes[L].widthProp.transitions){
+                    for(const Transition& T : lane.widthProp.transitions){
                         if(T.from==val[0]){
                             newVal = std::max(newVal,T.to);
                         }
                     }
                     val[0] = newVal;
                 }
-                if(lanes[L].width(val[1])==0){
+                if(lane.width(val[1])==0){
                     // If lane's width is zero at s=val[1], decrease val[1] to the point where the lane is fully
                     // inserted (assuming there is a single transition responsible for the insertion)
                     double newVal = val[1];
-                    for(const Transition& T : lanes[L].widthProp.transitions){
+                    for(const Transition& T : lane.widthProp.transitions){
                         if(T.to==val[1]){
                             newVal = std::min(newVal,T.from);
                         }
                     }
                     val[1] = newVal;
                 }
-                if(lanes[L].merge){
+                if(lane.merge){
                     // If lane merges with another lane, decrease val[1] (or increase val[0]) to the point where
                     // the lane is not yet being merged (assuming there is a single transition responsible for
                     // the merge)
-                    double newVal = lanes[L].end();
-                    int dir = static_cast<int>(lanes[L].direction);
-                    for(const Transition& T : lanes[L].offsetProp.transitions){
-                        if(dir>0 && T.to==lanes[L].end()){
+                    double newVal = lane.end();
+                    int dir = static_cast<int>(lane.direction);
+                    for(const Transition& T : lane.offsetProp.transitions){
+                        if(dir>0 && T.to==lane.end()){
                             newVal = std::min(newVal,T.from);
-                        }else if(dir<0 && T.from==lanes[L].end()){
+                        }else if(dir<0 && T.from==lane.end()){
                             newVal = std::max(newVal,T.to);
                         }
                     }

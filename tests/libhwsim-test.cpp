@@ -3,8 +3,8 @@
 #include "doctest.h"
 
 TEST_CASE("Checking the hwsim wrapper library"){
-    char* path = "../scenarios/scenarios.h5";
-    char* scenario = "CLOVERLEAF_RAW";
+    const char* path = "../scenarios/scenarios.h5";
+    const char* scenario = "CLOVERLEAF_RAW";
     Simulation* null_sim = NULL;
     SUBCASE("Scenario creation"){
         sConfig sConf = {0.1,NULL};
@@ -30,8 +30,8 @@ TEST_CASE("Checking the hwsim wrapper library"){
     cfg_scenariosPath(path);
     sConfig sConf = {0.1,NULL};
     SUBCASE("Blueprints"){
-        unsigned char bpt[1];
-        pbp_basic(bpt,2);
+        unsigned char bpt[24];
+        pbp_basicT(bpt,2);
         vType vTypes[1] = {
             {1,{1,NULL,2,bpt,1,1,50.0},{minProps,maxProps}},
         };
@@ -62,9 +62,11 @@ TEST_CASE("Checking the hwsim wrapper library"){
         CHECK(sim == null_sim);
     }
     SUBCASE("Size"){
+        unsigned char bpt[24];
+        pbp_basicT(bpt,2);
         vType vTypes[2] = {
-            {1,{1,NULL,1,NULL,1,1,50.0},{minProps,minProps}},
-            {1,{1,NULL,1,NULL,1,1,50.0},{maxProps,maxProps}}
+            {1,{1,NULL,2,bpt,1,1,50.0},{minProps,minProps}},
+            {1,{1,NULL,2,bpt,1,1,50.0},{maxProps,maxProps}}
         };
         Simulation* sim = sim_from_types(&sConf,scenario,vTypes,2);
         Vehicle* veh0 = sim_getVehicle(sim,0);

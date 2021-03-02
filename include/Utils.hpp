@@ -74,90 +74,154 @@ struct RNG : public R{
         }
 };
 
-struct Utils{
-    #ifdef COMPAT
-    static RNG<std::mt19937> rng;
-    #else
-    static inline RNG<std::mt19937> rng{};
-    #endif
-    static constexpr double PI = 3.14159265358979323846;
-    static constexpr double EPS = 1e-6;
-    using sdata_t = std::vector<std::byte>;
+class Utils{
+    public:
+        #ifdef COMPAT
+        static RNG<std::mt19937> rng;
+        #else
+        static inline RNG<std::mt19937> rng{};
+        #endif
+        static constexpr double PI = 3.14159265358979323846;
+        static constexpr double EPS = 1e-6;
+        using sdata_t = std::vector<std::byte>;
 
-    template<class Scalar>
-    static inline int sign(Scalar d){
-        if(std::abs(d)<EPS){
-            return 0;
-        }else{
-            return std::signbit(d) ? -1 : 1;
+        template<class Scalar>
+        static inline int sign(Scalar d){
+            if(std::abs(d)<EPS){
+                return 0;
+            }else{
+                return std::signbit(d) ? -1 : 1;
+            }
         }
-    }
 
-    static inline double wrapAngle(double alpha){
-        // Wraps any given angle (in radians) to the interval [-PI,PI]
-        return std::remainder(alpha,2*PI);
-    }
-
-    template<class State, class Sys>
-    static inline State integrateRK4(const Sys& sys, const State& x, const double dt){
-        // Integrate the given system from the given state for a time step dt.
-        State k1 = dt*sys(x);
-        State k2 = dt*sys(x+k1/2);
-        State k3 = dt*sys(x+k2/2);
-        State k4 = dt*sys(x+k3);
-        return x+(k1+2*k2+2*k3+k4)/6;
-    }
-
-    template <class Op, class ItOut, class ... ItInputs>
-    static inline void transform(Op f, ItOut outStart, ItOut outEnd, ItInputs... inputs)
-    {
-        while(outStart != outEnd){
-            *outStart++ = f(*inputs++...);
+        static inline double wrapAngle(double alpha){
+            // Wraps any given angle (in radians) to the interval [-PI,PI]
+            return std::remainder(alpha,2*PI);
         }
-    }
 
-    template<class C1, class C2, class Op>
-    static inline C1 ebop(const C1& lhs, const C2& rhs, const Op& op){// Elementwise binary operation on values of two containers
-        assert(rhs.size()==lhs.size());
-        C1 result = C1();
-        std::transform(lhs.begin(),lhs.end(),rhs.begin(),result.begin(),op);
-        return result;
-    }
+        template<class State, class Sys>
+        static inline State integrateRK4(const Sys& sys, const State& x, const double dt){
+            // Integrate the given system from the given state for a time step dt.
+            State k1 = dt*sys(x);
+            State k2 = dt*sys(x+k1/2);
+            State k3 = dt*sys(x+k2/2);
+            State k4 = dt*sys(x+k3);
+            return x+(k1+2*k2+2*k3+k4)/6;
+        }
 
-    template<class C, class Op>
-    static inline C euop(const C& container, const Op& op){// Elementwise unary operation on values of a container
-        C result = C();
-        std::transform(container.begin(),container.end(),result.begin(),op);
-        return result;
-    }
+        template <class Op, class ItOut, class ... ItInputs>
+        static inline void transform(Op f, ItOut outStart, ItOut outEnd, ItInputs... inputs)
+        {
+            while(outStart != outEnd){
+                *outStart++ = f(*inputs++...);
+            }
+        }
 
-    // Default serializer
-    template<class C>
-    static inline sdata_t serialize(const C& obj){
-        sdata_t data;
-        data.reserve(sizeof(C));
-        const std::byte* bytes = reinterpret_cast<const std::byte*>(&obj);
-        data.insert(data.end(),bytes,bytes+sizeof(C));
-        return data;
-    }
+        template<class C1, class C2, class Op>
+        static inline C1 ebop(const C1& lhs, const C2& rhs, const Op& op){// Elementwise binary operation on values of two containers
+            assert(rhs.size()==lhs.size());
+            C1 result = C1();
+            std::transform(lhs.begin(),lhs.end(),rhs.begin(),result.begin(),op);
+            return result;
+        }
 
-    // Default deserializer
-    template<class C>
-    static inline C deserialize(const sdata_t& data){
-        const std::byte* bytes = data.data();
-        const C* obj = reinterpret_cast<const C*>(bytes);
-        return C(*obj);// Create copy
-    }
+        template<class C, class Op>
+        static inline C euop(const C& container, const Op& op){// Elementwise unary operation on values of a container
+            C result = C();
+            std::transform(container.begin(),container.end(),result.begin(),op);
+            return result;
+        }
 
-    // template<class To>
-    // struct cast_from_byte{
-    //     To* operator()(std::byte* data){ return reinterpret_cast<To*>(data); }
-    // };
+        template<size_t N>
+        static inline constexpr std::array<size_t,N> partial_sum(const std::array<size_t,N>& arr){
+            // Can be replaced by std::partial_sum in C++20
+            using Arr = std::array<size_t,N>;
+            Arr s = arr;
+            #ifdef COMPAT
+            const Arr& const_s = static_cast<const Arr&>(s);
+            #endif
+            for(size_t i=1;i<N;i++){
+                #ifndef COMPAT
+                s[i] += s[i-1];
+                #else
+                // Oversight in C++14 standard, see https://stackoverflow.com/a/34200975
+                const_cast<size_t&>(const_s[i]) += const_s[i-1];
+                #endif
+            }
+            return s;
+        }
 
-    // template<class From>
-    // struct cast_to_byte{
-    //     std::byte* operator()(From* data){ return reinterpret_cast<std::byte*>(data); }
-    // };
+        // Default serializer (to existing data vector)
+        template<class C, class ... Cs>
+        static inline void serialize(sdata_t& data, const C& obj, const Cs&... objs){
+            const std::byte* bytes = reinterpret_cast<const std::byte*>(&obj);// Interpret obj as a bytes array
+            data.insert(data.end(),bytes,bytes+sizeof(C));// Insert bytes into data vector
+            // Following fold expression is evaluated from left to right (because of the comma)
+            #ifndef COMPAT
+            // C++17 fold expression:
+            (serialize(data, objs),...);
+            #else
+            // Expander trick: https://stackoverflow.com/a/30563282
+            using expander = int[];
+            (void) expander {0, ((void)serialize(data, objs), 0)...};
+            #endif
+        }
+
+        // Default serializer (to new data vector)
+        template<class C, class ... Cs>
+        static inline sdata_t serialize(const C& obj, const Cs&... objs){
+            sdata_t data;
+            serialize(data, obj, objs...);
+            return data;
+        }
+
+        // Default deserializer (single type)
+        template<class C>
+        static inline C deserialize(const sdata_t& data){
+            assert(data.size()>=sizeof(C));
+            const std::byte* bytes = data.data();
+            return deserialize<C>(bytes);
+        }
+
+        // Default deserializer (multiple types)
+        template<class C1, class C2, class ... Cs>
+        static inline std::tuple<C1,C2,Cs...> deserialize(const sdata_t& data){
+            // Indices trick, see https://stackoverflow.com/a/31054198
+            return deserialize<C1,C2,Cs...>(data, std::index_sequence_for<C1,C2,Cs...>{});
+        }
+
+        // template<class To>
+        // struct cast_from_byte{
+        //     To* operator()(std::byte* data){ return reinterpret_cast<To*>(data); }
+        // };
+
+        // template<class From>
+        // struct cast_to_byte{
+        //     std::byte* operator()(From* data){ return reinterpret_cast<std::byte*>(data); }
+        // };
+
+    private:
+        // Default deserializer (helper method with proper Idxs pack)
+        template<class ... Cs, size_t ... Idxs>
+        static inline std::tuple<Cs...> deserialize(const sdata_t& data, std::index_sequence<Idxs...>){
+            // Idxs is a pack of integers: 0,1,...,N-1
+            static constexpr size_t N = sizeof...(Cs);
+            static constexpr std::array<size_t, N+1> sizes = {0,sizeof(Cs)...};
+            static constexpr std::array<size_t, N+1> offsets = partial_sum(sizes);
+            assert(data.size()>=offsets[N]);
+            const std::byte* bytes = data.data();
+            // Following fold expression can be evaluated arbitrarily (because it's a function call),
+            // but the offsets will always be correct (taking into account the left to right serialization
+            // process).
+            return std::tuple<Cs...>(deserialize<Cs>(bytes+offsets[Idxs])...);
+        }
+
+        // Default deserializer (from bytes array)
+        template<class C>
+        static inline C deserialize(const std::byte* bytes){
+            const C* obj = reinterpret_cast<const C*>(bytes);// Reinterpret bytes as object
+            return C(*obj);// Return copy of object
+        }
 };
 
 #ifdef COMPAT
@@ -289,12 +353,8 @@ struct Serializable : public T{// T inherits from ISerializable
     template<class... Args>
     Serializable(Args&&... args) : T(std::forward<Args>(args)...){
         // Forward constructor arguments to Base constructor (T)
-        ID; // Prevent ID (and hence the class registration) from being removed by compiler optimizations
+        (void) ID; // Prevent ID (and hence the class registration) from being removed by compiler optimizations
     }
-
-    // Serializable(){
-    //     ID; // Prevent ID (and hence the class registration) from being removed by compiler optimizations
-    // }
 
     inline typename BaseFactory::BluePrint blueprint() const{
         sdata_t data;
