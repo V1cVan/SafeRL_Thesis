@@ -145,6 +145,7 @@ class DataLogger(object):
         """"
         Pickles the all the variables during training for all the episodes in a file that can be opened later.
         """
+        self.global_parameters["training_parameters"].pop("optimiser")
         training_variables = {
             "parameters": self.global_parameters,
             "episode_variables": self.episodes,
