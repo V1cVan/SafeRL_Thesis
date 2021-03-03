@@ -6,7 +6,8 @@ import pandas as pd
 import numpy as np
 import tensorflow as tf
 import pickle as pic
-
+from collections import deque
+import random
 
 """
     HelperClasses.py module contains:
@@ -270,12 +271,9 @@ class EpisodeBuffer(object):
         self.timesteps = []
         self.states = []
         self.actions = {
-            "vel_model": [],
-            "offset_model": [],
-            "vel_simulator": [],
-            "offset_simulator": [],
-            "vel_choice": [],
-            "offset_choice": []
+            "model": [],
+            "simulator": [],
+            "choice": [],
         }
         self.critic = []
         self.advantage = []
@@ -287,17 +285,14 @@ class EpisodeBuffer(object):
         self.model_weights = []
         self.experience = None
 
-    def set_experience(self, timestep, state, vel_action_model, off_action_model,
-                       vel_action_sim, offset_action_sim, vel_choice, off_choice, reward, critic):
+    def set_experience(self, timestep, state, action_model,
+                       action_sim, action_choice, reward, critic):
         """ Adds the most recent experience to the buffer. """
         self.timesteps.append(timestep)
         self.states.append(state)
-        self.actions["vel_model"].append(vel_action_model)
-        self.actions["offset_model"].append(off_action_model)
-        self.actions["vel_simulator"].append(vel_action_sim)
-        self.actions["offset_simulator"].append(offset_action_sim)
-        self.actions["vel_choice"].append(vel_choice)
-        self.actions["offset_choice"].append(off_choice)
+        self.actions["model"].append(action_model)
+        self.actions["simulator"].append(action_sim)
+        self.actions["choice"].append(action_choice)
         self.rewards.append(reward)
         self.critic.append(critic)
 
@@ -315,12 +310,9 @@ class EpisodeBuffer(object):
         if timestep is not None:
             index = timestep-1
             actions = {
-                "vel_model": self.actions["vel_model"][index],
-                "offset_model": self.actions["offset_model"][index],
-                "vel_simulator": self.actions["vel_simulator"][index],
-                "offset_simulator": self.actions["offset_simulator"][index],
-                "vel_choice": self.actions["vel_choice"][index],
-                "offset_choice": self.actions["offset_choice"][index],
+                "model": self.actions["model"][index],
+                "simulator": self.actions["simulator"][index],
+                "choice": self.actions["choice"][index],
             }
             output_dict = {
                 "episode_num": self.episode,
@@ -337,12 +329,9 @@ class EpisodeBuffer(object):
             }
         else:
             actions = {
-                "vel_model": self.actions["vel_model"],
-                "offset_model": self.actions["offset_model"],
-                "vel_simulator": self.actions["vel_simulator"],
-                "offset_simulator": self.actions["offset_simulator"],
-                "vel_choice": self.actions["vel_choice"],
-                "offset_choice": self.actions["offset_choice"],
+                "model": self.actions["model"],
+                "simulator": self.actions["simulator"],
+                "choice": self.actions["choice"],
             }
             output_dict = {
                 "episode_num": self.episode,
@@ -364,9 +353,8 @@ class EpisodeBuffer(object):
         timesteps = tf.convert_to_tensor(self.timesteps)
         states = tf.convert_to_tensor(self.states)
         rewards = tf.convert_to_tensor(self.rewards)
-        action_vel_choice = tf.expand_dims(tf.convert_to_tensor(self.actions["vel_choice"], dtype=tf.int32),1)
-        action_off_choice = tf.expand_dims(tf.convert_to_tensor(self.actions["offset_choice"], dtype=tf.int32),1)
-        self.experience = timesteps, states, rewards, action_vel_choice, action_off_choice
+        action_choice = tf.convert_to_tensor(self.actions["choice"], dtype=tf.int32)
+        self.experience = timesteps, states, rewards, action_choice
 
     def alter_reward_at_timestep(self, timestep, reward_change):
         """
@@ -379,12 +367,9 @@ class EpisodeBuffer(object):
         """ Clears all the experiences in the episode. """
         self.timesteps = []
         self.states = []
-        self.actions["vel_model"] = []
-        self.actions["offset_model"] = []
-        self.actions["vel_simulator"] = []
-        self.actions["offset_simulator"] = []
-        self.actions["vel_choice"] = []
-        self.actions["offset_choice"] = []
+        self.actions["model"] = []
+        self.actions["simulator"] = []
+        self.actions["choice"] = []
         self.rewards = []
         self.critic = []
         self.loss = []
@@ -393,6 +378,32 @@ class EpisodeBuffer(object):
         self.model_weights = []
 
 
+
+class TrainingBuffer(object):
+    """
+    The training buffer is used to store experiences that are then sampled from uniformly to facilitate
+    improved training. The training buffer reduces the correlation between experiences and avoids that
+    the network 'forgets' good actions that it learnt previously.
+    """
+
+    def __init__(self, max_mem_size, batch_size):
+        self.max_mem_size = max_mem_size
+        self.buffer = deque(maxlen=max_mem_size)
+        self.batch_size = batch_size
+
+    def set_experience(self, state, action, reward, next_state, done_flag):
+        """
+        Add an experience (s_k, a_k, r_k, s_k+1) to the training buffer.
+        """
+        experience = (state, action, reward, next_state, done_flag)
+        self.buffer.append(experience)
+
+    def get_training_samples(self):
+        """ Get minibatch for training. """
+        return random.sample(self.buffer, self.batch_size)
+
+    def is_buffer_min_size(self):
+        return len(self.buffer) >= self.batch_size
 
 
 
