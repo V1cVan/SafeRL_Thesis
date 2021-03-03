@@ -313,7 +313,7 @@ if __name__=="__main__":
 
     # Model configuration and settings
     model_param = {
-        "n_units": (30, 20),
+        "n_units": (100, 50),
         "n_inputs": 54,  # Standard size of S
         "activation_function": tf.nn.swish,  # activation function of hidden nodes
         "n_actions": 2,
@@ -324,7 +324,7 @@ if __name__=="__main__":
     logging.critical("Model Parameters:")
     logging.critical(model_param)
 
-    STEP_TIME = 20
+    STEP_TIME = 10
     optimiser = "ADAM"
     learning_rate = 0.00005
     if optimiser == "ADAM":
@@ -338,18 +338,18 @@ if __name__=="__main__":
         "max_steps_per_episode": 3000,
         "max_episodes": 500,
         "final_return": 4000,
-        "show_plots_when_training": False,
+        "show_plots_when_training": True,
         "plot_freq": 50,
         "simulation_timesteps": 500,
         "STEP_TIME": STEP_TIME,  # Currently not implemented
-        "gamma": 0.99,
+        "gamma": 0.95,
         "clip_gradients": True,
         "clip_norm": 2,
         "standardise_returns": True,
         "learning_rate": learning_rate,
         "optimiser_name": optimiser_name,
         "optimiser": optimiser,
-        "loss_func": tf.losses.Huber(),
+        "loss_func": tf.losses.Huber(reduction=tf.keras.losses.Reduction.SUM),
         "seed": seed,
         "reward_weights": np.array([1.1, 0., 0., 0.6, -5])  # (rew_vel, rew_lat_position, rew_fol_dist, collision penalty)
     }
@@ -373,7 +373,7 @@ if __name__=="__main__":
     trainerTimer = Timer("the Trainer")
     episodeTimer = Timer("Episode")
 
-    sim_number = 0
+    sim_number = 2
     sim = Simulation(sim_types(sim_number))
 
     # Set up main class for running simulations:

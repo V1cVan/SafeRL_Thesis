@@ -251,10 +251,10 @@ class DataLogger(object):
         losses_graph.autoscale_view(True, True, True)  # Autoscale
         plt.pause(0.001)
         gradients_mean = np.array(gradients_mean)
-        if gradients_mean.all()!=np.NaN:
-            g_lines.set_data(ep, np.mean(gradients_mean, axis=1))
-            grad_graph.relim()  # Recalculate limits
-            grad_graph.autoscale_view(True, True, True)  # Autoscale
+        # if gradients_mean.all()!=np.NaN:
+        #     g_lines.set_data(ep, np.mean(gradients_mean, axis=1))
+        #     grad_graph.relim()  # Recalculate limits
+        #     grad_graph.autoscale_view(True, True, True)  # Autoscale
         plt.pause(0.001)
         plt.draw()
         plt.savefig('Training_plots.png')
