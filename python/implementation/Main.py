@@ -69,9 +69,10 @@ class Main(object):
         show_plots = training_param["show_plots_when_training"]
         max_timesteps_episode = training_param["max_steps_per_episode"]
         policy = self.pol[0]["policy"]
-
-        plot_items = self.data_logger.init_training_plot()
-
+        trained = False
+        # plot_items = self.data_logger.init_training_plot()
+        train_counter = 1
+        model_update_counter = 1
         # Run until all episodes are completed (reward reached).
         while episode_count <= training_param["max_episodes"]:
             policy.trainer.episode = episode_count
@@ -90,34 +91,52 @@ class Main(object):
                     # Saves actions values, critic values, and rewards in policy class variables
                     for t in np.arange(1, max_timesteps_episode+1):
                         # logging.critical("Timestep of episode: %0.2f" % self.sim.k)
-                        if t%training_param["STEP_TIME"]==0:
-                            policy.trainer.timestep = np.int(t/training_param["STEP_TIME"])
+
+                        trainer.stop_flags = self.sim.stopped
+                        if t%training_param["STEP_TIME"] == 0:
+                            train_counter += 1
+                            trainer.epsilon_decay_count = train_counter
+                            trainer.timestep = np.int(t/training_param["STEP_TIME"])
+                            if trainer.buffer.is_buffer_min_size():
+                                train_counter += 1
+                                model_update_counter += 1
+                                if model_update_counter % training_param["model_update_rate"] == 0:
+                                    reward, loss = trainer.train_step()
+                                    trained = True
+                                if model_update_counter % training_param["target_update_rate"] == 0:
+                                    trainer.update_target_net()
+                                    print("Updated target net.")
+
+
+
                         # Perform one simulations step:
                         if not self.sim.stopped:
                             self.sim.step()  # Calls AcPolicy.customAction method.
-                            if self.sim._collision:
-                                logging.critical("Collision. At episode %f" % episode_count)
-                                policy.trainer.set_neg_collision_reward(np.int(t/training_param["STEP_TIME"]),
-                                                                        training_param["reward_weights"][4])
+                            # if self.sim._collision:
+                            #     logging.critical("Collision. At episode %f" % episode_count)
+                            #     policy.trainer.set_neg_collision_reward(np.int(t/training_param["STEP_TIME"]),
+                            #                                             training_param["reward_weights"][4])
 
-                with trainerTimer:
-                    policy.trainer.buffer.set_tf_experience_for_episode_training()
-                    episode_reward, loss = policy.trainer.train_step()
+                # with trainerTimer:
+                #     policy.trainer.buffer.set_tf_experience_for_episode_training()
+                #     episode_reward, loss = policy.trainer.train_step()
 
-                self.data_logger.set_complete_episode(policy.trainer.buffer.get_experience())
+                # self.data_logger.set_complete_episode(policy.trainer.buffer.get_experience())
 
                 # Clear loss values and reward history
-                policy.trainer.buffer.clear_experience()
+                # policy.trainer.buffer.clear_experience()
 
-            if 0.05 * episode_reward + (1 - 0.05) * running_reward > running_reward:
-                policy.trainer.actor_critic_net.save_weights(model_param["weights_file_path"])
+            if trained:
+                # Running reward smoothing effect
+                running_reward = 0.05 * reward + (1 - 0.05) * running_reward
 
-            # Running reward smoothing effect
-            running_reward = 0.05 * episode_reward + (1 - 0.05) * running_reward
+                if 0.05 * reward + (1 - 0.05) * running_reward > running_reward:
+                    policy.trainer.Q_actual_net.save_weights(model_param["weights_file_path"])
 
-            if episode_count % 5 == 0:
-                print_template = "Running reward = {:.2f} at episode {}. Loss = {:.2f}"
-                print_output = print_template.format(running_reward, episode_count, loss)
+            if episode_count % 5 == 0 and trained:
+                epsilon = trainer.calc_epsilon()
+                print_template = "Running reward = {:.2f} at episode {}. Loss = {:.2f}. Epsilon = {:.2f}."
+                print_output = print_template.format(running_reward, episode_count, loss, epsilon)
                 print(print_output)
                 logging.critical(print_output)
 
@@ -127,17 +146,17 @@ class Main(object):
                 print_output = "Solved at episode {}!".format(episode_count)
                 print(print_output)
                 logging.critical(print_output)
-                policy.trainer.actor_critic_net.save_weights(model_param["weights_file_path"])
-                self.data_logger.plot_training_data(plot_items)
-                self.data_logger.save_training_data("./trained_models/training_variables.p")
+                policy.trainer.Q_actual_net.save_weights(model_param["weights_file_path"])
+                # self.data_logger.plot_training_data(plot_items)
+                # self.data_logger.save_training_data("./trained_models/training_variables.p")
 
 
                 break
 
             episode_count += 1
 
-            if episode_count % plot_freq == 0 and show_plots:
-                self.data_logger.plot_training_data(plot_items)
+            # if episode_count % plot_freq == 0 and show_plots:
+            #     self.data_logger.plot_training_data(plot_items)
 
 
 
@@ -165,7 +184,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"amount": 1, "model": KBModel(), "policy": DiscreteStochasticGradAscent(trainer)},
+            {"amount": 1, "model": KBModel(), "policy": DiscreteActionPolicy(trainer)},
             # {"amount": 2, "model": KBModel(), "policy": StepPolicy(10, [0.1, 0.5])},
             # {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
             # {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
@@ -185,7 +204,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"amount": 1, "model": KBModel(), "policy": DiscreteStochasticGradAscent(trainer)}
+            {"amount": 1, "model": KBModel(), "policy": DiscreteActionPolicy(trainer)}
         ]
     }
 
@@ -197,7 +216,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": DiscreteStochasticGradAscent(trainer), "R": 0, "l": 0, "s": 0,
+            {"model": KBModel(), "policy": DiscreteActionPolicy(trainer), "R": 0, "l": 0, "s": 0,
              "v": random.randint(25, 28)},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 50, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 150, "v": 24},
@@ -214,7 +233,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": DiscreteStochasticGradAscent(trainer), "R": 0, "l": 3.6, "s": 0,
+            {"model": KBModel(), "policy": DiscreteActionPolicy(trainer), "R": 0, "l": 3.6, "s": 0,
              "v": random.randint(25, 28)},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 40, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 50, "v": 24},
@@ -231,7 +250,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": DiscreteStochasticGradAscent(trainer), "R": 0, "l": 3.6, "s": 0,
+            {"model": KBModel(), "policy": DiscreteActionPolicy(trainer), "R": 0, "l": 3.6, "s": 0,
              "v": random.randint(25, 28)},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 0, "v": 24}
@@ -246,7 +265,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": DiscreteStochasticGradAscent(trainer), "R": 0, "l": -3.6, "s": 0,
+            {"model": KBModel(), "policy": DiscreteActionPolicy(trainer), "R": 0, "l": -3.6, "s": 0,
              "v": random.randint(25, 28)},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 10, "v": 24}
@@ -261,7 +280,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": DiscreteStochasticGradAscent(trainer), "R": 0, "l": 0, "s": 0,
+            {"model": KBModel(), "policy": DiscreteActionPolicy(trainer), "R": 0, "l": 0, "s": 0,
              "v": random.randint(25, 28)},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 20, "v": 24},
@@ -315,7 +334,7 @@ if __name__=="__main__":
     model_param = {
         "n_units": (100, 50),
         "n_inputs": 54,  # Standard size of S
-        "activation_function": tf.nn.swish,  # activation function of hidden nodes
+        "activation_function": tf.nn.relu,  # activation function of hidden nodes
         "n_actions": 2,
         "weights_file_path": "./trained_models/model_weights",
         "trained_model_file_path": "./trained_models/trained_model",
@@ -326,7 +345,7 @@ if __name__=="__main__":
 
     STEP_TIME = 10
     optimiser = "ADAM"
-    learning_rate = 0.00005
+    learning_rate = 0.0001
     if optimiser == "ADAM":
         optimiser_name = optimiser
         optimiser = tf.optimizers.Adam(learning_rate=learning_rate)
@@ -335,14 +354,22 @@ if __name__=="__main__":
         optimiser = tf.optimizers.RMSprop(learning_rate=learning_rate)
 
     training_param = {
-        "max_steps_per_episode": 3000,
-        "max_episodes": 500,
-        "final_return": 4000,
+        "max_steps_per_episode": 3e3,
+        "max_episodes": 2200,
+        "final_return": 1e10,
         "show_plots_when_training": True,
         "plot_freq": 50,
-        "simulation_timesteps": 500,
+        "simulation_timesteps": 200,
+        "max_buffer_size": 100000,
+        "batch_size": 400,
+        "evaluation": False,
+        "epsilon_max": 1.0,  # Initial epsilon - Exploration
+        "epsilon_min": 0.1,  # Final epsilon - Exploitation
+        "decay_rate": 0.99999,
+        "model_update_rate": 400,
+        "target_update_rate": 1e4,
         "STEP_TIME": STEP_TIME,  # Currently not implemented
-        "gamma": 0.99,
+        "gamma": 0.95,
         "clip_gradients": True,
         "clip_norm": 2,
         "standardise_returns": True,
@@ -357,10 +384,11 @@ if __name__=="__main__":
     logging.critical(training_param)
 
     # Initialise network/model architecture:
-    actor_critic_net = ActorCriticNetDiscrete(model_param)
-    # AC_vel_net = ActorCriticVelocity(model_param)
-    # AC_steer_net = ActorCriticSteering(model_param)
-    trainer = GradAscentTrainerDiscrete(actor_critic_net, training_param)  # training method used
+    # actor_critic_net = ActorCriticNetDiscrete(model_param)
+    # trainer = GradAscentTrainerDiscrete(actor_critic_net, training_param)
+    DQ_net = DeepQNetwork(model_param)
+    trainer = DqnTrainer(network=DQ_net, training_param=training_param)
+
 
     # Simulation configuration and settings
     # TODO Move to randomly initialising vehicles infront of ego vehicle to learn more complex actions than staying in lane
@@ -383,7 +411,7 @@ if __name__=="__main__":
     main.train_policy()
 
     # Simulate model:
-    main.pol[0]["policy"].trainer.actor_critic_net.load_weights(model_param["weights_file_path"])
+    main.pol[0]["policy"].trainer.Q_actual_net.load_weights(model_param["weights_file_path"])
     for i in range(0, 5):
         main = Main(sim_types(2))
         main.simulate(1000)
