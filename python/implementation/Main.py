@@ -11,9 +11,10 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from NeuralModels import *
-from RL_Policies import *
+from Agents import *
+from Policies import *
 from HelperClasses import *
+from Models import *
 import logging
 from matplotlib import pyplot as plt
 
@@ -357,7 +358,8 @@ if __name__=="__main__":
 
     # Initialise network/model architecture:
     actor_critic_net = ActorCriticNetDiscrete(model_param)
-    actor_critic_net.display_overview()
+    # AC_vel_net = ActorCriticVelocity(model_param)
+    # AC_steer_net = ActorCriticSteering(model_param)
     trainer = GradAscentTrainerDiscrete(actor_critic_net, training_param)  # training method used
 
     # Simulation configuration and settings
