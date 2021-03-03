@@ -23,7 +23,7 @@ class ActorCriticNetDiscrete(keras.Model):
 
         self.he = tf.keras.initializers.HeNormal()
         glorot = tf.keras.initializers.GlorotNormal()
-        normal = tf.keras.initializers.RandomUniform(minval=-0.03, maxval=0.03)
+        self.normal = tf.keras.initializers.RandomUniform(minval=-0.01, maxval=0.01)
         var_scale = tf.keras.initializers.VarianceScaling(scale=2.0, mode='fan_in', distribution='truncated_normal')
 
         input_layer = layers.Input(shape=(n_inputs,),
@@ -35,12 +35,12 @@ class ActorCriticNetDiscrete(keras.Model):
         output_layer_vel = layers.Dense(3,
                                         name="OutputLayerVelocity",
                                         activation=tf.nn.softmax,
-                                        kernel_initializer=glorot,
+                                        kernel_initializer=var_scale,
                                         bias_initializer=tf.keras.initializers.Constant(0))(dense_actor_layer2)
         output_layer_steer = layers.Dense(3,
                                           name="OutputLayerSteering",
                                           activation=tf.nn.softmax,
-                                          kernel_initializer=glorot,
+                                          kernel_initializer=var_scale,
                                           bias_initializer=tf.keras.initializers.Constant(0))(dense_actor_layer2)
 
         # Critic net:
@@ -57,7 +57,7 @@ class ActorCriticNetDiscrete(keras.Model):
         return layers.Dense(
             num_units,
             activation=act_func,
-            kernel_initializer=self.he)
+            kernel_initializer=self.normal)
 
     @tf.function
     def call(self, inputs: tf.Tensor):
