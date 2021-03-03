@@ -342,7 +342,7 @@ if __name__=="__main__":
         "plot_freq": 50,
         "simulation_timesteps": 500,
         "STEP_TIME": STEP_TIME,  # Currently not implemented
-        "gamma": 0.95,
+        "gamma": 0.99,
         "clip_gradients": True,
         "clip_norm": 2,
         "standardise_returns": True,
@@ -373,7 +373,7 @@ if __name__=="__main__":
     trainerTimer = Timer("the Trainer")
     episodeTimer = Timer("Episode")
 
-    sim_number = 2
+    sim_number = 0
     sim = Simulation(sim_types(sim_number))
 
     # Set up main class for running simulations:

@@ -82,7 +82,8 @@ class GradAscentTrainerDiscrete(keras.models.Model):
         actor_off_loss = -tf.math.reduce_sum(action_off_log_probs * advantage)
 
         # critic_loss = tf.losses.MSE(y_true=critic_values, y_pred=returns)
-        critic_loss = tf.reduce_mean(tf.square(critic_values - returns))
+        # critic_loss = tf.reduce_mean(tf.square(critic_values - returns))
+        critic_loss = self.training_param["loss_func"](critic_values, returns)
 
         loss = critic_loss + actor_vel_loss + actor_off_loss
 
@@ -115,15 +116,14 @@ class GradAscentTrainerDiscrete(keras.models.Model):
 
             return episode_reward, loss
 
-    @tf.function
+    #@tf.function
     def run_tape(self,
                  sim_states: tf.Tensor,
                  action_vel_choices: tf.Tensor,
                  action_off_choices: tf.Tensor,
                  rewards: tf.Tensor):
         """ Performs the training calculations in a tf.function. """
-        # Calculate expected returns
-        returns = self.get_expected_returns(rewards=rewards)
+
 
         with tf.GradientTape() as tape:
             # Forward Pass - (Re)Calculation of actions that caused saved states
@@ -133,6 +133,9 @@ class GradAscentTrainerDiscrete(keras.models.Model):
             # Choose actions based on what was previously (randomly) sampled during simulation
             action_vel = tf.reduce_sum(action_vel_choices * action_vel_probs, axis=1)
             action_off = tf.reduce_sum(action_off_choices * action_off_probs, axis=1)
+
+            # Calculate expected returns
+            returns = self.get_expected_returns(rewards=rewards)
 
             # Calculating loss values to update our network
             loss, advantage = self.compute_loss(action_vel, action_off, critic_values, returns)
