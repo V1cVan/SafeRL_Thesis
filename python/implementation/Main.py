@@ -17,6 +17,7 @@ from HelperClasses import *
 from Models import *
 import logging
 from matplotlib import pyplot as plt
+import time
 
 # tf.config.experimental.set_visible_devices([0], "GPU")
 
@@ -39,7 +40,7 @@ class Main(object):
         groups = [([0, 2], 0)]
         vehicle_type = "car" if FANCY_CARS else "cuboid3D"
         # self.p = Plotter(self.sim, "Multi car simulation", mode=PLOT_MODE, shape=shape, groups=groups, off_screen=OFF_SCREEN)
-        self.p = Plotter(self.sim, "Multi car simulation", mode=Plotter.Mode.MP4, shape=shape, groups=groups,
+        self.p = Plotter(self.sim, "Multi car simulation", mode=Plotter.Mode.LIVE, shape=shape, groups=groups,
                          V=0, state=Plotter.State.PLAY)
         self.p.subplot(0, 0)
         self.p.add_text("Detail view")
@@ -78,7 +79,9 @@ class Main(object):
             policy.trainer.episode = episode_count
 
             if episode_count % plot_freq == 0 and show_plots:
+                trainer.prev_epsilon = trainer.epsilon
                 self.simulate(training_param["simulation_timesteps"])
+                trainer.epsilon = trainer.prev_epsilon
 
             # print("Episode number: %0.2f" % episode_count)
             logging.critical("Episode number: %0.2f" % episode_count)
@@ -92,7 +95,6 @@ class Main(object):
                     for t in np.arange(1, max_timesteps_episode+1):
                         # logging.critical("Timestep of episode: %0.2f" % self.sim.k)
 
-                        trainer.stop_flags = self.sim.stopped
                         if t%training_param["STEP_TIME"] == 0:
                             train_counter += 1
                             trainer.epsilon_decay_count = train_counter
@@ -107,11 +109,15 @@ class Main(object):
                                     trainer.update_target_net()
                                     print("Updated target net.")
 
+                        trainer.stop_flags = self.sim.stopped or self.sim._collision
+                        if trainer.stop_flags == True:
+                            trainer.buffer.alter_buffer_stop_flag(flag=trainer.stop_flags)
 
 
                         # Perform one simulations step:
                         if not self.sim.stopped:
                             self.sim.step()  # Calls AcPolicy.customAction method.
+
                             # if self.sim._collision:
                             #     logging.critical("Collision. At episode %f" % episode_count)
                             #     policy.trainer.set_neg_collision_reward(np.int(t/training_param["STEP_TIME"]),
@@ -127,11 +133,13 @@ class Main(object):
                 # policy.trainer.buffer.clear_experience()
 
             if trained:
+                if 0.05 * reward + (1 - 0.05) * running_reward > running_reward and episode_count%50==0:
+                    policy.trainer.Q_actual_net.save_weights(model_param["weights_file_path"])
+                    print("Saved network weights.")
+
                 # Running reward smoothing effect
                 running_reward = 0.05 * reward + (1 - 0.05) * running_reward
 
-                if 0.05 * reward + (1 - 0.05) * running_reward > running_reward:
-                    policy.trainer.Q_actual_net.save_weights(model_param["weights_file_path"])
 
             if episode_count % 5 == 0 and trained:
                 epsilon = trainer.calc_epsilon()
@@ -149,8 +157,6 @@ class Main(object):
                 policy.trainer.Q_actual_net.save_weights(model_param["weights_file_path"])
                 # self.data_logger.plot_training_data(plot_items)
                 # self.data_logger.save_training_data("./trained_models/training_variables.p")
-
-
                 break
 
             episode_count += 1
@@ -162,20 +168,34 @@ class Main(object):
 
     def simulate(self, simulation_timesteps):
         self.pol[0]["policy"].trainer.training = False
+        trainer.evaluation = True
+        steps = 0
+        print_counter = 0
         with self.sim:
             self.create_plot()
-            t = 1
-            while not self.sim.stopped:
+            while not self.sim.stopped and not self.p.closed and steps<simulation_timesteps:
                 self.sim.step()
+                if print_counter % 10 == 0:
+                    if trainer.latest_action == 0:
+                        print("0: Slowing down.")
+                    elif trainer.latest_action == 1:
+                        print("1: Constant speed.")
+                    elif trainer.latest_action == 2:
+                        print("2: Speeding up.")
+                    elif trainer.latest_action == 3:
+                        print("3: Turning left.")
+                    elif trainer.latest_action == 4:
+                        print("4: Turning right.")
+                steps += 1
+                print_counter += 1
                 self.p.plot()
-                t += 1
-                if t == simulation_timesteps:
-                    self.p.close()
-                    break
+            self.p.close()
+            trainer.evaluation = False
+            trainer.training = True
 
-        self.pol[0]["policy"].trainer.training = True
 
 def sim_types(sim_num):
+    # TODO make variation in sims
     # Randomised highway
     sim_config_0 = {
         "name": "AC_policy_dense_highway",
@@ -188,9 +208,9 @@ def sim_types(sim_num):
             # {"amount": 2, "model": KBModel(), "policy": StepPolicy(10, [0.1, 0.5])},
             # {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
             # {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
-            {"amount": 22, "model": KBModel(), "policy": BasicPolicy("slow")},
-            {"amount": 14, "model": KBModel(), "policy": BasicPolicy("normal")},
-            {"amount": 7, "model": KBModel(), "policy": BasicPolicy("fast")}
+            {"amount": 27, "model": KBModel(), "policy": BasicPolicy("slow")},
+            {"amount": 16, "model": KBModel(), "policy": BasicPolicy("normal")},
+            {"amount": 8, "model": KBModel(), "policy": BasicPolicy("fast")}
         ]
     }
 
@@ -218,10 +238,13 @@ def sim_types(sim_num):
         "vehicles": [
             {"model": KBModel(), "policy": DiscreteActionPolicy(trainer), "R": 0, "l": 0, "s": 0,
              "v": random.randint(25, 28)},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 50, "v": 24},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 150, "v": 24},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 300, "v": 24},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 450, "v": 24}
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 0, "v": 27},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 50, "v": 27},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 75, "v": 27},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 140, "v": 27},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 140, "v": 27},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 300, "v": 27},            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 120, "v": 24},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 300, "v": 27}
         ]
     }
 
@@ -332,10 +355,10 @@ if __name__=="__main__":
 
     # Model configuration and settings
     model_param = {
-        "n_units": (100, 50),
+        "n_units": (75, 50),
         "n_inputs": 54,  # Standard size of S
         "activation_function": tf.nn.relu,  # activation function of hidden nodes
-        "n_actions": 2,
+        "n_actions": 5,
         "weights_file_path": "./trained_models/model_weights",
         "trained_model_file_path": "./trained_models/trained_model",
         "seed": seed
@@ -352,23 +375,22 @@ if __name__=="__main__":
     elif optimiser == "RMS":
         optimiser_name = optimiser
         optimiser = tf.optimizers.RMSprop(learning_rate=learning_rate)
-
+    # TODO make proper list of constants and relationships between in the dict.
     training_param = {
-        "max_steps_per_episode": 3e3,
-        "max_episodes": 2200,
+        "max_steps_per_episode": 3.5e3,
+        "max_episodes": 3000,
         "final_return": 1e10,
-        "show_plots_when_training": True,
+        "show_plots_when_training": False,
         "plot_freq": 50,
-        "simulation_timesteps": 200,
-        "max_buffer_size": 100000,
-        "batch_size": 400,
-        "evaluation": False,
+        "simulation_timesteps": 150,
+        "max_buffer_size": 500000,
+        "batch_size": 1000,
         "epsilon_max": 1.0,  # Initial epsilon - Exploration
         "epsilon_min": 0.1,  # Final epsilon - Exploitation
-        "decay_rate": 0.99999,
-        "model_update_rate": 400,
-        "target_update_rate": 1e4,
-        "STEP_TIME": STEP_TIME,  # Currently not implemented
+        "decay_rate": 0.999995,
+        "model_update_rate": 500,
+        "target_update_rate": 8000,
+        "STEP_TIME": STEP_TIME,
         "gamma": 0.95,
         "clip_gradients": True,
         "clip_norm": 2,
@@ -378,7 +400,7 @@ if __name__=="__main__":
         "optimiser": optimiser,
         "loss_func": tf.losses.Huber(reduction=tf.keras.losses.Reduction.SUM),
         "seed": seed,
-        "reward_weights": np.array([1.1, 0., 0., 0.6, -5])  # (rew_vel, rew_lat_position, rew_fol_dist, collision penalty)
+        "reward_weights": np.array([1.5, 0., 1.0, 1.0, -5])/3.0  # (rew_vel, rew_lat_position, rew_fol_dist, collision penalty)
     }
     logging.critical("Training param:")
     logging.critical(training_param)
@@ -388,7 +410,6 @@ if __name__=="__main__":
     # trainer = GradAscentTrainerDiscrete(actor_critic_net, training_param)
     DQ_net = DeepQNetwork(model_param)
     trainer = DqnTrainer(network=DQ_net, training_param=training_param)
-
 
     # Simulation configuration and settings
     # TODO Move to randomly initialising vehicles infront of ego vehicle to learn more complex actions than staying in lane
@@ -404,19 +425,25 @@ if __name__=="__main__":
     sim_number = 0
     sim = Simulation(sim_types(sim_number))
 
-    # Set up main class for running simulations:
+    # # Set up main class for running simulations:
     main = Main(sim_types(sim_number))
-
-    # Train model:
+    # # main.pol[0]["policy"].trainer.Q_actual_net.load_weights(model_param["weights_file_path"])
+    # # main.pol[0]["policy"].trainer.Q_target_net.load_weights(model_param["weights_file_path"])
+    main.pol[0]["policy"].trainer.evaluation = False
+    # # Train model:
     main.train_policy()
 
     # Simulate model:
     main.pol[0]["policy"].trainer.Q_actual_net.load_weights(model_param["weights_file_path"])
-    for i in range(0, 5):
-        main = Main(sim_types(2))
-        main.simulate(1000)
-        # print("Simulation number %d complete" % i)
-        main.p.close()
+    trainer.evaluation = True
+    main = Main(sim_types(sim_number))
+    main.simulate(1000)
+    # for i in range(0, 5):
+    #     for _ in range(2):
+    #         main = Main(sim_types(i))
+    #         main.simulate(1000)
+    #         # print("Simulation number %d complete" % i)
+    #         main.p.close()
 
     print("EOF")
 

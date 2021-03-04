@@ -49,8 +49,6 @@ class DiscreteActionPolicy(CustomPolicy):
             veh.s1 = veh.s_raw
             veh.s1_mod = self.convert_state(veh)
             Q = self.get_action(veh.s1_mod)
-            self.trainer.states.append(veh.s1_mod)
-            self.trainer.actions.append(Q)
             veh.a1_mod = Q
             action_choice = self.trainer.get_action_choice(Q)
             veh.a1_choice = action_choice
@@ -62,7 +60,6 @@ class DiscreteActionPolicy(CustomPolicy):
                 # Calculate reward at current state (if action was taken previously)
                 veh.flag = self.trainer.stop_flags
                 veh.reward = self.get_reward(veh) + np.sum(veh.rew_buffer)
-                self.trainer.rewards.append(veh.reward)
                 if self.trainer is not None and self.trainer.training is True:
                     # Save action taken previously on previous state value
                     # action = velocity action, lane_change action
@@ -87,6 +84,8 @@ class DiscreteActionPolicy(CustomPolicy):
             veh.rew_buffer = []
             output = np.array([veh.a1[0], veh.a1[1]], dtype=np.float64)  # The hwsim library uses double precision floats
             veh.prev_action = action_choice
+            veh.LONG_ACTION = output[0]
+            veh.LAT_ACTION = output[1]
             return output
 
         else:
@@ -172,7 +171,8 @@ class DiscreteActionPolicy(CustomPolicy):
         # Safety bounds
         vel_bounds = veh.a_bounds["long"]  # [min_rel_vel, max_rel_vel]
         off_bounds = veh.a_bounds["lat"]
-
+        # right lane = [0,1]
+        # left lane = [-1,0]
         # Compute safe actions
         if action_choices == 0:  # Slow down, stay in lane
             vel_controller = np.maximum(vel_bounds[0], -5)
@@ -185,10 +185,10 @@ class DiscreteActionPolicy(CustomPolicy):
             steer_controller = 0
         elif action_choices == 3:  # Constant speed, turn left
             vel_controller = np.minimum(vel_bounds[1], 0)
-            steer_controller = np.maximum(off_bounds[0], -1)
+            steer_controller = np.minimum(off_bounds[1], 1)
         elif action_choices == 4:  # Constant speed, turn right
             vel_controller = np.minimum(vel_bounds[1], 0)
-            steer_controller = np.minimum(off_bounds[1], 1)
+            steer_controller = np.maximum(off_bounds[0], -1)
         else:
             print("Error with setting offset action!")
 
@@ -213,49 +213,28 @@ class DiscreteActionPolicy(CustomPolicy):
             # Velocity reward:
             v = np.squeeze(veh.s["vel"])[0]
             v_lim = 120 / 3.6
-            r_vel = np.exp(-(v_lim - v) ** 2 / 140) #- np.exp(-(v) ** 2 / 70)
+            r_vel = np.exp(-((v_lim - v)/20) ** 2) #- np.exp(-(v) ** 2 / 70)
 
             # # TODO remove lane centre reward when acting with discrete lane changes
             # # Lane center reward:
             lane_offset = np.squeeze(veh.s["laneC"]["off"])
-            r_off = np.exp(-(lane_offset) ** 2 / 3.6)
+            r_off = np.exp(-((lane_offset)/3.6) ** 2 )
 
             # Following distance:
             d_gap = veh.s["laneC"]["relF"]["gap"][0, 0]
-            d_lim = 0
-            r_follow = -np.exp(-(d_lim - d_gap) ** 2 / 100)
+            d_lim = -20
+            r_follow = -np.exp(-(-d_gap/15) ** 2)
 
             # Stay right:
-            r_right = (1/(veh.s["laneC"]["width"]*3))*veh.s["gapB"][0]
-
+            road_width = veh.s["laneC"]["width"]*3
+            r_right = np.exp(-((road_width-veh.s["gapB"][0])/7)**2)
             reward = w_vel*r_vel + w_off*r_off + w_dist*r_follow + w_stay_right*r_right
 
         else:
             reward = 0
         return reward
 
-    # def squeeze_vehicle_state(self, veh):
-    #     # Squeeze values to fix matrix inconsistencies
-    #     # Current lane:
-    #     veh.s["laneC"]["off"] = np.squeeze(veh.s["laneC"]["off"])
-    #     veh.s["laneC"]["relB"]["off"] = np.squeeze(veh.s["laneC"]["relB"]["off"])
-    #     veh.s["laneC"]["relB"]["vel"] = np.squeeze(veh.s["laneC"]["relB"]["vel"])
-    #     veh.s["laneC"]["relF"]["off"] = np.squeeze(veh.s["laneC"]["relF"]["off"])
-    #     veh.s["laneC"]["relF"]["vel"] = np.squeeze(veh.s["laneC"]["relF"]["vel"])
-    #     # Left lane
-    #     veh.s["laneL"]["off"] = np.squeeze(veh.s["laneC"]["off"])
-    #     veh.s["laneL"]["relB"]["off"] = np.squeeze(veh.s["laneC"]["relB"]["off"])
-    #     veh.s["laneL"]["relB"]["vel"] = np.squeeze(veh.s["laneC"]["relB"]["vel"])
-    #     veh.s["laneL"]["relF"]["off"] = np.squeeze(veh.s["laneC"]["relF"]["off"])
-    #     veh.s["laneL"]["relF"]["vel"] = np.squeeze(veh.s["laneC"]["relF"]["vel"])
-    #     # Right lane
-    #     veh.s["laneR"]["off"] = np.squeeze(veh.s["laneC"]["off"])
-    #     veh.s["laneR"]["relB"]["off"] = np.squeeze(veh.s["laneC"]["relB"]["off"])
-    #     veh.s["laneR"]["relB"]["vel"] = np.squeeze(veh.s["laneC"]["relB"]["vel"])
-    #     veh.s["laneR"]["relF"]["off"] = np.squeeze(veh.s["laneC"]["relF"]["off"])
-    #     veh.s["laneR"]["relF"]["vel"] = np.squeeze(veh.s["laneC"]["relF"]["vel"])
-    #
-    #     return veh.s
+    ########################################################################
 
 
 

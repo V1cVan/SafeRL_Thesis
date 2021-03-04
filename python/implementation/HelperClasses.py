@@ -402,6 +402,11 @@ class TrainingBuffer(object):
         """ Get minibatch for training. """
         return random.sample(self.buffer, self.batch_size)
 
+    def alter_buffer_stop_flag(self, flag):
+        state, action, reward, next_state, done_flag = self.buffer[-1]
+        done_flag = flag
+        self.buffer[-1] = state, action, reward, next_state, done_flag
+
     def is_buffer_min_size(self):
         return len(self.buffer) >= self.batch_size
 
