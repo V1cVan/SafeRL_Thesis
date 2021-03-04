@@ -496,7 +496,7 @@ class FixedLanePolicy(CustomPolicy, enc_name="fixed_lane"):
     velocity (relative to the maximum allowed speed). The actual velocity is always upper
     bounded by the safety bounds (taking vehicles in front into account)."""
     LONG_ACTION = ActionType.ABS_VEL
-    LAT_ACTION = ActionType.REL_OFF # Alternatively: ActionType.LANE
+    LAT_ACTION = ActionType.LANE # Alternatively: ActionType.LANE
 
     def __init__(self, speed):
         super().__init__()
@@ -511,7 +511,7 @@ class FixedLanePolicy(CustomPolicy, enc_name="fixed_lane"):
         veh.counter = 0
 
     def _set_rel_vel(self, veh):
-        veh.rel_vel = 0
+        veh.rel_vel = 0.95-random.random()*0.3
 
     def custom_action(self, veh):
         """ This method is called at every iteration and the returned numpy arrary
@@ -519,16 +519,16 @@ class FixedLanePolicy(CustomPolicy, enc_name="fixed_lane"):
         who will set up proper model inputs to track the new reference) """
         # Start with updating the counter and setting a new reference if necessary
         veh.counter -= 1
-        if veh.counter<=0:
+        if veh.counter <= 0:
             veh.counter = self.STEP_TIME
             self._set_rel_vel(veh)
         # Then calculate proper actions from the current reference
-        s = veh.s # Current augmented state
-        bounds = veh.a_bounds # Current safety bounds on the actions (calculated from the current augmented state). Vehicle operation remains 'safe' as long as we respect these bounds.
-        v_max = veh.rel_vel*(s["maxVel"])
-        v = min(v_max,bounds["long"][1])
-        v = max(0,v)
+        s = veh.s  # Current augmented state
+        bounds = veh.a_bounds  # Current safety bounds on the actions (calculated from the current augmented state). Vehicle operation remains 'safe' as long as we respect these bounds.
+        v_max = veh.rel_vel * (s["maxVel"])
+        v = min(v_max, bounds["long"][1])
+        v = max(0, v)
         # Final actions are: the target velocity and negating the offset towards the lane center
-        return np.array([self.speed,-s["laneC"]["off"]])
+        return np.array([v, 0])
         # Alternatively (with LANE actionType):
         # return np.array([v,0]) # Lane reference is 0 => remain in (center of) current lane

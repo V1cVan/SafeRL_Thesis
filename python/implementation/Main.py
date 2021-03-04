@@ -122,6 +122,8 @@ class Main(object):
                         if not self.sim.stopped:
                             self.sim.step()  # Calls AcPolicy.customAction method.
 
+
+
                             # if self.sim._collision:
                             #     logging.critical("Collision. At episode %f" % episode_count)
                             #     policy.trainer.set_neg_collision_reward(np.int(t/training_param["STEP_TIME"]),
@@ -224,7 +226,7 @@ def sim_types(sim_num):
     }
 
     # TODO Add additional randomness to fixedlane policy
-
+    lane = random.randint(-1, 1)*3.6
     # Empty highway without cars
     sim_config_1 = {
         "name": "AC_policy_no_cars",
@@ -233,7 +235,8 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"amount": 1, "model": KBModel(), "policy": DiscreteActionPolicy(trainer)}
+            {"amount": 1, "model": KBModel(), "policy": DiscreteActionPolicy(trainer), "R": 0, "l": lane, "s": 0},
+            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": lane, "s": 30, "v": 28},
         ]
     }
 
@@ -247,13 +250,13 @@ def sim_types(sim_num):
         "vehicles": [
             {"model": KBModel(), "policy": DiscreteActionPolicy(trainer), "R": 0, "l": 0, "s": 0,
              "v": random.randint(25, 28)},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 0, "v": 27},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 50, "v": 27},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 75, "v": 27},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 140, "v": 27},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 140, "v": 27},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 300, "v": 27},            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 120, "v": 24},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 300, "v": 27}
+            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 0, "s": 50, "v": 28},
+            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 50, "v": 28},
+            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 3.6, "s": 120, "v": 28},
+            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 0, "s": 140, "v": 28},
+            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 140, "v": 28},
+            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 300, "v": 28},            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 120, "v": 24},
+            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 0, "s": 300, "v": 28}
         ]
     }
 
@@ -364,7 +367,7 @@ if __name__=="__main__":
 
     # Model configuration and settings
     model_param = {
-        "n_units": (75, 50),
+        "n_units": (50, 20),
         "n_inputs": 54,  # Standard size of S
         "activation_function": tf.nn.relu,  # activation function of hidden nodes
         "n_actions": 5,
@@ -378,7 +381,7 @@ if __name__=="__main__":
 
     STEP_TIME = 10
     optimiser = "ADAM"
-    learning_rate = 0.0001
+    learning_rate = 0.001
     if optimiser == "ADAM":
         optimiser_name = optimiser
         optimiser = tf.optimizers.Adam(learning_rate=learning_rate)
@@ -387,19 +390,19 @@ if __name__=="__main__":
         optimiser = tf.optimizers.RMSprop(learning_rate=learning_rate)
     # TODO make proper list of constants and relationships between in the dict.
     training_param = {
-        "max_steps_per_episode": 3.5e3,
-        "max_episodes": 3000,
+        "max_steps_per_episode": 1e3,
+        "max_episodes": 1000,
         "final_return": 1e10,
         "show_plots_when_training": False,
         "plot_freq": 50,
-        "simulation_timesteps": 150,
-        "max_buffer_size": 500000,
-        "batch_size": 1000,
+        "simulation_timesteps": 100,
+        "max_buffer_size": 100000,
+        "batch_size": 100,
         "epsilon_max": 1.0,  # Initial epsilon - Exploration
         "epsilon_min": 0.1,  # Final epsilon - Exploitation
-        "decay_rate": 0.999995,
-        "model_update_rate": 500,
-        "target_update_rate": 8000,
+        "decay_rate": 0.99999,
+        "model_update_rate": 150,
+        "target_update_rate": 2000,
         "STEP_TIME": STEP_TIME,
         "gamma": 0.95,
         "clip_gradients": True,
@@ -410,11 +413,15 @@ if __name__=="__main__":
         "optimiser": optimiser,
         "loss_func": tf.losses.Huber(reduction=tf.keras.losses.Reduction.SUM),
         "seed": seed,
-        "reward_weights": np.array([1.5, 0., 1.0, 1.0, -5])/3.0  # (rew_vel, rew_lat_position, rew_fol_dist, collision penalty)
+        "reward_weights": np.array([1.5, 0., 1.0, 1.5, -5])  # (rew_vel, rew_lat_position, rew_fol_dist, collision penalty)
     }
     logging.critical("Training param:")
     logging.critical(training_param)
-    pic.dump(training_param, open("./trained_models/training_variables", "wb"))
+
+    training_param_save = training_param.copy()
+    training_param_save.pop("loss_func")
+    training_param_save.pop("optimiser")
+    pic.dump(training_param_save, open("./trained_models/training_variables", "wb"))
 
     # Initialise network/model architecture:
     # actor_critic_net = ActorCriticNetDiscrete(model_param)
@@ -434,7 +441,7 @@ if __name__=="__main__":
     trainerTimer = Timer("the Trainer")
     episodeTimer = Timer("Episode")
 
-    sim_number = 0
+    sim_number = 1
     sim = Simulation(sim_types(sim_number))
 
     # # Set up main class for running simulations:
