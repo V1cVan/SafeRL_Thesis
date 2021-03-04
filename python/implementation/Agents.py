@@ -14,6 +14,7 @@ class DqnTrainer(keras.models.Model):
         super(DqnTrainer, self).__init__()
         tf.random.set_seed(training_param["seed"])
         np.random.seed(training_param["seed"])
+        self.latest_action = None
         self.Q_target_net = network
         self.Q_actual_net = network
         self.reward_weights = training_param["reward_weights"]
@@ -23,16 +24,16 @@ class DqnTrainer(keras.models.Model):
         self.stop_flags = None
         self.eps_final = 0.1
         self.decay = training_param["decay_rate"]
+
         self.epsilon = training_param["epsilon_max"]
+        self.prev_epsilon = self.epsilon
         self.epsilon_decay_count = 1
-        self.evaluation = training_param["evaluation"]
+        self.evaluation = False
         self.episode = 1
         self.buffer = TrainingBuffer(max_mem_size=training_param["max_buffer_size"],
                                      batch_size=training_param["batch_size"])
-        self.actions = []
-        self.states = []
-        self.rewards = []
         self.gamma = training_param["gamma"]
+
 
     def set_neg_collision_reward(self, timestep, punishment):
         """ Sets a negative reward if a collision occurs. """
@@ -41,14 +42,12 @@ class DqnTrainer(keras.models.Model):
     def calc_epsilon(self):
         if self.evaluation:
             self.epsilon = 0
-            return self.epsilon
-        elif not self.buffer.is_buffer_min_size():
+        elif not self.buffer.is_buffer_min_size() and not self.evaluation:
             self.epsilon = 1
-            return self.epsilon
         else:
             if self.epsilon_decay_count > 1 and self.epsilon > self.eps_final:
                 self.epsilon = self.epsilon * self.decay
-            return self.epsilon
+        return self.epsilon
 
     def get_action_choice(self, Q):
         """ Randomly choose from the available actions."""
@@ -58,7 +57,8 @@ class DqnTrainer(keras.models.Model):
             return np.random.randint(0, 5)
         else:
             # Otherwise, query the DQN for an action
-            return np.argmax(Q, axis=1)[0]
+            self.latest_action = np.argmax(Q, axis=1)[0]
+            return self.latest_action
 
 
     def update_target_net(self):
@@ -77,7 +77,9 @@ class DqnTrainer(keras.models.Model):
             next_states = tf.squeeze(tf.convert_to_tensor(np.array([each[3] for each in mini_batch], dtype=np.float32)))
             done = tf.cast([each[4] for each in mini_batch], dtype=tf.float32)
 
-            one_hot_actions = tf.keras.utils.to_categorical(actions)
+
+
+            one_hot_actions = tf.keras.utils.to_categorical(actions, num_classes=5)
 
             episode_reward, loss = self.run_tape(
                 states=states,
@@ -108,7 +110,7 @@ class DqnTrainer(keras.models.Model):
         ones = tf.ones(tf.shape(done), dtype=tf.dtypes.float32)
 
         Q_output = self.Q_target_net(next_states)
-        Q_target = rewards + (ones - done) * (self.gamma * tf.reduce_max(Q_output))
+        Q_target = rewards + (ones - done) * (self.gamma * tf.reduce_max(Q_output, axis=1))
 
         with tf.GradientTape() as tape:
             Q_output = self.Q_actual_net(states)
