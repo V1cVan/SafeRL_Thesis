@@ -165,7 +165,7 @@ class DeepQNetwork(keras.Model):
 
         self.model = keras.Model(inputs=input_layer,
                                  outputs=output_layer,
-                                 name="DQN")
+                                 name="DDQN")
 
     def dense_layer(self, num_units, act_func, initialiser):
         return layers.Dense(

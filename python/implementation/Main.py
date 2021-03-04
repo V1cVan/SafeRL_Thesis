@@ -1,6 +1,7 @@
 import os
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # specify which GPU(s) to be used
+import pickle
 
 from hwsim import Simulation, BasicPolicy, StepPolicy, SwayPolicy, IMPolicy, KBModel, TrackPolicy, CustomPolicy, config
 from hwsim.plotting import Plotter, SimulationPlot, DetailPlot, BirdsEyePlot, TimeChartPlot, ActionsPlot
@@ -71,6 +72,9 @@ class Main(object):
         max_timesteps_episode = training_param["max_steps_per_episode"]
         policy = self.pol[0]["policy"]
         trained = False
+        episode_list = []
+        running_reward_list = []
+        loss_list = []
         # plot_items = self.data_logger.init_training_plot()
         train_counter = 1
         model_update_counter = 1
@@ -145,6 +149,10 @@ class Main(object):
                 epsilon = trainer.calc_epsilon()
                 print_template = "Running reward = {:.2f} at episode {}. Loss = {:.2f}. Epsilon = {:.2f}."
                 print_output = print_template.format(running_reward, episode_count, loss, epsilon)
+                loss_list.append(loss)
+                episode_list.append(episode_count)
+                running_reward_list.append(running_reward)
+                training_var = (episode_list, running_reward_list, loss_list)
                 print(print_output)
                 logging.critical(print_output)
 
@@ -155,6 +163,7 @@ class Main(object):
                 print(print_output)
                 logging.critical(print_output)
                 policy.trainer.Q_actual_net.save_weights(model_param["weights_file_path"])
+                pic.dump(training_var, open("./trained_models/train_output", "wb"))
                 # self.data_logger.plot_training_data(plot_items)
                 # self.data_logger.save_training_data("./trained_models/training_variables.p")
                 break
@@ -363,6 +372,7 @@ if __name__=="__main__":
         "trained_model_file_path": "./trained_models/trained_model",
         "seed": seed
     }
+    pic.dump(model_param, open("./trained_models/model_variables", "wb"))
     logging.critical("Model Parameters:")
     logging.critical(model_param)
 
@@ -404,11 +414,13 @@ if __name__=="__main__":
     }
     logging.critical("Training param:")
     logging.critical(training_param)
+    pic.dump(training_param, open("./trained_models/training_variables", "wb"))
 
     # Initialise network/model architecture:
     # actor_critic_net = ActorCriticNetDiscrete(model_param)
     # trainer = GradAscentTrainerDiscrete(actor_critic_net, training_param)
     DQ_net = DeepQNetwork(model_param)
+    DQ_net.display_overview()
     trainer = DqnTrainer(network=DQ_net, training_param=training_param)
 
     # Simulation configuration and settings
