@@ -24,21 +24,22 @@ import time
 
 class Main(object):
 
-    def __init__(self, sim_config):
+    def __init__(self, scenario_num, policy):
         # ...
-        self.sim = Simulation(sim_config)
-        self.pol = [{  # List of autonomous policies
-            "ids": [0],  # Vehicle IDs of vehicles equipped with this autonomous policy
-            "policy": sim_config["vehicles"][0]["policy"],  # Reference to the policy
-            "metrics": {}  # Extra metrics we calculate for each autonomous policy
-        }]
+        scenario = sim_types(scenario_num=scenario_num, policy=policy)
+        self.sim = Simulation(scenario)
+        self.policy = policy
         # Create object for data logging and visualisation
         self.data_logger = DataLogger(model_param, training_param)
+        self.plotTimer = Timer("Plotting")
+        self.trainerTimer = Timer("the Trainer")
+        self.episodeTimer = Timer("Episode")
 
     # ...
     def create_plot(self):
         shape = (4, 2)
         groups = [([0, 2], 0)]
+        FANCY_CARS = True
         vehicle_type = "car" if FANCY_CARS else "cuboid3D"
         # self.p = Plotter(self.sim, "Multi car simulation", mode=PLOT_MODE, shape=shape, groups=groups, off_screen=OFF_SCREEN)
         self.p = Plotter(self.sim, "Multi car simulation", mode=Plotter.Mode.LIVE, shape=shape, groups=groups,
@@ -68,9 +69,9 @@ class Main(object):
         running_reward = 0
         episode_count = 1
         plot_freq = training_param["plot_freq"]
-        show_plots = training_param["show_plots_when_training"]
-        max_timesteps_episode = training_param["max_steps_per_episode"]
-        policy = self.pol[0]["policy"]
+        show_plots = training_param["show_train_plots"]
+        max_timesteps = training_param["max_timesteps"]
+        max_episodes = training_param["max_episodes"]
         trained = False
         episode_list = []
         running_reward_list = []
@@ -79,13 +80,13 @@ class Main(object):
         train_counter = 1
         model_update_counter = 1
         # Run until all episodes are completed (reward reached).
-        while episode_count <= training_param["max_episodes"]:
-            policy.trainer.episode = episode_count
+        while episode_count <= max_episodes:
+            self.policy.agent.episode = episode_count
 
             if episode_count % plot_freq == 0 and show_plots:
-                trainer.prev_epsilon = trainer.epsilon
-                self.simulate(training_param["simulation_timesteps"])
-                trainer.epsilon = trainer.prev_epsilon
+                self.policy.agent.prev_epsilon = self.policy.agent.epsilon
+                self.simulate(training_param["sim_timesteps"])
+                self.policy.agent.epsilon = self.policy.agent.prev_epsilon
 
             # print("Episode number: %0.2f" % episode_count)
             logging.critical("Episode number: %0.2f" % episode_count)
@@ -93,29 +94,29 @@ class Main(object):
             # Set simulation environment
             with self.sim:
                 # Loop through each timestep in episode.
-                with episodeTimer:
+                with self.episodeTimer:
                     # Run the model for one episode to collect training data
                     # Saves actions values, critic values, and rewards in policy class variables
-                    for t in np.arange(1, max_timesteps_episode+1):
+                    for t in np.arange(1, max_timesteps+1):
                         # logging.critical("Timestep of episode: %0.2f" % self.sim.k)
 
-                        if t%training_param["STEP_TIME"] == 0:
+                        if t%training_param["policy_rate"] == 0:
                             train_counter += 1
-                            trainer.epsilon_decay_count = train_counter
-                            trainer.timestep = np.int(t/training_param["STEP_TIME"])
-                            if trainer.buffer.is_buffer_min_size():
+                            self.policy.agent.epsilon_decay_count = train_counter
+                            self.policy.agent.timestep = np.int(t/training_param["policy_rate"])
+                            if self.policy.agent.buffer.is_buffer_min_size():
                                 train_counter += 1
                                 model_update_counter += 1
                                 if model_update_counter % training_param["model_update_rate"] == 0:
-                                    reward, loss = trainer.train_step()
+                                    reward, loss = self.policy.agent.train_step()
                                     trained = True
                                 if model_update_counter % training_param["target_update_rate"] == 0:
-                                    trainer.update_target_net()
-                                    print("Updated target net.")
+                                    self.policy.agent.update_target_net()
+                                    # print("Updated target net.")
 
-                        trainer.stop_flags = self.sim.stopped or self.sim._collision
-                        if trainer.stop_flags == True:
-                            trainer.buffer.alter_buffer_stop_flag(flag=trainer.stop_flags)
+                        self.policy.agent.stop_flags = self.sim.stopped or self.sim._collision
+                        if self.policy.agent.stop_flags == True:
+                            self.policy.agent.buffer.alter_buffer_stop_flag(flag=trainer.stop_flags)
 
 
                         # Perform one simulations step:
@@ -140,7 +141,7 @@ class Main(object):
 
             if trained:
                 if 0.05 * reward + (1 - 0.05) * running_reward > running_reward and episode_count%50==0:
-                    policy.trainer.Q_actual_net.save_weights(model_param["weights_file_path"])
+                    self.policy.agent.Q_actual_net.save_weights(model_param["weights_file_path"])
                     print("Saved network weights.")
 
                 # Running reward smoothing effect
@@ -148,7 +149,7 @@ class Main(object):
 
 
             if episode_count % 5 == 0 and trained:
-                epsilon = trainer.calc_epsilon()
+                epsilon = self.policy.agent.calc_epsilon()
                 print_template = "Running reward = {:.2f} at episode {}. Loss = {:.2f}. Epsilon = {:.2f}."
                 print_output = print_template.format(running_reward, episode_count, loss, epsilon)
                 loss_list.append(loss)
@@ -158,16 +159,16 @@ class Main(object):
                 print(print_output)
                 logging.critical(print_output)
 
-                # self.data_logger.save_xls("./trained_models/training_variables.xls")
+                # self.data_logger.save_xls("./models/training_variables.xls")
             if running_reward >= training_param["final_return"] \
                     or episode_count == training_param["max_episodes"]:
                 print_output = "Solved at episode {}!".format(episode_count)
                 print(print_output)
                 logging.critical(print_output)
-                policy.trainer.Q_actual_net.save_weights(model_param["weights_file_path"])
-                pic.dump(training_var, open("./trained_models/train_output", "wb"))
+                self.policy.agent.Q_actual_net.save_weights(model_param["weights_file_path"])
+                pic.dump(training_var, open("./models/train_output", "wb"))
                 # self.data_logger.plot_training_data(plot_items)
-                # self.data_logger.save_training_data("./trained_models/training_variables.p")
+                # self.data_logger.save_training_data("./models/training_variables.p")
                 break
 
             episode_count += 1
@@ -178,8 +179,8 @@ class Main(object):
 
 
     def simulate(self, simulation_timesteps):
-        self.pol[0]["policy"].trainer.training = False
-        trainer.evaluation = True
+        self.policy.agent.training = False
+        self.policy.agent.evaluation = True
         steps = 0
         print_counter = 0
         with self.sim:
@@ -187,25 +188,25 @@ class Main(object):
             while not self.sim.stopped and not self.p.closed and steps<simulation_timesteps:
                 self.sim.step()
                 if print_counter % 10 == 0:
-                    if trainer.latest_action == 0:
+                    if self.policy.agent.latest_action == 0:
                         print("0: Slowing down.")
-                    elif trainer.latest_action == 1:
+                    elif self.policy.agent.latest_action == 1:
                         print("1: Constant speed.")
-                    elif trainer.latest_action == 2:
+                    elif self.policy.agent.latest_action == 2:
                         print("2: Speeding up.")
-                    elif trainer.latest_action == 3:
+                    elif self.policy.agent.latest_action == 3:
                         print("3: Turning left.")
-                    elif trainer.latest_action == 4:
+                    elif self.policy.agent.latest_action == 4:
                         print("4: Turning right.")
                 steps += 1
                 print_counter += 1
                 self.p.plot()
             self.p.close()
-            trainer.evaluation = False
-            trainer.training = True
+            self.policy.agent.evaluation = False
+            self.policy.agent.training = True
 
 
-def sim_types(sim_num):
+def sim_types(scenario_num, policy):
     # TODO make variation in sims
     # Randomised highway
     sim_config_0 = {
@@ -215,7 +216,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"amount": 1, "model": KBModel(), "policy": DiscreteActionPolicy(trainer)},
+            {"amount": 1, "model": KBModel(), "policy": policy},
             # {"amount": 2, "model": KBModel(), "policy": StepPolicy(10, [0.1, 0.5])},
             # {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
             # {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
@@ -235,8 +236,8 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"amount": 1, "model": KBModel(), "policy": DiscreteActionPolicy(trainer), "R": 0, "l": lane, "s": 0},
-            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": lane, "s": 30, "v": 28},
+            {"amount": 1, "model": KBModel(), "policy": policy, "R": 0, "l": lane, "s": 0, "v": np.random.random(1)*30.0},
+            # {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": lane, "s": 30, "v": 28},
         ]
     }
 
@@ -248,7 +249,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": DiscreteActionPolicy(trainer), "R": 0, "l": 0, "s": 0,
+            {"model": KBModel(), "policy": policy, "R": 0, "l": 0, "s": 0,
              "v": random.randint(25, 28)},
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 0, "s": 50, "v": 28},
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 50, "v": 28},
@@ -268,7 +269,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": DiscreteActionPolicy(trainer), "R": 0, "l": 3.6, "s": 0,
+            {"model": KBModel(), "policy": policy, "R": 0, "l": 3.6, "s": 0,
              "v": random.randint(25, 28)},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 40, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 50, "v": 24},
@@ -285,7 +286,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": DiscreteActionPolicy(trainer), "R": 0, "l": 3.6, "s": 0,
+            {"model": KBModel(), "policy": policy, "R": 0, "l": 3.6, "s": 0,
              "v": random.randint(25, 28)},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 0, "v": 24}
@@ -300,7 +301,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": DiscreteActionPolicy(trainer), "R": 0, "l": -3.6, "s": 0,
+            {"model": KBModel(), "policy": policy, "R": 0, "l": -3.6, "s": 0,
              "v": random.randint(25, 28)},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 10, "v": 24}
@@ -315,7 +316,7 @@ def sim_types(sim_num):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"model": KBModel(), "policy": DiscreteActionPolicy(trainer), "R": 0, "l": 0, "s": 0,
+            {"model": KBModel(), "policy": policy, "R": 0, "l": 0, "s": 0,
              "v": random.randint(25, 28)},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 20, "v": 24},
@@ -335,127 +336,128 @@ def sim_types(sim_num):
         sim_config_6
     ]
 
-    return sim_config[sim_num]
+    return sim_config[scenario_num]
 
 if __name__=="__main__":
-    # Initial configuration
-    ID = -1  # ID of simulation to replay or -1 to create a new one
-    PLOT_MODE = Plotter.Mode.LIVE
-    OFF_SCREEN = False
-    FANCY_CARS = False
     LOG_DIR = "logs"
     ROOT = pathlib.Path(__file__).resolve().parents[2]
     SC_PATH = ROOT.joinpath("scenarios/scenarios.h5")
+    config.scenarios_path = str(SC_PATH)
 
     # Logging
     logging.basicConfig(level=logging.INFO, filename="./logfiles/main.log")
-    # TODO Enable TF warnings and query with Bram
-
-    logging.disable(logging.ERROR) # Temporarily disable error tf logs.
-
+    # logging.disable(logging.ERROR) # Temporarily disable error tf logs.
     with open('./logfiles/main.log', 'w'):
         pass  # Clear the log file of previous run
 
-    config.scenarios_path = str(SC_PATH)
-    print_output = "Using seed %f" % config.seed
-    print(print_output)
-    logging.critical(print_output)
+    SEED = config.seed
+    tf.random.set_seed(SEED)
+    np.random.seed(SEED)
 
-    seed = config.seed
-    tf.random.set_seed(seed)
-    np.random.seed(seed)
-
-    # Model configuration and settings
+    # Model parameters:
+    N_UNITS = (50, 20)
+    N_INPUTS = 54
+    N_ACTIONS = 5
+    ACT_FUNC = tf.nn.relu
+    MODEL_FILE_PATH = "./models/model_weights"
     model_param = {
-        "n_units": (50, 20),
-        "n_inputs": 54,  # Standard size of S
-        "activation_function": tf.nn.relu,  # activation function of hidden nodes
-        "n_actions": 5,
-        "weights_file_path": "./trained_models/model_weights",
-        "trained_model_file_path": "./trained_models/trained_model",
-        "seed": seed
+        "n_units": N_UNITS,
+        "n_inputs": N_INPUTS,
+        "n_actions": N_ACTIONS,
+        "activation_function": ACT_FUNC,
+        "weights_file_path": MODEL_FILE_PATH,
+        "seed": SEED
     }
-    pic.dump(model_param, open("./trained_models/model_variables", "wb"))
     logging.critical("Model Parameters:")
     logging.critical(model_param)
+    pic.dump(model_param, open("./models/model_variables", "wb"))
 
-    STEP_TIME = 10
-    optimiser = "ADAM"
-    learning_rate = 0.001
-    if optimiser == "ADAM":
-        optimiser_name = optimiser
-        optimiser = tf.optimizers.Adam(learning_rate=learning_rate)
-    elif optimiser == "RMS":
-        optimiser_name = optimiser
-        optimiser = tf.optimizers.RMSprop(learning_rate=learning_rate)
-    # TODO make proper list of constants and relationships between in the dict.
+    # Training parameters:
+    POLICY_ACTION_RATE = 10          # Number of simulator steps before new control action is taken
+    MAX_TIMESTEPS = 1e3     # range: 5e3 - 10e3
+    MAX_EPISODES = 3e3
+    FINAL_RETURN = 1e10
+    SHOW_TRAIN_PLOTS = True
+    PLOT_FREQ = 25
+    SIM_TIMESTEPS = 400
+    SCENARIO_NUM = 1          # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
+    BUFFER_SIZE = 100000
+    BATCH_SIZE = 50        # range: 32 - 150
+    EPSILON_MIN = 1.0       # Exploration
+    EPSILON_MAX = 0.1       # Exploitation
+    DECAY_RATE = 0.99999
+    MODEL_UPDATE_RATE = 1
+    TARGET_UPDATE_RATE = 10*MODEL_UPDATE_RATE
+    LEARN_RATE = 0.005      # range: 1e-3 - 1e-4
+    OPTIMISER = tf.optimizers.Adam(learning_rate=LEARN_RATE)
+    LOSS_FUNC = tf.losses.Huber(reduction=tf.keras.losses.Reduction.SUM)
+    GAMMA = 0.99            # range: 0.95 - 0.99
+    CLIP_GRADIENTS = True
+    CLIP_NORM = 2
+    # Reward weights = (rew_vel, rew_lat_position, rew_fol_dist, collision penalty)
+    REWARD_WEIGHTS = np.array([1.5, 0., 1.0, 1.5, -5])
+    STANDARDISE_REWARDS = True
     training_param = {
-        "max_steps_per_episode": 1e3,
-        "max_episodes": 1000,
-        "final_return": 1e10,
-        "show_plots_when_training": False,
-        "plot_freq": 50,
-        "simulation_timesteps": 100,
-        "max_buffer_size": 100000,
-        "batch_size": 100,
-        "epsilon_max": 1.0,  # Initial epsilon - Exploration
-        "epsilon_min": 0.1,  # Final epsilon - Exploitation
-        "decay_rate": 0.99999,
-        "model_update_rate": 150,
-        "target_update_rate": 2000,
-        "STEP_TIME": STEP_TIME,
-        "gamma": 0.95,
-        "clip_gradients": True,
-        "clip_norm": 2,
-        "standardise_returns": True,
-        "learning_rate": learning_rate,
-        "optimiser_name": optimiser_name,
-        "optimiser": optimiser,
-        "loss_func": tf.losses.Huber(reduction=tf.keras.losses.Reduction.SUM),
-        "seed": seed,
-        "reward_weights": np.array([1.5, 0., 1.0, 1.5, -5])  # (rew_vel, rew_lat_position, rew_fol_dist, collision penalty)
+        "max_timesteps": MAX_TIMESTEPS,
+        "max_episodes": MAX_EPISODES,
+        "final_return": FINAL_RETURN,
+        "show_train_plots": SHOW_TRAIN_PLOTS,
+        "plot_freq": PLOT_FREQ,
+        "sim_timesteps": SIM_TIMESTEPS,
+        "buffer_size": BUFFER_SIZE,
+        "batch_size": BATCH_SIZE,
+        "epsilon_max": EPSILON_MAX,
+        "epsilon_min": EPSILON_MIN,
+        "decay_rate": DECAY_RATE,
+        "model_update_rate": MODEL_UPDATE_RATE,
+        "target_update_rate": TARGET_UPDATE_RATE,
+        "policy_rate": POLICY_ACTION_RATE,
+        "gamma": GAMMA,
+        "clip_gradients": CLIP_GRADIENTS,
+        "clip_norm": CLIP_NORM,
+        "learning_rate": LEARN_RATE,
+        "optimiser": OPTIMISER,
+        "loss_func": LOSS_FUNC,
+        "seed": SEED,
+        "standardise_rewards": STANDARDISE_REWARDS,
+        "reward_weights": REWARD_WEIGHTS
     }
     logging.critical("Training param:")
     logging.critical(training_param)
-
     training_param_save = training_param.copy()
     training_param_save.pop("loss_func")
     training_param_save.pop("optimiser")
-    pic.dump(training_param_save, open("./trained_models/training_variables", "wb"))
+    pic.dump(training_param_save, open("./models/training_variables", "wb"))
 
-    # Initialise network/model architecture:
-    # actor_critic_net = ActorCriticNetDiscrete(model_param)
-    # trainer = GradAscentTrainerDiscrete(actor_critic_net, training_param)
-    DQ_net = DeepQNetwork(model_param)
-    DQ_net.display_overview()
-    trainer = DqnTrainer(network=DQ_net, training_param=training_param)
+    # Initialise models:
+    # TODO Retrain on 3 network architectures
+    AC_net_single = AcNetworkSingleAction(model_param=model_param)
+    spg_agent_single = SpgAgentSingle(network=AC_net_single, training_param=training_param)
+    spg_policy_single = DiscreteSingleActionPolicy(agent=spg_agent_single)
 
-    # Simulation configuration and settings
-    # TODO Move to randomly initialising vehicles infront of ego vehicle to learn more complex actions than staying in lane
-    safetyCfg = {
-        "Mvel": 1.0,
-        "Gth": 2.0
-    }
+    # TODO Fix Policies for double action as well as single action
+    # AC_net_double = AcNetworkDoubleAction(model_param=model_param)
+    # spg_agent_double = SpgAgentDouble(network=AC_net_double, training_param=training_param)
+    # spg_policy_double = DiscreteDoubleActionPolicy(agent=spg_agent_double)
 
-    plotTimer = Timer("Plotting")
-    trainerTimer = Timer("the Trainer")
-    episodeTimer = Timer("Episode")
+    DQ_net = DeepQNetwork(model_param=model_param)
+    dqn_agent = DqnAgent(network=DQ_net, training_param=training_param)
+    dqn_policy = DiscreteSingleActionPolicy(agent=dqn_agent)
 
-    sim_number = 1
-    sim = Simulation(sim_types(sim_number))
+    RewardFunction().plot_reward_functions()
 
-    # # Set up main class for running simulations:
-    main = Main(sim_types(sim_number))
-    # # main.pol[0]["policy"].trainer.Q_actual_net.load_weights(model_param["weights_file_path"])
-    # # main.pol[0]["policy"].trainer.Q_target_net.load_weights(model_param["weights_file_path"])
-    main.pol[0]["policy"].trainer.evaluation = False
-    # # Train model:
+    # Set up main class for running simulations:
+    main = Main(scenario_num=SCENARIO_NUM, policy=dqn_policy)
+    # main.policy.agent.Q_actual_net.load_weights(MODEL_FILE_PATH)
+    main.policy.agent.evaluation = False
+    # Train model:
     main.train_policy()
 
+    # TODO Tidy up simulation part:
     # Simulate model:
-    main.pol[0]["policy"].trainer.Q_actual_net.load_weights(model_param["weights_file_path"])
+    main.policy.agent.Q_actual_net.load_weights(MODEL_FILE_PATH)
     trainer.evaluation = True
-    main = Main(sim_types(sim_number))
+    main = Main(sim_types(SIM_NUMBER))
     main.simulate(1000)
     # for i in range(0, 5):
     #     for _ in range(2):
