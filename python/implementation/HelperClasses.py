@@ -400,7 +400,13 @@ class TrainingBuffer(object):
 
     def get_training_samples(self):
         """ Get minibatch for training. """
-        return random.sample(self.buffer, self.batch_size)
+        mini_batch = random.sample(self.buffer, self.batch_size)
+        states = tf.squeeze(tf.convert_to_tensor([each[0] for each in mini_batch], dtype=np.float32))
+        actions = tf.squeeze(tf.convert_to_tensor(np.array([each[1] for each in mini_batch])))
+        rewards = tf.squeeze(tf.convert_to_tensor(np.array([each[2] for each in mini_batch], dtype=np.float32)))
+        next_states = tf.squeeze(tf.convert_to_tensor(np.array([each[3] for each in mini_batch], dtype=np.float32)))
+        done = tf.cast([each[4] for each in mini_batch], dtype=tf.float32)
+        return states, actions, rewards, next_states, done
 
     def alter_buffer_stop_flag(self, flag):
         state, action, reward, next_state, done_flag = self.buffer[-1]
