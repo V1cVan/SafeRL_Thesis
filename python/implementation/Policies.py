@@ -74,7 +74,7 @@ class RewardFunction(object):
 
     def get_velocity_reward(self, current_velocity):
         max_vel = 120 / 3.6
-        reward_vel = np.exp(-(max_vel - current_velocity) ** 2 / 140)
+        reward_vel = np.exp(-(max_vel - current_velocity) ** 2 / 500)
         return reward_vel
 
     def get_lane_centre_reward(self, lane_offset):
@@ -82,12 +82,13 @@ class RewardFunction(object):
         return reward_offset
 
     def get_follow_dist_reward(self, following_distance):
-        distance_limit = 0
-        reward_following_distance = -np.exp(-(distance_limit - following_distance) ** 2 / 100)
+        distance_limit = 5
+        reward_following_distance = -np.exp(-(distance_limit - following_distance) ** 2 / 150)
         return reward_following_distance
 
     def get_right_lane_reward(self, total_road_width, dist_to_edge):
-        reward_right_lane = (1 / total_road_width) * dist_to_edge
+        reward_right_lane = ((1 - 0) / (0 - total_road_width)) * dist_to_edge + 1
+        # reward_right_lane = (1 / total_road_width) * dist_to_edge  # Stay left
         return reward_right_lane
 
     def get_reward(self, agent, veh=None):
@@ -96,10 +97,11 @@ class RewardFunction(object):
         Reward = Speed + LaneCentre + FollowingDistance
         """
         # Reward function weightings:
-        w_vel = agent.reward_weights[0]         # Speed weight
-        w_off = agent.reward_weights[1]         # Lane center
-        w_dist = agent.reward_weights[2]        # Following distance
+        w_vel = agent.reward_weights[0]  # Speed weight
+        w_off = agent.reward_weights[1]  # Lane center
+        w_dist = agent.reward_weights[2]  # Following distance
         w_stay_right = agent.reward_weights[3]  # Staying in right lane
+        weights_sum = np.sum(np.array([w_vel, w_off, w_dist, w_stay_right]))
 
         # Reward function declaration:
         reward = np.array([0], dtype=np.float32)
@@ -122,7 +124,7 @@ class RewardFunction(object):
             road_edge_dist = veh.s["gapB"][0]
             r_right = self.get_right_lane_reward(total_road_width=road_width, dist_to_edge=road_edge_dist)
 
-            reward = w_vel*r_vel + w_off*r_off + w_dist*r_follow + w_stay_right*r_right
+            reward = (w_vel * r_vel + w_off * r_off + w_dist * r_follow + w_stay_right * r_right) / weights_sum
         else:
             reward = 0
         return reward
@@ -131,7 +133,7 @@ class RewardFunction(object):
         plt.ion()
 
         fig, axs = plt.subplots(2, 2)
-        vel = np.linspace(0, 130/3.6, 100)
+        vel = np.linspace(0, 130 / 3.6, 100)
         rew = self.get_velocity_reward(vel)
         axs[0, 0].plot(vel, rew)
         axs[0, 0].set_title('Velocity reward')
@@ -158,7 +160,7 @@ class RewardFunction(object):
         axs[1, 1].plot(y, rew, 'tab:red')
         axs[1, 1].set_title('Drive on Right Reward')
         axs[1, 1].grid(True)
-        axs[1, 1].set(xlabel='Position on highway', ylabel='Reward')
+        axs[1, 1].set(xlabel='Distance from right road edge', ylabel='Reward')
 
         fig.tight_layout()
         plt.show()
@@ -176,7 +178,6 @@ class DiscreteSingleActionPolicy(CustomPolicy):
         self.agent = agent  # agent = f(NN_model)
         self.STEP_TIME = self.agent.training_param["policy_rate"]
         self.rewards = RewardFunction()
-
 
     def init_vehicle(self, veh):
         # Book-keeping of last states and actions
@@ -199,7 +200,6 @@ class DiscreteSingleActionPolicy(CustomPolicy):
         veh.c1 = None
         veh.flag = None
 
-
     def custom_action(self, veh):
         # s0, a0 = previous vehicle state action pair
         # s1, a1 = current vehicle state action pair
@@ -216,7 +216,6 @@ class DiscreteSingleActionPolicy(CustomPolicy):
             veh.a1_choice = action_choice
             veh.a1 = self.convert_action_discrete(veh, action_choice)
 
-
             # Save experience
             if veh.a0_mod is not None:  # Check if the agent has taken an action that led to this reward...
                 # Calculate reward at current state (if action was taken previously)
@@ -231,10 +230,10 @@ class DiscreteSingleActionPolicy(CustomPolicy):
                     # add_experience expects (timestep, state, vel_model_action, off_model_action,
                     #                         vel_action_sim, offset_action_sim, vel_choice, off_choice, reward, critic)
                     self.agent.buffer.set_experience(state=np.squeeze(veh.s0_mod),
-                                                       action=veh.a0_choice,
-                                                       reward=veh.reward,
-                                                       next_state=np.squeeze(veh.s1_mod),
-                                                       done_flag=veh.flag)
+                                                     action=veh.a0_choice,
+                                                     reward=veh.reward,
+                                                     next_state=np.squeeze(veh.s1_mod),
+                                                     done_flag=veh.flag)
 
             # Set past vehicle state and action pair
             veh.s0 = veh.s1
@@ -244,7 +243,8 @@ class DiscreteSingleActionPolicy(CustomPolicy):
             veh.a0_choice = veh.a1_choice
             veh.c0 = veh.c1
             veh.rew_buffer = []
-            output = np.array([veh.a1[0], veh.a1[1]], dtype=np.float64)  # The hwsim library uses double precision floats
+            output = np.array([veh.a1[0], veh.a1[1]],
+                              dtype=np.float64)  # The hwsim library uses double precision floats
             veh.prev_action = action_choice
             veh.LONG_ACTION = output[0]
             veh.LAT_ACTION = output[1]
@@ -253,7 +253,7 @@ class DiscreteSingleActionPolicy(CustomPolicy):
         else:
             discrete_actions = self.convert_action_discrete(veh, veh.prev_action)
             output = np.array(discrete_actions, dtype=np.float64)
-            veh.rew_buffer.append(self.get_reward(veh))
+            veh.rew_buffer.append(self.rewards.get_reward(agent=self.agent, veh=veh))
             return output
 
     def get_action(self, state):
@@ -370,12 +370,12 @@ class DiscreteDoubleActionPolicy(CustomPolicy):
                     # add_experience expects (timestep, state, vel_model_action, off_model_action,
                     #                         vel_action_sim, offset_action_sim, vel_choice, off_choice, reward, critic)
                     self.agent.buffer.set_experience(timestep=self.agent.timestep,
-                                                       state=np.squeeze(veh.s0_mod),
-                                                       action_model=np.array(action),
-                                                       action_sim=veh.a0,
-                                                       action_choice=veh.a0_choice,
-                                                       reward=veh.reward,
-                                                       critic=np.squeeze(veh.c0))
+                                                     state=np.squeeze(veh.s0_mod),
+                                                     action_model=np.array(action),
+                                                     action_sim=veh.a0,
+                                                     action_choice=veh.a0_choice,
+                                                     reward=veh.reward,
+                                                     critic=np.squeeze(veh.c0))
 
             # Set past vehicle state and action pair
             veh.s0 = veh.s1
@@ -385,14 +385,15 @@ class DiscreteDoubleActionPolicy(CustomPolicy):
             veh.a0_choice = veh.a1_choice
             veh.c0 = veh.c1
             veh.rew_buffer = []
-            output = np.array([veh.a1[0], veh.a1[1]], dtype=np.float64)  # The hwsim library uses double precision floats
+            output = np.array([veh.a1[0], veh.a1[1]],
+                              dtype=np.float64)  # The hwsim library uses double precision floats
             veh.prev_action = action_choice
             return output
 
         else:
             discrete_actions = self.convert_action_discrete(veh, veh.prev_action)
             output = np.array(discrete_actions, dtype=np.float64)
-            veh.rew_buffer.append(self.get_reward(veh))
+            veh.rew_buffer.append(self.rewards.get_reward(agent=self.agent, veh=veh))
             return output
 
     def get_action_and_critic(self, state):
@@ -444,11 +445,11 @@ class FixedLanePolicy(CustomPolicy, enc_name="fixed_lane"):
     velocity (relative to the maximum allowed speed). The actual velocity is always upper
     bounded by the safety bounds (taking vehicles in front into account)."""
     LONG_ACTION = ActionType.ABS_VEL
-    LAT_ACTION = ActionType.LANE # Alternatively: ActionType.LANE
+    LAT_ACTION = ActionType.LANE  # Alternatively: ActionType.LANE
 
     def __init__(self, speed):
         super().__init__()
-        self.STEP_TIME = 100 # Change reference velocity every 100 iterations (10s)
+        self.STEP_TIME = 100  # Change reference velocity every 100 iterations (10s)
         self.speed = speed
 
     def init_vehicle(self, veh):
@@ -459,7 +460,7 @@ class FixedLanePolicy(CustomPolicy, enc_name="fixed_lane"):
         veh.counter = 0
 
     def _set_rel_vel(self, veh):
-        veh.rel_vel = 0.95-random.random()*0.3
+        veh.rel_vel = 0.95 - random.random() * 0.3
 
     def custom_action(self, veh):
         """ This method is called at every iteration and the returned numpy arrary

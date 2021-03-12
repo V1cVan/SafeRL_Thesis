@@ -70,14 +70,7 @@ class DqnAgent(keras.models.Model):
 
             # Gather and convert data from the buffer (data from simulation):
             # Sample mini-batch from memory
-            mini_batch = self.buffer.get_training_samples()
-            states = tf.squeeze(tf.convert_to_tensor([each[0] for each in mini_batch], dtype=np.float32))
-            actions = tf.squeeze(tf.convert_to_tensor(np.array([each[1] for each in mini_batch])))
-            rewards = tf.squeeze(tf.convert_to_tensor(np.array([each[2] for each in mini_batch], dtype=np.float32)))
-            next_states = tf.squeeze(tf.convert_to_tensor(np.array([each[3] for each in mini_batch], dtype=np.float32)))
-            done = tf.cast([each[4] for each in mini_batch], dtype=tf.float32)
-
-
+            states, actions, rewards, next_states, done = self.buffer.get_training_samples()
 
             one_hot_actions = tf.keras.utils.to_categorical(actions, num_classes=5)
 
@@ -112,6 +105,10 @@ class DqnAgent(keras.models.Model):
         Q_output = self.Q_target_net(next_states)
         Q_target = rewards + (ones - done) * (self.gamma * tf.reduce_max(Q_output, axis=1))
 
+        if self.training_param["standardise_returns"]:
+            eps = np.finfo(np.float32).eps.item()
+            Q_target = Q_target - tf.math.reduce_mean(Q_target) / (tf.math.reduce_std(Q_target) + eps)
+
         with tf.GradientTape() as tape:
             Q_output = self.Q_actual_net(states)
             Q_predicted = tf.reduce_sum(Q_output * actions, axis=1)
@@ -122,9 +119,15 @@ class DqnAgent(keras.models.Model):
             # Choose actions based on what was previously (randomly) sampled during simulation
 
         grads = tape.gradient(loss_value, self.Q_actual_net.trainable_variables)
+        # Clip gradients
+        if self.training_param["clip_gradients"]:
+            norm = self.training_param["clip_norm"]
+            grads = [tf.clip_by_norm(g, norm)
+                     for g in grads]
 
         self.training_param["optimiser"].apply_gradients(zip(grads, self.Q_actual_net.trainable_variables))
         reward = tf.math.reduce_sum(rewards)
+        reward = reward/len(self.buffer.buffer)
 
         return reward, loss_value
 
@@ -181,7 +184,7 @@ class SpgAgentSingle(keras.models.Model):
             returns = returns.write(i, discounted_sum)
         returns = returns.stack()[::-1]
 
-        if self.training_param["standardise_returns"]:
+        if self.training_param["standardise_rewards"]:
             returns = ((returns - tf.math.reduce_mean(returns)) / (tf.math.reduce_std(returns) + eps))
 
         return returns
@@ -327,7 +330,7 @@ class SpgAgentDouble(keras.models.Model):
             returns = returns.write(i, discounted_sum)
         returns = returns.stack()[::-1]
 
-        if self.training_param["standardise_returns"]:
+        if self.training_param["standardise_rewards"]:
             returns = ((returns - tf.math.reduce_mean(returns)) / (tf.math.reduce_std(returns) + eps))
 
         return returns

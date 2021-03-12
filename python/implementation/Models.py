@@ -32,10 +32,13 @@ class DeepQNetwork(keras.Model):
         dense_layer2 = self.dense_layer(num_units=n_units[1],
                                         initialiser=he,
                                         act_func=act_func)(dense_layer1)
+        dense_layer3 = self.dense_layer(num_units=n_units[2],
+                                        initialiser=he,
+                                        act_func=act_func)(dense_layer2)
         output_layer = layers.Dense(n_actions,
                                     name="OutputLayerSteering",
                                     kernel_initializer=var_scale,
-                                    bias_initializer=tf.keras.initializers.Constant(0))(dense_layer2)
+                                    bias_initializer=tf.keras.initializers.Constant(0))(dense_layer3)
 
         self.model = keras.Model(inputs=input_layer,
                                  outputs=output_layer,

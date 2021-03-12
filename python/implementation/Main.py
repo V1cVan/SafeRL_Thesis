@@ -60,9 +60,9 @@ class Main(object):
         ActionsPlot(self.p, actions="long")
         self.p.subplot(3, 1)
         ActionsPlot(self.p, actions="lat")
-        # self.p.subplot(3, 0)
-        # self.p.add_text("Rewards")
-        # self.p.TimeChartPlot(self.p, lines=self.pol[0]["policy"].buffer.rewards)
+        self.p.subplot(3, 0)
+        self.p.add_text("Rewards")
+        # TimeChartPlot(self.p, lines=self.policy.agent.buffer.rewards)
         self.p.plot()  # Initial plot
 
     def train_policy(self):
@@ -105,25 +105,21 @@ class Main(object):
                             self.policy.agent.epsilon_decay_count = train_counter
                             self.policy.agent.timestep = np.int(t/training_param["policy_rate"])
                             if self.policy.agent.buffer.is_buffer_min_size():
-                                train_counter += 1
                                 model_update_counter += 1
                                 if model_update_counter % training_param["model_update_rate"] == 0:
                                     reward, loss = self.policy.agent.train_step()
                                     trained = True
                                 if model_update_counter % training_param["target_update_rate"] == 0:
                                     self.policy.agent.update_target_net()
-                                    # print("Updated target net.")
+                                    print("Updated target net.")
 
                         self.policy.agent.stop_flags = self.sim.stopped or self.sim._collision
                         if self.policy.agent.stop_flags == True:
-                            self.policy.agent.buffer.alter_buffer_stop_flag(flag=trainer.stop_flags)
-
+                            self.policy.agent.buffer.alter_buffer_stop_flag(flag=self.policy.agent.stop_flags)
 
                         # Perform one simulations step:
                         if not self.sim.stopped:
                             self.sim.step()  # Calls AcPolicy.customAction method.
-
-
 
                             # if self.sim._collision:
                             #     logging.critical("Collision. At episode %f" % episode_count)
@@ -220,9 +216,9 @@ def sim_types(scenario_num, policy):
             # {"amount": 2, "model": KBModel(), "policy": StepPolicy(10, [0.1, 0.5])},
             # {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
             # {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
-            {"amount": 27, "model": KBModel(), "policy": BasicPolicy("slow")},
-            {"amount": 16, "model": KBModel(), "policy": BasicPolicy("normal")},
-            {"amount": 8, "model": KBModel(), "policy": BasicPolicy("fast")}
+            {"amount": 30, "model": KBModel(), "policy": BasicPolicy("slow")},
+            {"amount": 20, "model": KBModel(), "policy": BasicPolicy("normal")},
+            {"amount": 10, "model": KBModel(), "policy": BasicPolicy("fast")}
         ]
     }
 
@@ -355,7 +351,7 @@ if __name__=="__main__":
     np.random.seed(SEED)
 
     # Model parameters:
-    N_UNITS = (50, 20)
+    N_UNITS = (64, 32, 16)
     N_INPUTS = 54
     N_ACTIONS = 5
     ACT_FUNC = tf.nn.relu
@@ -373,30 +369,30 @@ if __name__=="__main__":
     pic.dump(model_param, open("./models/model_variables", "wb"))
 
     # Training parameters:
-    POLICY_ACTION_RATE = 10          # Number of simulator steps before new control action is taken
-    MAX_TIMESTEPS = 1e3     # range: 5e3 - 10e3
+    POLICY_ACTION_RATE = 10     # Number of simulator steps before new control action is taken
+    MAX_TIMESTEPS = 3e3         # range: 5e3 - 10e3
     MAX_EPISODES = 3e3
     FINAL_RETURN = 1e10
-    SHOW_TRAIN_PLOTS = True
-    PLOT_FREQ = 25
-    SIM_TIMESTEPS = 400
-    SCENARIO_NUM = 1          # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
-    BUFFER_SIZE = 100000
-    BATCH_SIZE = 50        # range: 32 - 150
-    EPSILON_MIN = 1.0       # Exploration
-    EPSILON_MAX = 0.1       # Exploitation
-    DECAY_RATE = 0.99999
-    MODEL_UPDATE_RATE = 1
-    TARGET_UPDATE_RATE = 10*MODEL_UPDATE_RATE
-    LEARN_RATE = 0.005      # range: 1e-3 - 1e-4
+    SHOW_TRAIN_PLOTS = False
+    PLOT_FREQ = 50
+    SIM_TIMESTEPS = 100
+    SCENARIO_NUM = 0            # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
+    BUFFER_SIZE = 300000
+    BATCH_SIZE = 250       # range: 32 - 150
+    EPSILON_MIN = 1.0           # Exploration
+    EPSILON_MAX = 0.1           # Exploitation
+    DECAY_RATE = 0.999995
+    MODEL_UPDATE_RATE = 400
+    TARGET_UPDATE_RATE = 50*MODEL_UPDATE_RATE
+    LEARN_RATE = 0.0005         # range: 1e-3 - 1e-4
     OPTIMISER = tf.optimizers.Adam(learning_rate=LEARN_RATE)
-    LOSS_FUNC = tf.losses.Huber(reduction=tf.keras.losses.Reduction.SUM)
-    GAMMA = 0.99            # range: 0.95 - 0.99
+    LOSS_FUNC = tf.losses.Huber()
+    GAMMA = 0.99                # range: 0.95 - 0.99
     CLIP_GRADIENTS = True
     CLIP_NORM = 2
-    # Reward weights = (rew_vel, rew_lat_position, rew_fol_dist, collision penalty)
-    REWARD_WEIGHTS = np.array([1.5, 0., 1.0, 1.5, -5])
-    STANDARDISE_REWARDS = True
+    # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
+    REWARD_WEIGHTS = np.array([1.0, 0.15, 1.0, 0.3, -5])
+    STANDARDISE_RETURNS = True
     training_param = {
         "max_timesteps": MAX_TIMESTEPS,
         "max_episodes": MAX_EPISODES,
@@ -419,7 +415,7 @@ if __name__=="__main__":
         "optimiser": OPTIMISER,
         "loss_func": LOSS_FUNC,
         "seed": SEED,
-        "standardise_rewards": STANDARDISE_REWARDS,
+        "standardise_returns": STANDARDISE_RETURNS,
         "reward_weights": REWARD_WEIGHTS
     }
     logging.critical("Training param:")
@@ -448,16 +444,16 @@ if __name__=="__main__":
 
     # Set up main class for running simulations:
     main = Main(scenario_num=SCENARIO_NUM, policy=dqn_policy)
+    time.sleep(0.01)
     # main.policy.agent.Q_actual_net.load_weights(MODEL_FILE_PATH)
     main.policy.agent.evaluation = False
     # Train model:
-    main.train_policy()
+    # main.train_policy()
 
     # TODO Tidy up simulation part:
     # Simulate model:
     main.policy.agent.Q_actual_net.load_weights(MODEL_FILE_PATH)
-    trainer.evaluation = True
-    main = Main(sim_types(SIM_NUMBER))
+    main.policy.agent.evaluation = True
     main.simulate(1000)
     # for i in range(0, 5):
     #     for _ in range(2):
