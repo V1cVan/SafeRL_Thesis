@@ -25,8 +25,12 @@
 #include <cmath>
 #include <string>
 #include <iostream>
+#include <mutex>
 
 class Scenario{
+    private:
+        STATIC_INLINE std::mutex sc_read_mutex;// Protects reading of scenario files
+
     public:
         STATIC_INLINE std::string scenarios_path;
         const std::string name;
@@ -77,6 +81,8 @@ class Scenario{
                 matClose(pmat);
             }
             #else
+            // Obtain lock to prevent concurrent reading of the scenario file (hdf5 cannot handle this)
+            const std::lock_guard<std::mutex> lock(sc_read_mutex);
             // Initialize a resource manager who will take care of file and dataset
             // closing in case of exceptions.
             H5ResourceManager rm;
@@ -127,6 +133,8 @@ class Scenario{
             }
             // Resource manager will automatically close the registered files and datasets,
             // together with the initialized datatypes once it goes out of scope
+            // Afterwards, the sc_read_mutex lock is released, allowing a next thread to
+            // read the scenario file.
             #endif
         }
 
@@ -464,6 +472,7 @@ class Scenario{
 
 #ifdef COMPAT
 std::string Scenario::scenarios_path;
+std::mutex Scenario::sc_read_mutex;
 #endif
 
 #endif

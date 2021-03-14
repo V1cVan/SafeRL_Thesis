@@ -476,13 +476,13 @@ class TimeChartPlot(_PlotterView):
     Base class for all 2D time chart plots.
     """
 
-    def __init__(self,p,lines=None,patches=None,value_cb=None,ylabel="",zoom=1.0,cached_vehicles=None):
+    def __init__(self,p,lines=None,patches=None,value_cb=None,ylabel="",zoom=1.0,cached_vehicles=None,mem_size=1000):
         super().__init__(p)
         # This view will keep track of the last data for all vehicles in the simulation
         # such that we can switch the active vehicle at a later point without information
         # loss.
         # TODO: now that we have replays, the buffering is no longer really necessary? Maybe add a toggle and default off
-        self._MEMORY_SIZE = 1000
+        self._MEMORY_SIZE = mem_size
         if lines is None:
             lines = {}
         self._lines = lines
