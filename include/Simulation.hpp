@@ -338,19 +338,13 @@ class Simulation{
             // In this first part of the new time step we update all vehicle model states
             part = 0;
             k += 1;
+            bool stop = false;
             if(mode==Mode::SIMULATE){
-                try{
-                    for(Vehicle& v : vehicles){
-                        v.modelUpdate(dt);
-                    }
-                    return false;
-                }catch(std::out_of_range& e){
-                    std::cout << e.what() << std::endl;
-                    return true;
+                for(Vehicle& v : vehicles){
+                    stop |= v.modelUpdate(dt);
                 }
-            }else{
-                return false;
             }
+            return stop;
         }
 
         // CUSTOM MODELS ACT HERE (between step a and b)
@@ -565,19 +559,7 @@ class Simulation{
                 v.driverUpdate(s);// Provide driver with updated augmented state
                 if(v.colStatus!=Vehicle::COL_NONE){
                     collision = true;
-                    std::cout << "Vehicle " << Vr << " collided with ";
-                    switch(v.colStatus){
-                        case Vehicle::COL_LEFT:
-                            std::cout << "the left road boundary.";
-                            break;
-                        case Vehicle::COL_RIGHT:
-                            std::cout << "the right road boundary.";
-                            break;
-                        default:
-                            std::cout << "vehicle " << v.colStatus << ".";
-                            break;
-                    }
-                    std::cout << std::endl;
+                    std::cout << "Vehicle " << Vr << " collided with vehicle " << v.colStatus << "." << std::endl;
                 }
                 collision |= v.colStatus!=Vehicle::COL_NONE;
             }

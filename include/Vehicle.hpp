@@ -12,6 +12,7 @@
 #include <array>
 #include <random>
 #include <cmath>
+#include <iostream>
 
 class Vehicle : public VehicleBase{
     public:
@@ -70,9 +71,10 @@ class Vehicle : public VehicleBase{
         EIGEN_NAMED_BASE(RoadState,(Eigen::Matrix<double,2+Model::State::SIZE,1>),ROADSTATE_REFS)
         EIGEN_NAMED_MATRIX(RoadState,ROADSTATE_REFS)
 
-        static constexpr int COL_NONE = 0;// No collision
+        static constexpr int COL_NONE = -9;// No collision
         static constexpr int COL_LEFT = -1;// Collision with left road boundary
         static constexpr int COL_RIGHT = -2;// Collision with right road boundary
+        static constexpr int COL_INV = -3;// Invalid road position (either end of lane reached or crash through left or right boundary) 
 
         const Scenario& sc;// Scenario in which the vehicle lives
         std::unique_ptr<Model::ModelBase> model;// Dynamical model of the vehicle's movement in the global coordinate system
@@ -111,14 +113,20 @@ class Vehicle : public VehicleBase{
         // The vehicle's state is updated from one time step to the other by means of three methods:
         // In a first step, the model is updated based on the current driving actions. After the
         // modelUpdate function returns all local states are updated (including roadInfo).
-        inline void modelUpdate(const double dt){// throws std::out_of_range
+        inline bool modelUpdate(const double dt){
             // Based on current model inputs, perform 1 simulation step to retrieve
             // new local states
             model->preIntegration(*this,x);// TODO: compilation issue when changed to StateRef
             Eigen::Map<Eigen::Vector2d> roadPos(roadInfo.pos.data());
             RoadState rs = {roadPos,x};
             auto sys = [this](const RoadState& xr){return roadDerivatives(xr);};
-            rs = Utils::integrateRK4(sys,rs,dt);
+            try{
+                rs = Utils::integrateRK4(sys,rs,dt);
+            }catch(std::out_of_range& e){
+                colStatus = COL_INV;
+                std::cout << "Vehicle " << ID << " crashed: " << e.what() << std::endl;
+                return true;
+            }
             model->postIntegration(*this,rs.modelState);
             // Wrap integrated road state to a valid new road id and road position:
             Road::id_t R = roadInfo.R;
@@ -126,10 +134,16 @@ class Vehicle : public VehicleBase{
             double Rl = roadInfo.pos[1];
             sc.updateRoadState(R,Rs,Rl,rs.roadPos[0]-Rs,rs.roadPos[1]-Rl);
             rs.modelState.ang[0] = Utils::wrapAngle(rs.modelState.ang[0]);
+            if(!sc.roads[R].laneId(Rs, Rl)){
+                colStatus = COL_INV;
+                std::cout << "Vehicle " << ID << " crashed: Invalid lane (crash through left or right boundary)" << std::endl;
+                return true;
+            }
             // Note that from here on we have an updated AND VALID new road state
-            // as otherwise an out_of_range exception would have been thrown.
+            // as otherwise we would have returned by now.
             double gamma = Utils::wrapAngle(rs.modelState.ang[0]-sc.roads[R].heading(Rs,Rl));
             updateState({R,Rs,Rl,gamma,rs.modelState.vel,rs.modelState.ang_vel});
+            return colStatus!=COL_NONE;
         }
 
         // To get new driving actions based on the updated local states of all other vehicles in the 
@@ -307,9 +321,11 @@ class Vehicle : public VehicleBase{
             // Update collision status:
             if(roadInfo.gapB[0]<=0){
                 colStatus = COL_RIGHT;
+                std::cout << "Vehicle " << ID << " collided with the right road boundary." << std::endl;
             }
             if(roadInfo.gapB[1]<=0){
                 colStatus = COL_LEFT;
+                std::cout << "Vehicle " << ID << " collided with the left road boundary." << std::endl;
             }
         }
 

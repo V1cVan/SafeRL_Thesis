@@ -5,6 +5,11 @@ from hwsim._utils import hybridmethod
 
 class Vehicle(object):
 
+    COL_NONE = -9
+    COL_LEFT = -1
+    COL_RIGHT = -2
+    COL_INV = -3
+
     def __init__(self,sim,id,model,policy,metrics):
         self._sim = sim
         self.id = id
@@ -238,9 +243,10 @@ class Vehicle(object):
     def col_status(self):
         """
         Collision status of this vehicle:
-        0:      No collision
+        -9:     No collision
         -1:     Collision with left road boundary (veh.s["gapB"][1]<=0)
         -2:     Collision with right road boundary (veh.s["gapB"][0]<=0)
+        -3:     Invalid road position (either end of lane reached or crash through left or right boundary)
         N>0:    Collision with other vehicle with id N (rls[0]<=0 and rls[1]<=0
                 for any rls in {ls["relF"][0],ls["relB"][0]} and any ls in
                 {veh.s["laneC"],veh.s["laneR"][0],veh.s["laneL"][0]})
