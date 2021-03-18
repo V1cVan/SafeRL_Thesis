@@ -229,11 +229,12 @@ class DiscreteSingleActionPolicy(CustomPolicy):
                     # Save to buffer from the Buffer class in HelperClasses.py module
                     # add_experience expects (timestep, state, vel_model_action, off_model_action,
                     #                         vel_action_sim, offset_action_sim, vel_choice, off_choice, reward, critic)
-                    self.agent.buffer.set_experience(state=np.squeeze(veh.s0_mod),
-                                                     action=veh.a0_choice,
-                                                     reward=veh.reward,
-                                                     next_state=np.squeeze(veh.s1_mod),
-                                                     done_flag=veh.flag)
+                    experience = (np.squeeze(veh.s0_mod),
+                                  veh.a0_choice,
+                                  veh.reward,
+                                  np.squeeze(veh.s1_mod),
+                                  veh.flag)
+                    self.agent.add_experience(experience)
 
             # Set past vehicle state and action pair
             veh.s0 = veh.s1

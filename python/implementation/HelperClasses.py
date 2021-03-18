@@ -378,46 +378,6 @@ class EpisodeBuffer(object):
         self.model_weights = []
 
 
-
-class TrainingBuffer(object):
-    """
-    The training buffer is used to store experiences that are then sampled from uniformly to facilitate
-    improved training. The training buffer reduces the correlation between experiences and avoids that
-    the network 'forgets' good actions that it learnt previously.
-    """
-
-    def __init__(self, max_mem_size, batch_size):
-        self.max_mem_size = max_mem_size
-        self.buffer = deque(maxlen=max_mem_size)
-        self.batch_size = batch_size
-
-    def set_experience(self, state, action, reward, next_state, done_flag):
-        """
-        Add an experience (s_k, a_k, r_k, s_k+1) to the training buffer.
-        """
-        experience = (state, action, reward, next_state, done_flag)
-        self.buffer.append(experience)
-
-    def get_training_samples(self):
-        """ Get minibatch for training. """
-        mini_batch = random.sample(self.buffer, self.batch_size)
-        states = tf.squeeze(tf.convert_to_tensor([each[0] for each in mini_batch], dtype=np.float32))
-        actions = tf.squeeze(tf.convert_to_tensor(np.array([each[1] for each in mini_batch])))
-        rewards = tf.squeeze(tf.convert_to_tensor(np.array([each[2] for each in mini_batch], dtype=np.float32)))
-        next_states = tf.squeeze(tf.convert_to_tensor(np.array([each[3] for each in mini_batch], dtype=np.float32)))
-        done = tf.cast([each[4] for each in mini_batch], dtype=tf.float32)
-        return states, actions, rewards, next_states, done
-
-    def alter_buffer_stop_flag(self, flag):
-        state, action, reward, next_state, done_flag = self.buffer[-1]
-        done_flag = flag
-        self.buffer[-1] = state, action, reward, next_state, done_flag
-
-    def is_buffer_min_size(self):
-        return len(self.buffer) >= self.batch_size
-
-
-
 class Timer(object):
     def __init__(self, timer_name):
         self.timer_name = timer_name
