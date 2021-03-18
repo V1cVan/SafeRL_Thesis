@@ -11,6 +11,7 @@ class DeepQNetwork(keras.Model):
     """
     def __init__(self, model_param):
         super(DeepQNetwork, self).__init__()
+        self.model_param = model_param
         tf.random.set_seed(model_param["seed"])
         np.random.seed(model_param["seed"])
         act_func = model_param["activation_function"]
@@ -66,6 +67,73 @@ class DeepQNetwork(keras.Model):
                                to_file='./models/DeepQNetwork.png')
 
 
+class DuellingDqnNetwork(keras.Model):
+    """
+    Builds the Q-network as a keras model.
+    """
+    def __init__(self, model_param):
+        super(DuellingDqnNetwork, self).__init__()
+        self.model_param = model_param
+        tf.random.set_seed(model_param["seed"])
+        np.random.seed(model_param["seed"])
+        act_func = model_param["activation_function"]
+        n_units = model_param["n_units"]
+        n_inputs = model_param["n_inputs"]
+        n_actions = model_param["n_actions"]
+
+        he = tf.keras.initializers.HeUniform()
+        glorot = tf.keras.initializers.GlorotUniform()
+        normal = tf.keras.initializers.RandomUniform(minval=-0.01, maxval=0.01)
+        var_scale = tf.keras.initializers.VarianceScaling(scale=2.0, mode='fan_in', distribution='truncated_normal')
+
+        input_layer = layers.Input(shape=(n_inputs,),
+                                   name="inputStateLayer")
+
+        dense_layer1 = self.dense_layer(num_units=n_units[0],
+                                        initialiser=he,
+                                        act_func=act_func)(input_layer)
+        dense_layer2 = self.dense_layer(num_units=n_units[1],
+                                        initialiser=he,
+                                        act_func=act_func)(dense_layer1)
+        dense_layer3 = self.dense_layer(num_units=n_units[2],
+                                        initialiser=he,
+                                        act_func=act_func)(dense_layer2)
+
+        value_layer, advantage_layer = layers.Lambda(lambda w: tf.split(w, 2, 1))(dense_layer3)
+
+        value_layer = layers.Dense(1)(value_layer)
+        advantage_layer = layers.Dense(n_actions)(advantage_layer)
+
+        reduce_mean_layer = layers.Lambda(lambda w: tf.reduce_mean(w, axis=1, keepdims=True))
+
+        output_layer = layers.Add()(
+            [value_layer, layers.Subtract()([advantage_layer, reduce_mean_layer(advantage_layer)])])
+
+        self.model = keras.Model(inputs=input_layer,
+                                 outputs=output_layer,
+                                 name="DuellingDQN")
+
+    def dense_layer(self, num_units, act_func, initialiser):
+        return layers.Dense(
+            num_units,
+            activation=act_func,
+            kernel_initializer=initialiser)
+
+    def display_overview(self):
+        """ Displays an overview of the model. """
+        self.model.summary()
+        keras.utils.plot_model(self.model,
+                               show_shapes=True,
+                               show_layer_names=True,
+                               to_file='./models/DuellingDeepQNetwork.png')
+
+    @tf.function
+    def call(self, inputs: tf.Tensor):
+        """ Returns the output of the model given an input. """
+        y = self.model(inputs)
+        return y
+
+
 class AcNetworkSingleAction(keras.Model):
     """
     Neural network architecture for the actor and critic.
@@ -75,6 +143,7 @@ class AcNetworkSingleAction(keras.Model):
     """
     def __init__(self, model_param):
         super(AcNetworkSingleAction, self).__init__()
+        self.model_param = model_param
         tf.random.set_seed(model_param["seed"])
         np.random.seed(model_param["seed"])
         act_func = model_param["activation_function"]
@@ -140,6 +209,7 @@ class AcNetworkDoubleAction(keras.Model):
     """
     def __init__(self, model_param):
         super(AcNetworkDoubleAction, self).__init__()
+        self.model_param = model_param
         tf.random.set_seed(model_param["seed"])
         np.random.seed(model_param["seed"])
         act_func = model_param["activation_function"]

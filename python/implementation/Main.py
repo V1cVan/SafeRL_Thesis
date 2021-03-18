@@ -107,12 +107,16 @@ class Main(object):
                             if self.policy.agent.buffer.is_buffer_min_size():
                                 model_update_counter += 1
                                 if model_update_counter % training_param["model_update_rate"] == 0:
+                                    # TODO add data to episode buffer to get episode rewards while training.
                                     reward, loss = self.policy.agent.train_step()
                                     trained = True
                                 if model_update_counter % training_param["target_update_rate"] == 0:
                                     self.policy.agent.update_target_net()
                                     print("Updated target net.")
 
+
+                        # TODO Reformat so that check is done after sim.step()
+                        # TODO maybe add penalties for collisions
                         self.policy.agent.stop_flags = self.sim.stopped or self.sim._collision
                         if self.policy.agent.stop_flags == True:
                             self.policy.agent.buffer.alter_buffer_stop_flag(flag=self.policy.agent.stop_flags)
@@ -136,7 +140,7 @@ class Main(object):
                 # policy.trainer.buffer.clear_experience()
 
             if trained:
-                if 0.05 * reward + (1 - 0.05) * running_reward > running_reward and episode_count%50==0:
+                if 0.05 * reward + (1 - 0.05) * running_reward > running_reward and episode_count % 50 == 0:
                     self.policy.agent.Q_actual_net.save_weights(model_param["weights_file_path"])
                     print("Saved network weights.")
 
@@ -381,7 +385,7 @@ if __name__=="__main__":
     BATCH_SIZE = 250       # range: 32 - 150
     EPSILON_MIN = 1.0           # Exploration
     EPSILON_MAX = 0.1           # Exploitation
-    DECAY_RATE = 0.999995
+    DECAY_RATE = 0.999993
     MODEL_UPDATE_RATE = 400
     TARGET_UPDATE_RATE = 50*MODEL_UPDATE_RATE
     LEARN_RATE = 0.0005         # range: 1e-3 - 1e-4
@@ -393,6 +397,12 @@ if __name__=="__main__":
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
     REWARD_WEIGHTS = np.array([1.0, 0.15, 1.0, 0.3, -5])
     STANDARDISE_RETURNS = True
+    USE_PER = False
+    ALPHA = 0.75                # Priority scale: a=0:random, a=1:completely based on priority
+    BETA = 0.3                  # Prioritisation factor
+    BETA_INCREMENT = 0.0005     # Rate of Beta annealing to 1 # TODO plotting of beta increment
+    USE_DUELLING = False
+    # TODO comparitive plotting of standard DQN, DDQN, PER, and Duelling
     training_param = {
         "max_timesteps": MAX_TIMESTEPS,
         "max_episodes": MAX_EPISODES,
@@ -416,7 +426,12 @@ if __name__=="__main__":
         "loss_func": LOSS_FUNC,
         "seed": SEED,
         "standardise_returns": STANDARDISE_RETURNS,
-        "reward_weights": REWARD_WEIGHTS
+        "reward_weights": REWARD_WEIGHTS,
+        "use_per": USE_PER,
+        "alpha": ALPHA,
+        "beta": BETA,
+        "beta_increment": BETA_INCREMENT,
+        "use_duelling": USE_DUELLING
     }
     logging.critical("Training param:")
     logging.critical(training_param)
@@ -436,7 +451,10 @@ if __name__=="__main__":
     # spg_agent_double = SpgAgentDouble(network=AC_net_double, training_param=training_param)
     # spg_policy_double = DiscreteDoubleActionPolicy(agent=spg_agent_double)
 
-    DQ_net = DeepQNetwork(model_param=model_param)
+    if USE_DUELLING:
+        DQ_net = DuellingDqnNetwork(model_param=model_param)
+    else:
+        DQ_net = DeepQNetwork(model_param=model_param)
     dqn_agent = DqnAgent(network=DQ_net, training_param=training_param)
     dqn_policy = DiscreteSingleActionPolicy(agent=dqn_agent)
 
@@ -448,7 +466,7 @@ if __name__=="__main__":
     # main.policy.agent.Q_actual_net.load_weights(MODEL_FILE_PATH)
     main.policy.agent.evaluation = False
     # Train model:
-    # main.train_policy()
+    main.train_policy()
 
     # TODO Tidy up simulation part:
     # Simulate model:

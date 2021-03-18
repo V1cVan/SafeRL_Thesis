@@ -1,4 +1,3605 @@
 CRITICAL:root:Model Parameters:
-CRITICAL:root:{'n_units': (64, 32, 16), 'n_inputs': 54, 'n_actions': 5, 'activation_function': <function relu at 0x000001D8848E1048>, 'weights_file_path': './models/model_weights', 'seed': 81033505}
+CRITICAL:root:{'n_units': (64, 32, 16), 'n_inputs': 54, 'n_actions': 5, 'activation_function': <function relu at 0x00000210DEC92168>, 'weights_file_path': './models/model_weights', 'seed': 2576165811}
 CRITICAL:root:Training param:
-CRITICAL:root:{'max_timesteps': 3000.0, 'max_episodes': 3000.0, 'final_return': 10000000000.0, 'show_train_plots': False, 'plot_freq': 50, 'sim_timesteps': 100, 'buffer_size': 300000, 'batch_size': 250, 'epsilon_max': 0.1, 'epsilon_min': 1.0, 'decay_rate': 0.999995, 'model_update_rate': 400, 'target_update_rate': 20000, 'policy_rate': 10, 'gamma': 0.99, 'clip_gradients': True, 'clip_norm': 2, 'learning_rate': 0.0005, 'optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x000001D88AAA8BC8>, 'loss_func': <tensorflow.python.keras.losses.Huber object at 0x000001D88E8DB888>, 'seed': 81033505, 'standardise_returns': True, 'reward_weights': array([ 1.  ,  0.2 ,  1.  ,  0.25, -5.  ])}
+CRITICAL:root:{'max_timesteps': 3000.0, 'max_episodes': 3000.0, 'final_return': 10000000000.0, 'show_train_plots': False, 'plot_freq': 50, 'sim_timesteps': 100, 'buffer_size': 300000, 'batch_size': 250, 'epsilon_max': 0.1, 'epsilon_min': 1.0, 'decay_rate': 0.999995, 'model_update_rate': 400, 'target_update_rate': 20000, 'policy_rate': 10, 'gamma': 0.99, 'clip_gradients': True, 'clip_norm': 2, 'learning_rate': 0.0005, 'optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x00000210E4E46088>, 'loss_func': <tensorflow.python.keras.losses.Huber object at 0x00000210E8C77D88>, 'seed': 2576165811, 'standardise_returns': True, 'reward_weights': array([ 1.  ,  0.15,  1.  ,  0.3 , -5.  ]), 'use_per': False, 'alpha': 0.75, 'beta': 0.3, 'beta_increment': 0.0005, 'use_duelling': False}
+CRITICAL:root:Episode number: 1.00
+CRITICAL:root:Episode number: 2.00
+CRITICAL:root:Episode number: 3.00
+CRITICAL:root:Episode number: 4.00
+CRITICAL:root:Episode number: 5.00
+CRITICAL:root:Running reward = 0.22 at episode 5. Loss = 0.71. Epsilon = 1.00.
+CRITICAL:root:Episode number: 6.00
+CRITICAL:root:Episode number: 7.00
+CRITICAL:root:Episode number: 8.00
+CRITICAL:root:Episode number: 9.00
+CRITICAL:root:Episode number: 10.00
+CRITICAL:root:Running reward = 0.70 at episode 10. Loss = 0.75. Epsilon = 1.00.
+CRITICAL:root:Episode number: 11.00
+CRITICAL:root:Episode number: 12.00
+CRITICAL:root:Episode number: 13.00
+CRITICAL:root:Episode number: 14.00
+CRITICAL:root:Episode number: 15.00
+CRITICAL:root:Running reward = 1.06 at episode 15. Loss = 0.69. Epsilon = 0.99.
+CRITICAL:root:Episode number: 16.00
+CRITICAL:root:Episode number: 17.00
+CRITICAL:root:Episode number: 18.00
+CRITICAL:root:Episode number: 19.00
+CRITICAL:root:Episode number: 20.00
+CRITICAL:root:Running reward = 1.33 at episode 20. Loss = 0.61. Epsilon = 0.99.
+CRITICAL:root:Episode number: 21.00
+CRITICAL:root:Episode number: 22.00
+CRITICAL:root:Episode number: 23.00
+CRITICAL:root:Episode number: 24.00
+CRITICAL:root:Episode number: 25.00
+CRITICAL:root:Running reward = 1.55 at episode 25. Loss = 0.77. Epsilon = 0.99.
+CRITICAL:root:Episode number: 26.00
+CRITICAL:root:Episode number: 27.00
+CRITICAL:root:Episode number: 28.00
+CRITICAL:root:Episode number: 29.00
+CRITICAL:root:Episode number: 30.00
+CRITICAL:root:Running reward = 1.71 at episode 30. Loss = 0.76. Epsilon = 0.99.
+CRITICAL:root:Episode number: 31.00
+CRITICAL:root:Episode number: 32.00
+CRITICAL:root:Episode number: 33.00
+CRITICAL:root:Episode number: 34.00
+CRITICAL:root:Episode number: 35.00
+CRITICAL:root:Running reward = 1.83 at episode 35. Loss = 0.73. Epsilon = 0.98.
+CRITICAL:root:Episode number: 36.00
+CRITICAL:root:Episode number: 37.00
+CRITICAL:root:Episode number: 38.00
+CRITICAL:root:Episode number: 39.00
+CRITICAL:root:Episode number: 40.00
+CRITICAL:root:Running reward = 1.93 at episode 40. Loss = 0.92. Epsilon = 0.98.
+CRITICAL:root:Episode number: 41.00
+CRITICAL:root:Episode number: 42.00
+CRITICAL:root:Episode number: 43.00
+CRITICAL:root:Episode number: 44.00
+CRITICAL:root:Episode number: 45.00
+CRITICAL:root:Running reward = 2.01 at episode 45. Loss = 0.93. Epsilon = 0.98.
+CRITICAL:root:Episode number: 46.00
+CRITICAL:root:Episode number: 47.00
+CRITICAL:root:Episode number: 48.00
+CRITICAL:root:Episode number: 49.00
+CRITICAL:root:Episode number: 50.00
+CRITICAL:root:Running reward = 2.07 at episode 50. Loss = 0.82. Epsilon = 0.98.
+CRITICAL:root:Episode number: 51.00
+CRITICAL:root:Episode number: 52.00
+CRITICAL:root:Episode number: 53.00
+CRITICAL:root:Episode number: 54.00
+CRITICAL:root:Episode number: 55.00
+CRITICAL:root:Running reward = 2.14 at episode 55. Loss = 0.94. Epsilon = 0.97.
+CRITICAL:root:Episode number: 56.00
+CRITICAL:root:Episode number: 57.00
+CRITICAL:root:Episode number: 58.00
+CRITICAL:root:Episode number: 59.00
+CRITICAL:root:Episode number: 60.00
+CRITICAL:root:Running reward = 2.17 at episode 60. Loss = 1.13. Epsilon = 0.97.
+CRITICAL:root:Episode number: 61.00
+CRITICAL:root:Episode number: 62.00
+CRITICAL:root:Episode number: 63.00
+CRITICAL:root:Episode number: 64.00
+CRITICAL:root:Episode number: 65.00
+CRITICAL:root:Running reward = 2.20 at episode 65. Loss = 1.09. Epsilon = 0.97.
+CRITICAL:root:Episode number: 66.00
+CRITICAL:root:Episode number: 67.00
+CRITICAL:root:Episode number: 68.00
+CRITICAL:root:Episode number: 69.00
+CRITICAL:root:Episode number: 70.00
+CRITICAL:root:Running reward = 2.22 at episode 70. Loss = 1.14. Epsilon = 0.97.
+CRITICAL:root:Episode number: 71.00
+CRITICAL:root:Episode number: 72.00
+CRITICAL:root:Episode number: 73.00
+CRITICAL:root:Episode number: 74.00
+CRITICAL:root:Episode number: 75.00
+CRITICAL:root:Running reward = 2.24 at episode 75. Loss = 1.22. Epsilon = 0.96.
+CRITICAL:root:Episode number: 76.00
+CRITICAL:root:Episode number: 77.00
+CRITICAL:root:Episode number: 78.00
+CRITICAL:root:Episode number: 79.00
+CRITICAL:root:Episode number: 80.00
+CRITICAL:root:Running reward = 2.26 at episode 80. Loss = 1.23. Epsilon = 0.96.
+CRITICAL:root:Episode number: 81.00
+CRITICAL:root:Episode number: 82.00
+CRITICAL:root:Episode number: 83.00
+CRITICAL:root:Episode number: 84.00
+CRITICAL:root:Episode number: 85.00
+CRITICAL:root:Running reward = 2.26 at episode 85. Loss = 1.23. Epsilon = 0.96.
+CRITICAL:root:Episode number: 86.00
+CRITICAL:root:Episode number: 87.00
+CRITICAL:root:Episode number: 88.00
+CRITICAL:root:Episode number: 89.00
+CRITICAL:root:Episode number: 90.00
+CRITICAL:root:Running reward = 2.27 at episode 90. Loss = 1.26. Epsilon = 0.96.
+CRITICAL:root:Episode number: 91.00
+CRITICAL:root:Episode number: 92.00
+CRITICAL:root:Episode number: 93.00
+CRITICAL:root:Episode number: 94.00
+CRITICAL:root:Episode number: 95.00
+CRITICAL:root:Running reward = 2.26 at episode 95. Loss = 1.27. Epsilon = 0.95.
+CRITICAL:root:Episode number: 96.00
+CRITICAL:root:Episode number: 97.00
+CRITICAL:root:Episode number: 98.00
+CRITICAL:root:Episode number: 99.00
+CRITICAL:root:Episode number: 100.00
+CRITICAL:root:Running reward = 2.27 at episode 100. Loss = 1.41. Epsilon = 0.95.
+CRITICAL:root:Episode number: 101.00
+CRITICAL:root:Episode number: 102.00
+CRITICAL:root:Episode number: 103.00
+CRITICAL:root:Episode number: 104.00
+CRITICAL:root:Episode number: 105.00
+CRITICAL:root:Running reward = 2.26 at episode 105. Loss = 1.63. Epsilon = 0.95.
+CRITICAL:root:Episode number: 106.00
+CRITICAL:root:Episode number: 107.00
+CRITICAL:root:Episode number: 108.00
+CRITICAL:root:Episode number: 109.00
+CRITICAL:root:Episode number: 110.00
+CRITICAL:root:Running reward = 2.27 at episode 110. Loss = 1.67. Epsilon = 0.95.
+CRITICAL:root:Episode number: 111.00
+CRITICAL:root:Episode number: 112.00
+CRITICAL:root:Episode number: 113.00
+CRITICAL:root:Episode number: 114.00
+CRITICAL:root:Episode number: 115.00
+CRITICAL:root:Running reward = 2.27 at episode 115. Loss = 1.76. Epsilon = 0.94.
+CRITICAL:root:Episode number: 116.00
+CRITICAL:root:Episode number: 117.00
+CRITICAL:root:Episode number: 118.00
+CRITICAL:root:Episode number: 119.00
+CRITICAL:root:Episode number: 120.00
+CRITICAL:root:Running reward = 2.26 at episode 120. Loss = 2.01. Epsilon = 0.94.
+CRITICAL:root:Episode number: 121.00
+CRITICAL:root:Episode number: 122.00
+CRITICAL:root:Episode number: 123.00
+CRITICAL:root:Episode number: 124.00
+CRITICAL:root:Episode number: 125.00
+CRITICAL:root:Running reward = 2.28 at episode 125. Loss = 1.90. Epsilon = 0.94.
+CRITICAL:root:Episode number: 126.00
+CRITICAL:root:Episode number: 127.00
+CRITICAL:root:Episode number: 128.00
+CRITICAL:root:Episode number: 129.00
+CRITICAL:root:Episode number: 130.00
+CRITICAL:root:Running reward = 2.28 at episode 130. Loss = 2.16. Epsilon = 0.94.
+CRITICAL:root:Episode number: 131.00
+CRITICAL:root:Episode number: 132.00
+CRITICAL:root:Episode number: 133.00
+CRITICAL:root:Episode number: 134.00
+CRITICAL:root:Episode number: 135.00
+CRITICAL:root:Running reward = 2.29 at episode 135. Loss = 1.99. Epsilon = 0.94.
+CRITICAL:root:Episode number: 136.00
+CRITICAL:root:Episode number: 137.00
+CRITICAL:root:Episode number: 138.00
+CRITICAL:root:Episode number: 139.00
+CRITICAL:root:Episode number: 140.00
+CRITICAL:root:Running reward = 2.28 at episode 140. Loss = 2.30. Epsilon = 0.93.
+CRITICAL:root:Episode number: 141.00
+CRITICAL:root:Episode number: 142.00
+CRITICAL:root:Episode number: 143.00
+CRITICAL:root:Episode number: 144.00
+CRITICAL:root:Episode number: 145.00
+CRITICAL:root:Running reward = 2.29 at episode 145. Loss = 2.62. Epsilon = 0.93.
+CRITICAL:root:Episode number: 146.00
+CRITICAL:root:Episode number: 147.00
+CRITICAL:root:Episode number: 148.00
+CRITICAL:root:Episode number: 149.00
+CRITICAL:root:Episode number: 150.00
+CRITICAL:root:Running reward = 2.30 at episode 150. Loss = 2.93. Epsilon = 0.93.
+CRITICAL:root:Episode number: 151.00
+CRITICAL:root:Episode number: 152.00
+CRITICAL:root:Episode number: 153.00
+CRITICAL:root:Episode number: 154.00
+CRITICAL:root:Episode number: 155.00
+CRITICAL:root:Running reward = 2.30 at episode 155. Loss = 2.74. Epsilon = 0.93.
+CRITICAL:root:Episode number: 156.00
+CRITICAL:root:Episode number: 157.00
+CRITICAL:root:Episode number: 158.00
+CRITICAL:root:Episode number: 159.00
+CRITICAL:root:Episode number: 160.00
+CRITICAL:root:Running reward = 2.30 at episode 160. Loss = 3.09. Epsilon = 0.92.
+CRITICAL:root:Episode number: 161.00
+CRITICAL:root:Episode number: 162.00
+CRITICAL:root:Episode number: 163.00
+CRITICAL:root:Episode number: 164.00
+CRITICAL:root:Episode number: 165.00
+CRITICAL:root:Running reward = 2.30 at episode 165. Loss = 2.89. Epsilon = 0.92.
+CRITICAL:root:Episode number: 166.00
+CRITICAL:root:Episode number: 167.00
+CRITICAL:root:Episode number: 168.00
+CRITICAL:root:Episode number: 169.00
+CRITICAL:root:Episode number: 170.00
+CRITICAL:root:Running reward = 2.30 at episode 170. Loss = 3.27. Epsilon = 0.92.
+CRITICAL:root:Episode number: 171.00
+CRITICAL:root:Episode number: 172.00
+CRITICAL:root:Episode number: 173.00
+CRITICAL:root:Episode number: 174.00
+CRITICAL:root:Episode number: 175.00
+CRITICAL:root:Running reward = 2.31 at episode 175. Loss = 3.93. Epsilon = 0.92.
+CRITICAL:root:Episode number: 176.00
+CRITICAL:root:Episode number: 177.00
+CRITICAL:root:Episode number: 178.00
+CRITICAL:root:Episode number: 179.00
+CRITICAL:root:Episode number: 180.00
+CRITICAL:root:Running reward = 2.31 at episode 180. Loss = 4.04. Epsilon = 0.91.
+CRITICAL:root:Episode number: 181.00
+CRITICAL:root:Episode number: 182.00
+CRITICAL:root:Episode number: 183.00
+CRITICAL:root:Episode number: 184.00
+CRITICAL:root:Episode number: 185.00
+CRITICAL:root:Running reward = 2.31 at episode 185. Loss = 4.50. Epsilon = 0.91.
+CRITICAL:root:Episode number: 186.00
+CRITICAL:root:Episode number: 187.00
+CRITICAL:root:Episode number: 188.00
+CRITICAL:root:Episode number: 189.00
+CRITICAL:root:Episode number: 190.00
+CRITICAL:root:Running reward = 2.31 at episode 190. Loss = 4.22. Epsilon = 0.91.
+CRITICAL:root:Episode number: 191.00
+CRITICAL:root:Episode number: 192.00
+CRITICAL:root:Episode number: 193.00
+CRITICAL:root:Episode number: 194.00
+CRITICAL:root:Episode number: 195.00
+CRITICAL:root:Running reward = 2.29 at episode 195. Loss = 3.82. Epsilon = 0.91.
+CRITICAL:root:Episode number: 196.00
+CRITICAL:root:Episode number: 197.00
+CRITICAL:root:Episode number: 198.00
+CRITICAL:root:Episode number: 199.00
+CRITICAL:root:Episode number: 200.00
+CRITICAL:root:Running reward = 2.30 at episode 200. Loss = 4.05. Epsilon = 0.91.
+CRITICAL:root:Episode number: 201.00
+CRITICAL:root:Episode number: 202.00
+CRITICAL:root:Episode number: 203.00
+CRITICAL:root:Episode number: 204.00
+CRITICAL:root:Episode number: 205.00
+CRITICAL:root:Running reward = 2.31 at episode 205. Loss = 4.13. Epsilon = 0.90.
+CRITICAL:root:Episode number: 206.00
+CRITICAL:root:Episode number: 207.00
+CRITICAL:root:Episode number: 208.00
+CRITICAL:root:Episode number: 209.00
+CRITICAL:root:Episode number: 210.00
+CRITICAL:root:Running reward = 2.31 at episode 210. Loss = 3.70. Epsilon = 0.90.
+CRITICAL:root:Episode number: 211.00
+CRITICAL:root:Episode number: 212.00
+CRITICAL:root:Episode number: 213.00
+CRITICAL:root:Episode number: 214.00
+CRITICAL:root:Episode number: 215.00
+CRITICAL:root:Running reward = 2.30 at episode 215. Loss = 3.66. Epsilon = 0.90.
+CRITICAL:root:Episode number: 216.00
+CRITICAL:root:Episode number: 217.00
+CRITICAL:root:Episode number: 218.00
+CRITICAL:root:Episode number: 219.00
+CRITICAL:root:Episode number: 220.00
+CRITICAL:root:Running reward = 2.30 at episode 220. Loss = 3.46. Epsilon = 0.90.
+CRITICAL:root:Episode number: 221.00
+CRITICAL:root:Episode number: 222.00
+CRITICAL:root:Episode number: 223.00
+CRITICAL:root:Episode number: 224.00
+CRITICAL:root:Episode number: 225.00
+CRITICAL:root:Running reward = 2.31 at episode 225. Loss = 3.58. Epsilon = 0.89.
+CRITICAL:root:Episode number: 226.00
+CRITICAL:root:Episode number: 227.00
+CRITICAL:root:Episode number: 228.00
+CRITICAL:root:Episode number: 229.00
+CRITICAL:root:Episode number: 230.00
+CRITICAL:root:Running reward = 2.32 at episode 230. Loss = 3.96. Epsilon = 0.89.
+CRITICAL:root:Episode number: 231.00
+CRITICAL:root:Episode number: 232.00
+CRITICAL:root:Episode number: 233.00
+CRITICAL:root:Episode number: 234.00
+CRITICAL:root:Episode number: 235.00
+CRITICAL:root:Running reward = 2.32 at episode 235. Loss = 3.53. Epsilon = 0.89.
+CRITICAL:root:Episode number: 236.00
+CRITICAL:root:Episode number: 237.00
+CRITICAL:root:Episode number: 238.00
+CRITICAL:root:Episode number: 239.00
+CRITICAL:root:Episode number: 240.00
+CRITICAL:root:Running reward = 2.33 at episode 240. Loss = 3.33. Epsilon = 0.89.
+CRITICAL:root:Episode number: 241.00
+CRITICAL:root:Episode number: 242.00
+CRITICAL:root:Episode number: 243.00
+CRITICAL:root:Episode number: 244.00
+CRITICAL:root:Episode number: 245.00
+CRITICAL:root:Running reward = 2.33 at episode 245. Loss = 3.40. Epsilon = 0.88.
+CRITICAL:root:Episode number: 246.00
+CRITICAL:root:Episode number: 247.00
+CRITICAL:root:Episode number: 248.00
+CRITICAL:root:Episode number: 249.00
+CRITICAL:root:Episode number: 250.00
+CRITICAL:root:Running reward = 2.33 at episode 250. Loss = 3.49. Epsilon = 0.88.
+CRITICAL:root:Episode number: 251.00
+CRITICAL:root:Episode number: 252.00
+CRITICAL:root:Episode number: 253.00
+CRITICAL:root:Episode number: 254.00
+CRITICAL:root:Episode number: 255.00
+CRITICAL:root:Running reward = 2.33 at episode 255. Loss = 3.65. Epsilon = 0.88.
+CRITICAL:root:Episode number: 256.00
+CRITICAL:root:Episode number: 257.00
+CRITICAL:root:Episode number: 258.00
+CRITICAL:root:Episode number: 259.00
+CRITICAL:root:Episode number: 260.00
+CRITICAL:root:Running reward = 2.33 at episode 260. Loss = 3.56. Epsilon = 0.88.
+CRITICAL:root:Episode number: 261.00
+CRITICAL:root:Episode number: 262.00
+CRITICAL:root:Episode number: 263.00
+CRITICAL:root:Episode number: 264.00
+CRITICAL:root:Episode number: 265.00
+CRITICAL:root:Running reward = 2.33 at episode 265. Loss = 3.21. Epsilon = 0.88.
+CRITICAL:root:Episode number: 266.00
+CRITICAL:root:Episode number: 267.00
+CRITICAL:root:Episode number: 268.00
+CRITICAL:root:Episode number: 269.00
+CRITICAL:root:Episode number: 270.00
+CRITICAL:root:Running reward = 2.34 at episode 270. Loss = 2.84. Epsilon = 0.87.
+CRITICAL:root:Episode number: 271.00
+CRITICAL:root:Episode number: 272.00
+CRITICAL:root:Episode number: 273.00
+CRITICAL:root:Episode number: 274.00
+CRITICAL:root:Episode number: 275.00
+CRITICAL:root:Running reward = 2.34 at episode 275. Loss = 3.04. Epsilon = 0.87.
+CRITICAL:root:Episode number: 276.00
+CRITICAL:root:Episode number: 277.00
+CRITICAL:root:Episode number: 278.00
+CRITICAL:root:Episode number: 279.00
+CRITICAL:root:Episode number: 280.00
+CRITICAL:root:Running reward = 2.35 at episode 280. Loss = 2.61. Epsilon = 0.87.
+CRITICAL:root:Episode number: 281.00
+CRITICAL:root:Episode number: 282.00
+CRITICAL:root:Episode number: 283.00
+CRITICAL:root:Episode number: 284.00
+CRITICAL:root:Episode number: 285.00
+CRITICAL:root:Running reward = 2.35 at episode 285. Loss = 2.44. Epsilon = 0.87.
+CRITICAL:root:Episode number: 286.00
+CRITICAL:root:Episode number: 287.00
+CRITICAL:root:Episode number: 288.00
+CRITICAL:root:Episode number: 289.00
+CRITICAL:root:Episode number: 290.00
+CRITICAL:root:Running reward = 2.36 at episode 290. Loss = 2.65. Epsilon = 0.86.
+CRITICAL:root:Episode number: 291.00
+CRITICAL:root:Episode number: 292.00
+CRITICAL:root:Episode number: 293.00
+CRITICAL:root:Episode number: 294.00
+CRITICAL:root:Episode number: 295.00
+CRITICAL:root:Running reward = 2.37 at episode 295. Loss = 2.77. Epsilon = 0.86.
+CRITICAL:root:Episode number: 296.00
+CRITICAL:root:Episode number: 297.00
+CRITICAL:root:Episode number: 298.00
+CRITICAL:root:Episode number: 299.00
+CRITICAL:root:Episode number: 300.00
+CRITICAL:root:Running reward = 2.37 at episode 300. Loss = 2.35. Epsilon = 0.86.
+CRITICAL:root:Episode number: 301.00
+CRITICAL:root:Episode number: 302.00
+CRITICAL:root:Episode number: 303.00
+CRITICAL:root:Episode number: 304.00
+CRITICAL:root:Episode number: 305.00
+CRITICAL:root:Running reward = 2.37 at episode 305. Loss = 3.24. Epsilon = 0.86.
+CRITICAL:root:Episode number: 306.00
+CRITICAL:root:Episode number: 307.00
+CRITICAL:root:Episode number: 308.00
+CRITICAL:root:Episode number: 309.00
+CRITICAL:root:Episode number: 310.00
+CRITICAL:root:Running reward = 2.38 at episode 310. Loss = 2.73. Epsilon = 0.86.
+CRITICAL:root:Episode number: 311.00
+CRITICAL:root:Episode number: 312.00
+CRITICAL:root:Episode number: 313.00
+CRITICAL:root:Episode number: 314.00
+CRITICAL:root:Episode number: 315.00
+CRITICAL:root:Running reward = 2.38 at episode 315. Loss = 2.80. Epsilon = 0.85.
+CRITICAL:root:Episode number: 316.00
+CRITICAL:root:Episode number: 317.00
+CRITICAL:root:Episode number: 318.00
+CRITICAL:root:Episode number: 319.00
+CRITICAL:root:Episode number: 320.00
+CRITICAL:root:Running reward = 2.39 at episode 320. Loss = 3.51. Epsilon = 0.85.
+CRITICAL:root:Episode number: 321.00
+CRITICAL:root:Episode number: 322.00
+CRITICAL:root:Episode number: 323.00
+CRITICAL:root:Episode number: 324.00
+CRITICAL:root:Episode number: 325.00
+CRITICAL:root:Running reward = 2.40 at episode 325. Loss = 3.51. Epsilon = 0.85.
+CRITICAL:root:Episode number: 326.00
+CRITICAL:root:Episode number: 327.00
+CRITICAL:root:Episode number: 328.00
+CRITICAL:root:Episode number: 329.00
+CRITICAL:root:Episode number: 330.00
+CRITICAL:root:Running reward = 2.40 at episode 330. Loss = 3.36. Epsilon = 0.85.
+CRITICAL:root:Episode number: 331.00
+CRITICAL:root:Episode number: 332.00
+CRITICAL:root:Episode number: 333.00
+CRITICAL:root:Episode number: 334.00
+CRITICAL:root:Episode number: 335.00
+CRITICAL:root:Running reward = 2.40 at episode 335. Loss = 2.29. Epsilon = 0.85.
+CRITICAL:root:Episode number: 336.00
+CRITICAL:root:Episode number: 337.00
+CRITICAL:root:Episode number: 338.00
+CRITICAL:root:Episode number: 339.00
+CRITICAL:root:Episode number: 340.00
+CRITICAL:root:Running reward = 2.40 at episode 340. Loss = 3.59. Epsilon = 0.84.
+CRITICAL:root:Episode number: 341.00
+CRITICAL:root:Episode number: 342.00
+CRITICAL:root:Episode number: 343.00
+CRITICAL:root:Episode number: 344.00
+CRITICAL:root:Episode number: 345.00
+CRITICAL:root:Running reward = 2.41 at episode 345. Loss = 3.88. Epsilon = 0.84.
+CRITICAL:root:Episode number: 346.00
+CRITICAL:root:Episode number: 347.00
+CRITICAL:root:Episode number: 348.00
+CRITICAL:root:Episode number: 349.00
+CRITICAL:root:Episode number: 350.00
+CRITICAL:root:Running reward = 2.42 at episode 350. Loss = 3.88. Epsilon = 0.84.
+CRITICAL:root:Episode number: 351.00
+CRITICAL:root:Episode number: 352.00
+CRITICAL:root:Episode number: 353.00
+CRITICAL:root:Episode number: 354.00
+CRITICAL:root:Episode number: 355.00
+CRITICAL:root:Running reward = 2.43 at episode 355. Loss = 4.31. Epsilon = 0.84.
+CRITICAL:root:Episode number: 356.00
+CRITICAL:root:Episode number: 357.00
+CRITICAL:root:Episode number: 358.00
+CRITICAL:root:Episode number: 359.00
+CRITICAL:root:Episode number: 360.00
+CRITICAL:root:Running reward = 2.44 at episode 360. Loss = 4.55. Epsilon = 0.83.
+CRITICAL:root:Episode number: 361.00
+CRITICAL:root:Episode number: 362.00
+CRITICAL:root:Episode number: 363.00
+CRITICAL:root:Episode number: 364.00
+CRITICAL:root:Episode number: 365.00
+CRITICAL:root:Running reward = 2.45 at episode 365. Loss = 3.09. Epsilon = 0.83.
+CRITICAL:root:Episode number: 366.00
+CRITICAL:root:Episode number: 367.00
+CRITICAL:root:Episode number: 368.00
+CRITICAL:root:Episode number: 369.00
+CRITICAL:root:Episode number: 370.00
+CRITICAL:root:Running reward = 2.45 at episode 370. Loss = 4.11. Epsilon = 0.83.
+CRITICAL:root:Episode number: 371.00
+CRITICAL:root:Episode number: 372.00
+CRITICAL:root:Episode number: 373.00
+CRITICAL:root:Episode number: 374.00
+CRITICAL:root:Episode number: 375.00
+CRITICAL:root:Running reward = 2.45 at episode 375. Loss = 3.08. Epsilon = 0.83.
+CRITICAL:root:Episode number: 376.00
+CRITICAL:root:Episode number: 377.00
+CRITICAL:root:Episode number: 378.00
+CRITICAL:root:Episode number: 379.00
+CRITICAL:root:Episode number: 380.00
+CRITICAL:root:Running reward = 2.46 at episode 380. Loss = 4.30. Epsilon = 0.83.
+CRITICAL:root:Episode number: 381.00
+CRITICAL:root:Episode number: 382.00
+CRITICAL:root:Episode number: 383.00
+CRITICAL:root:Episode number: 384.00
+CRITICAL:root:Episode number: 385.00
+CRITICAL:root:Running reward = 2.45 at episode 385. Loss = 4.20. Epsilon = 0.82.
+CRITICAL:root:Episode number: 386.00
+CRITICAL:root:Episode number: 387.00
+CRITICAL:root:Episode number: 388.00
+CRITICAL:root:Episode number: 389.00
+CRITICAL:root:Episode number: 390.00
+CRITICAL:root:Running reward = 2.46 at episode 390. Loss = 3.85. Epsilon = 0.82.
+CRITICAL:root:Episode number: 391.00
+CRITICAL:root:Episode number: 392.00
+CRITICAL:root:Episode number: 393.00
+CRITICAL:root:Episode number: 394.00
+CRITICAL:root:Episode number: 395.00
+CRITICAL:root:Running reward = 2.47 at episode 395. Loss = 4.15. Epsilon = 0.82.
+CRITICAL:root:Episode number: 396.00
+CRITICAL:root:Episode number: 397.00
+CRITICAL:root:Episode number: 398.00
+CRITICAL:root:Episode number: 399.00
+CRITICAL:root:Episode number: 400.00
+CRITICAL:root:Running reward = 2.48 at episode 400. Loss = 4.58. Epsilon = 0.82.
+CRITICAL:root:Episode number: 401.00
+CRITICAL:root:Episode number: 402.00
+CRITICAL:root:Episode number: 403.00
+CRITICAL:root:Episode number: 404.00
+CRITICAL:root:Episode number: 405.00
+CRITICAL:root:Running reward = 2.48 at episode 405. Loss = 5.76. Epsilon = 0.82.
+CRITICAL:root:Episode number: 406.00
+CRITICAL:root:Episode number: 407.00
+CRITICAL:root:Episode number: 408.00
+CRITICAL:root:Episode number: 409.00
+CRITICAL:root:Episode number: 410.00
+CRITICAL:root:Running reward = 2.48 at episode 410. Loss = 4.83. Epsilon = 0.81.
+CRITICAL:root:Episode number: 411.00
+CRITICAL:root:Episode number: 412.00
+CRITICAL:root:Episode number: 413.00
+CRITICAL:root:Episode number: 414.00
+CRITICAL:root:Episode number: 415.00
+CRITICAL:root:Running reward = 2.49 at episode 415. Loss = 4.55. Epsilon = 0.81.
+CRITICAL:root:Episode number: 416.00
+CRITICAL:root:Episode number: 417.00
+CRITICAL:root:Episode number: 418.00
+CRITICAL:root:Episode number: 419.00
+CRITICAL:root:Episode number: 420.00
+CRITICAL:root:Running reward = 2.50 at episode 420. Loss = 4.86. Epsilon = 0.81.
+CRITICAL:root:Episode number: 421.00
+CRITICAL:root:Episode number: 422.00
+CRITICAL:root:Episode number: 423.00
+CRITICAL:root:Episode number: 424.00
+CRITICAL:root:Episode number: 425.00
+CRITICAL:root:Running reward = 2.50 at episode 425. Loss = 4.35. Epsilon = 0.81.
+CRITICAL:root:Episode number: 426.00
+CRITICAL:root:Episode number: 427.00
+CRITICAL:root:Episode number: 428.00
+CRITICAL:root:Episode number: 429.00
+CRITICAL:root:Episode number: 430.00
+CRITICAL:root:Running reward = 2.52 at episode 430. Loss = 4.20. Epsilon = 0.81.
+CRITICAL:root:Episode number: 431.00
+CRITICAL:root:Episode number: 432.00
+CRITICAL:root:Episode number: 433.00
+CRITICAL:root:Episode number: 434.00
+CRITICAL:root:Episode number: 435.00
+CRITICAL:root:Running reward = 2.52 at episode 435. Loss = 4.67. Epsilon = 0.80.
+CRITICAL:root:Episode number: 436.00
+CRITICAL:root:Episode number: 437.00
+CRITICAL:root:Episode number: 438.00
+CRITICAL:root:Episode number: 439.00
+CRITICAL:root:Episode number: 440.00
+CRITICAL:root:Running reward = 2.52 at episode 440. Loss = 4.71. Epsilon = 0.80.
+CRITICAL:root:Episode number: 441.00
+CRITICAL:root:Episode number: 442.00
+CRITICAL:root:Episode number: 443.00
+CRITICAL:root:Episode number: 444.00
+CRITICAL:root:Episode number: 445.00
+CRITICAL:root:Running reward = 2.52 at episode 445. Loss = 4.85. Epsilon = 0.80.
+CRITICAL:root:Episode number: 446.00
+CRITICAL:root:Episode number: 447.00
+CRITICAL:root:Episode number: 448.00
+CRITICAL:root:Episode number: 449.00
+CRITICAL:root:Episode number: 450.00
+CRITICAL:root:Running reward = 2.52 at episode 450. Loss = 5.07. Epsilon = 0.80.
+CRITICAL:root:Episode number: 451.00
+CRITICAL:root:Episode number: 452.00
+CRITICAL:root:Episode number: 453.00
+CRITICAL:root:Episode number: 454.00
+CRITICAL:root:Episode number: 455.00
+CRITICAL:root:Running reward = 2.51 at episode 455. Loss = 4.18. Epsilon = 0.80.
+CRITICAL:root:Episode number: 456.00
+CRITICAL:root:Episode number: 457.00
+CRITICAL:root:Episode number: 458.00
+CRITICAL:root:Episode number: 459.00
+CRITICAL:root:Episode number: 460.00
+CRITICAL:root:Running reward = 2.51 at episode 460. Loss = 4.78. Epsilon = 0.79.
+CRITICAL:root:Episode number: 461.00
+CRITICAL:root:Episode number: 462.00
+CRITICAL:root:Episode number: 463.00
+CRITICAL:root:Episode number: 464.00
+CRITICAL:root:Episode number: 465.00
+CRITICAL:root:Running reward = 2.52 at episode 465. Loss = 6.86. Epsilon = 0.79.
+CRITICAL:root:Episode number: 466.00
+CRITICAL:root:Episode number: 467.00
+CRITICAL:root:Episode number: 468.00
+CRITICAL:root:Episode number: 469.00
+CRITICAL:root:Episode number: 470.00
+CRITICAL:root:Running reward = 2.52 at episode 470. Loss = 6.27. Epsilon = 0.79.
+CRITICAL:root:Episode number: 471.00
+CRITICAL:root:Episode number: 472.00
+CRITICAL:root:Episode number: 473.00
+CRITICAL:root:Episode number: 474.00
+CRITICAL:root:Episode number: 475.00
+CRITICAL:root:Running reward = 2.53 at episode 475. Loss = 5.69. Epsilon = 0.79.
+CRITICAL:root:Episode number: 476.00
+CRITICAL:root:Episode number: 477.00
+CRITICAL:root:Episode number: 478.00
+CRITICAL:root:Episode number: 479.00
+CRITICAL:root:Episode number: 480.00
+CRITICAL:root:Running reward = 2.54 at episode 480. Loss = 5.89. Epsilon = 0.79.
+CRITICAL:root:Episode number: 481.00
+CRITICAL:root:Episode number: 482.00
+CRITICAL:root:Episode number: 483.00
+CRITICAL:root:Episode number: 484.00
+CRITICAL:root:Episode number: 485.00
+CRITICAL:root:Running reward = 2.55 at episode 485. Loss = 8.05. Epsilon = 0.78.
+CRITICAL:root:Episode number: 486.00
+CRITICAL:root:Episode number: 487.00
+CRITICAL:root:Episode number: 488.00
+CRITICAL:root:Episode number: 489.00
+CRITICAL:root:Episode number: 490.00
+CRITICAL:root:Running reward = 2.55 at episode 490. Loss = 5.02. Epsilon = 0.78.
+CRITICAL:root:Episode number: 491.00
+CRITICAL:root:Episode number: 492.00
+CRITICAL:root:Episode number: 493.00
+CRITICAL:root:Episode number: 494.00
+CRITICAL:root:Episode number: 495.00
+CRITICAL:root:Running reward = 2.55 at episode 495. Loss = 4.71. Epsilon = 0.78.
+CRITICAL:root:Episode number: 496.00
+CRITICAL:root:Episode number: 497.00
+CRITICAL:root:Episode number: 498.00
+CRITICAL:root:Episode number: 499.00
+CRITICAL:root:Episode number: 500.00
+CRITICAL:root:Running reward = 2.55 at episode 500. Loss = 4.74. Epsilon = 0.78.
+CRITICAL:root:Episode number: 501.00
+CRITICAL:root:Episode number: 502.00
+CRITICAL:root:Episode number: 503.00
+CRITICAL:root:Episode number: 504.00
+CRITICAL:root:Episode number: 505.00
+CRITICAL:root:Running reward = 2.56 at episode 505. Loss = 5.93. Epsilon = 0.78.
+CRITICAL:root:Episode number: 506.00
+CRITICAL:root:Episode number: 507.00
+CRITICAL:root:Episode number: 508.00
+CRITICAL:root:Episode number: 509.00
+CRITICAL:root:Episode number: 510.00
+CRITICAL:root:Running reward = 2.56 at episode 510. Loss = 5.84. Epsilon = 0.77.
+CRITICAL:root:Episode number: 511.00
+CRITICAL:root:Episode number: 512.00
+CRITICAL:root:Episode number: 513.00
+CRITICAL:root:Episode number: 514.00
+CRITICAL:root:Episode number: 515.00
+CRITICAL:root:Running reward = 2.57 at episode 515. Loss = 6.15. Epsilon = 0.77.
+CRITICAL:root:Episode number: 516.00
+CRITICAL:root:Episode number: 517.00
+CRITICAL:root:Episode number: 518.00
+CRITICAL:root:Episode number: 519.00
+CRITICAL:root:Episode number: 520.00
+CRITICAL:root:Running reward = 2.57 at episode 520. Loss = 4.87. Epsilon = 0.77.
+CRITICAL:root:Episode number: 521.00
+CRITICAL:root:Episode number: 522.00
+CRITICAL:root:Episode number: 523.00
+CRITICAL:root:Episode number: 524.00
+CRITICAL:root:Episode number: 525.00
+CRITICAL:root:Running reward = 2.56 at episode 525. Loss = 4.06. Epsilon = 0.77.
+CRITICAL:root:Episode number: 526.00
+CRITICAL:root:Episode number: 527.00
+CRITICAL:root:Episode number: 528.00
+CRITICAL:root:Episode number: 529.00
+CRITICAL:root:Episode number: 530.00
+CRITICAL:root:Running reward = 2.56 at episode 530. Loss = 5.09. Epsilon = 0.77.
+CRITICAL:root:Episode number: 531.00
+CRITICAL:root:Episode number: 532.00
+CRITICAL:root:Episode number: 533.00
+CRITICAL:root:Episode number: 534.00
+CRITICAL:root:Episode number: 535.00
+CRITICAL:root:Running reward = 2.57 at episode 535. Loss = 4.55. Epsilon = 0.76.
+CRITICAL:root:Episode number: 536.00
+CRITICAL:root:Episode number: 537.00
+CRITICAL:root:Episode number: 538.00
+CRITICAL:root:Episode number: 539.00
+CRITICAL:root:Episode number: 540.00
+CRITICAL:root:Running reward = 2.58 at episode 540. Loss = 4.94. Epsilon = 0.76.
+CRITICAL:root:Episode number: 541.00
+CRITICAL:root:Episode number: 542.00
+CRITICAL:root:Episode number: 543.00
+CRITICAL:root:Episode number: 544.00
+CRITICAL:root:Episode number: 545.00
+CRITICAL:root:Running reward = 2.58 at episode 545. Loss = 4.54. Epsilon = 0.76.
+CRITICAL:root:Episode number: 546.00
+CRITICAL:root:Episode number: 547.00
+CRITICAL:root:Episode number: 548.00
+CRITICAL:root:Episode number: 549.00
+CRITICAL:root:Episode number: 550.00
+CRITICAL:root:Running reward = 2.58 at episode 550. Loss = 4.91. Epsilon = 0.76.
+CRITICAL:root:Episode number: 551.00
+CRITICAL:root:Episode number: 552.00
+CRITICAL:root:Episode number: 553.00
+CRITICAL:root:Episode number: 554.00
+CRITICAL:root:Episode number: 555.00
+CRITICAL:root:Running reward = 2.58 at episode 555. Loss = 3.49. Epsilon = 0.76.
+CRITICAL:root:Episode number: 556.00
+CRITICAL:root:Episode number: 557.00
+CRITICAL:root:Episode number: 558.00
+CRITICAL:root:Episode number: 559.00
+CRITICAL:root:Episode number: 560.00
+CRITICAL:root:Running reward = 2.58 at episode 560. Loss = 5.19. Epsilon = 0.75.
+CRITICAL:root:Episode number: 561.00
+CRITICAL:root:Episode number: 562.00
+CRITICAL:root:Episode number: 563.00
+CRITICAL:root:Episode number: 564.00
+CRITICAL:root:Episode number: 565.00
+CRITICAL:root:Running reward = 2.58 at episode 565. Loss = 3.97. Epsilon = 0.75.
+CRITICAL:root:Episode number: 566.00
+CRITICAL:root:Episode number: 567.00
+CRITICAL:root:Episode number: 568.00
+CRITICAL:root:Episode number: 569.00
+CRITICAL:root:Episode number: 570.00
+CRITICAL:root:Running reward = 2.58 at episode 570. Loss = 4.89. Epsilon = 0.75.
+CRITICAL:root:Episode number: 571.00
+CRITICAL:root:Episode number: 572.00
+CRITICAL:root:Episode number: 573.00
+CRITICAL:root:Episode number: 574.00
+CRITICAL:root:Episode number: 575.00
+CRITICAL:root:Running reward = 2.59 at episode 575. Loss = 4.50. Epsilon = 0.75.
+CRITICAL:root:Episode number: 576.00
+CRITICAL:root:Episode number: 577.00
+CRITICAL:root:Episode number: 578.00
+CRITICAL:root:Episode number: 579.00
+CRITICAL:root:Episode number: 580.00
+CRITICAL:root:Running reward = 2.59 at episode 580. Loss = 4.31. Epsilon = 0.75.
+CRITICAL:root:Episode number: 581.00
+CRITICAL:root:Episode number: 582.00
+CRITICAL:root:Episode number: 583.00
+CRITICAL:root:Episode number: 584.00
+CRITICAL:root:Episode number: 585.00
+CRITICAL:root:Running reward = 2.59 at episode 585. Loss = 3.93. Epsilon = 0.74.
+CRITICAL:root:Episode number: 586.00
+CRITICAL:root:Episode number: 587.00
+CRITICAL:root:Episode number: 588.00
+CRITICAL:root:Episode number: 589.00
+CRITICAL:root:Episode number: 590.00
+CRITICAL:root:Running reward = 2.60 at episode 590. Loss = 4.54. Epsilon = 0.74.
+CRITICAL:root:Episode number: 591.00
+CRITICAL:root:Episode number: 592.00
+CRITICAL:root:Episode number: 593.00
+CRITICAL:root:Episode number: 594.00
+CRITICAL:root:Episode number: 595.00
+CRITICAL:root:Running reward = 2.61 at episode 595. Loss = 3.58. Epsilon = 0.74.
+CRITICAL:root:Episode number: 596.00
+CRITICAL:root:Episode number: 597.00
+CRITICAL:root:Episode number: 598.00
+CRITICAL:root:Episode number: 599.00
+CRITICAL:root:Episode number: 600.00
+CRITICAL:root:Running reward = 2.61 at episode 600. Loss = 4.22. Epsilon = 0.74.
+CRITICAL:root:Episode number: 601.00
+CRITICAL:root:Episode number: 602.00
+CRITICAL:root:Episode number: 603.00
+CRITICAL:root:Episode number: 604.00
+CRITICAL:root:Episode number: 605.00
+CRITICAL:root:Running reward = 2.61 at episode 605. Loss = 3.95. Epsilon = 0.74.
+CRITICAL:root:Episode number: 606.00
+CRITICAL:root:Episode number: 607.00
+CRITICAL:root:Episode number: 608.00
+CRITICAL:root:Episode number: 609.00
+CRITICAL:root:Episode number: 610.00
+CRITICAL:root:Running reward = 2.61 at episode 610. Loss = 3.38. Epsilon = 0.74.
+CRITICAL:root:Episode number: 611.00
+CRITICAL:root:Episode number: 612.00
+CRITICAL:root:Episode number: 613.00
+CRITICAL:root:Episode number: 614.00
+CRITICAL:root:Episode number: 615.00
+CRITICAL:root:Running reward = 2.61 at episode 615. Loss = 4.01. Epsilon = 0.73.
+CRITICAL:root:Episode number: 616.00
+CRITICAL:root:Episode number: 617.00
+CRITICAL:root:Episode number: 618.00
+CRITICAL:root:Episode number: 619.00
+CRITICAL:root:Episode number: 620.00
+CRITICAL:root:Running reward = 2.61 at episode 620. Loss = 4.26. Epsilon = 0.73.
+CRITICAL:root:Episode number: 621.00
+CRITICAL:root:Episode number: 622.00
+CRITICAL:root:Episode number: 623.00
+CRITICAL:root:Episode number: 624.00
+CRITICAL:root:Episode number: 625.00
+CRITICAL:root:Running reward = 2.61 at episode 625. Loss = 3.31. Epsilon = 0.73.
+CRITICAL:root:Episode number: 626.00
+CRITICAL:root:Episode number: 627.00
+CRITICAL:root:Episode number: 628.00
+CRITICAL:root:Episode number: 629.00
+CRITICAL:root:Episode number: 630.00
+CRITICAL:root:Running reward = 2.62 at episode 630. Loss = 3.25. Epsilon = 0.73.
+CRITICAL:root:Episode number: 631.00
+CRITICAL:root:Episode number: 632.00
+CRITICAL:root:Episode number: 633.00
+CRITICAL:root:Episode number: 634.00
+CRITICAL:root:Episode number: 635.00
+CRITICAL:root:Running reward = 2.63 at episode 635. Loss = 3.80. Epsilon = 0.73.
+CRITICAL:root:Episode number: 636.00
+CRITICAL:root:Episode number: 637.00
+CRITICAL:root:Episode number: 638.00
+CRITICAL:root:Episode number: 639.00
+CRITICAL:root:Episode number: 640.00
+CRITICAL:root:Running reward = 2.62 at episode 640. Loss = 3.46. Epsilon = 0.72.
+CRITICAL:root:Episode number: 641.00
+CRITICAL:root:Episode number: 642.00
+CRITICAL:root:Episode number: 643.00
+CRITICAL:root:Episode number: 644.00
+CRITICAL:root:Episode number: 645.00
+CRITICAL:root:Running reward = 2.62 at episode 645. Loss = 3.61. Epsilon = 0.72.
+CRITICAL:root:Episode number: 646.00
+CRITICAL:root:Episode number: 647.00
+CRITICAL:root:Episode number: 648.00
+CRITICAL:root:Episode number: 649.00
+CRITICAL:root:Episode number: 650.00
+CRITICAL:root:Running reward = 2.62 at episode 650. Loss = 3.40. Epsilon = 0.72.
+CRITICAL:root:Episode number: 651.00
+CRITICAL:root:Episode number: 652.00
+CRITICAL:root:Episode number: 653.00
+CRITICAL:root:Episode number: 654.00
+CRITICAL:root:Episode number: 655.00
+CRITICAL:root:Running reward = 2.63 at episode 655. Loss = 3.71. Epsilon = 0.72.
+CRITICAL:root:Episode number: 656.00
+CRITICAL:root:Episode number: 657.00
+CRITICAL:root:Episode number: 658.00
+CRITICAL:root:Episode number: 659.00
+CRITICAL:root:Episode number: 660.00
+CRITICAL:root:Running reward = 2.63 at episode 660. Loss = 2.78. Epsilon = 0.72.
+CRITICAL:root:Episode number: 661.00
+CRITICAL:root:Episode number: 662.00
+CRITICAL:root:Episode number: 663.00
+CRITICAL:root:Episode number: 664.00
+CRITICAL:root:Episode number: 665.00
+CRITICAL:root:Running reward = 2.63 at episode 665. Loss = 2.59. Epsilon = 0.72.
+CRITICAL:root:Episode number: 666.00
+CRITICAL:root:Episode number: 667.00
+CRITICAL:root:Episode number: 668.00
+CRITICAL:root:Episode number: 669.00
+CRITICAL:root:Episode number: 670.00
+CRITICAL:root:Running reward = 2.64 at episode 670. Loss = 2.83. Epsilon = 0.71.
+CRITICAL:root:Episode number: 671.00
+CRITICAL:root:Episode number: 672.00
+CRITICAL:root:Episode number: 673.00
+CRITICAL:root:Episode number: 674.00
+CRITICAL:root:Episode number: 675.00
+CRITICAL:root:Running reward = 2.63 at episode 675. Loss = 2.56. Epsilon = 0.71.
+CRITICAL:root:Episode number: 676.00
+CRITICAL:root:Episode number: 677.00
+CRITICAL:root:Episode number: 678.00
+CRITICAL:root:Episode number: 679.00
+CRITICAL:root:Episode number: 680.00
+CRITICAL:root:Running reward = 2.64 at episode 680. Loss = 2.41. Epsilon = 0.71.
+CRITICAL:root:Episode number: 681.00
+CRITICAL:root:Episode number: 682.00
+CRITICAL:root:Episode number: 683.00
+CRITICAL:root:Episode number: 684.00
+CRITICAL:root:Episode number: 685.00
+CRITICAL:root:Running reward = 2.64 at episode 685. Loss = 2.19. Epsilon = 0.71.
+CRITICAL:root:Episode number: 686.00
+CRITICAL:root:Episode number: 687.00
+CRITICAL:root:Episode number: 688.00
+CRITICAL:root:Episode number: 689.00
+CRITICAL:root:Episode number: 690.00
+CRITICAL:root:Running reward = 2.63 at episode 690. Loss = 2.32. Epsilon = 0.71.
+CRITICAL:root:Episode number: 691.00
+CRITICAL:root:Episode number: 692.00
+CRITICAL:root:Episode number: 693.00
+CRITICAL:root:Episode number: 694.00
+CRITICAL:root:Episode number: 695.00
+CRITICAL:root:Running reward = 2.64 at episode 695. Loss = 1.54. Epsilon = 0.70.
+CRITICAL:root:Episode number: 696.00
+CRITICAL:root:Episode number: 697.00
+CRITICAL:root:Episode number: 698.00
+CRITICAL:root:Episode number: 699.00
+CRITICAL:root:Episode number: 700.00
+CRITICAL:root:Running reward = 2.65 at episode 700. Loss = 2.63. Epsilon = 0.70.
+CRITICAL:root:Episode number: 701.00
+CRITICAL:root:Episode number: 702.00
+CRITICAL:root:Episode number: 703.00
+CRITICAL:root:Episode number: 704.00
+CRITICAL:root:Episode number: 705.00
+CRITICAL:root:Running reward = 2.65 at episode 705. Loss = 2.35. Epsilon = 0.70.
+CRITICAL:root:Episode number: 706.00
+CRITICAL:root:Episode number: 707.00
+CRITICAL:root:Episode number: 708.00
+CRITICAL:root:Episode number: 709.00
+CRITICAL:root:Episode number: 710.00
+CRITICAL:root:Running reward = 2.65 at episode 710. Loss = 2.42. Epsilon = 0.70.
+CRITICAL:root:Episode number: 711.00
+CRITICAL:root:Episode number: 712.00
+CRITICAL:root:Episode number: 713.00
+CRITICAL:root:Episode number: 714.00
+CRITICAL:root:Episode number: 715.00
+CRITICAL:root:Running reward = 2.65 at episode 715. Loss = 2.25. Epsilon = 0.70.
+CRITICAL:root:Episode number: 716.00
+CRITICAL:root:Episode number: 717.00
+CRITICAL:root:Episode number: 718.00
+CRITICAL:root:Episode number: 719.00
+CRITICAL:root:Episode number: 720.00
+CRITICAL:root:Running reward = 2.65 at episode 720. Loss = 2.06. Epsilon = 0.70.
+CRITICAL:root:Episode number: 721.00
+CRITICAL:root:Episode number: 722.00
+CRITICAL:root:Episode number: 723.00
+CRITICAL:root:Episode number: 724.00
+CRITICAL:root:Episode number: 725.00
+CRITICAL:root:Running reward = 2.65 at episode 725. Loss = 1.87. Epsilon = 0.69.
+CRITICAL:root:Episode number: 726.00
+CRITICAL:root:Episode number: 727.00
+CRITICAL:root:Episode number: 728.00
+CRITICAL:root:Episode number: 729.00
+CRITICAL:root:Episode number: 730.00
+CRITICAL:root:Running reward = 2.66 at episode 730. Loss = 1.68. Epsilon = 0.69.
+CRITICAL:root:Episode number: 731.00
+CRITICAL:root:Episode number: 732.00
+CRITICAL:root:Episode number: 733.00
+CRITICAL:root:Episode number: 734.00
+CRITICAL:root:Episode number: 735.00
+CRITICAL:root:Running reward = 2.67 at episode 735. Loss = 1.83. Epsilon = 0.69.
+CRITICAL:root:Episode number: 736.00
+CRITICAL:root:Episode number: 737.00
+CRITICAL:root:Episode number: 738.00
+CRITICAL:root:Episode number: 739.00
+CRITICAL:root:Episode number: 740.00
+CRITICAL:root:Running reward = 2.66 at episode 740. Loss = 1.93. Epsilon = 0.69.
+CRITICAL:root:Episode number: 741.00
+CRITICAL:root:Episode number: 742.00
+CRITICAL:root:Episode number: 743.00
+CRITICAL:root:Episode number: 744.00
+CRITICAL:root:Episode number: 745.00
+CRITICAL:root:Running reward = 2.66 at episode 745. Loss = 1.79. Epsilon = 0.69.
+CRITICAL:root:Episode number: 746.00
+CRITICAL:root:Episode number: 747.00
+CRITICAL:root:Episode number: 748.00
+CRITICAL:root:Episode number: 749.00
+CRITICAL:root:Episode number: 750.00
+CRITICAL:root:Running reward = 2.67 at episode 750. Loss = 1.33. Epsilon = 0.69.
+CRITICAL:root:Episode number: 751.00
+CRITICAL:root:Episode number: 752.00
+CRITICAL:root:Episode number: 753.00
+CRITICAL:root:Episode number: 754.00
+CRITICAL:root:Episode number: 755.00
+CRITICAL:root:Running reward = 2.67 at episode 755. Loss = 1.72. Epsilon = 0.68.
+CRITICAL:root:Episode number: 756.00
+CRITICAL:root:Episode number: 757.00
+CRITICAL:root:Episode number: 758.00
+CRITICAL:root:Episode number: 759.00
+CRITICAL:root:Episode number: 760.00
+CRITICAL:root:Running reward = 2.67 at episode 760. Loss = 2.13. Epsilon = 0.68.
+CRITICAL:root:Episode number: 761.00
+CRITICAL:root:Episode number: 762.00
+CRITICAL:root:Episode number: 763.00
+CRITICAL:root:Episode number: 764.00
+CRITICAL:root:Episode number: 765.00
+CRITICAL:root:Running reward = 2.66 at episode 765. Loss = 1.22. Epsilon = 0.68.
+CRITICAL:root:Episode number: 766.00
+CRITICAL:root:Episode number: 767.00
+CRITICAL:root:Episode number: 768.00
+CRITICAL:root:Episode number: 769.00
+CRITICAL:root:Episode number: 770.00
+CRITICAL:root:Running reward = 2.66 at episode 770. Loss = 1.53. Epsilon = 0.68.
+CRITICAL:root:Episode number: 771.00
+CRITICAL:root:Episode number: 772.00
+CRITICAL:root:Episode number: 773.00
+CRITICAL:root:Episode number: 774.00
+CRITICAL:root:Episode number: 775.00
+CRITICAL:root:Running reward = 2.67 at episode 775. Loss = 1.43. Epsilon = 0.68.
+CRITICAL:root:Episode number: 776.00
+CRITICAL:root:Episode number: 777.00
+CRITICAL:root:Episode number: 778.00
+CRITICAL:root:Episode number: 779.00
+CRITICAL:root:Episode number: 780.00
+CRITICAL:root:Running reward = 2.68 at episode 780. Loss = 1.47. Epsilon = 0.67.
+CRITICAL:root:Episode number: 781.00
+CRITICAL:root:Episode number: 782.00
+CRITICAL:root:Episode number: 783.00
+CRITICAL:root:Episode number: 784.00
+CRITICAL:root:Episode number: 785.00
+CRITICAL:root:Running reward = 2.68 at episode 785. Loss = 1.17. Epsilon = 0.67.
+CRITICAL:root:Episode number: 786.00
+CRITICAL:root:Episode number: 787.00
+CRITICAL:root:Episode number: 788.00
+CRITICAL:root:Episode number: 789.00
+CRITICAL:root:Episode number: 790.00
+CRITICAL:root:Running reward = 2.68 at episode 790. Loss = 1.24. Epsilon = 0.67.
+CRITICAL:root:Episode number: 791.00
+CRITICAL:root:Episode number: 792.00
+CRITICAL:root:Episode number: 793.00
+CRITICAL:root:Episode number: 794.00
+CRITICAL:root:Episode number: 795.00
+CRITICAL:root:Running reward = 2.68 at episode 795. Loss = 1.22. Epsilon = 0.67.
+CRITICAL:root:Episode number: 796.00
+CRITICAL:root:Episode number: 797.00
+CRITICAL:root:Episode number: 798.00
+CRITICAL:root:Episode number: 799.00
+CRITICAL:root:Episode number: 800.00
+CRITICAL:root:Running reward = 2.68 at episode 800. Loss = 1.60. Epsilon = 0.67.
+CRITICAL:root:Episode number: 801.00
+CRITICAL:root:Episode number: 802.00
+CRITICAL:root:Episode number: 803.00
+CRITICAL:root:Episode number: 804.00
+CRITICAL:root:Episode number: 805.00
+CRITICAL:root:Running reward = 2.68 at episode 805. Loss = 1.14. Epsilon = 0.67.
+CRITICAL:root:Episode number: 806.00
+CRITICAL:root:Episode number: 807.00
+CRITICAL:root:Episode number: 808.00
+CRITICAL:root:Episode number: 809.00
+CRITICAL:root:Episode number: 810.00
+CRITICAL:root:Running reward = 2.68 at episode 810. Loss = 1.61. Epsilon = 0.66.
+CRITICAL:root:Episode number: 811.00
+CRITICAL:root:Episode number: 812.00
+CRITICAL:root:Episode number: 813.00
+CRITICAL:root:Episode number: 814.00
+CRITICAL:root:Episode number: 815.00
+CRITICAL:root:Running reward = 2.70 at episode 815. Loss = 1.66. Epsilon = 0.66.
+CRITICAL:root:Episode number: 816.00
+CRITICAL:root:Episode number: 817.00
+CRITICAL:root:Episode number: 818.00
+CRITICAL:root:Episode number: 819.00
+CRITICAL:root:Episode number: 820.00
+CRITICAL:root:Running reward = 2.70 at episode 820. Loss = 1.37. Epsilon = 0.66.
+CRITICAL:root:Episode number: 821.00
+CRITICAL:root:Episode number: 822.00
+CRITICAL:root:Episode number: 823.00
+CRITICAL:root:Episode number: 824.00
+CRITICAL:root:Episode number: 825.00
+CRITICAL:root:Running reward = 2.69 at episode 825. Loss = 1.27. Epsilon = 0.66.
+CRITICAL:root:Episode number: 826.00
+CRITICAL:root:Episode number: 827.00
+CRITICAL:root:Episode number: 828.00
+CRITICAL:root:Episode number: 829.00
+CRITICAL:root:Episode number: 830.00
+CRITICAL:root:Running reward = 2.70 at episode 830. Loss = 1.86. Epsilon = 0.66.
+CRITICAL:root:Episode number: 831.00
+CRITICAL:root:Episode number: 832.00
+CRITICAL:root:Episode number: 833.00
+CRITICAL:root:Episode number: 834.00
+CRITICAL:root:Episode number: 835.00
+CRITICAL:root:Running reward = 2.71 at episode 835. Loss = 1.32. Epsilon = 0.66.
+CRITICAL:root:Episode number: 836.00
+CRITICAL:root:Episode number: 837.00
+CRITICAL:root:Episode number: 838.00
+CRITICAL:root:Episode number: 839.00
+CRITICAL:root:Episode number: 840.00
+CRITICAL:root:Running reward = 2.70 at episode 840. Loss = 1.17. Epsilon = 0.65.
+CRITICAL:root:Episode number: 841.00
+CRITICAL:root:Episode number: 842.00
+CRITICAL:root:Episode number: 843.00
+CRITICAL:root:Episode number: 844.00
+CRITICAL:root:Episode number: 845.00
+CRITICAL:root:Running reward = 2.70 at episode 845. Loss = 1.54. Epsilon = 0.65.
+CRITICAL:root:Episode number: 846.00
+CRITICAL:root:Episode number: 847.00
+CRITICAL:root:Episode number: 848.00
+CRITICAL:root:Episode number: 849.00
+CRITICAL:root:Episode number: 850.00
+CRITICAL:root:Running reward = 2.70 at episode 850. Loss = 1.64. Epsilon = 0.65.
+CRITICAL:root:Episode number: 851.00
+CRITICAL:root:Episode number: 852.00
+CRITICAL:root:Episode number: 853.00
+CRITICAL:root:Episode number: 854.00
+CRITICAL:root:Episode number: 855.00
+CRITICAL:root:Running reward = 2.69 at episode 855. Loss = 1.40. Epsilon = 0.65.
+CRITICAL:root:Episode number: 856.00
+CRITICAL:root:Episode number: 857.00
+CRITICAL:root:Episode number: 858.00
+CRITICAL:root:Episode number: 859.00
+CRITICAL:root:Episode number: 860.00
+CRITICAL:root:Running reward = 2.70 at episode 860. Loss = 1.19. Epsilon = 0.65.
+CRITICAL:root:Episode number: 861.00
+CRITICAL:root:Episode number: 862.00
+CRITICAL:root:Episode number: 863.00
+CRITICAL:root:Episode number: 864.00
+CRITICAL:root:Episode number: 865.00
+CRITICAL:root:Running reward = 2.70 at episode 865. Loss = 1.15. Epsilon = 0.65.
+CRITICAL:root:Episode number: 866.00
+CRITICAL:root:Episode number: 867.00
+CRITICAL:root:Episode number: 868.00
+CRITICAL:root:Episode number: 869.00
+CRITICAL:root:Episode number: 870.00
+CRITICAL:root:Running reward = 2.71 at episode 870. Loss = 1.18. Epsilon = 0.64.
+CRITICAL:root:Episode number: 871.00
+CRITICAL:root:Episode number: 872.00
+CRITICAL:root:Episode number: 873.00
+CRITICAL:root:Episode number: 874.00
+CRITICAL:root:Episode number: 875.00
+CRITICAL:root:Running reward = 2.72 at episode 875. Loss = 1.47. Epsilon = 0.64.
+CRITICAL:root:Episode number: 876.00
+CRITICAL:root:Episode number: 877.00
+CRITICAL:root:Episode number: 878.00
+CRITICAL:root:Episode number: 879.00
+CRITICAL:root:Episode number: 880.00
+CRITICAL:root:Running reward = 2.71 at episode 880. Loss = 1.15. Epsilon = 0.64.
+CRITICAL:root:Episode number: 881.00
+CRITICAL:root:Episode number: 882.00
+CRITICAL:root:Episode number: 883.00
+CRITICAL:root:Episode number: 884.00
+CRITICAL:root:Episode number: 885.00
+CRITICAL:root:Running reward = 2.70 at episode 885. Loss = 1.09. Epsilon = 0.64.
+CRITICAL:root:Episode number: 886.00
+CRITICAL:root:Episode number: 887.00
+CRITICAL:root:Episode number: 888.00
+CRITICAL:root:Episode number: 889.00
+CRITICAL:root:Episode number: 890.00
+CRITICAL:root:Running reward = 2.70 at episode 890. Loss = 0.95. Epsilon = 0.64.
+CRITICAL:root:Episode number: 891.00
+CRITICAL:root:Episode number: 892.00
+CRITICAL:root:Episode number: 893.00
+CRITICAL:root:Episode number: 894.00
+CRITICAL:root:Episode number: 895.00
+CRITICAL:root:Running reward = 2.70 at episode 895. Loss = 0.92. Epsilon = 0.64.
+CRITICAL:root:Episode number: 896.00
+CRITICAL:root:Episode number: 897.00
+CRITICAL:root:Episode number: 898.00
+CRITICAL:root:Episode number: 899.00
+CRITICAL:root:Episode number: 900.00
+CRITICAL:root:Running reward = 2.71 at episode 900. Loss = 1.30. Epsilon = 0.64.
+CRITICAL:root:Episode number: 901.00
+CRITICAL:root:Episode number: 902.00
+CRITICAL:root:Episode number: 903.00
+CRITICAL:root:Episode number: 904.00
+CRITICAL:root:Episode number: 905.00
+CRITICAL:root:Running reward = 2.71 at episode 905. Loss = 1.24. Epsilon = 0.63.
+CRITICAL:root:Episode number: 906.00
+CRITICAL:root:Episode number: 907.00
+CRITICAL:root:Episode number: 908.00
+CRITICAL:root:Episode number: 909.00
+CRITICAL:root:Episode number: 910.00
+CRITICAL:root:Running reward = 2.71 at episode 910. Loss = 1.16. Epsilon = 0.63.
+CRITICAL:root:Episode number: 911.00
+CRITICAL:root:Episode number: 912.00
+CRITICAL:root:Episode number: 913.00
+CRITICAL:root:Episode number: 914.00
+CRITICAL:root:Episode number: 915.00
+CRITICAL:root:Running reward = 2.71 at episode 915. Loss = 0.82. Epsilon = 0.63.
+CRITICAL:root:Episode number: 916.00
+CRITICAL:root:Episode number: 917.00
+CRITICAL:root:Episode number: 918.00
+CRITICAL:root:Episode number: 919.00
+CRITICAL:root:Episode number: 920.00
+CRITICAL:root:Running reward = 2.72 at episode 920. Loss = 1.18. Epsilon = 0.63.
+CRITICAL:root:Episode number: 921.00
+CRITICAL:root:Episode number: 922.00
+CRITICAL:root:Episode number: 923.00
+CRITICAL:root:Episode number: 924.00
+CRITICAL:root:Episode number: 925.00
+CRITICAL:root:Running reward = 2.72 at episode 925. Loss = 0.78. Epsilon = 0.63.
+CRITICAL:root:Episode number: 926.00
+CRITICAL:root:Episode number: 927.00
+CRITICAL:root:Episode number: 928.00
+CRITICAL:root:Episode number: 929.00
+CRITICAL:root:Episode number: 930.00
+CRITICAL:root:Running reward = 2.73 at episode 930. Loss = 0.94. Epsilon = 0.63.
+CRITICAL:root:Episode number: 931.00
+CRITICAL:root:Episode number: 932.00
+CRITICAL:root:Episode number: 933.00
+CRITICAL:root:Episode number: 934.00
+CRITICAL:root:Episode number: 935.00
+CRITICAL:root:Running reward = 2.73 at episode 935. Loss = 0.88. Epsilon = 0.62.
+CRITICAL:root:Episode number: 936.00
+CRITICAL:root:Episode number: 937.00
+CRITICAL:root:Episode number: 938.00
+CRITICAL:root:Episode number: 939.00
+CRITICAL:root:Episode number: 940.00
+CRITICAL:root:Running reward = 2.73 at episode 940. Loss = 0.77. Epsilon = 0.62.
+CRITICAL:root:Episode number: 941.00
+CRITICAL:root:Episode number: 942.00
+CRITICAL:root:Episode number: 943.00
+CRITICAL:root:Episode number: 944.00
+CRITICAL:root:Episode number: 945.00
+CRITICAL:root:Running reward = 2.73 at episode 945. Loss = 1.00. Epsilon = 0.62.
+CRITICAL:root:Episode number: 946.00
+CRITICAL:root:Episode number: 947.00
+CRITICAL:root:Episode number: 948.00
+CRITICAL:root:Episode number: 949.00
+CRITICAL:root:Episode number: 950.00
+CRITICAL:root:Running reward = 2.74 at episode 950. Loss = 0.86. Epsilon = 0.62.
+CRITICAL:root:Episode number: 951.00
+CRITICAL:root:Episode number: 952.00
+CRITICAL:root:Episode number: 953.00
+CRITICAL:root:Episode number: 954.00
+CRITICAL:root:Episode number: 955.00
+CRITICAL:root:Running reward = 2.74 at episode 955. Loss = 1.04. Epsilon = 0.62.
+CRITICAL:root:Episode number: 956.00
+CRITICAL:root:Episode number: 957.00
+CRITICAL:root:Episode number: 958.00
+CRITICAL:root:Episode number: 959.00
+CRITICAL:root:Episode number: 960.00
+CRITICAL:root:Running reward = 2.73 at episode 960. Loss = 0.66. Epsilon = 0.62.
+CRITICAL:root:Episode number: 961.00
+CRITICAL:root:Episode number: 962.00
+CRITICAL:root:Episode number: 963.00
+CRITICAL:root:Episode number: 964.00
+CRITICAL:root:Episode number: 965.00
+CRITICAL:root:Running reward = 2.73 at episode 965. Loss = 0.81. Epsilon = 0.61.
+CRITICAL:root:Episode number: 966.00
+CRITICAL:root:Episode number: 967.00
+CRITICAL:root:Episode number: 968.00
+CRITICAL:root:Episode number: 969.00
+CRITICAL:root:Episode number: 970.00
+CRITICAL:root:Running reward = 2.73 at episode 970. Loss = 1.02. Epsilon = 0.61.
+CRITICAL:root:Episode number: 971.00
+CRITICAL:root:Episode number: 972.00
+CRITICAL:root:Episode number: 973.00
+CRITICAL:root:Episode number: 974.00
+CRITICAL:root:Episode number: 975.00
+CRITICAL:root:Running reward = 2.73 at episode 975. Loss = 1.22. Epsilon = 0.61.
+CRITICAL:root:Episode number: 976.00
+CRITICAL:root:Episode number: 977.00
+CRITICAL:root:Episode number: 978.00
+CRITICAL:root:Episode number: 979.00
+CRITICAL:root:Episode number: 980.00
+CRITICAL:root:Running reward = 2.72 at episode 980. Loss = 1.13. Epsilon = 0.61.
+CRITICAL:root:Episode number: 981.00
+CRITICAL:root:Episode number: 982.00
+CRITICAL:root:Episode number: 983.00
+CRITICAL:root:Episode number: 984.00
+CRITICAL:root:Episode number: 985.00
+CRITICAL:root:Running reward = 2.73 at episode 985. Loss = 1.39. Epsilon = 0.61.
+CRITICAL:root:Episode number: 986.00
+CRITICAL:root:Episode number: 987.00
+CRITICAL:root:Episode number: 988.00
+CRITICAL:root:Episode number: 989.00
+CRITICAL:root:Episode number: 990.00
+CRITICAL:root:Running reward = 2.73 at episode 990. Loss = 0.81. Epsilon = 0.61.
+CRITICAL:root:Episode number: 991.00
+CRITICAL:root:Episode number: 992.00
+CRITICAL:root:Episode number: 993.00
+CRITICAL:root:Episode number: 994.00
+CRITICAL:root:Episode number: 995.00
+CRITICAL:root:Running reward = 2.74 at episode 995. Loss = 0.54. Epsilon = 0.61.
+CRITICAL:root:Episode number: 996.00
+CRITICAL:root:Episode number: 997.00
+CRITICAL:root:Episode number: 998.00
+CRITICAL:root:Episode number: 999.00
+CRITICAL:root:Episode number: 1000.00
+CRITICAL:root:Running reward = 2.74 at episode 1000. Loss = 0.79. Epsilon = 0.60.
+CRITICAL:root:Episode number: 1001.00
+CRITICAL:root:Episode number: 1002.00
+CRITICAL:root:Episode number: 1003.00
+CRITICAL:root:Episode number: 1004.00
+CRITICAL:root:Episode number: 1005.00
+CRITICAL:root:Running reward = 2.75 at episode 1005. Loss = 0.79. Epsilon = 0.60.
+CRITICAL:root:Episode number: 1006.00
+CRITICAL:root:Episode number: 1007.00
+CRITICAL:root:Episode number: 1008.00
+CRITICAL:root:Episode number: 1009.00
+CRITICAL:root:Episode number: 1010.00
+CRITICAL:root:Running reward = 2.75 at episode 1010. Loss = 0.95. Epsilon = 0.60.
+CRITICAL:root:Episode number: 1011.00
+CRITICAL:root:Episode number: 1012.00
+CRITICAL:root:Episode number: 1013.00
+CRITICAL:root:Episode number: 1014.00
+CRITICAL:root:Episode number: 1015.00
+CRITICAL:root:Running reward = 2.75 at episode 1015. Loss = 0.62. Epsilon = 0.60.
+CRITICAL:root:Episode number: 1016.00
+CRITICAL:root:Episode number: 1017.00
+CRITICAL:root:Episode number: 1018.00
+CRITICAL:root:Episode number: 1019.00
+CRITICAL:root:Episode number: 1020.00
+CRITICAL:root:Running reward = 2.75 at episode 1020. Loss = 0.85. Epsilon = 0.60.
+CRITICAL:root:Episode number: 1021.00
+CRITICAL:root:Episode number: 1022.00
+CRITICAL:root:Episode number: 1023.00
+CRITICAL:root:Episode number: 1024.00
+CRITICAL:root:Episode number: 1025.00
+CRITICAL:root:Running reward = 2.75 at episode 1025. Loss = 0.71. Epsilon = 0.60.
+CRITICAL:root:Episode number: 1026.00
+CRITICAL:root:Episode number: 1027.00
+CRITICAL:root:Episode number: 1028.00
+CRITICAL:root:Episode number: 1029.00
+CRITICAL:root:Episode number: 1030.00
+CRITICAL:root:Running reward = 2.75 at episode 1030. Loss = 0.71. Epsilon = 0.59.
+CRITICAL:root:Episode number: 1031.00
+CRITICAL:root:Episode number: 1032.00
+CRITICAL:root:Episode number: 1033.00
+CRITICAL:root:Episode number: 1034.00
+CRITICAL:root:Episode number: 1035.00
+CRITICAL:root:Running reward = 2.74 at episode 1035. Loss = 0.70. Epsilon = 0.59.
+CRITICAL:root:Episode number: 1036.00
+CRITICAL:root:Episode number: 1037.00
+CRITICAL:root:Episode number: 1038.00
+CRITICAL:root:Episode number: 1039.00
+CRITICAL:root:Episode number: 1040.00
+CRITICAL:root:Running reward = 2.75 at episode 1040. Loss = 0.86. Epsilon = 0.59.
+CRITICAL:root:Episode number: 1041.00
+CRITICAL:root:Episode number: 1042.00
+CRITICAL:root:Episode number: 1043.00
+CRITICAL:root:Episode number: 1044.00
+CRITICAL:root:Episode number: 1045.00
+CRITICAL:root:Running reward = 2.74 at episode 1045. Loss = 0.58. Epsilon = 0.59.
+CRITICAL:root:Episode number: 1046.00
+CRITICAL:root:Episode number: 1047.00
+CRITICAL:root:Episode number: 1048.00
+CRITICAL:root:Episode number: 1049.00
+CRITICAL:root:Episode number: 1050.00
+CRITICAL:root:Running reward = 2.75 at episode 1050. Loss = 0.75. Epsilon = 0.59.
+CRITICAL:root:Episode number: 1051.00
+CRITICAL:root:Episode number: 1052.00
+CRITICAL:root:Episode number: 1053.00
+CRITICAL:root:Episode number: 1054.00
+CRITICAL:root:Episode number: 1055.00
+CRITICAL:root:Running reward = 2.75 at episode 1055. Loss = 0.95. Epsilon = 0.59.
+CRITICAL:root:Episode number: 1056.00
+CRITICAL:root:Episode number: 1057.00
+CRITICAL:root:Episode number: 1058.00
+CRITICAL:root:Episode number: 1059.00
+CRITICAL:root:Episode number: 1060.00
+CRITICAL:root:Running reward = 2.75 at episode 1060. Loss = 0.41. Epsilon = 0.59.
+CRITICAL:root:Episode number: 1061.00
+CRITICAL:root:Episode number: 1062.00
+CRITICAL:root:Episode number: 1063.00
+CRITICAL:root:Episode number: 1064.00
+CRITICAL:root:Episode number: 1065.00
+CRITICAL:root:Running reward = 2.75 at episode 1065. Loss = 0.78. Epsilon = 0.58.
+CRITICAL:root:Episode number: 1066.00
+CRITICAL:root:Episode number: 1067.00
+CRITICAL:root:Episode number: 1068.00
+CRITICAL:root:Episode number: 1069.00
+CRITICAL:root:Episode number: 1070.00
+CRITICAL:root:Running reward = 2.76 at episode 1070. Loss = 0.75. Epsilon = 0.58.
+CRITICAL:root:Episode number: 1071.00
+CRITICAL:root:Episode number: 1072.00
+CRITICAL:root:Episode number: 1073.00
+CRITICAL:root:Episode number: 1074.00
+CRITICAL:root:Episode number: 1075.00
+CRITICAL:root:Running reward = 2.77 at episode 1075. Loss = 0.46. Epsilon = 0.58.
+CRITICAL:root:Episode number: 1076.00
+CRITICAL:root:Episode number: 1077.00
+CRITICAL:root:Episode number: 1078.00
+CRITICAL:root:Episode number: 1079.00
+CRITICAL:root:Episode number: 1080.00
+CRITICAL:root:Running reward = 2.77 at episode 1080. Loss = 0.54. Epsilon = 0.58.
+CRITICAL:root:Episode number: 1081.00
+CRITICAL:root:Episode number: 1082.00
+CRITICAL:root:Episode number: 1083.00
+CRITICAL:root:Episode number: 1084.00
+CRITICAL:root:Episode number: 1085.00
+CRITICAL:root:Running reward = 2.76 at episode 1085. Loss = 0.66. Epsilon = 0.58.
+CRITICAL:root:Episode number: 1086.00
+CRITICAL:root:Episode number: 1087.00
+CRITICAL:root:Episode number: 1088.00
+CRITICAL:root:Episode number: 1089.00
+CRITICAL:root:Episode number: 1090.00
+CRITICAL:root:Running reward = 2.76 at episode 1090. Loss = 0.76. Epsilon = 0.58.
+CRITICAL:root:Episode number: 1091.00
+CRITICAL:root:Episode number: 1092.00
+CRITICAL:root:Episode number: 1093.00
+CRITICAL:root:Episode number: 1094.00
+CRITICAL:root:Episode number: 1095.00
+CRITICAL:root:Running reward = 2.76 at episode 1095. Loss = 0.69. Epsilon = 0.58.
+CRITICAL:root:Episode number: 1096.00
+CRITICAL:root:Episode number: 1097.00
+CRITICAL:root:Episode number: 1098.00
+CRITICAL:root:Episode number: 1099.00
+CRITICAL:root:Episode number: 1100.00
+CRITICAL:root:Running reward = 2.76 at episode 1100. Loss = 0.62. Epsilon = 0.57.
+CRITICAL:root:Episode number: 1101.00
+CRITICAL:root:Episode number: 1102.00
+CRITICAL:root:Episode number: 1103.00
+CRITICAL:root:Episode number: 1104.00
+CRITICAL:root:Episode number: 1105.00
+CRITICAL:root:Running reward = 2.76 at episode 1105. Loss = 0.91. Epsilon = 0.57.
+CRITICAL:root:Episode number: 1106.00
+CRITICAL:root:Episode number: 1107.00
+CRITICAL:root:Episode number: 1108.00
+CRITICAL:root:Episode number: 1109.00
+CRITICAL:root:Episode number: 1110.00
+CRITICAL:root:Running reward = 2.75 at episode 1110. Loss = 0.53. Epsilon = 0.57.
+CRITICAL:root:Episode number: 1111.00
+CRITICAL:root:Episode number: 1112.00
+CRITICAL:root:Episode number: 1113.00
+CRITICAL:root:Episode number: 1114.00
+CRITICAL:root:Episode number: 1115.00
+CRITICAL:root:Running reward = 2.75 at episode 1115. Loss = 0.45. Epsilon = 0.57.
+CRITICAL:root:Episode number: 1116.00
+CRITICAL:root:Episode number: 1117.00
+CRITICAL:root:Episode number: 1118.00
+CRITICAL:root:Episode number: 1119.00
+CRITICAL:root:Episode number: 1120.00
+CRITICAL:root:Running reward = 2.75 at episode 1120. Loss = 0.49. Epsilon = 0.57.
+CRITICAL:root:Episode number: 1121.00
+CRITICAL:root:Episode number: 1122.00
+CRITICAL:root:Episode number: 1123.00
+CRITICAL:root:Episode number: 1124.00
+CRITICAL:root:Episode number: 1125.00
+CRITICAL:root:Running reward = 2.76 at episode 1125. Loss = 0.72. Epsilon = 0.57.
+CRITICAL:root:Episode number: 1126.00
+CRITICAL:root:Episode number: 1127.00
+CRITICAL:root:Episode number: 1128.00
+CRITICAL:root:Episode number: 1129.00
+CRITICAL:root:Episode number: 1130.00
+CRITICAL:root:Running reward = 2.75 at episode 1130. Loss = 0.34. Epsilon = 0.57.
+CRITICAL:root:Episode number: 1131.00
+CRITICAL:root:Episode number: 1132.00
+CRITICAL:root:Episode number: 1133.00
+CRITICAL:root:Episode number: 1134.00
+CRITICAL:root:Episode number: 1135.00
+CRITICAL:root:Running reward = 2.76 at episode 1135. Loss = 0.71. Epsilon = 0.56.
+CRITICAL:root:Episode number: 1136.00
+CRITICAL:root:Episode number: 1137.00
+CRITICAL:root:Episode number: 1138.00
+CRITICAL:root:Episode number: 1139.00
+CRITICAL:root:Episode number: 1140.00
+CRITICAL:root:Running reward = 2.76 at episode 1140. Loss = 1.00. Epsilon = 0.56.
+CRITICAL:root:Episode number: 1141.00
+CRITICAL:root:Episode number: 1142.00
+CRITICAL:root:Episode number: 1143.00
+CRITICAL:root:Episode number: 1144.00
+CRITICAL:root:Episode number: 1145.00
+CRITICAL:root:Running reward = 2.76 at episode 1145. Loss = 0.52. Epsilon = 0.56.
+CRITICAL:root:Episode number: 1146.00
+CRITICAL:root:Episode number: 1147.00
+CRITICAL:root:Episode number: 1148.00
+CRITICAL:root:Episode number: 1149.00
+CRITICAL:root:Episode number: 1150.00
+CRITICAL:root:Running reward = 2.76 at episode 1150. Loss = 0.54. Epsilon = 0.56.
+CRITICAL:root:Episode number: 1151.00
+CRITICAL:root:Episode number: 1152.00
+CRITICAL:root:Episode number: 1153.00
+CRITICAL:root:Episode number: 1154.00
+CRITICAL:root:Episode number: 1155.00
+CRITICAL:root:Running reward = 2.77 at episode 1155. Loss = 0.47. Epsilon = 0.56.
+CRITICAL:root:Episode number: 1156.00
+CRITICAL:root:Episode number: 1157.00
+CRITICAL:root:Episode number: 1158.00
+CRITICAL:root:Episode number: 1159.00
+CRITICAL:root:Episode number: 1160.00
+CRITICAL:root:Running reward = 2.78 at episode 1160. Loss = 0.83. Epsilon = 0.56.
+CRITICAL:root:Episode number: 1161.00
+CRITICAL:root:Episode number: 1162.00
+CRITICAL:root:Episode number: 1163.00
+CRITICAL:root:Episode number: 1164.00
+CRITICAL:root:Episode number: 1165.00
+CRITICAL:root:Running reward = 2.77 at episode 1165. Loss = 0.50. Epsilon = 0.56.
+CRITICAL:root:Episode number: 1166.00
+CRITICAL:root:Episode number: 1167.00
+CRITICAL:root:Episode number: 1168.00
+CRITICAL:root:Episode number: 1169.00
+CRITICAL:root:Episode number: 1170.00
+CRITICAL:root:Running reward = 2.77 at episode 1170. Loss = 0.58. Epsilon = 0.55.
+CRITICAL:root:Episode number: 1171.00
+CRITICAL:root:Episode number: 1172.00
+CRITICAL:root:Episode number: 1173.00
+CRITICAL:root:Episode number: 1174.00
+CRITICAL:root:Episode number: 1175.00
+CRITICAL:root:Running reward = 2.77 at episode 1175. Loss = 0.47. Epsilon = 0.55.
+CRITICAL:root:Episode number: 1176.00
+CRITICAL:root:Episode number: 1177.00
+CRITICAL:root:Episode number: 1178.00
+CRITICAL:root:Episode number: 1179.00
+CRITICAL:root:Episode number: 1180.00
+CRITICAL:root:Running reward = 2.77 at episode 1180. Loss = 0.75. Epsilon = 0.55.
+CRITICAL:root:Episode number: 1181.00
+CRITICAL:root:Episode number: 1182.00
+CRITICAL:root:Episode number: 1183.00
+CRITICAL:root:Episode number: 1184.00
+CRITICAL:root:Episode number: 1185.00
+CRITICAL:root:Running reward = 2.76 at episode 1185. Loss = 0.57. Epsilon = 0.55.
+CRITICAL:root:Episode number: 1186.00
+CRITICAL:root:Episode number: 1187.00
+CRITICAL:root:Episode number: 1188.00
+CRITICAL:root:Episode number: 1189.00
+CRITICAL:root:Episode number: 1190.00
+CRITICAL:root:Running reward = 2.76 at episode 1190. Loss = 0.40. Epsilon = 0.55.
+CRITICAL:root:Episode number: 1191.00
+CRITICAL:root:Episode number: 1192.00
+CRITICAL:root:Episode number: 1193.00
+CRITICAL:root:Episode number: 1194.00
+CRITICAL:root:Episode number: 1195.00
+CRITICAL:root:Running reward = 2.77 at episode 1195. Loss = 0.63. Epsilon = 0.55.
+CRITICAL:root:Episode number: 1196.00
+CRITICAL:root:Episode number: 1197.00
+CRITICAL:root:Episode number: 1198.00
+CRITICAL:root:Episode number: 1199.00
+CRITICAL:root:Episode number: 1200.00
+CRITICAL:root:Running reward = 2.77 at episode 1200. Loss = 0.48. Epsilon = 0.55.
+CRITICAL:root:Episode number: 1201.00
+CRITICAL:root:Episode number: 1202.00
+CRITICAL:root:Episode number: 1203.00
+CRITICAL:root:Episode number: 1204.00
+CRITICAL:root:Episode number: 1205.00
+CRITICAL:root:Running reward = 2.77 at episode 1205. Loss = 0.40. Epsilon = 0.54.
+CRITICAL:root:Episode number: 1206.00
+CRITICAL:root:Episode number: 1207.00
+CRITICAL:root:Episode number: 1208.00
+CRITICAL:root:Episode number: 1209.00
+CRITICAL:root:Episode number: 1210.00
+CRITICAL:root:Running reward = 2.77 at episode 1210. Loss = 0.48. Epsilon = 0.54.
+CRITICAL:root:Episode number: 1211.00
+CRITICAL:root:Episode number: 1212.00
+CRITICAL:root:Episode number: 1213.00
+CRITICAL:root:Episode number: 1214.00
+CRITICAL:root:Episode number: 1215.00
+CRITICAL:root:Running reward = 2.77 at episode 1215. Loss = 0.60. Epsilon = 0.54.
+CRITICAL:root:Episode number: 1216.00
+CRITICAL:root:Episode number: 1217.00
+CRITICAL:root:Episode number: 1218.00
+CRITICAL:root:Episode number: 1219.00
+CRITICAL:root:Episode number: 1220.00
+CRITICAL:root:Running reward = 2.77 at episode 1220. Loss = 0.32. Epsilon = 0.54.
+CRITICAL:root:Episode number: 1221.00
+CRITICAL:root:Episode number: 1222.00
+CRITICAL:root:Episode number: 1223.00
+CRITICAL:root:Episode number: 1224.00
+CRITICAL:root:Episode number: 1225.00
+CRITICAL:root:Running reward = 2.78 at episode 1225. Loss = 0.69. Epsilon = 0.54.
+CRITICAL:root:Episode number: 1226.00
+CRITICAL:root:Episode number: 1227.00
+CRITICAL:root:Episode number: 1228.00
+CRITICAL:root:Episode number: 1229.00
+CRITICAL:root:Episode number: 1230.00
+CRITICAL:root:Running reward = 2.78 at episode 1230. Loss = 0.68. Epsilon = 0.54.
+CRITICAL:root:Episode number: 1231.00
+CRITICAL:root:Episode number: 1232.00
+CRITICAL:root:Episode number: 1233.00
+CRITICAL:root:Episode number: 1234.00
+CRITICAL:root:Episode number: 1235.00
+CRITICAL:root:Running reward = 2.78 at episode 1235. Loss = 1.15. Epsilon = 0.54.
+CRITICAL:root:Episode number: 1236.00
+CRITICAL:root:Episode number: 1237.00
+CRITICAL:root:Episode number: 1238.00
+CRITICAL:root:Episode number: 1239.00
+CRITICAL:root:Episode number: 1240.00
+CRITICAL:root:Running reward = 2.77 at episode 1240. Loss = 0.39. Epsilon = 0.53.
+CRITICAL:root:Episode number: 1241.00
+CRITICAL:root:Episode number: 1242.00
+CRITICAL:root:Episode number: 1243.00
+CRITICAL:root:Episode number: 1244.00
+CRITICAL:root:Episode number: 1245.00
+CRITICAL:root:Running reward = 2.77 at episode 1245. Loss = 1.16. Epsilon = 0.53.
+CRITICAL:root:Episode number: 1246.00
+CRITICAL:root:Episode number: 1247.00
+CRITICAL:root:Episode number: 1248.00
+CRITICAL:root:Episode number: 1249.00
+CRITICAL:root:Episode number: 1250.00
+CRITICAL:root:Running reward = 2.77 at episode 1250. Loss = 0.65. Epsilon = 0.53.
+CRITICAL:root:Episode number: 1251.00
+CRITICAL:root:Episode number: 1252.00
+CRITICAL:root:Episode number: 1253.00
+CRITICAL:root:Episode number: 1254.00
+CRITICAL:root:Episode number: 1255.00
+CRITICAL:root:Running reward = 2.77 at episode 1255. Loss = 1.23. Epsilon = 0.53.
+CRITICAL:root:Episode number: 1256.00
+CRITICAL:root:Episode number: 1257.00
+CRITICAL:root:Episode number: 1258.00
+CRITICAL:root:Episode number: 1259.00
+CRITICAL:root:Episode number: 1260.00
+CRITICAL:root:Running reward = 2.77 at episode 1260. Loss = 0.74. Epsilon = 0.53.
+CRITICAL:root:Episode number: 1261.00
+CRITICAL:root:Episode number: 1262.00
+CRITICAL:root:Episode number: 1263.00
+CRITICAL:root:Episode number: 1264.00
+CRITICAL:root:Episode number: 1265.00
+CRITICAL:root:Running reward = 2.77 at episode 1265. Loss = 0.35. Epsilon = 0.53.
+CRITICAL:root:Episode number: 1266.00
+CRITICAL:root:Episode number: 1267.00
+CRITICAL:root:Episode number: 1268.00
+CRITICAL:root:Episode number: 1269.00
+CRITICAL:root:Episode number: 1270.00
+CRITICAL:root:Running reward = 2.77 at episode 1270. Loss = 0.52. Epsilon = 0.53.
+CRITICAL:root:Episode number: 1271.00
+CRITICAL:root:Episode number: 1272.00
+CRITICAL:root:Episode number: 1273.00
+CRITICAL:root:Episode number: 1274.00
+CRITICAL:root:Episode number: 1275.00
+CRITICAL:root:Running reward = 2.78 at episode 1275. Loss = 0.44. Epsilon = 0.53.
+CRITICAL:root:Episode number: 1276.00
+CRITICAL:root:Episode number: 1277.00
+CRITICAL:root:Episode number: 1278.00
+CRITICAL:root:Episode number: 1279.00
+CRITICAL:root:Episode number: 1280.00
+CRITICAL:root:Running reward = 2.78 at episode 1280. Loss = 0.38. Epsilon = 0.52.
+CRITICAL:root:Episode number: 1281.00
+CRITICAL:root:Episode number: 1282.00
+CRITICAL:root:Episode number: 1283.00
+CRITICAL:root:Episode number: 1284.00
+CRITICAL:root:Episode number: 1285.00
+CRITICAL:root:Running reward = 2.79 at episode 1285. Loss = 0.53. Epsilon = 0.52.
+CRITICAL:root:Episode number: 1286.00
+CRITICAL:root:Episode number: 1287.00
+CRITICAL:root:Episode number: 1288.00
+CRITICAL:root:Episode number: 1289.00
+CRITICAL:root:Episode number: 1290.00
+CRITICAL:root:Running reward = 2.78 at episode 1290. Loss = 0.38. Epsilon = 0.52.
+CRITICAL:root:Episode number: 1291.00
+CRITICAL:root:Episode number: 1292.00
+CRITICAL:root:Episode number: 1293.00
+CRITICAL:root:Episode number: 1294.00
+CRITICAL:root:Episode number: 1295.00
+CRITICAL:root:Running reward = 2.77 at episode 1295. Loss = 0.58. Epsilon = 0.52.
+CRITICAL:root:Episode number: 1296.00
+CRITICAL:root:Episode number: 1297.00
+CRITICAL:root:Episode number: 1298.00
+CRITICAL:root:Episode number: 1299.00
+CRITICAL:root:Episode number: 1300.00
+CRITICAL:root:Running reward = 2.78 at episode 1300. Loss = 0.65. Epsilon = 0.52.
+CRITICAL:root:Episode number: 1301.00
+CRITICAL:root:Episode number: 1302.00
+CRITICAL:root:Episode number: 1303.00
+CRITICAL:root:Episode number: 1304.00
+CRITICAL:root:Episode number: 1305.00
+CRITICAL:root:Running reward = 2.78 at episode 1305. Loss = 0.61. Epsilon = 0.52.
+CRITICAL:root:Episode number: 1306.00
+CRITICAL:root:Episode number: 1307.00
+CRITICAL:root:Episode number: 1308.00
+CRITICAL:root:Episode number: 1309.00
+CRITICAL:root:Episode number: 1310.00
+CRITICAL:root:Running reward = 2.78 at episode 1310. Loss = 0.34. Epsilon = 0.52.
+CRITICAL:root:Episode number: 1311.00
+CRITICAL:root:Episode number: 1312.00
+CRITICAL:root:Episode number: 1313.00
+CRITICAL:root:Episode number: 1314.00
+CRITICAL:root:Episode number: 1315.00
+CRITICAL:root:Running reward = 2.78 at episode 1315. Loss = 0.49. Epsilon = 0.51.
+CRITICAL:root:Episode number: 1316.00
+CRITICAL:root:Episode number: 1317.00
+CRITICAL:root:Episode number: 1318.00
+CRITICAL:root:Episode number: 1319.00
+CRITICAL:root:Episode number: 1320.00
+CRITICAL:root:Running reward = 2.79 at episode 1320. Loss = 0.50. Epsilon = 0.51.
+CRITICAL:root:Episode number: 1321.00
+CRITICAL:root:Episode number: 1322.00
+CRITICAL:root:Episode number: 1323.00
+CRITICAL:root:Episode number: 1324.00
+CRITICAL:root:Episode number: 1325.00
+CRITICAL:root:Running reward = 2.78 at episode 1325. Loss = 0.54. Epsilon = 0.51.
+CRITICAL:root:Episode number: 1326.00
+CRITICAL:root:Episode number: 1327.00
+CRITICAL:root:Episode number: 1328.00
+CRITICAL:root:Episode number: 1329.00
+CRITICAL:root:Episode number: 1330.00
+CRITICAL:root:Running reward = 2.79 at episode 1330. Loss = 0.46. Epsilon = 0.51.
+CRITICAL:root:Episode number: 1331.00
+CRITICAL:root:Episode number: 1332.00
+CRITICAL:root:Episode number: 1333.00
+CRITICAL:root:Episode number: 1334.00
+CRITICAL:root:Episode number: 1335.00
+CRITICAL:root:Running reward = 2.79 at episode 1335. Loss = 0.56. Epsilon = 0.51.
+CRITICAL:root:Episode number: 1336.00
+CRITICAL:root:Episode number: 1337.00
+CRITICAL:root:Episode number: 1338.00
+CRITICAL:root:Episode number: 1339.00
+CRITICAL:root:Episode number: 1340.00
+CRITICAL:root:Running reward = 2.79 at episode 1340. Loss = 0.43. Epsilon = 0.51.
+CRITICAL:root:Episode number: 1341.00
+CRITICAL:root:Episode number: 1342.00
+CRITICAL:root:Episode number: 1343.00
+CRITICAL:root:Episode number: 1344.00
+CRITICAL:root:Episode number: 1345.00
+CRITICAL:root:Running reward = 2.79 at episode 1345. Loss = 0.86. Epsilon = 0.51.
+CRITICAL:root:Episode number: 1346.00
+CRITICAL:root:Episode number: 1347.00
+CRITICAL:root:Episode number: 1348.00
+CRITICAL:root:Episode number: 1349.00
+CRITICAL:root:Episode number: 1350.00
+CRITICAL:root:Running reward = 2.80 at episode 1350. Loss = 0.32. Epsilon = 0.51.
+CRITICAL:root:Episode number: 1351.00
+CRITICAL:root:Episode number: 1352.00
+CRITICAL:root:Episode number: 1353.00
+CRITICAL:root:Episode number: 1354.00
+CRITICAL:root:Episode number: 1355.00
+CRITICAL:root:Running reward = 2.79 at episode 1355. Loss = 0.42. Epsilon = 0.50.
+CRITICAL:root:Episode number: 1356.00
+CRITICAL:root:Episode number: 1357.00
+CRITICAL:root:Episode number: 1358.00
+CRITICAL:root:Episode number: 1359.00
+CRITICAL:root:Episode number: 1360.00
+CRITICAL:root:Running reward = 2.79 at episode 1360. Loss = 0.33. Epsilon = 0.50.
+CRITICAL:root:Episode number: 1361.00
+CRITICAL:root:Episode number: 1362.00
+CRITICAL:root:Episode number: 1363.00
+CRITICAL:root:Episode number: 1364.00
+CRITICAL:root:Episode number: 1365.00
+CRITICAL:root:Running reward = 2.79 at episode 1365. Loss = 0.38. Epsilon = 0.50.
+CRITICAL:root:Episode number: 1366.00
+CRITICAL:root:Episode number: 1367.00
+CRITICAL:root:Episode number: 1368.00
+CRITICAL:root:Episode number: 1369.00
+CRITICAL:root:Episode number: 1370.00
+CRITICAL:root:Running reward = 2.78 at episode 1370. Loss = 0.38. Epsilon = 0.50.
+CRITICAL:root:Episode number: 1371.00
+CRITICAL:root:Episode number: 1372.00
+CRITICAL:root:Episode number: 1373.00
+CRITICAL:root:Episode number: 1374.00
+CRITICAL:root:Episode number: 1375.00
+CRITICAL:root:Running reward = 2.78 at episode 1375. Loss = 0.35. Epsilon = 0.50.
+CRITICAL:root:Episode number: 1376.00
+CRITICAL:root:Episode number: 1377.00
+CRITICAL:root:Episode number: 1378.00
+CRITICAL:root:Episode number: 1379.00
+CRITICAL:root:Episode number: 1380.00
+CRITICAL:root:Running reward = 2.78 at episode 1380. Loss = 0.32. Epsilon = 0.50.
+CRITICAL:root:Episode number: 1381.00
+CRITICAL:root:Episode number: 1382.00
+CRITICAL:root:Episode number: 1383.00
+CRITICAL:root:Episode number: 1384.00
+CRITICAL:root:Episode number: 1385.00
+CRITICAL:root:Running reward = 2.79 at episode 1385. Loss = 0.43. Epsilon = 0.50.
+CRITICAL:root:Episode number: 1386.00
+CRITICAL:root:Episode number: 1387.00
+CRITICAL:root:Episode number: 1388.00
+CRITICAL:root:Episode number: 1389.00
+CRITICAL:root:Episode number: 1390.00
+CRITICAL:root:Running reward = 2.79 at episode 1390. Loss = 0.49. Epsilon = 0.50.
+CRITICAL:root:Episode number: 1391.00
+CRITICAL:root:Episode number: 1392.00
+CRITICAL:root:Episode number: 1393.00
+CRITICAL:root:Episode number: 1394.00
+CRITICAL:root:Episode number: 1395.00
+CRITICAL:root:Running reward = 2.79 at episode 1395. Loss = 0.57. Epsilon = 0.49.
+CRITICAL:root:Episode number: 1396.00
+CRITICAL:root:Episode number: 1397.00
+CRITICAL:root:Episode number: 1398.00
+CRITICAL:root:Episode number: 1399.00
+CRITICAL:root:Episode number: 1400.00
+CRITICAL:root:Running reward = 2.79 at episode 1400. Loss = 0.36. Epsilon = 0.49.
+CRITICAL:root:Episode number: 1401.00
+CRITICAL:root:Episode number: 1402.00
+CRITICAL:root:Episode number: 1403.00
+CRITICAL:root:Episode number: 1404.00
+CRITICAL:root:Episode number: 1405.00
+CRITICAL:root:Running reward = 2.80 at episode 1405. Loss = 0.48. Epsilon = 0.49.
+CRITICAL:root:Episode number: 1406.00
+CRITICAL:root:Episode number: 1407.00
+CRITICAL:root:Episode number: 1408.00
+CRITICAL:root:Episode number: 1409.00
+CRITICAL:root:Episode number: 1410.00
+CRITICAL:root:Running reward = 2.80 at episode 1410. Loss = 0.35. Epsilon = 0.49.
+CRITICAL:root:Episode number: 1411.00
+CRITICAL:root:Episode number: 1412.00
+CRITICAL:root:Episode number: 1413.00
+CRITICAL:root:Episode number: 1414.00
+CRITICAL:root:Episode number: 1415.00
+CRITICAL:root:Running reward = 2.80 at episode 1415. Loss = 0.57. Epsilon = 0.49.
+CRITICAL:root:Episode number: 1416.00
+CRITICAL:root:Episode number: 1417.00
+CRITICAL:root:Episode number: 1418.00
+CRITICAL:root:Episode number: 1419.00
+CRITICAL:root:Episode number: 1420.00
+CRITICAL:root:Running reward = 2.79 at episode 1420. Loss = 0.40. Epsilon = 0.49.
+CRITICAL:root:Episode number: 1421.00
+CRITICAL:root:Episode number: 1422.00
+CRITICAL:root:Episode number: 1423.00
+CRITICAL:root:Episode number: 1424.00
+CRITICAL:root:Episode number: 1425.00
+CRITICAL:root:Running reward = 2.80 at episode 1425. Loss = 1.41. Epsilon = 0.49.
+CRITICAL:root:Episode number: 1426.00
+CRITICAL:root:Episode number: 1427.00
+CRITICAL:root:Episode number: 1428.00
+CRITICAL:root:Episode number: 1429.00
+CRITICAL:root:Episode number: 1430.00
+CRITICAL:root:Running reward = 2.81 at episode 1430. Loss = 0.46. Epsilon = 0.49.
+CRITICAL:root:Episode number: 1431.00
+CRITICAL:root:Episode number: 1432.00
+CRITICAL:root:Episode number: 1433.00
+CRITICAL:root:Episode number: 1434.00
+CRITICAL:root:Episode number: 1435.00
+CRITICAL:root:Running reward = 2.81 at episode 1435. Loss = 0.47. Epsilon = 0.48.
+CRITICAL:root:Episode number: 1436.00
+CRITICAL:root:Episode number: 1437.00
+CRITICAL:root:Episode number: 1438.00
+CRITICAL:root:Episode number: 1439.00
+CRITICAL:root:Episode number: 1440.00
+CRITICAL:root:Running reward = 2.80 at episode 1440. Loss = 0.34. Epsilon = 0.48.
+CRITICAL:root:Episode number: 1441.00
+CRITICAL:root:Episode number: 1442.00
+CRITICAL:root:Episode number: 1443.00
+CRITICAL:root:Episode number: 1444.00
+CRITICAL:root:Episode number: 1445.00
+CRITICAL:root:Running reward = 2.80 at episode 1445. Loss = 0.49. Epsilon = 0.48.
+CRITICAL:root:Episode number: 1446.00
+CRITICAL:root:Episode number: 1447.00
+CRITICAL:root:Episode number: 1448.00
+CRITICAL:root:Episode number: 1449.00
+CRITICAL:root:Episode number: 1450.00
+CRITICAL:root:Running reward = 2.80 at episode 1450. Loss = 1.11. Epsilon = 0.48.
+CRITICAL:root:Episode number: 1451.00
+CRITICAL:root:Episode number: 1452.00
+CRITICAL:root:Episode number: 1453.00
+CRITICAL:root:Episode number: 1454.00
+CRITICAL:root:Episode number: 1455.00
+CRITICAL:root:Running reward = 2.79 at episode 1455. Loss = 0.73. Epsilon = 0.48.
+CRITICAL:root:Episode number: 1456.00
+CRITICAL:root:Episode number: 1457.00
+CRITICAL:root:Episode number: 1458.00
+CRITICAL:root:Episode number: 1459.00
+CRITICAL:root:Episode number: 1460.00
+CRITICAL:root:Running reward = 2.78 at episode 1460. Loss = 0.56. Epsilon = 0.48.
+CRITICAL:root:Episode number: 1461.00
+CRITICAL:root:Episode number: 1462.00
+CRITICAL:root:Episode number: 1463.00
+CRITICAL:root:Episode number: 1464.00
+CRITICAL:root:Episode number: 1465.00
+CRITICAL:root:Running reward = 2.79 at episode 1465. Loss = 0.36. Epsilon = 0.48.
+CRITICAL:root:Episode number: 1466.00
+CRITICAL:root:Episode number: 1467.00
+CRITICAL:root:Episode number: 1468.00
+CRITICAL:root:Episode number: 1469.00
+CRITICAL:root:Episode number: 1470.00
+CRITICAL:root:Running reward = 2.79 at episode 1470. Loss = 0.46. Epsilon = 0.48.
+CRITICAL:root:Episode number: 1471.00
+CRITICAL:root:Episode number: 1472.00
+CRITICAL:root:Episode number: 1473.00
+CRITICAL:root:Episode number: 1474.00
+CRITICAL:root:Episode number: 1475.00
+CRITICAL:root:Running reward = 2.79 at episode 1475. Loss = 0.61. Epsilon = 0.47.
+CRITICAL:root:Episode number: 1476.00
+CRITICAL:root:Episode number: 1477.00
+CRITICAL:root:Episode number: 1478.00
+CRITICAL:root:Episode number: 1479.00
+CRITICAL:root:Episode number: 1480.00
+CRITICAL:root:Running reward = 2.79 at episode 1480. Loss = 0.41. Epsilon = 0.47.
+CRITICAL:root:Episode number: 1481.00
+CRITICAL:root:Episode number: 1482.00
+CRITICAL:root:Episode number: 1483.00
+CRITICAL:root:Episode number: 1484.00
+CRITICAL:root:Episode number: 1485.00
+CRITICAL:root:Running reward = 2.80 at episode 1485. Loss = 0.55. Epsilon = 0.47.
+CRITICAL:root:Episode number: 1486.00
+CRITICAL:root:Episode number: 1487.00
+CRITICAL:root:Episode number: 1488.00
+CRITICAL:root:Episode number: 1489.00
+CRITICAL:root:Episode number: 1490.00
+CRITICAL:root:Running reward = 2.80 at episode 1490. Loss = 0.66. Epsilon = 0.47.
+CRITICAL:root:Episode number: 1491.00
+CRITICAL:root:Episode number: 1492.00
+CRITICAL:root:Episode number: 1493.00
+CRITICAL:root:Episode number: 1494.00
+CRITICAL:root:Episode number: 1495.00
+CRITICAL:root:Running reward = 2.80 at episode 1495. Loss = 0.39. Epsilon = 0.47.
+CRITICAL:root:Episode number: 1496.00
+CRITICAL:root:Episode number: 1497.00
+CRITICAL:root:Episode number: 1498.00
+CRITICAL:root:Episode number: 1499.00
+CRITICAL:root:Episode number: 1500.00
+CRITICAL:root:Running reward = 2.80 at episode 1500. Loss = 0.54. Epsilon = 0.47.
+CRITICAL:root:Episode number: 1501.00
+CRITICAL:root:Episode number: 1502.00
+CRITICAL:root:Episode number: 1503.00
+CRITICAL:root:Episode number: 1504.00
+CRITICAL:root:Episode number: 1505.00
+CRITICAL:root:Running reward = 2.81 at episode 1505. Loss = 0.29. Epsilon = 0.47.
+CRITICAL:root:Episode number: 1506.00
+CRITICAL:root:Episode number: 1507.00
+CRITICAL:root:Episode number: 1508.00
+CRITICAL:root:Episode number: 1509.00
+CRITICAL:root:Episode number: 1510.00
+CRITICAL:root:Running reward = 2.80 at episode 1510. Loss = 0.64. Epsilon = 0.47.
+CRITICAL:root:Episode number: 1511.00
+CRITICAL:root:Episode number: 1512.00
+CRITICAL:root:Episode number: 1513.00
+CRITICAL:root:Episode number: 1514.00
+CRITICAL:root:Episode number: 1515.00
+CRITICAL:root:Running reward = 2.80 at episode 1515. Loss = 0.67. Epsilon = 0.47.
+CRITICAL:root:Episode number: 1516.00
+CRITICAL:root:Episode number: 1517.00
+CRITICAL:root:Episode number: 1518.00
+CRITICAL:root:Episode number: 1519.00
+CRITICAL:root:Episode number: 1520.00
+CRITICAL:root:Running reward = 2.80 at episode 1520. Loss = 0.51. Epsilon = 0.46.
+CRITICAL:root:Episode number: 1521.00
+CRITICAL:root:Episode number: 1522.00
+CRITICAL:root:Episode number: 1523.00
+CRITICAL:root:Episode number: 1524.00
+CRITICAL:root:Episode number: 1525.00
+CRITICAL:root:Running reward = 2.80 at episode 1525. Loss = 0.39. Epsilon = 0.46.
+CRITICAL:root:Episode number: 1526.00
+CRITICAL:root:Episode number: 1527.00
+CRITICAL:root:Episode number: 1528.00
+CRITICAL:root:Episode number: 1529.00
+CRITICAL:root:Episode number: 1530.00
+CRITICAL:root:Running reward = 2.81 at episode 1530. Loss = 0.34. Epsilon = 0.46.
+CRITICAL:root:Episode number: 1531.00
+CRITICAL:root:Episode number: 1532.00
+CRITICAL:root:Episode number: 1533.00
+CRITICAL:root:Episode number: 1534.00
+CRITICAL:root:Episode number: 1535.00
+CRITICAL:root:Running reward = 2.81 at episode 1535. Loss = 0.61. Epsilon = 0.46.
+CRITICAL:root:Episode number: 1536.00
+CRITICAL:root:Episode number: 1537.00
+CRITICAL:root:Episode number: 1538.00
+CRITICAL:root:Episode number: 1539.00
+CRITICAL:root:Episode number: 1540.00
+CRITICAL:root:Running reward = 2.81 at episode 1540. Loss = 0.70. Epsilon = 0.46.
+CRITICAL:root:Episode number: 1541.00
+CRITICAL:root:Episode number: 1542.00
+CRITICAL:root:Episode number: 1543.00
+CRITICAL:root:Episode number: 1544.00
+CRITICAL:root:Episode number: 1545.00
+CRITICAL:root:Running reward = 2.81 at episode 1545. Loss = 0.28. Epsilon = 0.46.
+CRITICAL:root:Episode number: 1546.00
+CRITICAL:root:Episode number: 1547.00
+CRITICAL:root:Episode number: 1548.00
+CRITICAL:root:Episode number: 1549.00
+CRITICAL:root:Episode number: 1550.00
+CRITICAL:root:Running reward = 2.80 at episode 1550. Loss = 0.39. Epsilon = 0.46.
+CRITICAL:root:Episode number: 1551.00
+CRITICAL:root:Episode number: 1552.00
+CRITICAL:root:Episode number: 1553.00
+CRITICAL:root:Episode number: 1554.00
+CRITICAL:root:Episode number: 1555.00
+CRITICAL:root:Running reward = 2.80 at episode 1555. Loss = 0.48. Epsilon = 0.46.
+CRITICAL:root:Episode number: 1556.00
+CRITICAL:root:Episode number: 1557.00
+CRITICAL:root:Episode number: 1558.00
+CRITICAL:root:Episode number: 1559.00
+CRITICAL:root:Episode number: 1560.00
+CRITICAL:root:Running reward = 2.80 at episode 1560. Loss = 0.36. Epsilon = 0.45.
+CRITICAL:root:Episode number: 1561.00
+CRITICAL:root:Episode number: 1562.00
+CRITICAL:root:Episode number: 1563.00
+CRITICAL:root:Episode number: 1564.00
+CRITICAL:root:Episode number: 1565.00
+CRITICAL:root:Running reward = 2.80 at episode 1565. Loss = 1.22. Epsilon = 0.45.
+CRITICAL:root:Episode number: 1566.00
+CRITICAL:root:Episode number: 1567.00
+CRITICAL:root:Episode number: 1568.00
+CRITICAL:root:Episode number: 1569.00
+CRITICAL:root:Episode number: 1570.00
+CRITICAL:root:Running reward = 2.80 at episode 1570. Loss = 0.48. Epsilon = 0.45.
+CRITICAL:root:Episode number: 1571.00
+CRITICAL:root:Episode number: 1572.00
+CRITICAL:root:Episode number: 1573.00
+CRITICAL:root:Episode number: 1574.00
+CRITICAL:root:Episode number: 1575.00
+CRITICAL:root:Running reward = 2.80 at episode 1575. Loss = 0.55. Epsilon = 0.45.
+CRITICAL:root:Episode number: 1576.00
+CRITICAL:root:Episode number: 1577.00
+CRITICAL:root:Episode number: 1578.00
+CRITICAL:root:Episode number: 1579.00
+CRITICAL:root:Episode number: 1580.00
+CRITICAL:root:Running reward = 2.79 at episode 1580. Loss = 0.29. Epsilon = 0.45.
+CRITICAL:root:Episode number: 1581.00
+CRITICAL:root:Episode number: 1582.00
+CRITICAL:root:Episode number: 1583.00
+CRITICAL:root:Episode number: 1584.00
+CRITICAL:root:Episode number: 1585.00
+CRITICAL:root:Running reward = 2.80 at episode 1585. Loss = 0.41. Epsilon = 0.45.
+CRITICAL:root:Episode number: 1586.00
+CRITICAL:root:Episode number: 1587.00
+CRITICAL:root:Episode number: 1588.00
+CRITICAL:root:Episode number: 1589.00
+CRITICAL:root:Episode number: 1590.00
+CRITICAL:root:Running reward = 2.80 at episode 1590. Loss = 0.43. Epsilon = 0.45.
+CRITICAL:root:Episode number: 1591.00
+CRITICAL:root:Episode number: 1592.00
+CRITICAL:root:Episode number: 1593.00
+CRITICAL:root:Episode number: 1594.00
+CRITICAL:root:Episode number: 1595.00
+CRITICAL:root:Running reward = 2.81 at episode 1595. Loss = 0.52. Epsilon = 0.45.
+CRITICAL:root:Episode number: 1596.00
+CRITICAL:root:Episode number: 1597.00
+CRITICAL:root:Episode number: 1598.00
+CRITICAL:root:Episode number: 1599.00
+CRITICAL:root:Episode number: 1600.00
+CRITICAL:root:Running reward = 2.80 at episode 1600. Loss = 0.53. Epsilon = 0.45.
+CRITICAL:root:Episode number: 1601.00
+CRITICAL:root:Episode number: 1602.00
+CRITICAL:root:Episode number: 1603.00
+CRITICAL:root:Episode number: 1604.00
+CRITICAL:root:Episode number: 1605.00
+CRITICAL:root:Running reward = 2.80 at episode 1605. Loss = 0.30. Epsilon = 0.44.
+CRITICAL:root:Episode number: 1606.00
+CRITICAL:root:Episode number: 1607.00
+CRITICAL:root:Episode number: 1608.00
+CRITICAL:root:Episode number: 1609.00
+CRITICAL:root:Episode number: 1610.00
+CRITICAL:root:Running reward = 2.80 at episode 1610. Loss = 0.59. Epsilon = 0.44.
+CRITICAL:root:Episode number: 1611.00
+CRITICAL:root:Episode number: 1612.00
+CRITICAL:root:Episode number: 1613.00
+CRITICAL:root:Episode number: 1614.00
+CRITICAL:root:Episode number: 1615.00
+CRITICAL:root:Running reward = 2.79 at episode 1615. Loss = 0.42. Epsilon = 0.44.
+CRITICAL:root:Episode number: 1616.00
+CRITICAL:root:Episode number: 1617.00
+CRITICAL:root:Episode number: 1618.00
+CRITICAL:root:Episode number: 1619.00
+CRITICAL:root:Episode number: 1620.00
+CRITICAL:root:Running reward = 2.79 at episode 1620. Loss = 0.64. Epsilon = 0.44.
+CRITICAL:root:Episode number: 1621.00
+CRITICAL:root:Episode number: 1622.00
+CRITICAL:root:Episode number: 1623.00
+CRITICAL:root:Episode number: 1624.00
+CRITICAL:root:Episode number: 1625.00
+CRITICAL:root:Running reward = 2.79 at episode 1625. Loss = 0.44. Epsilon = 0.44.
+CRITICAL:root:Episode number: 1626.00
+CRITICAL:root:Episode number: 1627.00
+CRITICAL:root:Episode number: 1628.00
+CRITICAL:root:Episode number: 1629.00
+CRITICAL:root:Episode number: 1630.00
+CRITICAL:root:Running reward = 2.80 at episode 1630. Loss = 0.53. Epsilon = 0.44.
+CRITICAL:root:Episode number: 1631.00
+CRITICAL:root:Episode number: 1632.00
+CRITICAL:root:Episode number: 1633.00
+CRITICAL:root:Episode number: 1634.00
+CRITICAL:root:Episode number: 1635.00
+CRITICAL:root:Running reward = 2.80 at episode 1635. Loss = 0.48. Epsilon = 0.44.
+CRITICAL:root:Episode number: 1636.00
+CRITICAL:root:Episode number: 1637.00
+CRITICAL:root:Episode number: 1638.00
+CRITICAL:root:Episode number: 1639.00
+CRITICAL:root:Episode number: 1640.00
+CRITICAL:root:Running reward = 2.81 at episode 1640. Loss = 0.51. Epsilon = 0.44.
+CRITICAL:root:Episode number: 1641.00
+CRITICAL:root:Episode number: 1642.00
+CRITICAL:root:Episode number: 1643.00
+CRITICAL:root:Episode number: 1644.00
+CRITICAL:root:Episode number: 1645.00
+CRITICAL:root:Running reward = 2.81 at episode 1645. Loss = 0.41. Epsilon = 0.44.
+CRITICAL:root:Episode number: 1646.00
+CRITICAL:root:Episode number: 1647.00
+CRITICAL:root:Episode number: 1648.00
+CRITICAL:root:Episode number: 1649.00
+CRITICAL:root:Episode number: 1650.00
+CRITICAL:root:Running reward = 2.82 at episode 1650. Loss = 0.57. Epsilon = 0.43.
+CRITICAL:root:Episode number: 1651.00
+CRITICAL:root:Episode number: 1652.00
+CRITICAL:root:Episode number: 1653.00
+CRITICAL:root:Episode number: 1654.00
+CRITICAL:root:Episode number: 1655.00
+CRITICAL:root:Running reward = 2.81 at episode 1655. Loss = 0.63. Epsilon = 0.43.
+CRITICAL:root:Episode number: 1656.00
+CRITICAL:root:Episode number: 1657.00
+CRITICAL:root:Episode number: 1658.00
+CRITICAL:root:Episode number: 1659.00
+CRITICAL:root:Episode number: 1660.00
+CRITICAL:root:Running reward = 2.81 at episode 1660. Loss = 0.60. Epsilon = 0.43.
+CRITICAL:root:Episode number: 1661.00
+CRITICAL:root:Episode number: 1662.00
+CRITICAL:root:Episode number: 1663.00
+CRITICAL:root:Episode number: 1664.00
+CRITICAL:root:Episode number: 1665.00
+CRITICAL:root:Running reward = 2.81 at episode 1665. Loss = 0.46. Epsilon = 0.43.
+CRITICAL:root:Episode number: 1666.00
+CRITICAL:root:Episode number: 1667.00
+CRITICAL:root:Episode number: 1668.00
+CRITICAL:root:Episode number: 1669.00
+CRITICAL:root:Episode number: 1670.00
+CRITICAL:root:Running reward = 2.81 at episode 1670. Loss = 0.57. Epsilon = 0.43.
+CRITICAL:root:Episode number: 1671.00
+CRITICAL:root:Episode number: 1672.00
+CRITICAL:root:Episode number: 1673.00
+CRITICAL:root:Episode number: 1674.00
+CRITICAL:root:Episode number: 1675.00
+CRITICAL:root:Running reward = 2.80 at episode 1675. Loss = 0.41. Epsilon = 0.43.
+CRITICAL:root:Episode number: 1676.00
+CRITICAL:root:Episode number: 1677.00
+CRITICAL:root:Episode number: 1678.00
+CRITICAL:root:Episode number: 1679.00
+CRITICAL:root:Episode number: 1680.00
+CRITICAL:root:Running reward = 2.80 at episode 1680. Loss = 0.27. Epsilon = 0.43.
+CRITICAL:root:Episode number: 1681.00
+CRITICAL:root:Episode number: 1682.00
+CRITICAL:root:Episode number: 1683.00
+CRITICAL:root:Episode number: 1684.00
+CRITICAL:root:Episode number: 1685.00
+CRITICAL:root:Running reward = 2.80 at episode 1685. Loss = 0.61. Epsilon = 0.43.
+CRITICAL:root:Episode number: 1686.00
+CRITICAL:root:Episode number: 1687.00
+CRITICAL:root:Episode number: 1688.00
+CRITICAL:root:Episode number: 1689.00
+CRITICAL:root:Episode number: 1690.00
+CRITICAL:root:Running reward = 2.79 at episode 1690. Loss = 0.31. Epsilon = 0.43.
+CRITICAL:root:Episode number: 1691.00
+CRITICAL:root:Episode number: 1692.00
+CRITICAL:root:Episode number: 1693.00
+CRITICAL:root:Episode number: 1694.00
+CRITICAL:root:Episode number: 1695.00
+CRITICAL:root:Running reward = 2.80 at episode 1695. Loss = 0.58. Epsilon = 0.42.
+CRITICAL:root:Episode number: 1696.00
+CRITICAL:root:Episode number: 1697.00
+CRITICAL:root:Episode number: 1698.00
+CRITICAL:root:Episode number: 1699.00
+CRITICAL:root:Episode number: 1700.00
+CRITICAL:root:Running reward = 2.81 at episode 1700. Loss = 0.45. Epsilon = 0.42.
+CRITICAL:root:Episode number: 1701.00
+CRITICAL:root:Episode number: 1702.00
+CRITICAL:root:Episode number: 1703.00
+CRITICAL:root:Episode number: 1704.00
+CRITICAL:root:Episode number: 1705.00
+CRITICAL:root:Running reward = 2.80 at episode 1705. Loss = 0.39. Epsilon = 0.42.
+CRITICAL:root:Episode number: 1706.00
+CRITICAL:root:Episode number: 1707.00
+CRITICAL:root:Episode number: 1708.00
+CRITICAL:root:Episode number: 1709.00
+CRITICAL:root:Episode number: 1710.00
+CRITICAL:root:Running reward = 2.80 at episode 1710. Loss = 0.82. Epsilon = 0.42.
+CRITICAL:root:Episode number: 1711.00
+CRITICAL:root:Episode number: 1712.00
+CRITICAL:root:Episode number: 1713.00
+CRITICAL:root:Episode number: 1714.00
+CRITICAL:root:Episode number: 1715.00
+CRITICAL:root:Running reward = 2.80 at episode 1715. Loss = 0.50. Epsilon = 0.42.
+CRITICAL:root:Episode number: 1716.00
+CRITICAL:root:Episode number: 1717.00
+CRITICAL:root:Episode number: 1718.00
+CRITICAL:root:Episode number: 1719.00
+CRITICAL:root:Episode number: 1720.00
+CRITICAL:root:Running reward = 2.81 at episode 1720. Loss = 0.32. Epsilon = 0.42.
+CRITICAL:root:Episode number: 1721.00
+CRITICAL:root:Episode number: 1722.00
+CRITICAL:root:Episode number: 1723.00
+CRITICAL:root:Episode number: 1724.00
+CRITICAL:root:Episode number: 1725.00
+CRITICAL:root:Running reward = 2.81 at episode 1725. Loss = 0.42. Epsilon = 0.42.
+CRITICAL:root:Episode number: 1726.00
+CRITICAL:root:Episode number: 1727.00
+CRITICAL:root:Episode number: 1728.00
+CRITICAL:root:Episode number: 1729.00
+CRITICAL:root:Episode number: 1730.00
+CRITICAL:root:Running reward = 2.79 at episode 1730. Loss = 0.79. Epsilon = 0.42.
+CRITICAL:root:Episode number: 1731.00
+CRITICAL:root:Episode number: 1732.00
+CRITICAL:root:Episode number: 1733.00
+CRITICAL:root:Episode number: 1734.00
+CRITICAL:root:Episode number: 1735.00
+CRITICAL:root:Running reward = 2.80 at episode 1735. Loss = 0.58. Epsilon = 0.42.
+CRITICAL:root:Episode number: 1736.00
+CRITICAL:root:Episode number: 1737.00
+CRITICAL:root:Episode number: 1738.00
+CRITICAL:root:Episode number: 1739.00
+CRITICAL:root:Episode number: 1740.00
+CRITICAL:root:Running reward = 2.81 at episode 1740. Loss = 0.52. Epsilon = 0.42.
+CRITICAL:root:Episode number: 1741.00
+CRITICAL:root:Episode number: 1742.00
+CRITICAL:root:Episode number: 1743.00
+CRITICAL:root:Episode number: 1744.00
+CRITICAL:root:Episode number: 1745.00
+CRITICAL:root:Running reward = 2.80 at episode 1745. Loss = 0.70. Epsilon = 0.41.
+CRITICAL:root:Episode number: 1746.00
+CRITICAL:root:Episode number: 1747.00
+CRITICAL:root:Episode number: 1748.00
+CRITICAL:root:Episode number: 1749.00
+CRITICAL:root:Episode number: 1750.00
+CRITICAL:root:Running reward = 2.80 at episode 1750. Loss = 0.30. Epsilon = 0.41.
+CRITICAL:root:Episode number: 1751.00
+CRITICAL:root:Episode number: 1752.00
+CRITICAL:root:Episode number: 1753.00
+CRITICAL:root:Episode number: 1754.00
+CRITICAL:root:Episode number: 1755.00
+CRITICAL:root:Running reward = 2.80 at episode 1755. Loss = 0.47. Epsilon = 0.41.
+CRITICAL:root:Episode number: 1756.00
+CRITICAL:root:Episode number: 1757.00
+CRITICAL:root:Episode number: 1758.00
+CRITICAL:root:Episode number: 1759.00
+CRITICAL:root:Episode number: 1760.00
+CRITICAL:root:Running reward = 2.81 at episode 1760. Loss = 0.51. Epsilon = 0.41.
+CRITICAL:root:Episode number: 1761.00
+CRITICAL:root:Episode number: 1762.00
+CRITICAL:root:Episode number: 1763.00
+CRITICAL:root:Episode number: 1764.00
+CRITICAL:root:Episode number: 1765.00
+CRITICAL:root:Running reward = 2.81 at episode 1765. Loss = 0.43. Epsilon = 0.41.
+CRITICAL:root:Episode number: 1766.00
+CRITICAL:root:Episode number: 1767.00
+CRITICAL:root:Episode number: 1768.00
+CRITICAL:root:Episode number: 1769.00
+CRITICAL:root:Episode number: 1770.00
+CRITICAL:root:Running reward = 2.81 at episode 1770. Loss = 0.74. Epsilon = 0.41.
+CRITICAL:root:Episode number: 1771.00
+CRITICAL:root:Episode number: 1772.00
+CRITICAL:root:Episode number: 1773.00
+CRITICAL:root:Episode number: 1774.00
+CRITICAL:root:Episode number: 1775.00
+CRITICAL:root:Running reward = 2.81 at episode 1775. Loss = 0.46. Epsilon = 0.41.
+CRITICAL:root:Episode number: 1776.00
+CRITICAL:root:Episode number: 1777.00
+CRITICAL:root:Episode number: 1778.00
+CRITICAL:root:Episode number: 1779.00
+CRITICAL:root:Episode number: 1780.00
+CRITICAL:root:Running reward = 2.82 at episode 1780. Loss = 0.40. Epsilon = 0.41.
+CRITICAL:root:Episode number: 1781.00
+CRITICAL:root:Episode number: 1782.00
+CRITICAL:root:Episode number: 1783.00
+CRITICAL:root:Episode number: 1784.00
+CRITICAL:root:Episode number: 1785.00
+CRITICAL:root:Running reward = 2.82 at episode 1785. Loss = 0.95. Epsilon = 0.41.
+CRITICAL:root:Episode number: 1786.00
+CRITICAL:root:Episode number: 1787.00
+CRITICAL:root:Episode number: 1788.00
+CRITICAL:root:Episode number: 1789.00
+CRITICAL:root:Episode number: 1790.00
+CRITICAL:root:Running reward = 2.82 at episode 1790. Loss = 0.37. Epsilon = 0.40.
+CRITICAL:root:Episode number: 1791.00
+CRITICAL:root:Episode number: 1792.00
+CRITICAL:root:Episode number: 1793.00
+CRITICAL:root:Episode number: 1794.00
+CRITICAL:root:Episode number: 1795.00
+CRITICAL:root:Running reward = 2.82 at episode 1795. Loss = 0.35. Epsilon = 0.40.
+CRITICAL:root:Episode number: 1796.00
+CRITICAL:root:Episode number: 1797.00
+CRITICAL:root:Episode number: 1798.00
+CRITICAL:root:Episode number: 1799.00
+CRITICAL:root:Episode number: 1800.00
+CRITICAL:root:Running reward = 2.82 at episode 1800. Loss = 0.47. Epsilon = 0.40.
+CRITICAL:root:Episode number: 1801.00
+CRITICAL:root:Episode number: 1802.00
+CRITICAL:root:Episode number: 1803.00
+CRITICAL:root:Episode number: 1804.00
+CRITICAL:root:Episode number: 1805.00
+CRITICAL:root:Running reward = 2.82 at episode 1805. Loss = 0.52. Epsilon = 0.40.
+CRITICAL:root:Episode number: 1806.00
+CRITICAL:root:Episode number: 1807.00
+CRITICAL:root:Episode number: 1808.00
+CRITICAL:root:Episode number: 1809.00
+CRITICAL:root:Episode number: 1810.00
+CRITICAL:root:Running reward = 2.82 at episode 1810. Loss = 0.34. Epsilon = 0.40.
+CRITICAL:root:Episode number: 1811.00
+CRITICAL:root:Episode number: 1812.00
+CRITICAL:root:Episode number: 1813.00
+CRITICAL:root:Episode number: 1814.00
+CRITICAL:root:Episode number: 1815.00
+CRITICAL:root:Running reward = 2.82 at episode 1815. Loss = 0.51. Epsilon = 0.40.
+CRITICAL:root:Episode number: 1816.00
+CRITICAL:root:Episode number: 1817.00
+CRITICAL:root:Episode number: 1818.00
+CRITICAL:root:Episode number: 1819.00
+CRITICAL:root:Episode number: 1820.00
+CRITICAL:root:Running reward = 2.82 at episode 1820. Loss = 0.46. Epsilon = 0.40.
+CRITICAL:root:Episode number: 1821.00
+CRITICAL:root:Episode number: 1822.00
+CRITICAL:root:Episode number: 1823.00
+CRITICAL:root:Episode number: 1824.00
+CRITICAL:root:Episode number: 1825.00
+CRITICAL:root:Running reward = 2.82 at episode 1825. Loss = 0.72. Epsilon = 0.40.
+CRITICAL:root:Episode number: 1826.00
+CRITICAL:root:Episode number: 1827.00
+CRITICAL:root:Episode number: 1828.00
+CRITICAL:root:Episode number: 1829.00
+CRITICAL:root:Episode number: 1830.00
+CRITICAL:root:Running reward = 2.82 at episode 1830. Loss = 0.36. Epsilon = 0.40.
+CRITICAL:root:Episode number: 1831.00
+CRITICAL:root:Episode number: 1832.00
+CRITICAL:root:Episode number: 1833.00
+CRITICAL:root:Episode number: 1834.00
+CRITICAL:root:Episode number: 1835.00
+CRITICAL:root:Running reward = 2.82 at episode 1835. Loss = 0.33. Epsilon = 0.40.
+CRITICAL:root:Episode number: 1836.00
+CRITICAL:root:Episode number: 1837.00
+CRITICAL:root:Episode number: 1838.00
+CRITICAL:root:Episode number: 1839.00
+CRITICAL:root:Episode number: 1840.00
+CRITICAL:root:Running reward = 2.82 at episode 1840. Loss = 0.48. Epsilon = 0.39.
+CRITICAL:root:Episode number: 1841.00
+CRITICAL:root:Episode number: 1842.00
+CRITICAL:root:Episode number: 1843.00
+CRITICAL:root:Episode number: 1844.00
+CRITICAL:root:Episode number: 1845.00
+CRITICAL:root:Running reward = 2.82 at episode 1845. Loss = 0.54. Epsilon = 0.39.
+CRITICAL:root:Episode number: 1846.00
+CRITICAL:root:Episode number: 1847.00
+CRITICAL:root:Episode number: 1848.00
+CRITICAL:root:Episode number: 1849.00
+CRITICAL:root:Episode number: 1850.00
+CRITICAL:root:Running reward = 2.81 at episode 1850. Loss = 0.35. Epsilon = 0.39.
+CRITICAL:root:Episode number: 1851.00
+CRITICAL:root:Episode number: 1852.00
+CRITICAL:root:Episode number: 1853.00
+CRITICAL:root:Episode number: 1854.00
+CRITICAL:root:Episode number: 1855.00
+CRITICAL:root:Running reward = 2.81 at episode 1855. Loss = 0.36. Epsilon = 0.39.
+CRITICAL:root:Episode number: 1856.00
+CRITICAL:root:Episode number: 1857.00
+CRITICAL:root:Episode number: 1858.00
+CRITICAL:root:Episode number: 1859.00
+CRITICAL:root:Episode number: 1860.00
+CRITICAL:root:Running reward = 2.82 at episode 1860. Loss = 0.34. Epsilon = 0.39.
+CRITICAL:root:Episode number: 1861.00
+CRITICAL:root:Episode number: 1862.00
+CRITICAL:root:Episode number: 1863.00
+CRITICAL:root:Episode number: 1864.00
+CRITICAL:root:Episode number: 1865.00
+CRITICAL:root:Running reward = 2.82 at episode 1865. Loss = 0.68. Epsilon = 0.39.
+CRITICAL:root:Episode number: 1866.00
+CRITICAL:root:Episode number: 1867.00
+CRITICAL:root:Episode number: 1868.00
+CRITICAL:root:Episode number: 1869.00
+CRITICAL:root:Episode number: 1870.00
+CRITICAL:root:Running reward = 2.82 at episode 1870. Loss = 0.57. Epsilon = 0.39.
+CRITICAL:root:Episode number: 1871.00
+CRITICAL:root:Episode number: 1872.00
+CRITICAL:root:Episode number: 1873.00
+CRITICAL:root:Episode number: 1874.00
+CRITICAL:root:Episode number: 1875.00
+CRITICAL:root:Running reward = 2.83 at episode 1875. Loss = 0.34. Epsilon = 0.39.
+CRITICAL:root:Episode number: 1876.00
+CRITICAL:root:Episode number: 1877.00
+CRITICAL:root:Episode number: 1878.00
+CRITICAL:root:Episode number: 1879.00
+CRITICAL:root:Episode number: 1880.00
+CRITICAL:root:Running reward = 2.82 at episode 1880. Loss = 0.35. Epsilon = 0.39.
+CRITICAL:root:Episode number: 1881.00
+CRITICAL:root:Episode number: 1882.00
+CRITICAL:root:Episode number: 1883.00
+CRITICAL:root:Episode number: 1884.00
+CRITICAL:root:Episode number: 1885.00
+CRITICAL:root:Running reward = 2.83 at episode 1885. Loss = 0.34. Epsilon = 0.39.
+CRITICAL:root:Episode number: 1886.00
+CRITICAL:root:Episode number: 1887.00
+CRITICAL:root:Episode number: 1888.00
+CRITICAL:root:Episode number: 1889.00
+CRITICAL:root:Episode number: 1890.00
+CRITICAL:root:Running reward = 2.83 at episode 1890. Loss = 0.41. Epsilon = 0.38.
+CRITICAL:root:Episode number: 1891.00
+CRITICAL:root:Episode number: 1892.00
+CRITICAL:root:Episode number: 1893.00
+CRITICAL:root:Episode number: 1894.00
+CRITICAL:root:Episode number: 1895.00
+CRITICAL:root:Running reward = 2.82 at episode 1895. Loss = 0.48. Epsilon = 0.38.
+CRITICAL:root:Episode number: 1896.00
+CRITICAL:root:Episode number: 1897.00
+CRITICAL:root:Episode number: 1898.00
+CRITICAL:root:Episode number: 1899.00
+CRITICAL:root:Episode number: 1900.00
+CRITICAL:root:Running reward = 2.83 at episode 1900. Loss = 0.38. Epsilon = 0.38.
+CRITICAL:root:Episode number: 1901.00
+CRITICAL:root:Episode number: 1902.00
+CRITICAL:root:Episode number: 1903.00
+CRITICAL:root:Episode number: 1904.00
+CRITICAL:root:Episode number: 1905.00
+CRITICAL:root:Running reward = 2.82 at episode 1905. Loss = 0.53. Epsilon = 0.38.
+CRITICAL:root:Episode number: 1906.00
+CRITICAL:root:Episode number: 1907.00
+CRITICAL:root:Episode number: 1908.00
+CRITICAL:root:Episode number: 1909.00
+CRITICAL:root:Episode number: 1910.00
+CRITICAL:root:Running reward = 2.82 at episode 1910. Loss = 1.41. Epsilon = 0.38.
+CRITICAL:root:Episode number: 1911.00
+CRITICAL:root:Episode number: 1912.00
+CRITICAL:root:Episode number: 1913.00
+CRITICAL:root:Episode number: 1914.00
+CRITICAL:root:Episode number: 1915.00
+CRITICAL:root:Running reward = 2.82 at episode 1915. Loss = 0.43. Epsilon = 0.38.
+CRITICAL:root:Episode number: 1916.00
+CRITICAL:root:Episode number: 1917.00
+CRITICAL:root:Episode number: 1918.00
+CRITICAL:root:Episode number: 1919.00
+CRITICAL:root:Episode number: 1920.00
+CRITICAL:root:Running reward = 2.82 at episode 1920. Loss = 0.39. Epsilon = 0.38.
+CRITICAL:root:Episode number: 1921.00
+CRITICAL:root:Episode number: 1922.00
+CRITICAL:root:Episode number: 1923.00
+CRITICAL:root:Episode number: 1924.00
+CRITICAL:root:Episode number: 1925.00
+CRITICAL:root:Running reward = 2.82 at episode 1925. Loss = 0.47. Epsilon = 0.38.
+CRITICAL:root:Episode number: 1926.00
+CRITICAL:root:Episode number: 1927.00
+CRITICAL:root:Episode number: 1928.00
+CRITICAL:root:Episode number: 1929.00
+CRITICAL:root:Episode number: 1930.00
+CRITICAL:root:Running reward = 2.82 at episode 1930. Loss = 0.45. Epsilon = 0.38.
+CRITICAL:root:Episode number: 1931.00
+CRITICAL:root:Episode number: 1932.00
+CRITICAL:root:Episode number: 1933.00
+CRITICAL:root:Episode number: 1934.00
+CRITICAL:root:Episode number: 1935.00
+CRITICAL:root:Running reward = 2.82 at episode 1935. Loss = 0.34. Epsilon = 0.38.
+CRITICAL:root:Episode number: 1936.00
+CRITICAL:root:Episode number: 1937.00
+CRITICAL:root:Episode number: 1938.00
+CRITICAL:root:Episode number: 1939.00
+CRITICAL:root:Episode number: 1940.00
+CRITICAL:root:Running reward = 2.82 at episode 1940. Loss = 0.44. Epsilon = 0.38.
+CRITICAL:root:Episode number: 1941.00
+CRITICAL:root:Episode number: 1942.00
+CRITICAL:root:Episode number: 1943.00
+CRITICAL:root:Episode number: 1944.00
+CRITICAL:root:Episode number: 1945.00
+CRITICAL:root:Running reward = 2.82 at episode 1945. Loss = 0.50. Epsilon = 0.37.
+CRITICAL:root:Episode number: 1946.00
+CRITICAL:root:Episode number: 1947.00
+CRITICAL:root:Episode number: 1948.00
+CRITICAL:root:Episode number: 1949.00
+CRITICAL:root:Episode number: 1950.00
+CRITICAL:root:Running reward = 2.82 at episode 1950. Loss = 0.38. Epsilon = 0.37.
+CRITICAL:root:Episode number: 1951.00
+CRITICAL:root:Episode number: 1952.00
+CRITICAL:root:Episode number: 1953.00
+CRITICAL:root:Episode number: 1954.00
+CRITICAL:root:Episode number: 1955.00
+CRITICAL:root:Running reward = 2.83 at episode 1955. Loss = 0.41. Epsilon = 0.37.
+CRITICAL:root:Episode number: 1956.00
+CRITICAL:root:Episode number: 1957.00
+CRITICAL:root:Episode number: 1958.00
+CRITICAL:root:Episode number: 1959.00
+CRITICAL:root:Episode number: 1960.00
+CRITICAL:root:Running reward = 2.83 at episode 1960. Loss = 0.32. Epsilon = 0.37.
+CRITICAL:root:Episode number: 1961.00
+CRITICAL:root:Episode number: 1962.00
+CRITICAL:root:Episode number: 1963.00
+CRITICAL:root:Episode number: 1964.00
+CRITICAL:root:Episode number: 1965.00
+CRITICAL:root:Running reward = 2.83 at episode 1965. Loss = 0.37. Epsilon = 0.37.
+CRITICAL:root:Episode number: 1966.00
+CRITICAL:root:Episode number: 1967.00
+CRITICAL:root:Episode number: 1968.00
+CRITICAL:root:Episode number: 1969.00
+CRITICAL:root:Episode number: 1970.00
+CRITICAL:root:Running reward = 2.84 at episode 1970. Loss = 0.53. Epsilon = 0.37.
+CRITICAL:root:Episode number: 1971.00
+CRITICAL:root:Episode number: 1972.00
+CRITICAL:root:Episode number: 1973.00
+CRITICAL:root:Episode number: 1974.00
+CRITICAL:root:Episode number: 1975.00
+CRITICAL:root:Running reward = 2.83 at episode 1975. Loss = 0.53. Epsilon = 0.37.
+CRITICAL:root:Episode number: 1976.00
+CRITICAL:root:Episode number: 1977.00
+CRITICAL:root:Episode number: 1978.00
+CRITICAL:root:Episode number: 1979.00
+CRITICAL:root:Episode number: 1980.00
+CRITICAL:root:Running reward = 2.83 at episode 1980. Loss = 0.49. Epsilon = 0.37.
+CRITICAL:root:Episode number: 1981.00
+CRITICAL:root:Episode number: 1982.00
+CRITICAL:root:Episode number: 1983.00
+CRITICAL:root:Episode number: 1984.00
+CRITICAL:root:Episode number: 1985.00
+CRITICAL:root:Running reward = 2.83 at episode 1985. Loss = 0.69. Epsilon = 0.37.
+CRITICAL:root:Episode number: 1986.00
+CRITICAL:root:Episode number: 1987.00
+CRITICAL:root:Episode number: 1988.00
+CRITICAL:root:Episode number: 1989.00
+CRITICAL:root:Episode number: 1990.00
+CRITICAL:root:Running reward = 2.83 at episode 1990. Loss = 0.42. Epsilon = 0.37.
+CRITICAL:root:Episode number: 1991.00
+CRITICAL:root:Episode number: 1992.00
+CRITICAL:root:Episode number: 1993.00
+CRITICAL:root:Episode number: 1994.00
+CRITICAL:root:Episode number: 1995.00
+CRITICAL:root:Running reward = 2.83 at episode 1995. Loss = 0.44. Epsilon = 0.36.
+CRITICAL:root:Episode number: 1996.00
+CRITICAL:root:Episode number: 1997.00
+CRITICAL:root:Episode number: 1998.00
+CRITICAL:root:Episode number: 1999.00
+CRITICAL:root:Episode number: 2000.00
+CRITICAL:root:Running reward = 2.83 at episode 2000. Loss = 0.43. Epsilon = 0.36.
+CRITICAL:root:Episode number: 2001.00
+CRITICAL:root:Episode number: 2002.00
+CRITICAL:root:Episode number: 2003.00
+CRITICAL:root:Episode number: 2004.00
+CRITICAL:root:Episode number: 2005.00
+CRITICAL:root:Running reward = 2.83 at episode 2005. Loss = 0.47. Epsilon = 0.36.
+CRITICAL:root:Episode number: 2006.00
+CRITICAL:root:Episode number: 2007.00
+CRITICAL:root:Episode number: 2008.00
+CRITICAL:root:Episode number: 2009.00
+CRITICAL:root:Episode number: 2010.00
+CRITICAL:root:Running reward = 2.83 at episode 2010. Loss = 0.35. Epsilon = 0.36.
+CRITICAL:root:Episode number: 2011.00
+CRITICAL:root:Episode number: 2012.00
+CRITICAL:root:Episode number: 2013.00
+CRITICAL:root:Episode number: 2014.00
+CRITICAL:root:Episode number: 2015.00
+CRITICAL:root:Running reward = 2.83 at episode 2015. Loss = 0.40. Epsilon = 0.36.
+CRITICAL:root:Episode number: 2016.00
+CRITICAL:root:Episode number: 2017.00
+CRITICAL:root:Episode number: 2018.00
+CRITICAL:root:Episode number: 2019.00
+CRITICAL:root:Episode number: 2020.00
+CRITICAL:root:Running reward = 2.84 at episode 2020. Loss = 0.42. Epsilon = 0.36.
+CRITICAL:root:Episode number: 2021.00
+CRITICAL:root:Episode number: 2022.00
+CRITICAL:root:Episode number: 2023.00
+CRITICAL:root:Episode number: 2024.00
+CRITICAL:root:Episode number: 2025.00
+CRITICAL:root:Running reward = 2.84 at episode 2025. Loss = 0.35. Epsilon = 0.36.
+CRITICAL:root:Episode number: 2026.00
+CRITICAL:root:Episode number: 2027.00
+CRITICAL:root:Episode number: 2028.00
+CRITICAL:root:Episode number: 2029.00
+CRITICAL:root:Episode number: 2030.00
+CRITICAL:root:Running reward = 2.84 at episode 2030. Loss = 0.33. Epsilon = 0.36.
+CRITICAL:root:Episode number: 2031.00
+CRITICAL:root:Episode number: 2032.00
+CRITICAL:root:Episode number: 2033.00
+CRITICAL:root:Episode number: 2034.00
+CRITICAL:root:Episode number: 2035.00
+CRITICAL:root:Running reward = 2.83 at episode 2035. Loss = 0.51. Epsilon = 0.36.
+CRITICAL:root:Episode number: 2036.00
+CRITICAL:root:Episode number: 2037.00
+CRITICAL:root:Episode number: 2038.00
+CRITICAL:root:Episode number: 2039.00
+CRITICAL:root:Episode number: 2040.00
+CRITICAL:root:Running reward = 2.84 at episode 2040. Loss = 0.54. Epsilon = 0.36.
+CRITICAL:root:Episode number: 2041.00
+CRITICAL:root:Episode number: 2042.00
+CRITICAL:root:Episode number: 2043.00
+CRITICAL:root:Episode number: 2044.00
+CRITICAL:root:Episode number: 2045.00
+CRITICAL:root:Running reward = 2.83 at episode 2045. Loss = 0.45. Epsilon = 0.36.
+CRITICAL:root:Episode number: 2046.00
+CRITICAL:root:Episode number: 2047.00
+CRITICAL:root:Episode number: 2048.00
+CRITICAL:root:Episode number: 2049.00
+CRITICAL:root:Episode number: 2050.00
+CRITICAL:root:Running reward = 2.83 at episode 2050. Loss = 0.34. Epsilon = 0.35.
+CRITICAL:root:Episode number: 2051.00
+CRITICAL:root:Episode number: 2052.00
+CRITICAL:root:Episode number: 2053.00
+CRITICAL:root:Episode number: 2054.00
+CRITICAL:root:Episode number: 2055.00
+CRITICAL:root:Running reward = 2.82 at episode 2055. Loss = 0.49. Epsilon = 0.35.
+CRITICAL:root:Episode number: 2056.00
+CRITICAL:root:Episode number: 2057.00
+CRITICAL:root:Episode number: 2058.00
+CRITICAL:root:Episode number: 2059.00
+CRITICAL:root:Episode number: 2060.00
+CRITICAL:root:Running reward = 2.82 at episode 2060. Loss = 0.47. Epsilon = 0.35.
+CRITICAL:root:Episode number: 2061.00
+CRITICAL:root:Episode number: 2062.00
+CRITICAL:root:Episode number: 2063.00
+CRITICAL:root:Episode number: 2064.00
+CRITICAL:root:Episode number: 2065.00
+CRITICAL:root:Running reward = 2.82 at episode 2065. Loss = 0.38. Epsilon = 0.35.
+CRITICAL:root:Episode number: 2066.00
+CRITICAL:root:Episode number: 2067.00
+CRITICAL:root:Episode number: 2068.00
+CRITICAL:root:Episode number: 2069.00
+CRITICAL:root:Episode number: 2070.00
+CRITICAL:root:Running reward = 2.83 at episode 2070. Loss = 0.49. Epsilon = 0.35.
+CRITICAL:root:Episode number: 2071.00
+CRITICAL:root:Episode number: 2072.00
+CRITICAL:root:Episode number: 2073.00
+CRITICAL:root:Episode number: 2074.00
+CRITICAL:root:Episode number: 2075.00
+CRITICAL:root:Running reward = 2.83 at episode 2075. Loss = 0.45. Epsilon = 0.35.
+CRITICAL:root:Episode number: 2076.00
+CRITICAL:root:Episode number: 2077.00
+CRITICAL:root:Episode number: 2078.00
+CRITICAL:root:Episode number: 2079.00
+CRITICAL:root:Episode number: 2080.00
+CRITICAL:root:Running reward = 2.83 at episode 2080. Loss = 0.42. Epsilon = 0.35.
+CRITICAL:root:Episode number: 2081.00
+CRITICAL:root:Episode number: 2082.00
+CRITICAL:root:Episode number: 2083.00
+CRITICAL:root:Episode number: 2084.00
+CRITICAL:root:Episode number: 2085.00
+CRITICAL:root:Running reward = 2.83 at episode 2085. Loss = 0.31. Epsilon = 0.35.
+CRITICAL:root:Episode number: 2086.00
+CRITICAL:root:Episode number: 2087.00
+CRITICAL:root:Episode number: 2088.00
+CRITICAL:root:Episode number: 2089.00
+CRITICAL:root:Episode number: 2090.00
+CRITICAL:root:Running reward = 2.83 at episode 2090. Loss = 0.56. Epsilon = 0.35.
+CRITICAL:root:Episode number: 2091.00
+CRITICAL:root:Episode number: 2092.00
+CRITICAL:root:Episode number: 2093.00
+CRITICAL:root:Episode number: 2094.00
+CRITICAL:root:Episode number: 2095.00
+CRITICAL:root:Running reward = 2.83 at episode 2095. Loss = 0.37. Epsilon = 0.35.
+CRITICAL:root:Episode number: 2096.00
+CRITICAL:root:Episode number: 2097.00
+CRITICAL:root:Episode number: 2098.00
+CRITICAL:root:Episode number: 2099.00
+CRITICAL:root:Episode number: 2100.00
+CRITICAL:root:Running reward = 2.83 at episode 2100. Loss = 0.36. Epsilon = 0.35.
+CRITICAL:root:Episode number: 2101.00
+CRITICAL:root:Episode number: 2102.00
+CRITICAL:root:Episode number: 2103.00
+CRITICAL:root:Episode number: 2104.00
+CRITICAL:root:Episode number: 2105.00
+CRITICAL:root:Running reward = 2.83 at episode 2105. Loss = 0.40. Epsilon = 0.35.
+CRITICAL:root:Episode number: 2106.00
+CRITICAL:root:Episode number: 2107.00
+CRITICAL:root:Episode number: 2108.00
+CRITICAL:root:Episode number: 2109.00
+CRITICAL:root:Episode number: 2110.00
+CRITICAL:root:Running reward = 2.83 at episode 2110. Loss = 0.45. Epsilon = 0.34.
+CRITICAL:root:Episode number: 2111.00
+CRITICAL:root:Episode number: 2112.00
+CRITICAL:root:Episode number: 2113.00
+CRITICAL:root:Episode number: 2114.00
+CRITICAL:root:Episode number: 2115.00
+CRITICAL:root:Running reward = 2.83 at episode 2115. Loss = 0.43. Epsilon = 0.34.
+CRITICAL:root:Episode number: 2116.00
+CRITICAL:root:Episode number: 2117.00
+CRITICAL:root:Episode number: 2118.00
+CRITICAL:root:Episode number: 2119.00
+CRITICAL:root:Episode number: 2120.00
+CRITICAL:root:Running reward = 2.84 at episode 2120. Loss = 0.66. Epsilon = 0.34.
+CRITICAL:root:Episode number: 2121.00
+CRITICAL:root:Episode number: 2122.00
+CRITICAL:root:Episode number: 2123.00
+CRITICAL:root:Episode number: 2124.00
+CRITICAL:root:Episode number: 2125.00
+CRITICAL:root:Running reward = 2.84 at episode 2125. Loss = 0.53. Epsilon = 0.34.
+CRITICAL:root:Episode number: 2126.00
+CRITICAL:root:Episode number: 2127.00
+CRITICAL:root:Episode number: 2128.00
+CRITICAL:root:Episode number: 2129.00
+CRITICAL:root:Episode number: 2130.00
+CRITICAL:root:Running reward = 2.83 at episode 2130. Loss = 0.40. Epsilon = 0.34.
+CRITICAL:root:Episode number: 2131.00
+CRITICAL:root:Episode number: 2132.00
+CRITICAL:root:Episode number: 2133.00
+CRITICAL:root:Episode number: 2134.00
+CRITICAL:root:Episode number: 2135.00
+CRITICAL:root:Running reward = 2.84 at episode 2135. Loss = 0.45. Epsilon = 0.34.
+CRITICAL:root:Episode number: 2136.00
+CRITICAL:root:Episode number: 2137.00
+CRITICAL:root:Episode number: 2138.00
+CRITICAL:root:Episode number: 2139.00
+CRITICAL:root:Episode number: 2140.00
+CRITICAL:root:Running reward = 2.83 at episode 2140. Loss = 0.42. Epsilon = 0.34.
+CRITICAL:root:Episode number: 2141.00
+CRITICAL:root:Episode number: 2142.00
+CRITICAL:root:Episode number: 2143.00
+CRITICAL:root:Episode number: 2144.00
+CRITICAL:root:Episode number: 2145.00
+CRITICAL:root:Running reward = 2.83 at episode 2145. Loss = 0.42. Epsilon = 0.34.
+CRITICAL:root:Episode number: 2146.00
+CRITICAL:root:Episode number: 2147.00
+CRITICAL:root:Episode number: 2148.00
+CRITICAL:root:Episode number: 2149.00
+CRITICAL:root:Episode number: 2150.00
+CRITICAL:root:Running reward = 2.83 at episode 2150. Loss = 0.37. Epsilon = 0.34.
+CRITICAL:root:Episode number: 2151.00
+CRITICAL:root:Episode number: 2152.00
+CRITICAL:root:Episode number: 2153.00
+CRITICAL:root:Episode number: 2154.00
+CRITICAL:root:Episode number: 2155.00
+CRITICAL:root:Running reward = 2.83 at episode 2155. Loss = 0.51. Epsilon = 0.34.
+CRITICAL:root:Episode number: 2156.00
+CRITICAL:root:Episode number: 2157.00
+CRITICAL:root:Episode number: 2158.00
+CRITICAL:root:Episode number: 2159.00
+CRITICAL:root:Episode number: 2160.00
+CRITICAL:root:Running reward = 2.83 at episode 2160. Loss = 0.55. Epsilon = 0.34.
+CRITICAL:root:Episode number: 2161.00
+CRITICAL:root:Episode number: 2162.00
+CRITICAL:root:Episode number: 2163.00
+CRITICAL:root:Episode number: 2164.00
+CRITICAL:root:Episode number: 2165.00
+CRITICAL:root:Running reward = 2.83 at episode 2165. Loss = 0.67. Epsilon = 0.33.
+CRITICAL:root:Episode number: 2166.00
+CRITICAL:root:Episode number: 2167.00
+CRITICAL:root:Episode number: 2168.00
+CRITICAL:root:Episode number: 2169.00
+CRITICAL:root:Episode number: 2170.00
+CRITICAL:root:Running reward = 2.84 at episode 2170. Loss = 0.74. Epsilon = 0.33.
+CRITICAL:root:Episode number: 2171.00
+CRITICAL:root:Episode number: 2172.00
+CRITICAL:root:Episode number: 2173.00
+CRITICAL:root:Episode number: 2174.00
+CRITICAL:root:Episode number: 2175.00
+CRITICAL:root:Running reward = 2.84 at episode 2175. Loss = 0.55. Epsilon = 0.33.
+CRITICAL:root:Episode number: 2176.00
+CRITICAL:root:Episode number: 2177.00
+CRITICAL:root:Episode number: 2178.00
+CRITICAL:root:Episode number: 2179.00
+CRITICAL:root:Episode number: 2180.00
+CRITICAL:root:Running reward = 2.84 at episode 2180. Loss = 0.50. Epsilon = 0.33.
+CRITICAL:root:Episode number: 2181.00
+CRITICAL:root:Episode number: 2182.00
+CRITICAL:root:Episode number: 2183.00
+CRITICAL:root:Episode number: 2184.00
+CRITICAL:root:Episode number: 2185.00
+CRITICAL:root:Running reward = 2.84 at episode 2185. Loss = 0.47. Epsilon = 0.33.
+CRITICAL:root:Episode number: 2186.00
+CRITICAL:root:Episode number: 2187.00
+CRITICAL:root:Episode number: 2188.00
+CRITICAL:root:Episode number: 2189.00
+CRITICAL:root:Episode number: 2190.00
+CRITICAL:root:Running reward = 2.84 at episode 2190. Loss = 0.37. Epsilon = 0.33.
+CRITICAL:root:Episode number: 2191.00
+CRITICAL:root:Episode number: 2192.00
+CRITICAL:root:Episode number: 2193.00
+CRITICAL:root:Episode number: 2194.00
+CRITICAL:root:Episode number: 2195.00
+CRITICAL:root:Running reward = 2.85 at episode 2195. Loss = 0.40. Epsilon = 0.33.
+CRITICAL:root:Episode number: 2196.00
+CRITICAL:root:Episode number: 2197.00
+CRITICAL:root:Episode number: 2198.00
+CRITICAL:root:Episode number: 2199.00
+CRITICAL:root:Episode number: 2200.00
+CRITICAL:root:Running reward = 2.85 at episode 2200. Loss = 0.29. Epsilon = 0.33.
+CRITICAL:root:Episode number: 2201.00
+CRITICAL:root:Episode number: 2202.00
+CRITICAL:root:Episode number: 2203.00
+CRITICAL:root:Episode number: 2204.00
+CRITICAL:root:Episode number: 2205.00
+CRITICAL:root:Running reward = 2.85 at episode 2205. Loss = 0.39. Epsilon = 0.33.
+CRITICAL:root:Episode number: 2206.00
+CRITICAL:root:Episode number: 2207.00
+CRITICAL:root:Episode number: 2208.00
+CRITICAL:root:Episode number: 2209.00
+CRITICAL:root:Episode number: 2210.00
+CRITICAL:root:Running reward = 2.85 at episode 2210. Loss = 0.44. Epsilon = 0.33.
+CRITICAL:root:Episode number: 2211.00
+CRITICAL:root:Episode number: 2212.00
+CRITICAL:root:Episode number: 2213.00
+CRITICAL:root:Episode number: 2214.00
+CRITICAL:root:Episode number: 2215.00
+CRITICAL:root:Running reward = 2.85 at episode 2215. Loss = 0.60. Epsilon = 0.33.
+CRITICAL:root:Episode number: 2216.00
+CRITICAL:root:Episode number: 2217.00
+CRITICAL:root:Episode number: 2218.00
+CRITICAL:root:Episode number: 2219.00
+CRITICAL:root:Episode number: 2220.00
+CRITICAL:root:Running reward = 2.85 at episode 2220. Loss = 0.49. Epsilon = 0.33.
+CRITICAL:root:Episode number: 2221.00
+CRITICAL:root:Episode number: 2222.00
+CRITICAL:root:Episode number: 2223.00
+CRITICAL:root:Episode number: 2224.00
+CRITICAL:root:Episode number: 2225.00
+CRITICAL:root:Running reward = 2.85 at episode 2225. Loss = 0.39. Epsilon = 0.32.
+CRITICAL:root:Episode number: 2226.00
+CRITICAL:root:Episode number: 2227.00
+CRITICAL:root:Episode number: 2228.00
+CRITICAL:root:Episode number: 2229.00
+CRITICAL:root:Episode number: 2230.00
+CRITICAL:root:Running reward = 2.84 at episode 2230. Loss = 0.53. Epsilon = 0.32.
+CRITICAL:root:Episode number: 2231.00
+CRITICAL:root:Episode number: 2232.00
+CRITICAL:root:Episode number: 2233.00
+CRITICAL:root:Episode number: 2234.00
+CRITICAL:root:Episode number: 2235.00
+CRITICAL:root:Running reward = 2.85 at episode 2235. Loss = 0.41. Epsilon = 0.32.
+CRITICAL:root:Episode number: 2236.00
+CRITICAL:root:Episode number: 2237.00
+CRITICAL:root:Episode number: 2238.00
+CRITICAL:root:Episode number: 2239.00
+CRITICAL:root:Episode number: 2240.00
+CRITICAL:root:Running reward = 2.84 at episode 2240. Loss = 0.42. Epsilon = 0.32.
+CRITICAL:root:Episode number: 2241.00
+CRITICAL:root:Episode number: 2242.00
+CRITICAL:root:Episode number: 2243.00
+CRITICAL:root:Episode number: 2244.00
+CRITICAL:root:Episode number: 2245.00
+CRITICAL:root:Running reward = 2.84 at episode 2245. Loss = 0.62. Epsilon = 0.32.
+CRITICAL:root:Episode number: 2246.00
+CRITICAL:root:Episode number: 2247.00
+CRITICAL:root:Episode number: 2248.00
+CRITICAL:root:Episode number: 2249.00
+CRITICAL:root:Episode number: 2250.00
+CRITICAL:root:Running reward = 2.84 at episode 2250. Loss = 0.47. Epsilon = 0.32.
+CRITICAL:root:Episode number: 2251.00
+CRITICAL:root:Episode number: 2252.00
+CRITICAL:root:Episode number: 2253.00
+CRITICAL:root:Episode number: 2254.00
+CRITICAL:root:Episode number: 2255.00
+CRITICAL:root:Running reward = 2.84 at episode 2255. Loss = 0.50. Epsilon = 0.32.
+CRITICAL:root:Episode number: 2256.00
+CRITICAL:root:Episode number: 2257.00
+CRITICAL:root:Episode number: 2258.00
+CRITICAL:root:Episode number: 2259.00
+CRITICAL:root:Episode number: 2260.00
+CRITICAL:root:Running reward = 2.85 at episode 2260. Loss = 0.52. Epsilon = 0.32.
+CRITICAL:root:Episode number: 2261.00
+CRITICAL:root:Episode number: 2262.00
+CRITICAL:root:Episode number: 2263.00
+CRITICAL:root:Episode number: 2264.00
+CRITICAL:root:Episode number: 2265.00
+CRITICAL:root:Running reward = 2.85 at episode 2265. Loss = 0.30. Epsilon = 0.32.
+CRITICAL:root:Episode number: 2266.00
+CRITICAL:root:Episode number: 2267.00
+CRITICAL:root:Episode number: 2268.00
+CRITICAL:root:Episode number: 2269.00
+CRITICAL:root:Episode number: 2270.00
+CRITICAL:root:Running reward = 2.85 at episode 2270. Loss = 0.39. Epsilon = 0.32.
+CRITICAL:root:Episode number: 2271.00
+CRITICAL:root:Episode number: 2272.00
+CRITICAL:root:Episode number: 2273.00
+CRITICAL:root:Episode number: 2274.00
+CRITICAL:root:Episode number: 2275.00
+CRITICAL:root:Running reward = 2.84 at episode 2275. Loss = 0.48. Epsilon = 0.32.
+CRITICAL:root:Episode number: 2276.00
+CRITICAL:root:Episode number: 2277.00
+CRITICAL:root:Episode number: 2278.00
+CRITICAL:root:Episode number: 2279.00
+CRITICAL:root:Episode number: 2280.00
+CRITICAL:root:Running reward = 2.84 at episode 2280. Loss = 0.34. Epsilon = 0.32.
+CRITICAL:root:Episode number: 2281.00
+CRITICAL:root:Episode number: 2282.00
+CRITICAL:root:Episode number: 2283.00
+CRITICAL:root:Episode number: 2284.00
+CRITICAL:root:Episode number: 2285.00
+CRITICAL:root:Running reward = 2.85 at episode 2285. Loss = 0.63. Epsilon = 0.32.
+CRITICAL:root:Episode number: 2286.00
+CRITICAL:root:Episode number: 2287.00
+CRITICAL:root:Episode number: 2288.00
+CRITICAL:root:Episode number: 2289.00
+CRITICAL:root:Episode number: 2290.00
+CRITICAL:root:Running reward = 2.84 at episode 2290. Loss = 0.44. Epsilon = 0.31.
+CRITICAL:root:Episode number: 2291.00
+CRITICAL:root:Episode number: 2292.00
+CRITICAL:root:Episode number: 2293.00
+CRITICAL:root:Episode number: 2294.00
+CRITICAL:root:Episode number: 2295.00
+CRITICAL:root:Running reward = 2.84 at episode 2295. Loss = 0.57. Epsilon = 0.31.
+CRITICAL:root:Episode number: 2296.00
+CRITICAL:root:Episode number: 2297.00
+CRITICAL:root:Episode number: 2298.00
+CRITICAL:root:Episode number: 2299.00
+CRITICAL:root:Episode number: 2300.00
+CRITICAL:root:Running reward = 2.85 at episode 2300. Loss = 0.31. Epsilon = 0.31.
+CRITICAL:root:Episode number: 2301.00
+CRITICAL:root:Episode number: 2302.00
+CRITICAL:root:Episode number: 2303.00
+CRITICAL:root:Episode number: 2304.00
+CRITICAL:root:Episode number: 2305.00
+CRITICAL:root:Running reward = 2.84 at episode 2305. Loss = 0.44. Epsilon = 0.31.
+CRITICAL:root:Episode number: 2306.00
+CRITICAL:root:Episode number: 2307.00
+CRITICAL:root:Episode number: 2308.00
+CRITICAL:root:Episode number: 2309.00
+CRITICAL:root:Episode number: 2310.00
+CRITICAL:root:Running reward = 2.84 at episode 2310. Loss = 0.76. Epsilon = 0.31.
+CRITICAL:root:Episode number: 2311.00
+CRITICAL:root:Episode number: 2312.00
+CRITICAL:root:Episode number: 2313.00
+CRITICAL:root:Episode number: 2314.00
+CRITICAL:root:Episode number: 2315.00
+CRITICAL:root:Running reward = 2.85 at episode 2315. Loss = 0.83. Epsilon = 0.31.
+CRITICAL:root:Episode number: 2316.00
+CRITICAL:root:Episode number: 2317.00
+CRITICAL:root:Episode number: 2318.00
+CRITICAL:root:Episode number: 2319.00
+CRITICAL:root:Episode number: 2320.00
+CRITICAL:root:Running reward = 2.85 at episode 2320. Loss = 0.55. Epsilon = 0.31.
+CRITICAL:root:Episode number: 2321.00
+CRITICAL:root:Episode number: 2322.00
+CRITICAL:root:Episode number: 2323.00
+CRITICAL:root:Episode number: 2324.00
+CRITICAL:root:Episode number: 2325.00
+CRITICAL:root:Running reward = 2.85 at episode 2325. Loss = 0.60. Epsilon = 0.31.
+CRITICAL:root:Episode number: 2326.00
+CRITICAL:root:Episode number: 2327.00
+CRITICAL:root:Episode number: 2328.00
+CRITICAL:root:Episode number: 2329.00
+CRITICAL:root:Episode number: 2330.00
+CRITICAL:root:Running reward = 2.85 at episode 2330. Loss = 0.52. Epsilon = 0.31.
+CRITICAL:root:Episode number: 2331.00
+CRITICAL:root:Episode number: 2332.00
+CRITICAL:root:Episode number: 2333.00
+CRITICAL:root:Episode number: 2334.00
+CRITICAL:root:Episode number: 2335.00
+CRITICAL:root:Running reward = 2.85 at episode 2335. Loss = 0.46. Epsilon = 0.31.
+CRITICAL:root:Episode number: 2336.00
+CRITICAL:root:Episode number: 2337.00
+CRITICAL:root:Episode number: 2338.00
+CRITICAL:root:Episode number: 2339.00
+CRITICAL:root:Episode number: 2340.00
+CRITICAL:root:Running reward = 2.85 at episode 2340. Loss = 0.55. Epsilon = 0.31.
+CRITICAL:root:Episode number: 2341.00
+CRITICAL:root:Episode number: 2342.00
+CRITICAL:root:Episode number: 2343.00
+CRITICAL:root:Episode number: 2344.00
+CRITICAL:root:Episode number: 2345.00
+CRITICAL:root:Running reward = 2.86 at episode 2345. Loss = 0.32. Epsilon = 0.31.
+CRITICAL:root:Episode number: 2346.00
+CRITICAL:root:Episode number: 2347.00
+CRITICAL:root:Episode number: 2348.00
+CRITICAL:root:Episode number: 2349.00
+CRITICAL:root:Episode number: 2350.00
+CRITICAL:root:Running reward = 2.86 at episode 2350. Loss = 0.48. Epsilon = 0.30.
+CRITICAL:root:Episode number: 2351.00
+CRITICAL:root:Episode number: 2352.00
+CRITICAL:root:Episode number: 2353.00
+CRITICAL:root:Episode number: 2354.00
+CRITICAL:root:Episode number: 2355.00
+CRITICAL:root:Running reward = 2.85 at episode 2355. Loss = 0.44. Epsilon = 0.30.
+CRITICAL:root:Episode number: 2356.00
+CRITICAL:root:Episode number: 2357.00
+CRITICAL:root:Episode number: 2358.00
+CRITICAL:root:Episode number: 2359.00
+CRITICAL:root:Episode number: 2360.00
+CRITICAL:root:Running reward = 2.85 at episode 2360. Loss = 0.50. Epsilon = 0.30.
+CRITICAL:root:Episode number: 2361.00
+CRITICAL:root:Episode number: 2362.00
+CRITICAL:root:Episode number: 2363.00
+CRITICAL:root:Episode number: 2364.00
+CRITICAL:root:Episode number: 2365.00
+CRITICAL:root:Running reward = 2.86 at episode 2365. Loss = 0.59. Epsilon = 0.30.
+CRITICAL:root:Episode number: 2366.00
+CRITICAL:root:Episode number: 2367.00
+CRITICAL:root:Episode number: 2368.00
+CRITICAL:root:Episode number: 2369.00
+CRITICAL:root:Episode number: 2370.00
+CRITICAL:root:Running reward = 2.86 at episode 2370. Loss = 0.45. Epsilon = 0.30.
+CRITICAL:root:Episode number: 2371.00
+CRITICAL:root:Episode number: 2372.00
+CRITICAL:root:Episode number: 2373.00
+CRITICAL:root:Episode number: 2374.00
+CRITICAL:root:Episode number: 2375.00
+CRITICAL:root:Running reward = 2.85 at episode 2375. Loss = 0.42. Epsilon = 0.30.
+CRITICAL:root:Episode number: 2376.00
+CRITICAL:root:Episode number: 2377.00
+CRITICAL:root:Episode number: 2378.00
+CRITICAL:root:Episode number: 2379.00
+CRITICAL:root:Episode number: 2380.00
+CRITICAL:root:Running reward = 2.85 at episode 2380. Loss = 0.37. Epsilon = 0.30.
+CRITICAL:root:Episode number: 2381.00
+CRITICAL:root:Episode number: 2382.00
+CRITICAL:root:Episode number: 2383.00
+CRITICAL:root:Episode number: 2384.00
+CRITICAL:root:Episode number: 2385.00
+CRITICAL:root:Running reward = 2.84 at episode 2385. Loss = 0.49. Epsilon = 0.30.
+CRITICAL:root:Episode number: 2386.00
+CRITICAL:root:Episode number: 2387.00
+CRITICAL:root:Episode number: 2388.00
+CRITICAL:root:Episode number: 2389.00
+CRITICAL:root:Episode number: 2390.00
+CRITICAL:root:Running reward = 2.84 at episode 2390. Loss = 0.58. Epsilon = 0.30.
+CRITICAL:root:Episode number: 2391.00
+CRITICAL:root:Episode number: 2392.00
+CRITICAL:root:Episode number: 2393.00
+CRITICAL:root:Episode number: 2394.00
+CRITICAL:root:Episode number: 2395.00
+CRITICAL:root:Running reward = 2.84 at episode 2395. Loss = 0.46. Epsilon = 0.30.
+CRITICAL:root:Episode number: 2396.00
+CRITICAL:root:Episode number: 2397.00
+CRITICAL:root:Episode number: 2398.00
+CRITICAL:root:Episode number: 2399.00
+CRITICAL:root:Episode number: 2400.00
+CRITICAL:root:Running reward = 2.84 at episode 2400. Loss = 0.39. Epsilon = 0.30.
+CRITICAL:root:Episode number: 2401.00
+CRITICAL:root:Episode number: 2402.00
+CRITICAL:root:Episode number: 2403.00
+CRITICAL:root:Episode number: 2404.00
+CRITICAL:root:Episode number: 2405.00
+CRITICAL:root:Running reward = 2.84 at episode 2405. Loss = 0.49. Epsilon = 0.30.
+CRITICAL:root:Episode number: 2406.00
+CRITICAL:root:Episode number: 2407.00
+CRITICAL:root:Episode number: 2408.00
+CRITICAL:root:Episode number: 2409.00
+CRITICAL:root:Episode number: 2410.00
+CRITICAL:root:Running reward = 2.85 at episode 2410. Loss = 0.55. Epsilon = 0.30.
+CRITICAL:root:Episode number: 2411.00
+CRITICAL:root:Episode number: 2412.00
+CRITICAL:root:Episode number: 2413.00
+CRITICAL:root:Episode number: 2414.00
+CRITICAL:root:Episode number: 2415.00
+CRITICAL:root:Running reward = 2.85 at episode 2415. Loss = 0.44. Epsilon = 0.30.
+CRITICAL:root:Episode number: 2416.00
+CRITICAL:root:Episode number: 2417.00
+CRITICAL:root:Episode number: 2418.00
+CRITICAL:root:Episode number: 2419.00
+CRITICAL:root:Episode number: 2420.00
+CRITICAL:root:Running reward = 2.85 at episode 2420. Loss = 0.37. Epsilon = 0.29.
+CRITICAL:root:Episode number: 2421.00
+CRITICAL:root:Episode number: 2422.00
+CRITICAL:root:Episode number: 2423.00
+CRITICAL:root:Episode number: 2424.00
+CRITICAL:root:Episode number: 2425.00
+CRITICAL:root:Running reward = 2.85 at episode 2425. Loss = 0.34. Epsilon = 0.29.
+CRITICAL:root:Episode number: 2426.00
+CRITICAL:root:Episode number: 2427.00
+CRITICAL:root:Episode number: 2428.00
+CRITICAL:root:Episode number: 2429.00
+CRITICAL:root:Episode number: 2430.00
+CRITICAL:root:Running reward = 2.86 at episode 2430. Loss = 0.47. Epsilon = 0.29.
+CRITICAL:root:Episode number: 2431.00
+CRITICAL:root:Episode number: 2432.00
+CRITICAL:root:Episode number: 2433.00
+CRITICAL:root:Episode number: 2434.00
+CRITICAL:root:Episode number: 2435.00
+CRITICAL:root:Running reward = 2.85 at episode 2435. Loss = 0.43. Epsilon = 0.29.
+CRITICAL:root:Episode number: 2436.00
+CRITICAL:root:Episode number: 2437.00
+CRITICAL:root:Episode number: 2438.00
+CRITICAL:root:Episode number: 2439.00
+CRITICAL:root:Episode number: 2440.00
+CRITICAL:root:Running reward = 2.85 at episode 2440. Loss = 0.50. Epsilon = 0.29.
+CRITICAL:root:Episode number: 2441.00
+CRITICAL:root:Episode number: 2442.00
+CRITICAL:root:Episode number: 2443.00
+CRITICAL:root:Episode number: 2444.00
+CRITICAL:root:Episode number: 2445.00
+CRITICAL:root:Running reward = 2.85 at episode 2445. Loss = 0.45. Epsilon = 0.29.
+CRITICAL:root:Episode number: 2446.00
+CRITICAL:root:Episode number: 2447.00
+CRITICAL:root:Episode number: 2448.00
+CRITICAL:root:Episode number: 2449.00
+CRITICAL:root:Episode number: 2450.00
+CRITICAL:root:Running reward = 2.86 at episode 2450. Loss = 0.60. Epsilon = 0.29.
+CRITICAL:root:Episode number: 2451.00
+CRITICAL:root:Episode number: 2452.00
+CRITICAL:root:Episode number: 2453.00
+CRITICAL:root:Episode number: 2454.00
+CRITICAL:root:Episode number: 2455.00
+CRITICAL:root:Running reward = 2.85 at episode 2455. Loss = 0.37. Epsilon = 0.29.
+CRITICAL:root:Episode number: 2456.00
+CRITICAL:root:Episode number: 2457.00
+CRITICAL:root:Episode number: 2458.00
+CRITICAL:root:Episode number: 2459.00
+CRITICAL:root:Episode number: 2460.00
+CRITICAL:root:Running reward = 2.85 at episode 2460. Loss = 0.62. Epsilon = 0.29.
+CRITICAL:root:Episode number: 2461.00
+CRITICAL:root:Episode number: 2462.00
+CRITICAL:root:Episode number: 2463.00
+CRITICAL:root:Episode number: 2464.00
+CRITICAL:root:Episode number: 2465.00
+CRITICAL:root:Running reward = 2.85 at episode 2465. Loss = 0.45. Epsilon = 0.29.
+CRITICAL:root:Episode number: 2466.00
+CRITICAL:root:Episode number: 2467.00
+CRITICAL:root:Episode number: 2468.00
+CRITICAL:root:Episode number: 2469.00
+CRITICAL:root:Episode number: 2470.00
+CRITICAL:root:Running reward = 2.85 at episode 2470. Loss = 0.50. Epsilon = 0.29.
+CRITICAL:root:Episode number: 2471.00
+CRITICAL:root:Episode number: 2472.00
+CRITICAL:root:Episode number: 2473.00
+CRITICAL:root:Episode number: 2474.00
+CRITICAL:root:Episode number: 2475.00
+CRITICAL:root:Running reward = 2.85 at episode 2475. Loss = 0.40. Epsilon = 0.29.
+CRITICAL:root:Episode number: 2476.00
+CRITICAL:root:Episode number: 2477.00
+CRITICAL:root:Episode number: 2478.00
+CRITICAL:root:Episode number: 2479.00
+CRITICAL:root:Episode number: 2480.00
+CRITICAL:root:Running reward = 2.86 at episode 2480. Loss = 0.67. Epsilon = 0.29.
+CRITICAL:root:Episode number: 2481.00
+CRITICAL:root:Episode number: 2482.00
+CRITICAL:root:Episode number: 2483.00
+CRITICAL:root:Episode number: 2484.00
+CRITICAL:root:Episode number: 2485.00
+CRITICAL:root:Running reward = 2.86 at episode 2485. Loss = 0.44. Epsilon = 0.28.
+CRITICAL:root:Episode number: 2486.00
+CRITICAL:root:Episode number: 2487.00
+CRITICAL:root:Episode number: 2488.00
+CRITICAL:root:Episode number: 2489.00
+CRITICAL:root:Episode number: 2490.00
+CRITICAL:root:Running reward = 2.86 at episode 2490. Loss = 0.58. Epsilon = 0.28.
+CRITICAL:root:Episode number: 2491.00
+CRITICAL:root:Episode number: 2492.00
+CRITICAL:root:Episode number: 2493.00
+CRITICAL:root:Episode number: 2494.00
+CRITICAL:root:Episode number: 2495.00
+CRITICAL:root:Running reward = 2.85 at episode 2495. Loss = 0.50. Epsilon = 0.28.
+CRITICAL:root:Episode number: 2496.00
+CRITICAL:root:Episode number: 2497.00
+CRITICAL:root:Episode number: 2498.00
+CRITICAL:root:Episode number: 2499.00
+CRITICAL:root:Episode number: 2500.00
+CRITICAL:root:Running reward = 2.86 at episode 2500. Loss = 0.35. Epsilon = 0.28.
+CRITICAL:root:Episode number: 2501.00
+CRITICAL:root:Episode number: 2502.00
+CRITICAL:root:Episode number: 2503.00
+CRITICAL:root:Episode number: 2504.00
+CRITICAL:root:Episode number: 2505.00
+CRITICAL:root:Running reward = 2.86 at episode 2505. Loss = 0.45. Epsilon = 0.28.
+CRITICAL:root:Episode number: 2506.00
+CRITICAL:root:Episode number: 2507.00
+CRITICAL:root:Episode number: 2508.00
+CRITICAL:root:Episode number: 2509.00
+CRITICAL:root:Episode number: 2510.00
+CRITICAL:root:Running reward = 2.85 at episode 2510. Loss = 0.33. Epsilon = 0.28.
+CRITICAL:root:Episode number: 2511.00
+CRITICAL:root:Episode number: 2512.00
+CRITICAL:root:Episode number: 2513.00
+CRITICAL:root:Episode number: 2514.00
+CRITICAL:root:Episode number: 2515.00
+CRITICAL:root:Running reward = 2.86 at episode 2515. Loss = 0.51. Epsilon = 0.28.
+CRITICAL:root:Episode number: 2516.00
+CRITICAL:root:Episode number: 2517.00
+CRITICAL:root:Episode number: 2518.00
+CRITICAL:root:Episode number: 2519.00
+CRITICAL:root:Episode number: 2520.00
+CRITICAL:root:Running reward = 2.86 at episode 2520. Loss = 0.45. Epsilon = 0.28.
+CRITICAL:root:Episode number: 2521.00
+CRITICAL:root:Episode number: 2522.00
+CRITICAL:root:Episode number: 2523.00
+CRITICAL:root:Episode number: 2524.00
+CRITICAL:root:Episode number: 2525.00
+CRITICAL:root:Running reward = 2.86 at episode 2525. Loss = 0.58. Epsilon = 0.28.
+CRITICAL:root:Episode number: 2526.00
+CRITICAL:root:Episode number: 2527.00
+CRITICAL:root:Episode number: 2528.00
+CRITICAL:root:Episode number: 2529.00
+CRITICAL:root:Episode number: 2530.00
+CRITICAL:root:Running reward = 2.86 at episode 2530. Loss = 0.45. Epsilon = 0.28.
+CRITICAL:root:Episode number: 2531.00
+CRITICAL:root:Episode number: 2532.00
+CRITICAL:root:Episode number: 2533.00
+CRITICAL:root:Episode number: 2534.00
+CRITICAL:root:Episode number: 2535.00
+CRITICAL:root:Running reward = 2.86 at episode 2535. Loss = 0.52. Epsilon = 0.28.
+CRITICAL:root:Episode number: 2536.00
+CRITICAL:root:Episode number: 2537.00
+CRITICAL:root:Episode number: 2538.00
+CRITICAL:root:Episode number: 2539.00
+CRITICAL:root:Episode number: 2540.00
+CRITICAL:root:Running reward = 2.86 at episode 2540. Loss = 0.46. Epsilon = 0.28.
+CRITICAL:root:Episode number: 2541.00
+CRITICAL:root:Episode number: 2542.00
+CRITICAL:root:Episode number: 2543.00
+CRITICAL:root:Episode number: 2544.00
+CRITICAL:root:Episode number: 2545.00
+CRITICAL:root:Running reward = 2.86 at episode 2545. Loss = 0.51. Epsilon = 0.28.
+CRITICAL:root:Episode number: 2546.00
+CRITICAL:root:Episode number: 2547.00
+CRITICAL:root:Episode number: 2548.00
+CRITICAL:root:Episode number: 2549.00
+CRITICAL:root:Episode number: 2550.00
+CRITICAL:root:Running reward = 2.86 at episode 2550. Loss = 0.59. Epsilon = 0.28.
+CRITICAL:root:Episode number: 2551.00
+CRITICAL:root:Episode number: 2552.00
+CRITICAL:root:Episode number: 2553.00
+CRITICAL:root:Episode number: 2554.00
+CRITICAL:root:Episode number: 2555.00
+CRITICAL:root:Running reward = 2.86 at episode 2555. Loss = 0.50. Epsilon = 0.27.
+CRITICAL:root:Episode number: 2556.00
+CRITICAL:root:Episode number: 2557.00
+CRITICAL:root:Episode number: 2558.00
+CRITICAL:root:Episode number: 2559.00
+CRITICAL:root:Episode number: 2560.00
+CRITICAL:root:Running reward = 2.86 at episode 2560. Loss = 0.54. Epsilon = 0.27.
+CRITICAL:root:Episode number: 2561.00
+CRITICAL:root:Episode number: 2562.00
+CRITICAL:root:Episode number: 2563.00
+CRITICAL:root:Episode number: 2564.00
+CRITICAL:root:Episode number: 2565.00
+CRITICAL:root:Running reward = 2.86 at episode 2565. Loss = 0.45. Epsilon = 0.27.
+CRITICAL:root:Episode number: 2566.00
+CRITICAL:root:Episode number: 2567.00
+CRITICAL:root:Episode number: 2568.00
+CRITICAL:root:Episode number: 2569.00
+CRITICAL:root:Episode number: 2570.00
+CRITICAL:root:Running reward = 2.86 at episode 2570. Loss = 0.48. Epsilon = 0.27.
+CRITICAL:root:Episode number: 2571.00
+CRITICAL:root:Episode number: 2572.00
+CRITICAL:root:Episode number: 2573.00
+CRITICAL:root:Episode number: 2574.00
+CRITICAL:root:Episode number: 2575.00
+CRITICAL:root:Running reward = 2.86 at episode 2575. Loss = 0.49. Epsilon = 0.27.
+CRITICAL:root:Episode number: 2576.00
+CRITICAL:root:Episode number: 2577.00
+CRITICAL:root:Episode number: 2578.00
+CRITICAL:root:Episode number: 2579.00
+CRITICAL:root:Episode number: 2580.00
+CRITICAL:root:Running reward = 2.86 at episode 2580. Loss = 0.44. Epsilon = 0.27.
+CRITICAL:root:Episode number: 2581.00
+CRITICAL:root:Episode number: 2582.00
+CRITICAL:root:Episode number: 2583.00
+CRITICAL:root:Episode number: 2584.00
+CRITICAL:root:Episode number: 2585.00
+CRITICAL:root:Running reward = 2.85 at episode 2585. Loss = 0.49. Epsilon = 0.27.
+CRITICAL:root:Episode number: 2586.00
+CRITICAL:root:Episode number: 2587.00
+CRITICAL:root:Episode number: 2588.00
+CRITICAL:root:Episode number: 2589.00
+CRITICAL:root:Episode number: 2590.00
+CRITICAL:root:Running reward = 2.86 at episode 2590. Loss = 0.38. Epsilon = 0.27.
+CRITICAL:root:Episode number: 2591.00
+CRITICAL:root:Episode number: 2592.00
+CRITICAL:root:Episode number: 2593.00
+CRITICAL:root:Episode number: 2594.00
+CRITICAL:root:Episode number: 2595.00
+CRITICAL:root:Running reward = 2.86 at episode 2595. Loss = 0.44. Epsilon = 0.27.
+CRITICAL:root:Episode number: 2596.00
+CRITICAL:root:Episode number: 2597.00
+CRITICAL:root:Episode number: 2598.00
+CRITICAL:root:Episode number: 2599.00
+CRITICAL:root:Episode number: 2600.00
+CRITICAL:root:Running reward = 2.85 at episode 2600. Loss = 0.42. Epsilon = 0.27.
+CRITICAL:root:Episode number: 2601.00
+CRITICAL:root:Episode number: 2602.00
+CRITICAL:root:Episode number: 2603.00
+CRITICAL:root:Episode number: 2604.00
+CRITICAL:root:Episode number: 2605.00
+CRITICAL:root:Running reward = 2.86 at episode 2605. Loss = 0.45. Epsilon = 0.27.
+CRITICAL:root:Episode number: 2606.00
+CRITICAL:root:Episode number: 2607.00
+CRITICAL:root:Episode number: 2608.00
+CRITICAL:root:Episode number: 2609.00
+CRITICAL:root:Episode number: 2610.00
+CRITICAL:root:Running reward = 2.86 at episode 2610. Loss = 0.39. Epsilon = 0.27.
+CRITICAL:root:Episode number: 2611.00
+CRITICAL:root:Episode number: 2612.00
+CRITICAL:root:Episode number: 2613.00
+CRITICAL:root:Episode number: 2614.00
+CRITICAL:root:Episode number: 2615.00
+CRITICAL:root:Running reward = 2.85 at episode 2615. Loss = 0.56. Epsilon = 0.27.
+CRITICAL:root:Episode number: 2616.00
+CRITICAL:root:Episode number: 2617.00
+CRITICAL:root:Episode number: 2618.00
+CRITICAL:root:Episode number: 2619.00
+CRITICAL:root:Episode number: 2620.00
+CRITICAL:root:Running reward = 2.85 at episode 2620. Loss = 0.41. Epsilon = 0.27.
+CRITICAL:root:Episode number: 2621.00
+CRITICAL:root:Episode number: 2622.00
+CRITICAL:root:Episode number: 2623.00
+CRITICAL:root:Episode number: 2624.00
+CRITICAL:root:Episode number: 2625.00
+CRITICAL:root:Running reward = 2.85 at episode 2625. Loss = 0.35. Epsilon = 0.27.
+CRITICAL:root:Episode number: 2626.00
+CRITICAL:root:Episode number: 2627.00
+CRITICAL:root:Episode number: 2628.00
+CRITICAL:root:Episode number: 2629.00
+CRITICAL:root:Episode number: 2630.00
+CRITICAL:root:Running reward = 2.85 at episode 2630. Loss = 0.46. Epsilon = 0.26.
+CRITICAL:root:Episode number: 2631.00
+CRITICAL:root:Episode number: 2632.00
+CRITICAL:root:Episode number: 2633.00
+CRITICAL:root:Episode number: 2634.00
+CRITICAL:root:Episode number: 2635.00
+CRITICAL:root:Running reward = 2.85 at episode 2635. Loss = 0.51. Epsilon = 0.26.
+CRITICAL:root:Episode number: 2636.00
+CRITICAL:root:Episode number: 2637.00
+CRITICAL:root:Episode number: 2638.00
+CRITICAL:root:Episode number: 2639.00
+CRITICAL:root:Episode number: 2640.00
+CRITICAL:root:Running reward = 2.85 at episode 2640. Loss = 0.39. Epsilon = 0.26.
+CRITICAL:root:Episode number: 2641.00
+CRITICAL:root:Episode number: 2642.00
+CRITICAL:root:Episode number: 2643.00
+CRITICAL:root:Episode number: 2644.00
+CRITICAL:root:Episode number: 2645.00
+CRITICAL:root:Running reward = 2.86 at episode 2645. Loss = 0.50. Epsilon = 0.26.
+CRITICAL:root:Episode number: 2646.00
+CRITICAL:root:Episode number: 2647.00
+CRITICAL:root:Episode number: 2648.00
+CRITICAL:root:Episode number: 2649.00
+CRITICAL:root:Episode number: 2650.00
+CRITICAL:root:Running reward = 2.86 at episode 2650. Loss = 0.49. Epsilon = 0.26.
+CRITICAL:root:Episode number: 2651.00
+CRITICAL:root:Episode number: 2652.00
+CRITICAL:root:Episode number: 2653.00
+CRITICAL:root:Episode number: 2654.00
+CRITICAL:root:Episode number: 2655.00
+CRITICAL:root:Running reward = 2.86 at episode 2655. Loss = 0.46. Epsilon = 0.26.
+CRITICAL:root:Episode number: 2656.00
+CRITICAL:root:Episode number: 2657.00
+CRITICAL:root:Episode number: 2658.00
+CRITICAL:root:Episode number: 2659.00
+CRITICAL:root:Episode number: 2660.00
+CRITICAL:root:Running reward = 2.87 at episode 2660. Loss = 0.48. Epsilon = 0.26.
+CRITICAL:root:Episode number: 2661.00
+CRITICAL:root:Episode number: 2662.00
+CRITICAL:root:Episode number: 2663.00
+CRITICAL:root:Episode number: 2664.00
+CRITICAL:root:Episode number: 2665.00
+CRITICAL:root:Running reward = 2.86 at episode 2665. Loss = 0.41. Epsilon = 0.26.
+CRITICAL:root:Episode number: 2666.00
+CRITICAL:root:Episode number: 2667.00
+CRITICAL:root:Episode number: 2668.00
+CRITICAL:root:Episode number: 2669.00
+CRITICAL:root:Episode number: 2670.00
+CRITICAL:root:Running reward = 2.87 at episode 2670. Loss = 0.49. Epsilon = 0.26.
+CRITICAL:root:Episode number: 2671.00
+CRITICAL:root:Episode number: 2672.00
+CRITICAL:root:Episode number: 2673.00
+CRITICAL:root:Episode number: 2674.00
+CRITICAL:root:Episode number: 2675.00
+CRITICAL:root:Running reward = 2.87 at episode 2675. Loss = 0.53. Epsilon = 0.26.
+CRITICAL:root:Episode number: 2676.00
+CRITICAL:root:Episode number: 2677.00
+CRITICAL:root:Episode number: 2678.00
+CRITICAL:root:Episode number: 2679.00
+CRITICAL:root:Episode number: 2680.00
+CRITICAL:root:Running reward = 2.86 at episode 2680. Loss = 0.48. Epsilon = 0.26.
+CRITICAL:root:Episode number: 2681.00
+CRITICAL:root:Episode number: 2682.00
+CRITICAL:root:Episode number: 2683.00
+CRITICAL:root:Episode number: 2684.00
+CRITICAL:root:Episode number: 2685.00
+CRITICAL:root:Running reward = 2.86 at episode 2685. Loss = 0.43. Epsilon = 0.26.
+CRITICAL:root:Episode number: 2686.00
+CRITICAL:root:Episode number: 2687.00
+CRITICAL:root:Episode number: 2688.00
+CRITICAL:root:Episode number: 2689.00
+CRITICAL:root:Episode number: 2690.00
+CRITICAL:root:Running reward = 2.86 at episode 2690. Loss = 0.41. Epsilon = 0.26.
+CRITICAL:root:Episode number: 2691.00
+CRITICAL:root:Episode number: 2692.00
+CRITICAL:root:Episode number: 2693.00
+CRITICAL:root:Episode number: 2694.00
+CRITICAL:root:Episode number: 2695.00
+CRITICAL:root:Running reward = 2.86 at episode 2695. Loss = 0.43. Epsilon = 0.26.
+CRITICAL:root:Episode number: 2696.00
+CRITICAL:root:Episode number: 2697.00
+CRITICAL:root:Episode number: 2698.00
+CRITICAL:root:Episode number: 2699.00
+CRITICAL:root:Episode number: 2700.00
+CRITICAL:root:Running reward = 2.86 at episode 2700. Loss = 0.45. Epsilon = 0.26.
+CRITICAL:root:Episode number: 2701.00
+CRITICAL:root:Episode number: 2702.00
+CRITICAL:root:Episode number: 2703.00
+CRITICAL:root:Episode number: 2704.00
+CRITICAL:root:Episode number: 2705.00
+CRITICAL:root:Running reward = 2.86 at episode 2705. Loss = 0.59. Epsilon = 0.25.
+CRITICAL:root:Episode number: 2706.00
+CRITICAL:root:Episode number: 2707.00
+CRITICAL:root:Episode number: 2708.00
+CRITICAL:root:Episode number: 2709.00
+CRITICAL:root:Episode number: 2710.00
+CRITICAL:root:Running reward = 2.87 at episode 2710. Loss = 0.67. Epsilon = 0.25.
+CRITICAL:root:Episode number: 2711.00
+CRITICAL:root:Episode number: 2712.00
+CRITICAL:root:Episode number: 2713.00
+CRITICAL:root:Episode number: 2714.00
+CRITICAL:root:Episode number: 2715.00
+CRITICAL:root:Running reward = 2.87 at episode 2715. Loss = 0.50. Epsilon = 0.25.
+CRITICAL:root:Episode number: 2716.00
+CRITICAL:root:Episode number: 2717.00
+CRITICAL:root:Episode number: 2718.00
+CRITICAL:root:Episode number: 2719.00
+CRITICAL:root:Episode number: 2720.00
+CRITICAL:root:Running reward = 2.87 at episode 2720. Loss = 0.42. Epsilon = 0.25.
+CRITICAL:root:Episode number: 2721.00
+CRITICAL:root:Episode number: 2722.00
+CRITICAL:root:Episode number: 2723.00
+CRITICAL:root:Episode number: 2724.00
+CRITICAL:root:Episode number: 2725.00
+CRITICAL:root:Running reward = 2.87 at episode 2725. Loss = 0.42. Epsilon = 0.25.
+CRITICAL:root:Episode number: 2726.00
+CRITICAL:root:Episode number: 2727.00
+CRITICAL:root:Episode number: 2728.00
+CRITICAL:root:Episode number: 2729.00
+CRITICAL:root:Episode number: 2730.00
+CRITICAL:root:Running reward = 2.87 at episode 2730. Loss = 0.50. Epsilon = 0.25.
+CRITICAL:root:Episode number: 2731.00
+CRITICAL:root:Episode number: 2732.00
+CRITICAL:root:Episode number: 2733.00
+CRITICAL:root:Episode number: 2734.00
+CRITICAL:root:Episode number: 2735.00
+CRITICAL:root:Running reward = 2.88 at episode 2735. Loss = 0.50. Epsilon = 0.25.
+CRITICAL:root:Episode number: 2736.00
+CRITICAL:root:Episode number: 2737.00
+CRITICAL:root:Episode number: 2738.00
+CRITICAL:root:Episode number: 2739.00
+CRITICAL:root:Episode number: 2740.00
+CRITICAL:root:Running reward = 2.88 at episode 2740. Loss = 0.48. Epsilon = 0.25.
+CRITICAL:root:Episode number: 2741.00
+CRITICAL:root:Episode number: 2742.00
+CRITICAL:root:Episode number: 2743.00
+CRITICAL:root:Episode number: 2744.00
+CRITICAL:root:Episode number: 2745.00
+CRITICAL:root:Running reward = 2.88 at episode 2745. Loss = 0.51. Epsilon = 0.25.
+CRITICAL:root:Episode number: 2746.00
+CRITICAL:root:Episode number: 2747.00
+CRITICAL:root:Episode number: 2748.00
+CRITICAL:root:Episode number: 2749.00
+CRITICAL:root:Episode number: 2750.00
+CRITICAL:root:Running reward = 2.88 at episode 2750. Loss = 0.61. Epsilon = 0.25.
+CRITICAL:root:Episode number: 2751.00
+CRITICAL:root:Episode number: 2752.00
+CRITICAL:root:Episode number: 2753.00
+CRITICAL:root:Episode number: 2754.00
+CRITICAL:root:Episode number: 2755.00
+CRITICAL:root:Running reward = 2.87 at episode 2755. Loss = 0.50. Epsilon = 0.25.
+CRITICAL:root:Episode number: 2756.00
+CRITICAL:root:Episode number: 2757.00
+CRITICAL:root:Episode number: 2758.00
+CRITICAL:root:Episode number: 2759.00
+CRITICAL:root:Episode number: 2760.00
+CRITICAL:root:Running reward = 2.87 at episode 2760. Loss = 0.54. Epsilon = 0.25.
+CRITICAL:root:Episode number: 2761.00
+CRITICAL:root:Episode number: 2762.00
+CRITICAL:root:Episode number: 2763.00
+CRITICAL:root:Episode number: 2764.00
+CRITICAL:root:Episode number: 2765.00
+CRITICAL:root:Running reward = 2.88 at episode 2765. Loss = 0.56. Epsilon = 0.25.
+CRITICAL:root:Episode number: 2766.00
+CRITICAL:root:Episode number: 2767.00
+CRITICAL:root:Episode number: 2768.00
+CRITICAL:root:Episode number: 2769.00
+CRITICAL:root:Episode number: 2770.00
+CRITICAL:root:Running reward = 2.88 at episode 2770. Loss = 0.37. Epsilon = 0.25.
+CRITICAL:root:Episode number: 2771.00
+CRITICAL:root:Episode number: 2772.00
+CRITICAL:root:Episode number: 2773.00
+CRITICAL:root:Episode number: 2774.00
+CRITICAL:root:Episode number: 2775.00
+CRITICAL:root:Running reward = 2.87 at episode 2775. Loss = 0.53. Epsilon = 0.25.
+CRITICAL:root:Episode number: 2776.00
+CRITICAL:root:Episode number: 2777.00
+CRITICAL:root:Episode number: 2778.00
+CRITICAL:root:Episode number: 2779.00
+CRITICAL:root:Episode number: 2780.00
+CRITICAL:root:Running reward = 2.87 at episode 2780. Loss = 0.46. Epsilon = 0.25.
+CRITICAL:root:Episode number: 2781.00
+CRITICAL:root:Episode number: 2782.00
+CRITICAL:root:Episode number: 2783.00
+CRITICAL:root:Episode number: 2784.00
+CRITICAL:root:Episode number: 2785.00
+CRITICAL:root:Running reward = 2.88 at episode 2785. Loss = 0.44. Epsilon = 0.24.
+CRITICAL:root:Episode number: 2786.00
+CRITICAL:root:Episode number: 2787.00
+CRITICAL:root:Episode number: 2788.00
+CRITICAL:root:Episode number: 2789.00
+CRITICAL:root:Episode number: 2790.00
+CRITICAL:root:Running reward = 2.87 at episode 2790. Loss = 0.39. Epsilon = 0.24.
+CRITICAL:root:Episode number: 2791.00
+CRITICAL:root:Episode number: 2792.00
+CRITICAL:root:Episode number: 2793.00
+CRITICAL:root:Episode number: 2794.00
+CRITICAL:root:Episode number: 2795.00
+CRITICAL:root:Running reward = 2.88 at episode 2795. Loss = 0.58. Epsilon = 0.24.
+CRITICAL:root:Episode number: 2796.00
+CRITICAL:root:Episode number: 2797.00
+CRITICAL:root:Episode number: 2798.00
+CRITICAL:root:Episode number: 2799.00
+CRITICAL:root:Episode number: 2800.00
+CRITICAL:root:Running reward = 2.87 at episode 2800. Loss = 0.56. Epsilon = 0.24.
+CRITICAL:root:Episode number: 2801.00
+CRITICAL:root:Episode number: 2802.00
+CRITICAL:root:Episode number: 2803.00
+CRITICAL:root:Episode number: 2804.00
+CRITICAL:root:Episode number: 2805.00
+CRITICAL:root:Running reward = 2.88 at episode 2805. Loss = 0.58. Epsilon = 0.24.
+CRITICAL:root:Episode number: 2806.00
+CRITICAL:root:Episode number: 2807.00
+CRITICAL:root:Episode number: 2808.00
+CRITICAL:root:Episode number: 2809.00
+CRITICAL:root:Episode number: 2810.00
+CRITICAL:root:Running reward = 2.88 at episode 2810. Loss = 0.42. Epsilon = 0.24.
+CRITICAL:root:Episode number: 2811.00
+CRITICAL:root:Episode number: 2812.00
+CRITICAL:root:Episode number: 2813.00
+CRITICAL:root:Episode number: 2814.00
+CRITICAL:root:Episode number: 2815.00
+CRITICAL:root:Running reward = 2.88 at episode 2815. Loss = 0.61. Epsilon = 0.24.
+CRITICAL:root:Episode number: 2816.00
+CRITICAL:root:Episode number: 2817.00
+CRITICAL:root:Episode number: 2818.00
+CRITICAL:root:Episode number: 2819.00
+CRITICAL:root:Episode number: 2820.00
+CRITICAL:root:Running reward = 2.87 at episode 2820. Loss = 0.61. Epsilon = 0.24.
+CRITICAL:root:Episode number: 2821.00
+CRITICAL:root:Episode number: 2822.00
+CRITICAL:root:Episode number: 2823.00
+CRITICAL:root:Episode number: 2824.00
+CRITICAL:root:Episode number: 2825.00
+CRITICAL:root:Running reward = 2.87 at episode 2825. Loss = 0.63. Epsilon = 0.24.
+CRITICAL:root:Episode number: 2826.00
+CRITICAL:root:Episode number: 2827.00
+CRITICAL:root:Episode number: 2828.00
+CRITICAL:root:Episode number: 2829.00
+CRITICAL:root:Episode number: 2830.00
+CRITICAL:root:Running reward = 2.87 at episode 2830. Loss = 0.46. Epsilon = 0.24.
+CRITICAL:root:Episode number: 2831.00
+CRITICAL:root:Episode number: 2832.00
+CRITICAL:root:Episode number: 2833.00
+CRITICAL:root:Episode number: 2834.00
+CRITICAL:root:Episode number: 2835.00
+CRITICAL:root:Running reward = 2.88 at episode 2835. Loss = 0.48. Epsilon = 0.24.
+CRITICAL:root:Episode number: 2836.00
+CRITICAL:root:Episode number: 2837.00
+CRITICAL:root:Episode number: 2838.00
+CRITICAL:root:Episode number: 2839.00
+CRITICAL:root:Episode number: 2840.00
+CRITICAL:root:Running reward = 2.87 at episode 2840. Loss = 0.82. Epsilon = 0.24.
+CRITICAL:root:Episode number: 2841.00
+CRITICAL:root:Episode number: 2842.00
+CRITICAL:root:Episode number: 2843.00
+CRITICAL:root:Episode number: 2844.00
+CRITICAL:root:Episode number: 2845.00
+CRITICAL:root:Running reward = 2.87 at episode 2845. Loss = 0.55. Epsilon = 0.24.
+CRITICAL:root:Episode number: 2846.00
+CRITICAL:root:Episode number: 2847.00
+CRITICAL:root:Episode number: 2848.00
+CRITICAL:root:Episode number: 2849.00
+CRITICAL:root:Episode number: 2850.00
+CRITICAL:root:Running reward = 2.87 at episode 2850. Loss = 0.43. Epsilon = 0.24.
+CRITICAL:root:Episode number: 2851.00
+CRITICAL:root:Episode number: 2852.00
+CRITICAL:root:Episode number: 2853.00
+CRITICAL:root:Episode number: 2854.00
+CRITICAL:root:Episode number: 2855.00
+CRITICAL:root:Running reward = 2.88 at episode 2855. Loss = 0.56. Epsilon = 0.24.
+CRITICAL:root:Episode number: 2856.00
+CRITICAL:root:Episode number: 2857.00
+CRITICAL:root:Episode number: 2858.00
+CRITICAL:root:Episode number: 2859.00
+CRITICAL:root:Episode number: 2860.00
+CRITICAL:root:Running reward = 2.88 at episode 2860. Loss = 0.66. Epsilon = 0.24.
+CRITICAL:root:Episode number: 2861.00
+CRITICAL:root:Episode number: 2862.00
+CRITICAL:root:Episode number: 2863.00
+CRITICAL:root:Episode number: 2864.00
+CRITICAL:root:Episode number: 2865.00
+CRITICAL:root:Running reward = 2.88 at episode 2865. Loss = 0.69. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2866.00
+CRITICAL:root:Episode number: 2867.00
+CRITICAL:root:Episode number: 2868.00
+CRITICAL:root:Episode number: 2869.00
+CRITICAL:root:Episode number: 2870.00
+CRITICAL:root:Running reward = 2.88 at episode 2870. Loss = 0.53. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2871.00
+CRITICAL:root:Episode number: 2872.00
+CRITICAL:root:Episode number: 2873.00
+CRITICAL:root:Episode number: 2874.00
+CRITICAL:root:Episode number: 2875.00
+CRITICAL:root:Running reward = 2.87 at episode 2875. Loss = 0.48. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2876.00
+CRITICAL:root:Episode number: 2877.00
+CRITICAL:root:Episode number: 2878.00
+CRITICAL:root:Episode number: 2879.00
+CRITICAL:root:Episode number: 2880.00
+CRITICAL:root:Running reward = 2.87 at episode 2880. Loss = 0.44. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2881.00
+CRITICAL:root:Episode number: 2882.00
+CRITICAL:root:Episode number: 2883.00
+CRITICAL:root:Episode number: 2884.00
+CRITICAL:root:Episode number: 2885.00
+CRITICAL:root:Running reward = 2.88 at episode 2885. Loss = 0.56. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2886.00
+CRITICAL:root:Episode number: 2887.00
+CRITICAL:root:Episode number: 2888.00
+CRITICAL:root:Episode number: 2889.00
+CRITICAL:root:Episode number: 2890.00
+CRITICAL:root:Running reward = 2.89 at episode 2890. Loss = 0.50. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2891.00
+CRITICAL:root:Episode number: 2892.00
+CRITICAL:root:Episode number: 2893.00
+CRITICAL:root:Episode number: 2894.00
+CRITICAL:root:Episode number: 2895.00
+CRITICAL:root:Running reward = 2.89 at episode 2895. Loss = 0.60. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2896.00
+CRITICAL:root:Episode number: 2897.00
+CRITICAL:root:Episode number: 2898.00
+CRITICAL:root:Episode number: 2899.00
+CRITICAL:root:Episode number: 2900.00
+CRITICAL:root:Running reward = 2.88 at episode 2900. Loss = 0.70. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2901.00
+CRITICAL:root:Episode number: 2902.00
+CRITICAL:root:Episode number: 2903.00
+CRITICAL:root:Episode number: 2904.00
+CRITICAL:root:Episode number: 2905.00
+CRITICAL:root:Running reward = 2.87 at episode 2905. Loss = 0.74. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2906.00
+CRITICAL:root:Episode number: 2907.00
+CRITICAL:root:Episode number: 2908.00
+CRITICAL:root:Episode number: 2909.00
+CRITICAL:root:Episode number: 2910.00
+CRITICAL:root:Running reward = 2.87 at episode 2910. Loss = 0.58. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2911.00
+CRITICAL:root:Episode number: 2912.00
+CRITICAL:root:Episode number: 2913.00
+CRITICAL:root:Episode number: 2914.00
+CRITICAL:root:Episode number: 2915.00
+CRITICAL:root:Running reward = 2.87 at episode 2915. Loss = 0.51. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2916.00
+CRITICAL:root:Episode number: 2917.00
+CRITICAL:root:Episode number: 2918.00
+CRITICAL:root:Episode number: 2919.00
+CRITICAL:root:Episode number: 2920.00
+CRITICAL:root:Running reward = 2.88 at episode 2920. Loss = 0.86. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2921.00
+CRITICAL:root:Episode number: 2922.00
+CRITICAL:root:Episode number: 2923.00
+CRITICAL:root:Episode number: 2924.00
+CRITICAL:root:Episode number: 2925.00
+CRITICAL:root:Running reward = 2.88 at episode 2925. Loss = 0.80. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2926.00
+CRITICAL:root:Episode number: 2927.00
+CRITICAL:root:Episode number: 2928.00
+CRITICAL:root:Episode number: 2929.00
+CRITICAL:root:Episode number: 2930.00
+CRITICAL:root:Running reward = 2.88 at episode 2930. Loss = 0.59. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2931.00
+CRITICAL:root:Episode number: 2932.00
+CRITICAL:root:Episode number: 2933.00
+CRITICAL:root:Episode number: 2934.00
+CRITICAL:root:Episode number: 2935.00
+CRITICAL:root:Running reward = 2.88 at episode 2935. Loss = 0.48. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2936.00
+CRITICAL:root:Episode number: 2937.00
+CRITICAL:root:Episode number: 2938.00
+CRITICAL:root:Episode number: 2939.00
+CRITICAL:root:Episode number: 2940.00
+CRITICAL:root:Running reward = 2.88 at episode 2940. Loss = 0.41. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2941.00
+CRITICAL:root:Episode number: 2942.00
+CRITICAL:root:Episode number: 2943.00
+CRITICAL:root:Episode number: 2944.00
+CRITICAL:root:Episode number: 2945.00
+CRITICAL:root:Running reward = 2.88 at episode 2945. Loss = 0.68. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2946.00
+CRITICAL:root:Episode number: 2947.00
+CRITICAL:root:Episode number: 2948.00
+CRITICAL:root:Episode number: 2949.00
+CRITICAL:root:Episode number: 2950.00
+CRITICAL:root:Running reward = 2.88 at episode 2950. Loss = 0.46. Epsilon = 0.23.
+CRITICAL:root:Episode number: 2951.00
+CRITICAL:root:Episode number: 2952.00
+CRITICAL:root:Episode number: 2953.00
+CRITICAL:root:Episode number: 2954.00
+CRITICAL:root:Episode number: 2955.00
+CRITICAL:root:Running reward = 2.88 at episode 2955. Loss = 0.67. Epsilon = 0.22.
+CRITICAL:root:Episode number: 2956.00
+CRITICAL:root:Episode number: 2957.00
+CRITICAL:root:Episode number: 2958.00
+CRITICAL:root:Episode number: 2959.00
+CRITICAL:root:Episode number: 2960.00
+CRITICAL:root:Running reward = 2.88 at episode 2960. Loss = 0.60. Epsilon = 0.22.
+CRITICAL:root:Episode number: 2961.00
+CRITICAL:root:Episode number: 2962.00
+CRITICAL:root:Episode number: 2963.00
+CRITICAL:root:Episode number: 2964.00
+CRITICAL:root:Episode number: 2965.00
+CRITICAL:root:Running reward = 2.88 at episode 2965. Loss = 0.56. Epsilon = 0.22.
+CRITICAL:root:Episode number: 2966.00
+CRITICAL:root:Episode number: 2967.00
+CRITICAL:root:Episode number: 2968.00
+CRITICAL:root:Episode number: 2969.00
+CRITICAL:root:Episode number: 2970.00
+CRITICAL:root:Running reward = 2.89 at episode 2970. Loss = 0.75. Epsilon = 0.22.
+CRITICAL:root:Episode number: 2971.00
+CRITICAL:root:Episode number: 2972.00
+CRITICAL:root:Episode number: 2973.00
+CRITICAL:root:Episode number: 2974.00
+CRITICAL:root:Episode number: 2975.00
+CRITICAL:root:Running reward = 2.90 at episode 2975. Loss = 0.56. Epsilon = 0.22.
+CRITICAL:root:Episode number: 2976.00
+CRITICAL:root:Episode number: 2977.00
+CRITICAL:root:Episode number: 2978.00
+CRITICAL:root:Episode number: 2979.00
+CRITICAL:root:Episode number: 2980.00
+CRITICAL:root:Running reward = 2.90 at episode 2980. Loss = 0.48. Epsilon = 0.22.
+CRITICAL:root:Episode number: 2981.00
+CRITICAL:root:Episode number: 2982.00
+CRITICAL:root:Episode number: 2983.00
+CRITICAL:root:Episode number: 2984.00
+CRITICAL:root:Episode number: 2985.00
+CRITICAL:root:Running reward = 2.90 at episode 2985. Loss = 0.62. Epsilon = 0.22.
+CRITICAL:root:Episode number: 2986.00
+CRITICAL:root:Episode number: 2987.00
+CRITICAL:root:Episode number: 2988.00
+CRITICAL:root:Episode number: 2989.00
+CRITICAL:root:Episode number: 2990.00
+CRITICAL:root:Running reward = 2.90 at episode 2990. Loss = 0.66. Epsilon = 0.22.
+CRITICAL:root:Episode number: 2991.00
+CRITICAL:root:Episode number: 2992.00
+CRITICAL:root:Episode number: 2993.00
+CRITICAL:root:Episode number: 2994.00
+CRITICAL:root:Episode number: 2995.00
+CRITICAL:root:Running reward = 2.89 at episode 2995. Loss = 0.45. Epsilon = 0.22.
+CRITICAL:root:Episode number: 2996.00
+CRITICAL:root:Episode number: 2997.00
+CRITICAL:root:Episode number: 2998.00
+CRITICAL:root:Episode number: 2999.00
+CRITICAL:root:Episode number: 3000.00
+CRITICAL:root:Running reward = 2.89 at episode 3000. Loss = 0.62. Epsilon = 0.22.
+CRITICAL:root:Solved at episode 3000!
