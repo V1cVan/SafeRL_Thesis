@@ -34,7 +34,10 @@ class DqnAgent(keras.models.Model):
         self.episode = 1
         if training_param["use_per"]:
             self.buffer = PerTrainingBuffer(buffer_size=training_param["buffer_size"],
-                                            batch_size=training_param["batch_size"])
+                                            batch_size=training_param["batch_size"],
+                                            alpha=training_param["alpha"],
+                                            beta=training_param["beta"],
+                                            beta_increment=training_param["beta_increment"])
         else:
             self.buffer = TrainingBuffer(buffer_size=training_param["buffer_size"],
                                          batch_size=training_param["batch_size"])
@@ -71,9 +74,9 @@ class DqnAgent(keras.models.Model):
                          next_states: tf.Tensor,
                          done: tf.Tensor):
         ones = tf.ones(tf.shape(done), dtype=tf.dtypes.float32)
-        target_Q = self.DQN_target(next_states)
+        target_Q = self.Q_target_net(next_states)
         target_output = rewards + (ones - done) * (self.gamma * tf.reduce_max(target_Q, axis=1))
-        predicted_Q = self.DQN_model(states)
+        predicted_Q = self.Q_actual_net(states)
         predicted_output = tf.reduce_max(predicted_Q, axis=1)
         return target_output - predicted_output
 
@@ -175,7 +178,7 @@ class DqnAgent(keras.models.Model):
 
         self.training_param["optimiser"].apply_gradients(zip(grads, self.Q_actual_net.trainable_variables))
         sum_reward = tf.math.reduce_sum(rewards)
-        mean_batch_reward = sum_reward / len(self.buffer.buffer)
+        mean_batch_reward = sum_reward / self.buffer.batch_size
 
         return mean_batch_reward, loss_value
 

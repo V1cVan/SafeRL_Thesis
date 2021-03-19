@@ -109,7 +109,7 @@ class Main(object):
                             # self.policy.agent.stop_flags = self.sim.stopped or self.sim._collision
                             # if self.policy.agent.stop_flags == True:
                             #     self.policy.agent.buffer.alter_buffer_stop_flag(flag=self.policy.agent.stop_flags)
-                            done = self.sim.stopped or self.sim._collision
+                            done = self.sim.stopped  # or self.sim._collision
                             if self.policy.agent.is_action_taken:
                                 self.policy.agent.add_experience(done)
 
@@ -383,7 +383,7 @@ if __name__=="__main__":
     SHOW_TRAIN_PLOTS = False
     PLOT_FREQ = 50
     SIM_TIMESTEPS = 100
-    SCENARIO_NUM = 0            # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
+    SCENARIO_NUM = 0          # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
     BUFFER_SIZE = 300000
     BATCH_SIZE = 250       # range: 32 - 150
     EPSILON_MIN = 1.0           # Exploration
@@ -399,13 +399,14 @@ if __name__=="__main__":
     CLIP_NORM = 2
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
     REWARD_WEIGHTS = np.array([1.0, 0.15, 1.0, 0.3, -5])
-    STANDARDISE_RETURNS = True
-    USE_PER = False
+    STANDARDISE_RETURNS = True  # TODO additional variable for SPG
+    USE_PER = True
     ALPHA = 0.75                # Priority scale: a=0:random, a=1:completely based on priority
     BETA = 0.3                  # Prioritisation factor
-    BETA_INCREMENT = 0.0005     # Rate of Beta annealing to 1 # TODO plotting of beta increment
-    USE_DUELLING = False
+    BETA_INCREMENT = 0.0005     # Rate of Beta annealing to 1 # TODO plotting of beta number
+    USE_DUELLING = True
     # TODO comparitive plotting of standard DQN, DDQN, PER, and Duelling
+    # TODO plotting of average reward of vehicle that just speeds up
     training_param = {
         "max_timesteps": MAX_TIMESTEPS,
         "max_episodes": MAX_EPISODES,
@@ -454,6 +455,7 @@ if __name__=="__main__":
     # spg_agent_double = SpgAgentDouble(network=AC_net_double, training_param=training_param)
     # spg_policy_double = DiscreteDoubleActionPolicy(agent=spg_agent_double)
 
+    # TODO Compare DQN DDQN PER and DUELLING ON SAME RANDOM SEED!
     if USE_DUELLING:
         DQ_net = DuellingDqnNetwork(model_param=model_param)
     else:

@@ -104,10 +104,7 @@ class PerTrainingBuffer(object):  # stored as ( s, a, r, s_ ) in SumTree
         self.tree.update(idx, p)
 
     def is_buffer_min_size(self):
-        if self.tree.n_entries < self.batch_size:
-            return False
-        else:
-            return True
+        return self.get_size() >= self.batch_size
 
     def get_size(self):
         return self.tree.n_entries
