@@ -100,10 +100,23 @@ class Main(object):
                     for t in np.arange(1, max_timesteps+1):
                         # logging.critical("Timestep of episode: %0.2f" % self.sim.k)
 
-                        if t%training_param["policy_rate"] == 0:
+                        # Perform one simulations step:
+                        if not self.sim.stopped:
+                            self.sim.step()  # Calls AcPolicy.customAction method.
+
+                            # TODO Reformat so that check is done after sim.step()
+                            # TODO maybe add penalties for collisions
+                            # self.policy.agent.stop_flags = self.sim.stopped or self.sim._collision
+                            # if self.policy.agent.stop_flags == True:
+                            #     self.policy.agent.buffer.alter_buffer_stop_flag(flag=self.policy.agent.stop_flags)
+                            done = self.sim.stopped or self.sim._collision
+                            if self.policy.agent.is_action_taken:
+                                self.policy.agent.add_experience(done)
+
+                        if t % training_param["policy_rate"] == 0:
                             train_counter += 1
                             self.policy.agent.epsilon_decay_count = train_counter
-                            self.policy.agent.timestep = np.int(t/training_param["policy_rate"])
+                            self.policy.agent.timestep = np.int(t / training_param["policy_rate"])
                             if self.policy.agent.buffer.is_buffer_min_size():
                                 model_update_counter += 1
                                 if model_update_counter % training_param["model_update_rate"] == 0:
@@ -114,16 +127,6 @@ class Main(object):
                                     self.policy.agent.update_target_net()
                                     print("Updated target net.")
 
-
-                        # TODO Reformat so that check is done after sim.step()
-                        # TODO maybe add penalties for collisions
-                        self.policy.agent.stop_flags = self.sim.stopped or self.sim._collision
-                        if self.policy.agent.stop_flags == True:
-                            self.policy.agent.buffer.alter_buffer_stop_flag(flag=self.policy.agent.stop_flags)
-
-                        # Perform one simulations step:
-                        if not self.sim.stopped:
-                            self.sim.step()  # Calls AcPolicy.customAction method.
 
                             # if self.sim._collision:
                             #     logging.critical("Collision. At episode %f" % episode_count)
