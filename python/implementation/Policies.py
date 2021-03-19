@@ -199,6 +199,7 @@ class DiscreteSingleActionPolicy(CustomPolicy):
         veh.a1 = None
         veh.c1 = None
         veh.flag = None
+        self.agent.is_action_taken = False
 
     def custom_action(self, veh):
         # s0, a0 = previous vehicle state action pair
@@ -229,12 +230,19 @@ class DiscreteSingleActionPolicy(CustomPolicy):
                     # Save to buffer from the Buffer class in HelperClasses.py module
                     # add_experience expects (timestep, state, vel_model_action, off_model_action,
                     #                         vel_action_sim, offset_action_sim, vel_choice, off_choice, reward, critic)
+                    # experience = (np.squeeze(veh.s0_mod),
+                    #               veh.a0_choice,
+                    #               veh.reward,
+                    #               np.squeeze(veh.s1_mod),
+                    #               veh.flag)
+                    # self.agent.add_experience(experience)
+
                     experience = (np.squeeze(veh.s0_mod),
                                   veh.a0_choice,
                                   veh.reward,
-                                  np.squeeze(veh.s1_mod),
-                                  veh.flag)
-                    self.agent.add_experience(experience)
+                                  np.squeeze(veh.s1_mod))
+                    self.agent.latest_experience = experience
+                    self.agent.is_action_taken = True
 
             # Set past vehicle state and action pair
             veh.s0 = veh.s1
@@ -252,6 +260,7 @@ class DiscreteSingleActionPolicy(CustomPolicy):
             return output
 
         else:
+            self.agent.is_action_taken = False
             discrete_actions = self.convert_action_discrete(veh, veh.prev_action)
             output = np.array(discrete_actions, dtype=np.float64)
             veh.rew_buffer.append(self.rewards.get_reward(agent=self.agent, veh=veh))

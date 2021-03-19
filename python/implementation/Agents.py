@@ -15,7 +15,8 @@ class DqnAgent(keras.models.Model):
         super(DqnAgent, self).__init__()
         tf.random.set_seed(training_param["seed"])
         np.random.seed(training_param["seed"])
-        self.latest_action = None
+        self.latest_experience = None
+        self.is_action_taken = False
         self.Q_target_net = network
         self.Q_actual_net = network
         self.reward_weights = training_param["reward_weights"]
@@ -43,7 +44,10 @@ class DqnAgent(keras.models.Model):
         """ Sets a negative reward if a collision occurs. """
         self.buffer.alter_reward_at_timestep(timestep, punishment)
 
-    def add_experience(self, experience):
+    def add_experience(self, done):
+        states, actions, rewards, next_states = self.latest_experience
+        experience = (states, actions, rewards, next_states, done)
+
         if self.training_param["use_per"]:
             # Calculate the TD-error for the Prioritised Replay Buffer
             states, actions, rewards, next_states, done = experience
