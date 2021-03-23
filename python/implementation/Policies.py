@@ -87,8 +87,8 @@ class RewardFunction(object):
         return reward_following_distance
 
     def get_right_lane_reward(self, total_road_width, dist_to_edge):
-        # reward_right_lane = ((1 - 0) / (0 - total_road_width)) * dist_to_edge + 1
-        reward_right_lane = (1 / total_road_width) * dist_to_edge  # Stay left
+        reward_right_lane = ((1 - 0) / (0 - total_road_width)) * dist_to_edge + 1
+        # reward_right_lane = (1 / total_road_width) * dist_to_edge  # Stay left
         return reward_right_lane
 
     def get_reward(self, agent, veh=None):
