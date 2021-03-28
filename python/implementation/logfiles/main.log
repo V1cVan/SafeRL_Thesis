@@ -1,6 +1,60 @@
 CRITICAL:root:Model Parameters:
-CRITICAL:root:{'n_units': (64, 32, 16), 'n_inputs': 54, 'n_actions': 5, 'activation_function': <function relu at 0x000001CA3BCFF168>, 'weights_file_path': './models/model_weights', 'seed': 3926932992}
+CRITICAL:root:{'n_units': (64, 32, 16), 'n_inputs': 54, 'n_actions': 5, 'activation_function': <function relu at 0x0000021F997B2168>, 'weights_file_path': './models/model_weights', 'seed': 2431373007}
 CRITICAL:root:Training param:
-CRITICAL:root:{'max_timesteps': 2000.0, 'max_episodes': 250, 'final_return': 10000000000.0, 'show_train_plots': False, 'plot_freq': 50, 'sim_timesteps': 100, 'buffer_size': 10000, 'batch_size': 32, 'epsilon_max': 0.1, 'epsilon_min': 1.0, 'decay_rate': 0.9999, 'model_update_rate': 1, 'target_update_rate': 30, 'policy_rate': 10, 'gamma': 0.99, 'clip_gradients': False, 'clip_norm': 2, 'learning_rate': 0.0005, 'optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x000001CA419143C8>, 'loss_func': <tensorflow.python.keras.losses.Huber object at 0x000001CA45CE7908>, 'seed': 3926932992, 'standardise_returns': True, 'reward_weights': array([ 1.  ,  0.01,  1.  ,  0.2 , -5.  ]), 'use_per': True, 'alpha': 0.75, 'beta': 0.2, 'beta_increment': 8e-05, 'use_duelling': True}
+CRITICAL:root:{'max_timesteps': 2000.0, 'max_episodes': 250, 'final_return': 10000000000.0, 'show_train_plots': False, 'plot_freq': 50, 'sim_timesteps': 100, 'buffer_size': 10000, 'batch_size': 32, 'epsilon_max': 0.1, 'epsilon_min': 1.0, 'decay_rate': 0.9999, 'model_update_rate': 100, 'target_update_rate': 3000, 'policy_rate': 10, 'gamma': 0.99, 'clip_gradients': False, 'clip_norm': 2, 'learning_rate': 0.0005, 'optimiser': <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x0000021F9F5B8AC8>, 'loss_func': <tensorflow.python.keras.losses.Huber object at 0x0000021FA3645288>, 'seed': 2431373007, 'standardise_returns': False, 'reward_weights': array([ 1.  ,  0.01,  1.  ,  0.2 , -5.  ]), 'use_per': True, 'alpha': 0.75, 'beta': 0.2, 'beta_increment': 8e-05, 'use_duelling': True}
 CRITICAL:root:Episode number: 1.00
 CRITICAL:root:Episode number: 2.00
+CRITICAL:root:Episode number: 3.00
+CRITICAL:root:Episode number: 4.00
+CRITICAL:root:Episode number: 5.00
+CRITICAL:root:Running reward = 3.85 at episode 5. Loss = 3.20. Epsilon = 0.95.
+CRITICAL:root:Episode number: 6.00
+CRITICAL:root:Episode number: 7.00
+CRITICAL:root:Episode number: 8.00
+CRITICAL:root:Episode number: 9.00
+CRITICAL:root:Episode number: 10.00
+CRITICAL:root:Running reward = 3.68 at episode 10. Loss = 2.98. Epsilon = 0.91.
+CRITICAL:root:Episode number: 11.00
+CRITICAL:root:Episode number: 12.00
+CRITICAL:root:Episode number: 13.00
+CRITICAL:root:Episode number: 14.00
+CRITICAL:root:Episode number: 15.00
+CRITICAL:root:Running reward = 3.71 at episode 15. Loss = 2.85. Epsilon = 0.86.
+CRITICAL:root:Episode number: 16.00
+CRITICAL:root:Episode number: 17.00
+CRITICAL:root:Episode number: 18.00
+CRITICAL:root:Episode number: 19.00
+CRITICAL:root:Episode number: 20.00
+CRITICAL:root:Running reward = 4.20 at episode 20. Loss = 3.76. Epsilon = 0.82.
+CRITICAL:root:Episode number: 21.00
+CRITICAL:root:Episode number: 22.00
+CRITICAL:root:Episode number: 23.00
+CRITICAL:root:Episode number: 24.00
+CRITICAL:root:Episode number: 25.00
+CRITICAL:root:Running reward = 3.76 at episode 25. Loss = 3.22. Epsilon = 0.78.
+CRITICAL:root:Episode number: 26.00
+CRITICAL:root:Episode number: 27.00
+CRITICAL:root:Episode number: 28.00
+CRITICAL:root:Episode number: 29.00
+CRITICAL:root:Episode number: 30.00
+CRITICAL:root:Running reward = 4.04 at episode 30. Loss = 3.70. Epsilon = 0.74.
+CRITICAL:root:Episode number: 31.00
+CRITICAL:root:Episode number: 32.00
+CRITICAL:root:Episode number: 33.00
+CRITICAL:root:Episode number: 34.00
+CRITICAL:root:Episode number: 35.00
+CRITICAL:root:Running reward = 4.23 at episode 35. Loss = 4.17. Epsilon = 0.70.
+CRITICAL:root:Episode number: 36.00
+CRITICAL:root:Episode number: 37.00
+CRITICAL:root:Episode number: 38.00
+CRITICAL:root:Episode number: 39.00
+CRITICAL:root:Episode number: 40.00
+CRITICAL:root:Running reward = 4.16 at episode 40. Loss = 4.28. Epsilon = 0.67.
+CRITICAL:root:Episode number: 41.00
+CRITICAL:root:Episode number: 42.00
+CRITICAL:root:Episode number: 43.00
+CRITICAL:root:Episode number: 44.00
+CRITICAL:root:Episode number: 45.00
+CRITICAL:root:Running reward = 3.83 at episode 45. Loss = 4.41. Epsilon = 0.64.
+CRITICAL:root:Episode number: 46.00
+CRITICAL:root:Episode number: 47.00
