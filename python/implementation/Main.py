@@ -149,7 +149,7 @@ class Main(object):
                     print("Saved network weights.")
 
                 # Running reward smoothing effect
-                running_reward = 0.05 * reward + (1 - 0.05) * running_reward
+                running_reward = reward #0.05 * reward + (1 - 0.05) * running_reward
 
 
             if episode_count % 5 == 0 and trained:
@@ -391,7 +391,7 @@ if __name__=="__main__":
     EPSILON_MIN = 1.0           # Exploration
     EPSILON_MAX = 0.1           # Exploitation
     DECAY_RATE = 0.9999#0.999992
-    MODEL_UPDATE_RATE = 1
+    MODEL_UPDATE_RATE = 100
     TARGET_UPDATE_RATE = 30*MODEL_UPDATE_RATE
     LEARN_RATE = 0.0005         # range: 1e-3 - 1e-4
     OPTIMISER = tf.optimizers.Adam(learning_rate=LEARN_RATE)
@@ -401,7 +401,7 @@ if __name__=="__main__":
     CLIP_NORM = 2
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
     REWARD_WEIGHTS = np.array([1.0, 0.01, 1.0, 0.2, -5])
-    STANDARDISE_RETURNS = True  # TODO additional variable for SPG
+    STANDARDISE_RETURNS = False  # TODO additional variable for SPG
     USE_PER = True
     ALPHA = 0.75                # Priority scale: a=0:random, a=1:completely based on priority
     BETA = 0.2                  # Prioritisation factor
