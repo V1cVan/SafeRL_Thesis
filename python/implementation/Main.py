@@ -390,7 +390,7 @@ if __name__=="__main__":
     BATCH_SIZE = 32            # range: 32 - 150
     EPSILON_MIN = 1.0           # Exploration
     EPSILON_MAX = 0.1           # Exploitation
-    DECAY_RATE = 0.9999#0.999992
+    DECAY_RATE = 0.99995 #0.999992
     MODEL_UPDATE_RATE = 100
     TARGET_UPDATE_RATE = 30*MODEL_UPDATE_RATE
     LEARN_RATE = 0.0005         # range: 1e-3 - 1e-4
