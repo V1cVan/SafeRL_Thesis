@@ -74,16 +74,16 @@ class RewardFunction(object):
 
     def _get_velocity_reward(self, current_velocity):
         max_vel = 120 / 3.6
-        reward_vel = np.exp(-(max_vel - current_velocity) ** 2 / 500)
+        reward_vel = np.exp(-(max_vel - current_velocity) ** 2 / 300)
         return reward_vel
 
     def _get_lane_centre_reward(self, lane_offset):
-        reward_offset = np.exp(-(lane_offset) ** 2 / 3.6)
+        reward_offset = np.exp(-(lane_offset) ** 2 / 1.18)
         return reward_offset
 
     def _get_follow_dist_reward(self, following_distance):
-        distance_limit = 5
-        reward_following_distance = -np.exp(-(distance_limit - following_distance) ** 2 / 150)
+        distance_limit = 0
+        reward_following_distance = -np.exp(-(distance_limit - following_distance) ** 2 / 250)
         return reward_following_distance
 
     def _get_right_lane_reward(self, total_road_width, dist_to_edge):
