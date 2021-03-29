@@ -95,11 +95,11 @@ class DqnAgent(keras.models.Model):
         epsilon = self.calc_epsilon()
 
         if np.random.rand() < epsilon and not self.evaluation:
-            return np.random.randint(0, 5)
+            self.latest_action = np.random.randint(0, 5)
         else:
             # Otherwise, query the DQN for an action
             self.latest_action = np.argmax(Q, axis=1)[0]
-            return self.latest_action
+        return self.latest_action
 
     def update_target_net(self):
         self.Q_target_net.set_weights(self.Q_actual_net.get_weights())
