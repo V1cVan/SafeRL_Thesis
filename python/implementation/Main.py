@@ -32,7 +32,7 @@ class Main(object):
         # Create object for data logging and visualisation
         self.data_logger = DataLogger(model_param, training_param)
         self.plotTimer = Timer("Plotting")
-        self.trainerTimer = Timer("the Trainer")
+
         self.episodeTimer = Timer("Episode")
 
     # ...
@@ -91,45 +91,47 @@ class Main(object):
             # print("Episode number: %0.2f" % episode_count)
             logging.critical("Episode number: %0.2f" % episode_count)
 
+            self.episodeTimer.startTime()
             # Set simulation environment
             with self.sim:
                 # Loop through each timestep in episode.
-                with self.episodeTimer:
-                    # Run the model for one episode to collect training data
-                    # Saves actions values, critic values, and rewards in policy class variables
-                    for t in np.arange(1, max_timesteps+1):
-                        # logging.critical("Timestep of episode: %0.2f" % self.sim.k)
 
-                        # Perform one simulations step:
-                        if not self.sim.stopped:
-                            self.sim.step()  # Calls AcPolicy.customAction method.
+                # Run the model for one episode to collect training data
+                for t in np.arange(1, max_timesteps+1):
+                    # logging.critical("Timestep of episode: %0.2f" % self.sim.k)
 
-                            # TODO Reformat so that check is done after sim.step()
-                            # TODO maybe add penalties for collisions
-                            # self.policy.agent.stop_flags = self.sim.stopped or self.sim._collision
-                            # if self.policy.agent.stop_flags == True:
-                            #     self.policy.agent.buffer.alter_buffer_stop_flag(flag=self.policy.agent.stop_flags)
-                            done = self.sim.stopped  # or self.sim._collision
-                            if self.policy.agent.is_action_taken:
-                                self.policy.agent.add_experience(done)
-                                episode_reward_list.append(self.policy.agent.latest_experience[2])
+                    # Perform one simulations step:
+                    if not self.sim.stopped:
+                        self.sim.step()  # Calls AcPolicy.customAction method.
 
-                        if t % training_param["policy_rate"] == 0:
-                            train_counter += 1
-                            self.policy.agent.epsilon_decay_count = train_counter
-                            self.policy.agent.timestep = np.int(t / training_param["policy_rate"])
-                            if self.policy.agent.buffer.is_buffer_min_size():
-                                model_update_counter += 1
-                                if model_update_counter % training_param["model_update_rate"] == 0:
-                                    # TODO add data to episode buffer to get episode rewards while training.
-                                    _, loss = self.policy.agent.train_step()
-                                    trained = True
+                        # TODO Reformat so that check is done after sim.step()
+                        # TODO maybe add penalties for collisions
+                        # self.policy.agent.stop_flags = self.sim.stopped or self.sim._collision
+                        # if self.policy.agent.stop_flags == True:
+                        #     self.policy.agent.buffer.alter_buffer_stop_flag(flag=self.policy.agent.stop_flags)
+                        done = self.sim.stopped  # or self.sim._collision
+                        if self.policy.agent.is_action_taken:
+                            self.policy.agent.add_experience(done)
+                            episode_reward_list.append(self.policy.agent.latest_experience[2])
 
-                                if model_update_counter % training_param["target_update_rate"] == 0:
-                                    self.policy.agent.update_target_net()
-                                    # print("Updated target net.")
+                    if t % training_param["policy_rate"] == 0:
+                        train_counter += 1
+                        self.policy.agent.epsilon_decay_count = train_counter
+                        self.policy.agent.timestep = np.int(t / training_param["policy_rate"])
+                        if self.policy.agent.buffer.is_buffer_min_size():
+                            model_update_counter += 1
+                            if model_update_counter % training_param["model_update_rate"] == 0:
+                                # TODO add data to episode buffer to get episode rewards while training.
+                                _, loss = self.policy.agent.train_step()
+                                trained = True
+
+                            if model_update_counter % training_param["target_update_rate"] == 0:
+                                self.policy.agent.update_target_net()
+                                # print("Updated target net.")
 
             reward = np.sum(episode_reward_list)/len(episode_reward_list)
+
+            time_taken = self.episodeTimer.endTime()
 
             if trained:
                 if 0.05 * reward + (1 - 0.05) * running_reward > running_reward and episode_count % 50 == 0:
@@ -143,12 +145,12 @@ class Main(object):
             if episode_count % 1 == 0 and trained:
                 epsilon = self.policy.agent.calc_epsilon()
                 if training_param["use_per"]:
-                    print_template = "Running reward = {:.2f} ({:.2f}) at episode {}. Loss = {:.2f}. Epsilon = {:.2f}. Beta = {:.2f}."
+                    print_template = "Running reward = {:.2f} ({:.2f}) at episode {}. Loss = {:.2f}. Epsilon = {:.2f}. Beta = {:.2f}. Episode timer = {:.2f}"
                     print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon,
-                                                         self.policy.agent.buffer.beta)
+                                                         self.policy.agent.buffer.beta, time_taken)
                 else:
-                    print_template = "Running reward = {:.2f} ({:.2f}) at episode {}. Loss = {:.2f}. Epsilon = {:.2f}."
-                    print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon)
+                    print_template = "Running reward = {:.2f} ({:.2f}) at episode {}. Loss = {:.2f}. Epsilon = {:.2f}. Episode timer = {:.2f}"
+                    print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon, time_taken)
 
                 loss_list.append(loss)
                 episode_list.append(episode_count)
@@ -346,6 +348,7 @@ if __name__=="__main__":
     with open('./logfiles/main.log', 'w'):
         pass  # Clear the log file of previous run
 
+    config.seed = 10
     SEED = config.seed
     tf.random.set_seed(SEED)
     np.random.seed(SEED)
@@ -376,7 +379,7 @@ if __name__=="__main__":
     SHOW_TRAIN_PLOTS = False
     PLOT_FREQ = 50
     SIM_TIMESTEPS = 200
-    SCENARIO_NUM = 1        # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
+    SCENARIO_NUM = 0        # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
     BUFFER_SIZE = 1000000
     BATCH_SIZE = 100          # range: 32 - 150
     EPSILON_MIN = 1.0           # Exploration
@@ -397,7 +400,8 @@ if __name__=="__main__":
     ALPHA = 0.75                # Priority scale: a=0:random, a=1:completely based on priority
     BETA = 0.2                  # Prioritisation factor
     BETA_INCREMENT = 0.001     # Rate of Beta annealing to 1 # TODO plotting of beta number
-    USE_DUELLING = True
+    USE_DUELLING = False
+    USE_DEEPSET = True
     # TODO comparitive plotting of standard DQN, DDQN, PER, and Duelling
     # TODO plotting of average reward of vehicle that just speeds up
     training_param = {
@@ -428,7 +432,8 @@ if __name__=="__main__":
         "alpha": ALPHA,
         "beta": BETA,
         "beta_increment": BETA_INCREMENT,
-        "use_duelling": USE_DUELLING
+        "use_duelling": USE_DUELLING,
+        "use_deepset": USE_DEEPSET
     }
     logging.critical("Training param:")
     logging.critical(training_param)
@@ -449,8 +454,12 @@ if __name__=="__main__":
     # spg_policy_double = DiscreteDoubleActionPolicy(agent=spg_agent_double)
 
     # TODO Compare DQN DDQN PER and DUELLING ON SAME RANDOM SEED!
-    if USE_DUELLING:
-        DQ_net = DuellingDqnNetwork(model_param=model_param)
+    # if USE_DUELLING:
+    #     DQ_net = DuellingDqnNetwork(model_param=model_param)
+    # else:
+    #     DQ_net = DeepQNetwork(model_param=model_param)
+    if USE_DEEPSET:
+        DQ_net = DeepSetQNetwork(model_param=model_param)
     else:
         DQ_net = DeepQNetwork(model_param=model_param)
     dqn_agent = DqnAgent(network=DQ_net, training_param=training_param)
@@ -466,7 +475,7 @@ if __name__=="__main__":
     # Train model:
 
     # TODO Ensure Dmax is consistently 150 when merging the branch with master!!!!!
-    # main.train_policy()  # TODO !!!
+    main.train_policy()  # TODO !!!
 
     # TODO Tidy up simulation part:
     # Simulate model:

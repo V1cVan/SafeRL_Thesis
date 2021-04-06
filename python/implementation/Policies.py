@@ -150,7 +150,7 @@ def decompose_state(veh):
 
     dynamic_state = tf.expand_dims(tf.convert_to_tensor(dynamic_state, dtype=tf.float32, name="dynamic_state_input"), 0)
 
-    return static_state, dynamic_state
+    return [dynamic_state, static_state]
 
 
 class RewardFunction(object):
@@ -300,8 +300,10 @@ class DiscreteSingleActionPolicy(CustomPolicy):
             veh.counter = self.STEP_TIME
             # Set current vehicle state and action pair
             veh.s1 = veh.s_raw
-            veh.s1_mod = convert_state(veh)
-            decompose_state(veh)
+            if self.agent.training_param["use_deepset"]:
+                veh.s1_mod = decompose_state(veh)
+            else:
+                veh.s1_mod = convert_state(veh)
             Q = self.get_action(veh.s1_mod)
             veh.a1_mod = Q
             action_choice = self.agent.get_action_choice(Q)
@@ -315,10 +317,10 @@ class DiscreteSingleActionPolicy(CustomPolicy):
                 veh.reward = (self.rewards.get_reward(agent=self.agent, veh=veh) + np.sum(veh.rew_buffer))/self.STEP_TIME
                 if self.agent is not None and self.agent.training is True:
                     # Save action taken previously on previous state value
-                    experience = (np.squeeze(veh.s0_mod),
+                    experience = (veh.s0_mod,
                                   veh.a0_choice,
                                   veh.reward,
-                                  np.squeeze(veh.s1_mod))
+                                  veh.s1_mod)
                     self.agent.latest_experience = experience
                     self.agent.is_action_taken = True
 

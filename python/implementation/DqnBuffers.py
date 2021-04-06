@@ -2,6 +2,7 @@ import numpy as np
 from collections import deque
 import tensorflow as tf
 import random
+from HelperClasses import Timer
 
 
 class TrainingBuffer(object):
@@ -11,25 +12,56 @@ class TrainingBuffer(object):
     the network 'forgets' good actions that it learnt previously.
     """
 
-    def __init__(self, buffer_size, batch_size):
+    def __init__(self, buffer_size, batch_size, use_deepset=False):
         self.buffer_size = buffer_size
         self.buffer = deque(maxlen=buffer_size)
         self.batch_size = batch_size
+        self.use_deepset = use_deepset
 
     def add_experience(self, experience):
         """
         Add an experience (s_k, a_k, r_k, s_k+1) to the training buffer.
         """
-        self.buffer.append(experience)
+        if self.use_deepset:
+            states, actions, rewards, next_states, done = experience
+            dynamic_states = np.squeeze(states[0])
+            static_states = np.squeeze(states[1])
+            dynamic_next_states = np.squeeze(next_states[0])
+            static_next_states = np.squeeze(next_states[1])
+            experience = (dynamic_states, static_states,
+                          actions, rewards,
+                          dynamic_next_states, static_next_states,
+                          done)
+            self.buffer.append(experience)
+        else:
+            states, actions, rewards, next_states, done = experience
+            experience = (np.squeeze(states), actions, rewards, np.squeeze(next_states), done)
+            self.buffer.append(experience)
 
     def get_training_samples(self):
         """ Get minibatch for training. """
         mini_batch = random.sample(self.buffer, self.batch_size)
-        states = tf.squeeze(tf.convert_to_tensor([each[0] for each in mini_batch], dtype=np.float32))
-        actions = tf.squeeze(tf.convert_to_tensor(np.array([each[1] for each in mini_batch])))
-        rewards = tf.squeeze(tf.convert_to_tensor(np.array([each[2] for each in mini_batch], dtype=np.float32)))
-        next_states = tf.squeeze(tf.convert_to_tensor(np.array([each[3] for each in mini_batch], dtype=np.float32)))
-        done = tf.cast([each[4] for each in mini_batch], dtype=tf.float32)
+        # TODO Remove additional for loops to speed up training
+        if self.use_deepset:
+            dynamic_states = tf.squeeze(tf.convert_to_tensor([each[0] for each in mini_batch], dtype=np.float32))
+            static_states = tf.squeeze(tf.convert_to_tensor([each[1] for each in mini_batch], dtype=np.float32))
+            states = (dynamic_states, static_states)
+
+            actions = tf.squeeze(tf.convert_to_tensor(np.array([each[2] for each in mini_batch])))
+            rewards = tf.squeeze(tf.convert_to_tensor(np.array([each[3] for each in mini_batch], dtype=np.float32)))
+
+            dynamic_next_states = tf.squeeze(tf.convert_to_tensor([each[4] for each in mini_batch], dtype=np.float32))
+            static_next_states = tf.squeeze(tf.convert_to_tensor([each[5] for each in mini_batch], dtype=np.float32))
+            next_states = (dynamic_next_states, static_next_states)
+
+            done = tf.cast([each[6] for each in mini_batch], dtype=tf.float32)
+        else:
+            states = tf.squeeze(tf.convert_to_tensor([each[0] for each in mini_batch], dtype=np.float32))
+            actions = tf.squeeze(tf.convert_to_tensor(np.array([each[1] for each in mini_batch])))
+            rewards = tf.squeeze(tf.convert_to_tensor(np.array([each[2] for each in mini_batch], dtype=np.float32)))
+            next_states = tf.squeeze(tf.convert_to_tensor(np.array([each[3] for each in mini_batch], dtype=np.float32)))
+            done = tf.cast([each[4] for each in mini_batch], dtype=tf.float32)
+
         return states, actions, rewards, next_states, done
 
     def alter_buffer_stop_flag(self, flag):
