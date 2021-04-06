@@ -104,11 +104,6 @@ class Main(object):
                         if not self.sim.stopped:
                             self.sim.step()  # Calls AcPolicy.customAction method.
 
-                            # TODO Reformat so that check is done after sim.step()
-                            # TODO maybe add penalties for collisions
-                            # self.policy.agent.stop_flags = self.sim.stopped or self.sim._collision
-                            # if self.policy.agent.stop_flags == True:
-                            #     self.policy.agent.buffer.alter_buffer_stop_flag(flag=self.policy.agent.stop_flags)
                             done = self.sim.stopped  # or self.sim._collision
                             if self.policy.agent.is_action_taken:
                                 self.policy.agent.add_experience(done)
@@ -350,7 +345,7 @@ if __name__=="__main__":
     np.random.seed(SEED)
 
     # Model parameters:
-    N_UNITS = (64, 32, 18)
+    N_UNITS = (64, 32, 16)
     N_INPUTS = 54
     N_ACTIONS = 5
     ACT_FUNC = tf.nn.swish
@@ -368,29 +363,29 @@ if __name__=="__main__":
     pic.dump(model_param, open("./models/model_variables", "wb"))
 
     # Training parameters:
-    POLICY_ACTION_RATE = 7     # Number of simulator steps before new control action is taken
-    MAX_TIMESTEPS = 2.5e3         # range: 5e3 - 10e3
-    MAX_EPISODES = 2500 #1.2e3
-    FINAL_RETURN = 0.9
+    POLICY_ACTION_RATE = 8      # Number of simulator steps before new control action is taken
+    MAX_TIMESTEPS = 2.5e3       # range: 5e3 - 10e3
+    MAX_EPISODES = 5000 #1.2e3
+    FINAL_RETURN = 0.93
     SHOW_TRAIN_PLOTS = False
     PLOT_FREQ = 50
     SIM_TIMESTEPS = 200
-    SCENARIO_NUM = 0        # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
-    BUFFER_SIZE = 200000
-    BATCH_SIZE = 50           # range: 32 - 150
+    SCENARIO_NUM = 0            # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
+    BUFFER_SIZE = 1000000
+    BATCH_SIZE = 64             # range: 32 - 150
     EPSILON_MIN = 1.0           # Exploration
     EPSILON_MAX = 0.1           # Exploitation
-    DECAY_RATE = 0.999993 #0.999992
+    DECAY_RATE = 0.999997 #0.999992
     MODEL_UPDATE_RATE = 1
-    TARGET_UPDATE_RATE = 2500
-    LEARN_RATE = 0.0005         # range: 1e-3 - 1e-4
+    TARGET_UPDATE_RATE = 10e4
+    LEARN_RATE = 0.0001         # range: 1e-3 - 1e-4
     OPTIMISER = tf.optimizers.Adam(learning_rate=LEARN_RATE)
     LOSS_FUNC = tf.losses.Huber()
     GAMMA = 0.99                # range: 0.95 - 0.99
     CLIP_GRADIENTS = True
     CLIP_NORM = 2
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
-    REWARD_WEIGHTS = np.array([1.0, 0.1, 0.9, 0.45, -5])
+    REWARD_WEIGHTS = np.array([1.0, 0.2, 0.9, 0.4, -5])
     STANDARDISE_RETURNS = True  # TODO additional variable for SPG
     USE_PER = False
     ALPHA = 0.75                # Priority scale: a=0:random, a=1:completely based on priority
