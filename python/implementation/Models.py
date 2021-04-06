@@ -5,6 +5,34 @@ import numpy as np
 from HelperClasses import EpisodeBuffer, DataLogger
 
 
+class DeepSetQNetwork(keras.Model):
+    """
+    Builds a deep Q-network using DeepSetQ approach incorporating permutation invariance.
+    """
+    def __init__(self, model_param):
+        super(DeepSetQNetwork, self).__init__()
+        self.model_param = model_param
+        tf.random.set_seed(model_param["seed"])
+        np.random.seed(model_param["seed"])
+        act_func = model_param["activation_function"]
+        n_units = model_param["n_units"]
+        n_inputs_static = 1
+        n_inputs_dynamic = 1
+        max_perceived = 12      # By default hwsim can perceive a maximum of 12 vehicles around the ego vehicle
+        n_actions = model_param["n_actions"]
+
+        he = tf.keras.initializers.HeUniform()
+
+        static_input_layer = layers.Input(shape=(n_inputs_static, ), name="StaticStateInput")
+        dynamic_input_layer = layers.Input(shape=(n_inputs_dynamic, ), name="DynamicStateInput")
+
+        phi_layer_11 = layers.Dense(16, activation=act_func, kernel_initializer=he, name="PhiLayer1")(dynamic_input_layer)
+        phi_layer_12 = layers.Dense(16, activation=act_func, kernel_initializer=he, name="PhiLayer2")(phi_layer_11)
+        # concat all phi
+        avg_pooling_layer = layers.AveragePooling2D(pool_size=(n_inputs_dynamic, 1), strides=(0, 1), padding='valid')
+        # sum_pooling_layer = layers.Lambda
+
+
 class DeepQNetwork(keras.Model):
     """
     Double Deep Q-network

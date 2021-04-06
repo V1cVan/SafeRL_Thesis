@@ -210,7 +210,7 @@ def sim_types(scenario_num, policy):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"amount": 1, "model": KBModel(), "policy": policy},
+            {"amount": 1, "model": KBModel(), "policy": policy, "D_MAX": 160},
             # {"amount": 2, "model": KBModel(), "policy": StepPolicy(10, [0.1, 0.5])},
             # {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
             # {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
@@ -231,7 +231,7 @@ def sim_types(scenario_num, policy):
         "k0": 0,
         "replay": False,
         "vehicles": [
-            {"amount": 1, "model": KBModel(), "policy": policy, "R": 0, "l": lane, "s": 0, "v": np.random.random(1)*30.0},
+            {"amount": 1, "model": KBModel(), "policy": policy, "R": 0, "l": lane, "s": 0, "v": np.random.random(1)*30.0, "D_MAX": 160},
             # {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": lane, "s": 30, "v": 28},
         ]
     }
@@ -245,13 +245,14 @@ def sim_types(scenario_num, policy):
         "replay": False,
         "vehicles": [
             {"model": KBModel(), "policy": policy, "R": 0, "l": 0, "s": 0,
-             "v": random.randint(25, 28)},
+             "v": random.randint(25, 28), "D_MAX": 160},
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 0, "s": 50, "v": 28},
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 50, "v": 28},
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 3.6, "s": 120, "v": 28},
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 0, "s": 140, "v": 28},
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 140, "v": 28},
-            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 300, "v": 28},            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 120, "v": 24},
+            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 300, "v": 28},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 120, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 0, "s": 300, "v": 28}
         ]
     }
@@ -265,7 +266,7 @@ def sim_types(scenario_num, policy):
         "replay": False,
         "vehicles": [
             {"model": KBModel(), "policy": policy, "R": 0, "l": 3.6, "s": 0,
-             "v": random.randint(25, 28)},
+             "v": random.randint(25, 28), "D_MAX": 160},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 40, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 50, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 150, "v": 24},
@@ -282,7 +283,7 @@ def sim_types(scenario_num, policy):
         "replay": False,
         "vehicles": [
             {"model": KBModel(), "policy": policy, "R": 0, "l": 3.6, "s": 0,
-             "v": random.randint(25, 28)},
+             "v": random.randint(25, 28), "D_MAX": 160},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 0, "v": 24}
         ]
@@ -297,7 +298,7 @@ def sim_types(scenario_num, policy):
         "replay": False,
         "vehicles": [
             {"model": KBModel(), "policy": policy, "R": 0, "l": -3.6, "s": 0,
-             "v": random.randint(25, 28)},
+             "v": random.randint(25, 28), "D_MAX": 160},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 10, "v": 24}
         ]
@@ -312,7 +313,7 @@ def sim_types(scenario_num, policy):
         "replay": False,
         "vehicles": [
             {"model": KBModel(), "policy": policy, "R": 0, "l": 0, "s": 0,
-             "v": random.randint(25, 28)},
+             "v": random.randint(25, 28), "D_MAX": 160},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 20, "v": 24},
@@ -351,7 +352,7 @@ if __name__=="__main__":
 
     # Model parameters:
     N_UNITS = (64, 32, 18)
-    N_INPUTS = 54
+    N_INPUTS = 55
     N_ACTIONS = 5
     ACT_FUNC = tf.nn.swish
     MODEL_FILE_PATH = "./models/model_weights"
@@ -375,7 +376,7 @@ if __name__=="__main__":
     SHOW_TRAIN_PLOTS = False
     PLOT_FREQ = 50
     SIM_TIMESTEPS = 200
-    SCENARIO_NUM = 0        # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
+    SCENARIO_NUM = 1        # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
     BUFFER_SIZE = 1000000
     BATCH_SIZE = 100          # range: 32 - 150
     EPSILON_MIN = 1.0           # Exploration
@@ -463,7 +464,9 @@ if __name__=="__main__":
     # main.policy.agent.Q_actual_net.load_weights(MODEL_FILE_PATH)
     main.policy.agent.evaluation = False
     # Train model:
-    main.train_policy()
+
+    # TODO Ensure Dmax is consistently 150 when merging the branch with master!!!!!
+    # main.train_policy()  # TODO !!!
 
     # TODO Tidy up simulation part:
     # Simulate model:
