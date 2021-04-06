@@ -95,11 +95,11 @@ class DqnAgent(keras.models.Model):
         epsilon = self.calc_epsilon()
 
         if np.random.rand() < epsilon and not self.evaluation:
-            return np.random.randint(0, 5)
+            self.latest_action = np.random.randint(0, 5)
         else:
             # Otherwise, query the DQN for an action
             self.latest_action = np.argmax(Q, axis=1)[0]
-            return self.latest_action
+        return self.latest_action
 
     def update_target_net(self):
         self.Q_target_net.set_weights(self.Q_actual_net.get_weights())
@@ -111,9 +111,9 @@ class DqnAgent(keras.models.Model):
             # Gather and convert data from the buffer (data from simulation):
             # Sample mini-batch from memory
             if self.training_param["use_per"]:
-                states, actions, rewards, next_states, done, _, is_weight = self.buffer.get_training_samples()
+                states, actions, rewards, next_states, done, idxs, is_weight = self.buffer.get_training_samples()
                 one_hot_actions = tf.keras.utils.to_categorical(actions, num_classes=n_actions)
-                mean_batch_reward, loss = self.run_tape(
+                mean_batch_reward, loss, td_error = self.run_tape(
                     states=states,
                     actions=one_hot_actions,
                     rewards=rewards,
@@ -123,13 +123,15 @@ class DqnAgent(keras.models.Model):
             else:
                 states, actions, rewards, next_states, done = self.buffer.get_training_samples()
                 one_hot_actions = tf.keras.utils.to_categorical(actions, num_classes=n_actions)
-                mean_batch_reward, loss = self.run_tape(
+                mean_batch_reward, loss, td_error = self.run_tape(
                     states=states,
                     actions=one_hot_actions,
                     rewards=rewards,
                     next_states=next_states,
                     done=done)
 
+            if self.training_param["use_per"]:
+                self.buffer.update(idxs, td_error)
             # self.buffer.set_training_variables(
             #     episode_num=self.episode,
             #     episode_reward=episode_reward,
@@ -163,11 +165,15 @@ class DqnAgent(keras.models.Model):
             Q_output = self.Q_actual_net(states)
             Q_predicted = tf.reduce_sum(Q_output * actions, axis=1)
 
-            loss_value = self.training_param["loss_func"](Q_target, Q_predicted)
+            td_error = Q_target - Q_predicted
+
+            loss_value = self.training_param["loss_func"](y_true=Q_target, y_pred=Q_predicted)
+
+            # loss_value = self.training_param["loss_func"](Q_target, Q_predicted)
             # loss_value = tf.losses.MSE(y_true=target_output, y_pred=predicted_output)
             # loss_value = tf.reduce_mean(tf.square(Q_target - Q_predicted))
             if self.training_param["use_per"]:
-                loss_value = tf.reduce_mean(loss_value * is_weight)
+                loss_value = tf.reduce_mean(is_weight * loss_value)
 
         grads = tape.gradient(loss_value, self.Q_actual_net.trainable_variables)
         # Clip gradients
@@ -180,7 +186,7 @@ class DqnAgent(keras.models.Model):
         sum_reward = tf.math.reduce_sum(rewards)
         mean_batch_reward = sum_reward / self.buffer.batch_size
 
-        return mean_batch_reward, loss_value
+        return mean_batch_reward, loss_value, td_error
 
 
 class SpgAgentSingle(keras.models.Model):
