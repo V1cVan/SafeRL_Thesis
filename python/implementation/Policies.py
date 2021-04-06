@@ -72,21 +72,21 @@ def convert_state(veh):
 
 class RewardFunction(object):
 
-    def get_velocity_reward(self, current_velocity):
+    def _get_velocity_reward(self, current_velocity):
         max_vel = 120 / 3.6
-        reward_vel = np.exp(-(max_vel - current_velocity) ** 2 / 500)
+        reward_vel = np.exp(-(max_vel - current_velocity) ** 2 / 300)
         return reward_vel
 
-    def get_lane_centre_reward(self, lane_offset):
-        reward_offset = np.exp(-(lane_offset) ** 2 / 3.6)
+    def _get_lane_centre_reward(self, lane_offset):
+        reward_offset = np.exp(-(lane_offset) ** 2 / 1.18)
         return reward_offset
 
-    def get_follow_dist_reward(self, following_distance):
-        distance_limit = 5
-        reward_following_distance = -np.exp(-(distance_limit - following_distance) ** 2 / 150)
+    def _get_follow_dist_reward(self, following_distance):
+        distance_limit = 0
+        reward_following_distance = -np.exp(-(distance_limit - following_distance) ** 2 / 250)
         return reward_following_distance
 
-    def get_right_lane_reward(self, total_road_width, dist_to_edge):
+    def _get_right_lane_reward(self, total_road_width, dist_to_edge):
         reward_right_lane = ((1 - 0) / (0 - total_road_width)) * dist_to_edge + 1
         # reward_right_lane = (1 / total_road_width) * dist_to_edge  # Stay left
         return reward_right_lane
@@ -102,29 +102,36 @@ class RewardFunction(object):
         w_dist = agent.reward_weights[2]  # Following distance
         w_stay_right = agent.reward_weights[3]  # Staying in right lane
         weights_sum = np.sum(np.array([w_vel, w_off, w_dist, w_stay_right]))
+        w_vel = w_vel/weights_sum
+        w_off = w_off/weights_sum
+        w_dist = w_dist/weights_sum
+        w_stay_right = w_stay_right/weights_sum
 
         # Reward function declaration:
         reward = np.array([0], dtype=np.float32)
         if veh is not None:
             # Velocity reward:
             v = np.squeeze(veh.s["vel"])[0]
-            r_vel = self.get_velocity_reward(current_velocity=v)
+            r_vel = self._get_velocity_reward(current_velocity=v)
 
             # TODO remove lane centre reward when acting with discrete lane changes
             # Lane center reward:
             lane_offset = np.squeeze(veh.s["laneC"]["off"])
-            r_off = self.get_lane_centre_reward(lane_offset=lane_offset)
+            r_off = self._get_lane_centre_reward(lane_offset=lane_offset)
 
             # Following distance:
             d_gap = veh.s["laneC"]["relF"]["gap"][0, 0]
-            r_follow = self.get_follow_dist_reward(following_distance=d_gap)
+            r_follow = self._get_follow_dist_reward(following_distance=d_gap)
 
             # Stay right:
             road_width = veh.s["laneC"]["width"] * 3
             road_edge_dist = veh.s["gapB"][0]
-            r_right = self.get_right_lane_reward(total_road_width=road_width, dist_to_edge=road_edge_dist)
+            r_right = self._get_right_lane_reward(total_road_width=road_width, dist_to_edge=road_edge_dist)
 
-            reward = (w_vel * r_vel + w_off * r_off + w_dist * r_follow + w_stay_right * r_right) / weights_sum
+            reward = (w_vel * r_vel + w_off * r_off + w_dist * r_follow + w_stay_right * r_right)
+            reward_max = w_vel * 1.0 + w_off * 1.0 + w_dist * 0.0 + w_stay_right * 1.0
+            reward_min = w_vel * 0.0 + w_off * 0.0 + w_dist * -1.0 + w_stay_right * 0.0
+            reward = (reward - reward_min) / (reward_max - reward_min)
         else:
             reward = 0
         return reward
@@ -134,21 +141,21 @@ class RewardFunction(object):
 
         fig, axs = plt.subplots(2, 2)
         vel = np.linspace(0, 130 / 3.6, 100)
-        rew = self.get_velocity_reward(vel)
+        rew = self._get_velocity_reward(vel)
         axs[0, 0].plot(vel, rew)
         axs[0, 0].set_title('Velocity reward')
         axs[0, 0].grid(True)
         axs[0, 0].set(xlabel='Velocity', ylabel='Reward')
 
         y = np.linspace(-3.6, 3.6, 100)
-        rew = self.get_lane_centre_reward(y)
+        rew = self._get_lane_centre_reward(y)
         axs[0, 1].plot(y, rew, 'tab:orange')
         axs[0, 1].set_title('Lane Centre Reward')
         axs[0, 1].grid(True)
         axs[0, 1].set(xlabel='Lane position', ylabel='Reward')
 
         x = np.linspace(0, 50, 100)
-        rew = self.get_follow_dist_reward(x)
+        rew = self._get_follow_dist_reward(x)
         axs[1, 0].plot(x, rew, 'tab:green')
         axs[1, 0].set_title('Following Distance Reward')
         axs[1, 0].grid(True)
@@ -156,7 +163,7 @@ class RewardFunction(object):
 
         road_width = 12
         y = np.linspace(0, road_width, 100)
-        rew = self.get_right_lane_reward(road_width, y)
+        rew = self._get_right_lane_reward(road_width, y)
         axs[1, 1].plot(y, rew, 'tab:red')
         axs[1, 1].set_title('Drive on Right Reward')
         axs[1, 1].grid(True)
@@ -221,7 +228,7 @@ class DiscreteSingleActionPolicy(CustomPolicy):
             if veh.a0_mod is not None:  # Check if the agent has taken an action that led to this reward...
                 # Calculate reward at current state (if action was taken previously)
                 veh.flag = self.agent.stop_flags
-                veh.reward = self.rewards.get_reward(agent=self.agent, veh=veh) + np.sum(veh.rew_buffer)
+                veh.reward = (self.rewards.get_reward(agent=self.agent, veh=veh) + np.sum(veh.rew_buffer))/self.STEP_TIME
                 if self.agent is not None and self.agent.training is True:
                     # Save action taken previously on previous state value
                     # action = velocity action, lane_change action
