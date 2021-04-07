@@ -145,11 +145,11 @@ class Main(object):
             if episode_count % 1 == 0 and trained:
                 epsilon = self.policy.agent.calc_epsilon()
                 if training_param["use_per"]:
-                    print_template = "Running reward = {:.2f} ({:.2f}) at episode {}. Loss = {:.2f}. Epsilon = {:.2f}. Beta = {:.2f}. Episode timer = {:.2f}"
+                    print_template = "Running reward = {:.3f} ({:.3f}) at episode {}. Loss = {:.3f}. Epsilon = {:.3f}. Beta = {:.3f}. Episode timer = {:.3f}"
                     print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon,
                                                          self.policy.agent.buffer.beta, time_taken)
                 else:
-                    print_template = "Running reward = {:.2f} ({:.2f}) at episode {}. Loss = {:.2f}. Epsilon = {:.2f}. Episode timer = {:.2f}"
+                    print_template = "Running reward = {:.3f} ({:.3f}) at episode {}. Loss = {:.3f}. Epsilon = {:.3f}. Episode timer = {:.3f}"
                     print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon, time_taken)
 
                 loss_list.append(loss)
@@ -348,13 +348,13 @@ if __name__=="__main__":
     with open('./logfiles/main.log', 'w'):
         pass  # Clear the log file of previous run
 
-    config.seed = 10
+
     SEED = config.seed
     tf.random.set_seed(SEED)
     np.random.seed(SEED)
 
     # Model parameters:
-    N_UNITS = (64, 32, 18)
+    N_UNITS = (32, 16, 0)
     N_INPUTS = 55
     N_ACTIONS = 5
     ACT_FUNC = tf.nn.swish
@@ -375,26 +375,26 @@ if __name__=="__main__":
     POLICY_ACTION_RATE = 8     # Number of simulator steps before new control action is taken
     MAX_TIMESTEPS = 2.5e3         # range: 5e3 - 10e3
     MAX_EPISODES = 5000 #1.2e3
-    FINAL_RETURN = 0.9
+    FINAL_RETURN = 0.91
     SHOW_TRAIN_PLOTS = False
     PLOT_FREQ = 50
     SIM_TIMESTEPS = 200
     SCENARIO_NUM = 0        # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
-    BUFFER_SIZE = 1000000
-    BATCH_SIZE = 100          # range: 32 - 150
+    BUFFER_SIZE = 300000
+    BATCH_SIZE = 64          # range: 32 - 150
     EPSILON_MIN = 1.0           # Exploration
     EPSILON_MAX = 0.1           # Exploitation
-    DECAY_RATE = 0.999997 #0.999992
+    DECAY_RATE = 0.999995 #0.999992
     MODEL_UPDATE_RATE = 1
     TARGET_UPDATE_RATE = 10e4
-    LEARN_RATE = 0.0003         # range: 1e-3 - 1e-4
+    LEARN_RATE = 0.0001         # range: 1e-3 - 1e-4
     OPTIMISER = tf.optimizers.Adam(learning_rate=LEARN_RATE)
     LOSS_FUNC = tf.losses.Huber()
     GAMMA = 0.99                # range: 0.95 - 0.99
     CLIP_GRADIENTS = True
     CLIP_NORM = 2
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
-    REWARD_WEIGHTS = np.array([1.0, 0.2, 0.8, 0.35, -5])
+    REWARD_WEIGHTS = np.array([1.0, 0.15, 0.8, 0.4, -5])
     STANDARDISE_RETURNS = True  # TODO additional variable for SPG
     USE_PER = False
     ALPHA = 0.75                # Priority scale: a=0:random, a=1:completely based on priority
@@ -475,7 +475,7 @@ if __name__=="__main__":
     # Train model:
 
     # TODO Ensure Dmax is consistently 150 when merging the branch with master!!!!!
-    main.train_policy()  # TODO !!!
+    # main.train_policy()  # TODO !!!
 
     # TODO Tidy up simulation part:
     # Simulate model:

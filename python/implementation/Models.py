@@ -16,8 +16,8 @@ class DeepSetQNetwork(keras.Model):
         np.random.seed(model_param["seed"])
         act_func = model_param["activation_function"]
         n_units = model_param["n_units"]
-        n_units_phi = [16, 16]
-        n_units_rho = [32, 32]
+        n_units_phi = [16, 32]
+        n_units_rho = [32, 16]
         n_inputs_static = (7,)
         n_inputs_dynamic = (4,)
         n_actions = model_param["n_actions"]
