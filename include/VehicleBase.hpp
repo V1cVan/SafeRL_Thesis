@@ -77,10 +77,10 @@ namespace Model{
     #else
     EIGEN_NAMED_BASE_DECL(State,(Eigen::Matrix<double,12,1>)){
         #define STATE_REFS(R,_)\
-        R((Eigen::Vector3d),pos,0,0) _\
-        R((Eigen::Vector3d),ang,3,0) _\
-        R((Eigen::Vector3d),vel,6,0) _\
-        R((Eigen::Vector3d),ang_vel,9,0)
+        R((Eigen::Vector3d),pos,0,0) _ /* x, y, z position (in global coordinate frame) */\
+        R((Eigen::Vector3d),ang,3,0) _ /* yaw, pitch, roll angle (rotation about vehicle's z-, y-, x-axis ; following the x-y-z Tait-Bryan convention) */\
+        R((Eigen::Vector3d),vel,6,0) _ /* longitudinal, lateral, vertical velocity (time derivative of positions along vehicle's orientation) */\
+        R((Eigen::Vector3d),ang_vel,9,0) /* yaw, pitch, roll angular velocity (time derivative of angles) */
         EIGEN_NAMED_BASE_IMPL(State, STATE_REFS)
     };
     EIGEN_NAMED_MATRIX_DECL(State){

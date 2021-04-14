@@ -68,7 +68,7 @@ def _polygonalMesh(left,right):
 def _transformPoints(points,C=None,S=None,A=None):
     """
     Transforms the given points (Px3) by rotating them by the angles supplied in
-    A (yaw,pitch and roll ; following the Tait-Bryan convention), scaling them by
+    A (yaw,pitch and roll ; following the x-y-z Tait-Bryan convention), scaling them by
     S and translating them by C.
     """
     if C is None:
@@ -503,16 +503,16 @@ class TimeChartPlot(_PlotterView):
             }
             for field in self._lines.keys():
                 veh_memory["lines"][field] = {
-                    "data": CyclicBuffer(self._MEMORY_SIZE,np.nan),
+                    "data": CyclicBuffer(self._MEMORY_SIZE,0), # np.nan is replaced by 0 until https://gitlab.kitware.com/vtk/vtk/-/issues/18019 is fixed (and included in pypi package)
                     "length": CyclicBuffer(self._MEMORY_SIZE)
                 }
             for field in self._patches.keys():
                 veh_memory["patches"][field] = {
-                    "upper": CyclicBuffer(self._MEMORY_SIZE,np.nan),
-                    "lower": CyclicBuffer(self._MEMORY_SIZE,np.nan)
+                    "upper": CyclicBuffer(self._MEMORY_SIZE,0), # np.nan
+                    "lower": CyclicBuffer(self._MEMORY_SIZE,0) # np.nan
                 }
             self._memory.append(veh_memory)
-        self._time = CyclicBuffer(self._MEMORY_SIZE,np.nan)
+        self._time = CyclicBuffer(self._MEMORY_SIZE,0) # np.nan
         self._updateMemory()
         for i in self._cvIds:
             for field in self._lines.keys():
@@ -571,10 +571,8 @@ class TimeChartPlot(_PlotterView):
             points = line["mesh"].points
             points[:,0] = self._time.view()
             points[:,1] = self._memory[self.V]["lines"][field]["data"].view()
-            line["mesh"].points = points # Using a full assignment calls the setter, which forces the updated data to be redrawn
             t_coords = line["mesh"].t_coords
             t_coords[:,0] = self._memory[self.V]["lines"][field]["length"].view() # TODO: incorporate screen size
-            line["mesh"].t_coords = t_coords # Force update
         for field, patch in self._patches.items():
             # Lower points are in first half, upper points in second half:
             points = patch["mesh"].points
@@ -582,7 +580,6 @@ class TimeChartPlot(_PlotterView):
             points[:self._MEMORY_SIZE,1] = self._memory[self.V]["patches"][field]["lower"].view()
             points[self._MEMORY_SIZE:,0] = self._time.view()
             points[self._MEMORY_SIZE:,1] = self._memory[self.V]["patches"][field]["upper"].view()
-            patch["mesh"].points = points
         data_bounds = np.array(self._r.bounds) # x_min,x_max,y_min,y_max,z_min,z_max
         # TODO: x_min is always 0 instead of the minimum value in memory?
         # TODO: zooming is wrong when render_height >> render_width?

@@ -92,15 +92,18 @@ namespace Model{
         KinematicBicycleModel(const sdata_t& = sdata_t()){}
 
         inline State derivatives_(const VehicleBase& vb, const State& x, const Input& u) const{
+            // Following section 2.2 of 'Vehicle dynamics and control' by Rajamani
             // Calculate slip angle (beta) and total velocity
             const double t = vb.cgLoc[0]*std::tan(u.delta)/vb.size[0];
             const double beta = std::atan(t);
-            const double v = std::sqrt(x.vel[0]*x.vel[0]+x.vel[1]*x.vel[1]);
+            const double v2 = x.vel[0]*x.vel[0]+x.vel[1]*x.vel[1];
+            const double v = std::sqrt(v2);
+            const double a_lat = v2*std::tan(u.delta)*std::cos(beta)/vb.size[0];// v*v/R where R is calculated from eq. 2.7
             // Calculate state derivatives:
             State dx;
             dx.pos = Eigen::Vector3d(v*std::cos(x.ang[0]+beta),v*std::sin(x.ang[0]+beta),std::nan(""));
             dx.ang = Eigen::Vector3d(v*std::sin(beta)/vb.cgLoc[0],std::nan(""),std::nan(""));
-            dx.vel = Eigen::Vector3d(u.longAcc,u.longAcc*t,std::nan(""));
+            dx.vel = Eigen::Vector3d(u.longAcc,a_lat,std::nan(""));
             dx.ang_vel = Eigen::Vector3d(std::nan(""),std::nan(""),std::nan(""));
             return dx;
         }

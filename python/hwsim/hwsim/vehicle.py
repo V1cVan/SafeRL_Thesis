@@ -98,9 +98,9 @@ class Vehicle(object):
         """
         Vehicle state in global 3D-coordinate frame.
         pos:        x, y, z position
-        ang:        roll, pitch, yaw angle (rotation about x-, y-, z-axis)
-        vel:        x, y, z velocity (time derivative of pos)
-        ang_vel:    roll, pitch, yaw angular velocity (time derivative of ang)
+        ang:        yaw, pitch, roll angle (rotation about vehicle's z-,y-,x-axis ; following the x-y-z Tait-Bryan convention)
+        vel:        longitudinal, lateral, vertical velocity (time derivative of positions along vehicle's orientation)
+        ang_vel:    yaw, pitch, roll angular velocity (time derivative of angles)
         """
         return self.x_raw.view(self.x_dt)[0]
 
