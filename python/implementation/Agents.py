@@ -176,6 +176,7 @@ class DqnAgent(keras.models.Model):
             # loss_value = tf.losses.MSE(y_true=target_output, y_pred=predicted_output)
             # loss_value = tf.reduce_mean(tf.square(Q_target - Q_predicted))
             if self.training_param["use_per"]:
+                # TODO compute loss for each item in experience individually and then perform the huber loss calculation
                 loss_value = tf.reduce_mean(is_weight * loss_value)
 
         grads = tape.gradient(loss_value, self.Q_actual_net.trainable_variables)

@@ -118,11 +118,13 @@ class PerTrainingBuffer(object):  # stored as ( s, a, r, s_ ) in SumTree
             batch.append(data)
             idxs.append(idx)
 
+        # TODO fix the division by self.tree.total() and rather just divide by the value of the root node
         sampling_probabilities = priorities / self.tree.total()
         is_weight = np.power(self.tree.n_entries * sampling_probabilities, -self.beta)
         is_weight /= is_weight.max()
         is_weight = tf.squeeze(tf.convert_to_tensor(is_weight, dtype=np.float32))
 
+        # TODO add deepset functionality to the PER as in the normal training buffer
         states = tf.squeeze(tf.convert_to_tensor([each[0] for each in batch], dtype=np.float32))
         actions = tf.squeeze(tf.convert_to_tensor(np.array([each[1] for each in batch], dtype=np.float32)))
         rewards = tf.squeeze(tf.convert_to_tensor(np.array([each[2] for each in batch], dtype=np.float32)))

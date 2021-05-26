@@ -444,9 +444,9 @@ if __name__=="__main__":
 
     # Initialise models:
     # TODO Retrain on 3 network architectures
-    AC_net_single = AcNetworkSingleAction(model_param=model_param)
-    spg_agent_single = SpgAgentSingle(network=AC_net_single, training_param=training_param)
-    spg_policy_single = DiscreteSingleActionPolicy(agent=spg_agent_single)
+    # AC_net_single = AcNetworkSingleAction(model_param=model_param)
+    # spg_agent_single = SpgAgentSingle(network=AC_net_single, training_param=training_param)
+    # spg_policy_single = DiscreteSingleActionPolicy(agent=spg_agent_single)
 
     # TODO Fix Policies for double action as well as single action
     # AC_net_double = AcNetworkDoubleAction(model_param=model_param)
