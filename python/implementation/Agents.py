@@ -40,7 +40,8 @@ class DqnAgent(keras.models.Model):
                                             beta_increment=training_param["beta_increment"])
         else:
             self.buffer = TrainingBuffer(buffer_size=training_param["buffer_size"],
-                                         batch_size=training_param["batch_size"])
+                                         batch_size=training_param["batch_size"],
+                                         use_deepset=training_param["use_deepset"])
         self.gamma = training_param["gamma"]
 
     def set_neg_collision_reward(self, timestep, punishment):
@@ -52,6 +53,7 @@ class DqnAgent(keras.models.Model):
         experience = (states, actions, rewards, next_states, done)
 
         if self.training_param["use_per"]:
+            # TODO add deepset implementation
             # Calculate the TD-error for the Prioritised Replay Buffer
             states, actions, rewards, next_states, done = experience
             states = tf.expand_dims(tf.convert_to_tensor(states, dtype=np.float32), axis=0)
@@ -111,6 +113,7 @@ class DqnAgent(keras.models.Model):
             # Gather and convert data from the buffer (data from simulation):
             # Sample mini-batch from memory
             if self.training_param["use_per"]:
+                # TODO add deepset implementation
                 states, actions, rewards, next_states, done, idxs, is_weight = self.buffer.get_training_samples()
                 one_hot_actions = tf.keras.utils.to_categorical(actions, num_classes=n_actions)
                 mean_batch_reward, loss, td_error = self.run_tape(
@@ -173,6 +176,7 @@ class DqnAgent(keras.models.Model):
             # loss_value = tf.losses.MSE(y_true=target_output, y_pred=predicted_output)
             # loss_value = tf.reduce_mean(tf.square(Q_target - Q_predicted))
             if self.training_param["use_per"]:
+                # TODO compute loss for each item in experience individually and then perform the huber loss calculation
                 loss_value = tf.reduce_mean(is_weight * loss_value)
 
         grads = tape.gradient(loss_value, self.Q_actual_net.trainable_variables)

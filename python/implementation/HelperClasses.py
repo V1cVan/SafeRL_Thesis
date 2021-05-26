@@ -379,7 +379,7 @@ class EpisodeBuffer(object):
 
 
 class Timer(object):
-    def __init__(self, timer_name):
+    def __init__(self, timer_name="NoName"):
         self.timer_name = timer_name
         self.tic = None
         self.toc = None
@@ -397,7 +397,10 @@ class Timer(object):
 
     def endTime(self):
         self.toc = time.perf_counter()
-        self.all_timers.append(self.toc - self.tic)
+        time_taken = self.toc - self.tic
+        self.all_timers.append(time_taken)
+        return time_taken
+
 
     def getMeanTime(self):
         return sum(self.all_timers) / len(self.all_timers)
