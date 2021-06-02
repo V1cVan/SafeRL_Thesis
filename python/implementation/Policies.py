@@ -10,33 +10,58 @@ def convert_state(veh):
     Assembles state vector in TF form to pass to neural network.
     Normalises certain state variables and excludes constants.
     """
+<<<<<<< HEAD
+=======
+    D_MAX = veh.D_MAX
+
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
     # Normalise states and remove unnecessary states:
     lane_width = veh.s["laneC"]["width"]  # Excluded
     gap_to_road_edge = veh.s["gapB"] / (lane_width * 3)  # Normalised
     max_vel = veh.s["maxVel"]  # Excluded
+<<<<<<< HEAD
     curr_vel = veh.s["vel"][0] / max_vel  # Normalised longitudinal component and lateral component excluded
 
     # Current Lane:
     offset_current_lane_center = veh.s["laneC"]["off"] / lane_width  # Normalised
     rel_offset_back_center_lane = np.hstack((veh.s["laneC"]["relB"]["gap"][:, 0] / 150,
+=======
+    curr_vel = veh.s["vel"] / max_vel  # Normalised
+
+    # Current Lane:
+    offset_current_lane_center = veh.s["laneC"]["off"] / lane_width  # Normalised
+    rel_offset_back_center_lane = np.hstack((veh.s["laneC"]["relB"]["gap"][:, 0] / D_MAX,
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
                                              veh.s["laneC"]["relB"]["gap"][:,
                                              1] / lane_width))  # Normalised to Dmax default
     rel_vel_back_center_lane = np.matrix.flatten(veh.s["laneC"]["relB"]["vel"]) / max_vel  # Normalised
 
+<<<<<<< HEAD
     rel_offset_front_center_lane = np.hstack((veh.s["laneC"]["relF"]["gap"][:, 0] / 150,
+=======
+    rel_offset_front_center_lane = np.hstack((veh.s["laneC"]["relF"]["gap"][:, 0] / D_MAX,
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
                                               veh.s["laneC"]["relF"]["gap"][:,
                                               1] / lane_width))  # Normalised to Dmax default
     rel_vel_front_center_lane = np.matrix.flatten(veh.s["laneC"]["relF"]["vel"]) / max_vel  # Normalised
 
     # Left Lane:
     offset_left_lane_center = veh.s["laneL"]["off"] / lane_width  # Normalised
+<<<<<<< HEAD
     rel_offset_back_left_lane = np.hstack((veh.s["laneL"]["relB"]["gap"][0][:, 0] / 150,
+=======
+    rel_offset_back_left_lane = np.hstack((veh.s["laneL"]["relB"]["gap"][0][:, 0] / D_MAX,
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
                                            veh.s["laneL"]["relB"]["gap"][0][:,
                                            1] / lane_width))  # Normalised to Dmax default
     rel_offset_back_left_lane = np.squeeze(rel_offset_back_left_lane)
     rel_vel_back_left_lane = np.matrix.flatten(veh.s["laneL"]["relB"]["vel"]) / max_vel  # Normalised
 
+<<<<<<< HEAD
     rel_offset_front_left_lane = np.hstack((veh.s["laneL"]["relF"]["gap"][0][:, 0] / 150,
+=======
+    rel_offset_front_left_lane = np.hstack((veh.s["laneL"]["relF"]["gap"][0][:, 0] / D_MAX,
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
                                             veh.s["laneL"]["relF"]["gap"][0][:,
                                             1] / lane_width))  # Normalised to Dmax default
     rel_offset_front_left_lane = np.squeeze(rel_offset_front_left_lane)
@@ -44,13 +69,21 @@ def convert_state(veh):
 
     # Right Lane:
     offset_right_lane_center = veh.s["laneR"]["off"] / lane_width  # Normalised
+<<<<<<< HEAD
     rel_offset_back_right_lane = np.hstack((veh.s["laneR"]["relB"]["gap"][0][:, 0] / 150,
+=======
+    rel_offset_back_right_lane = np.hstack((veh.s["laneR"]["relB"]["gap"][0][:, 0] / D_MAX,
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
                                             veh.s["laneR"]["relB"]["gap"][0][:,
                                             1] / lane_width))  # Normalised to Dmax default
     rel_offset_back_right_lane = np.squeeze(rel_offset_back_right_lane)
     rel_vel_back_right_late = np.matrix.flatten(veh.s["laneR"]["relB"]["vel"]) / max_vel  # Normalised
 
+<<<<<<< HEAD
     rel_offset_front_right_lane = np.hstack((veh.s["laneR"]["relF"]["gap"][0][:, 0] / 150,
+=======
+    rel_offset_front_right_lane = np.hstack((veh.s["laneR"]["relF"]["gap"][0][:, 0] / D_MAX,
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
                                              veh.s["laneR"]["relF"]["gap"][0][:,
                                              1] / lane_width))  # Normalised to Dmax default
     rel_offset_front_right_lane = np.squeeze(rel_offset_front_right_lane)
@@ -67,7 +100,92 @@ def convert_state(veh):
 
     state = tf.convert_to_tensor(state, dtype=tf.float32, name="state_input")
     state = tf.expand_dims(state, 0)
+<<<<<<< HEAD
     return state  # Can be overridden by subclasses
+=======
+    return state
+
+
+def decompose_state(veh):
+    """
+    Decomposes the state into static and dynamic components.
+        Static components -> Ego vehicle speed, distance to road edge, etc.
+        Dynamic components -> List of all information related to nearby vehicles.
+    This is then passed to a permutation invariant neural network.
+    Also normalises the state variables and excludes repeated or static variables.
+    """
+    D_MAX = 150
+
+    # Static part of the state vector:
+    lane_width = veh.s["laneC"]["width"]  # Excluded
+    gap_to_road_edge = veh.s["gapB"] / (lane_width * 3)  # Normalised
+    max_vel = veh.s["maxVel"]  # Excluded
+    curr_vel = veh.s["vel"] / max_vel  # Normalised longitudinal component and lateral component excluded
+
+    offset_current_lane_center = veh.s["laneC"]["off"] / lane_width  # Normalised
+    offset_left_lane_center = veh.s["laneL"]["off"] / lane_width  # Normalised
+    offset_right_lane_center = veh.s["laneR"]["off"] / lane_width  # Normalised
+
+    static_state = np.hstack(
+        (gap_to_road_edge, curr_vel, offset_current_lane_center, offset_left_lane_center, offset_right_lane_center))
+    static_state = tf.expand_dims(tf.convert_to_tensor(static_state, dtype=tf.float32, name="static_state_input"), 0)
+
+    # Dynamic part of the state vector:
+    # Current lane:
+    vehicles = tf.expand_dims(tf.convert_to_tensor(veh.s["laneC"]["relB"]["gap"][:, 0] < D_MAX, dtype=tf.float32), 1)
+    rel_offset_back_center_lane = np.vstack((veh.s["laneC"]["relB"]["gap"][:, 0] / D_MAX,
+                                             veh.s["laneC"]["relB"]["gap"][:,
+                                             1] / lane_width)).transpose()  # Normalised to Dmax default
+    rel_vel_back_center_lane = veh.s["laneC"]["relB"]["vel"] / max_vel  # Normalised
+    vehicles_back_center_lane = vehicles * np.hstack((rel_offset_back_center_lane, rel_vel_back_center_lane))
+    dynamic_state = vehicles_back_center_lane
+
+    vehicles = tf.expand_dims(tf.convert_to_tensor(veh.s["laneC"]["relF"]["gap"][:, 0] < D_MAX, dtype=tf.float32), 1)
+    rel_offset_front_center_lane = np.vstack((veh.s["laneC"]["relF"]["gap"][:, 0] / D_MAX,
+                                              veh.s["laneC"]["relF"]["gap"][:,
+                                              1] / lane_width)).transpose()  # Normalised to Dmax default
+    rel_vel_front_center_lane = veh.s["laneC"]["relF"]["vel"] / max_vel  # Normalised
+    vehicles_front_center_lane = vehicles * np.hstack((rel_offset_front_center_lane, rel_vel_front_center_lane))
+    dynamic_state = np.vstack((dynamic_state, vehicles_front_center_lane))
+
+    # Left lane:
+    vehicles = tf.expand_dims(tf.convert_to_tensor(veh.s["laneL"]["relB"]["gap"][0][:, 0] < D_MAX, dtype=tf.float32), 1)
+    rel_offset_back_left_lane = np.vstack((veh.s["laneL"]["relB"]["gap"][0][:, 0] / D_MAX,
+                                           veh.s["laneL"]["relB"]["gap"][0][:,
+                                           1] / lane_width)).transpose()  # Normalised to Dmax default
+    rel_vel_back_left_lane = veh.s["laneL"]["relB"]["vel"][0] / max_vel  # Normalised
+    vehicles_back_left_lane = vehicles * np.hstack((rel_offset_back_left_lane, rel_vel_back_left_lane))
+    dynamic_state = np.vstack((dynamic_state, vehicles_back_left_lane))
+
+    vehicles = tf.expand_dims(tf.convert_to_tensor(veh.s["laneL"]["relF"]["gap"][0][:, 0] < D_MAX, dtype=tf.float32), 1)
+    rel_offset_front_left_lane = np.vstack((veh.s["laneL"]["relF"]["gap"][0][:, 0] / D_MAX,
+                                            veh.s["laneL"]["relF"]["gap"][0][:,
+                                            1] / lane_width)).transpose()  # Normalised to Dmax default
+    rel_vel_front_left_lane = veh.s["laneL"]["relF"]["vel"][0] / max_vel  # Normalised
+    vehicles_front_left_lane = vehicles * np.hstack((rel_offset_front_left_lane, rel_vel_front_left_lane))
+    dynamic_state = np.vstack((dynamic_state, vehicles_front_left_lane))
+
+    # Right lane:
+    vehicles = tf.expand_dims(tf.convert_to_tensor(veh.s["laneR"]["relB"]["gap"][0][:, 0] < D_MAX, dtype=tf.float32), 1)
+    rel_offset_back_right_lane = np.vstack((veh.s["laneR"]["relB"]["gap"][0][:, 0] / D_MAX,
+                                            veh.s["laneR"]["relB"]["gap"][0][:,
+                                            1] / lane_width)).transpose()  # Normalised to Dmax default
+    rel_vel_back_right_lane = veh.s["laneR"]["relB"]["vel"][0] / max_vel  # Normalised
+    vehicles_back_right_lane = vehicles * np.hstack((rel_offset_back_right_lane, rel_vel_back_right_lane))
+    dynamic_state = np.vstack((dynamic_state, vehicles_back_right_lane))
+
+    vehicles = tf.expand_dims(tf.convert_to_tensor(veh.s["laneR"]["relF"]["gap"][0][:, 0] < D_MAX, dtype=tf.float32), 1)
+    rel_offset_front_right_lane = np.vstack((veh.s["laneR"]["relF"]["gap"][0][:, 0] / D_MAX,
+                                             veh.s["laneR"]["relF"]["gap"][0][:,
+                                             1] / lane_width)).transpose()  # Normalised to Dmax default
+    rel_vel_front_right_lane = veh.s["laneR"]["relF"]["vel"][0] / max_vel  # Normalised
+    vehicles_front_right_lane = vehicles * np.hstack((rel_offset_front_right_lane, rel_vel_front_right_lane))
+    dynamic_state = np.vstack((dynamic_state, vehicles_front_right_lane))
+
+    dynamic_state = tf.expand_dims(tf.convert_to_tensor(dynamic_state, dtype=tf.float32, name="dynamic_state_input"), 0)
+
+    return [dynamic_state, static_state]
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
 
 
 class RewardFunction(object):
@@ -217,7 +335,14 @@ class DiscreteSingleActionPolicy(CustomPolicy):
             veh.counter = self.STEP_TIME
             # Set current vehicle state and action pair
             veh.s1 = veh.s_raw
+<<<<<<< HEAD
             veh.s1_mod = convert_state(veh)
+=======
+            if self.agent.training_param["use_deepset"]:
+                veh.s1_mod = decompose_state(veh)
+            else:
+                veh.s1_mod = convert_state(veh)
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             Q = self.get_action(veh.s1_mod)
             veh.a1_mod = Q
             action_choice = self.agent.get_action_choice(Q)
@@ -231,6 +356,7 @@ class DiscreteSingleActionPolicy(CustomPolicy):
                 veh.reward = (self.rewards.get_reward(agent=self.agent, veh=veh) + np.sum(veh.rew_buffer))/self.STEP_TIME
                 if self.agent is not None and self.agent.training is True:
                     # Save action taken previously on previous state value
+<<<<<<< HEAD
                     # action = velocity action, lane_change action
                     action = veh.a0_mod[0][veh.a0_choice]
 
@@ -248,6 +374,12 @@ class DiscreteSingleActionPolicy(CustomPolicy):
                                   veh.a0_choice,
                                   veh.reward,
                                   np.squeeze(veh.s1_mod))
+=======
+                    experience = (veh.s0_mod,
+                                  veh.a0_choice,
+                                  veh.reward,
+                                  veh.s1_mod)
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
                     self.agent.latest_experience = experience
                     self.agent.is_action_taken = True
 

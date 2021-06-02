@@ -32,7 +32,11 @@ class Main(object):
         # Create object for data logging and visualisation
         self.data_logger = DataLogger(model_param, training_param)
         self.plotTimer = Timer("Plotting")
+<<<<<<< HEAD
         self.trainerTimer = Timer("the Trainer")
+=======
+
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
         self.episodeTimer = Timer("Episode")
 
     # ...
@@ -91,6 +95,7 @@ class Main(object):
             # print("Episode number: %0.2f" % episode_count)
             logging.critical("Episode number: %0.2f" % episode_count)
 
+<<<<<<< HEAD
             # Set simulation environment
             with self.sim:
                 # Loop through each timestep in episode.
@@ -126,6 +131,50 @@ class Main(object):
 
             reward = np.sum(episode_reward_list)/len(episode_reward_list)
 
+=======
+            self.episodeTimer.startTime()
+            # Set simulation environment
+            with self.sim:
+                # Loop through each timestep in episode.
+
+                # Run the model for one episode to collect training data
+                for t in np.arange(1, max_timesteps+1):
+                    # logging.critical("Timestep of episode: %0.2f" % self.sim.k)
+
+                    # Perform one simulations step:
+                    if not self.sim.stopped:
+                        self.sim.step()  # Calls AcPolicy.customAction method.
+
+                        # TODO Reformat so that check is done after sim.step()
+                        # TODO maybe add penalties for collisions
+                        # self.policy.agent.stop_flags = self.sim.stopped or self.sim._collision
+                        # if self.policy.agent.stop_flags == True:
+                        #     self.policy.agent.buffer.alter_buffer_stop_flag(flag=self.policy.agent.stop_flags)
+                        done = self.sim.stopped  # or self.sim._collision
+                        if self.policy.agent.is_action_taken:
+                            self.policy.agent.add_experience(done)
+                            episode_reward_list.append(self.policy.agent.latest_experience[2])
+
+                    if t % training_param["policy_rate"] == 0:
+                        train_counter += 1
+                        self.policy.agent.epsilon_decay_count = train_counter
+                        self.policy.agent.timestep = np.int(t / training_param["policy_rate"])
+                        if self.policy.agent.buffer.is_buffer_min_size():
+                            model_update_counter += 1
+                            if model_update_counter % training_param["model_update_rate"] == 0:
+                                # TODO add data to episode buffer to get episode rewards while training.
+                                _, loss = self.policy.agent.train_step()
+                                trained = True
+
+                            if model_update_counter % training_param["target_update_rate"] == 0:
+                                self.policy.agent.update_target_net()
+                                # print("Updated target net.")
+
+            reward = np.sum(episode_reward_list)/len(episode_reward_list)
+
+            time_taken = self.episodeTimer.endTime()
+
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             if trained:
                 if 0.05 * reward + (1 - 0.05) * running_reward > running_reward and episode_count % 50 == 0:
                     self.policy.agent.Q_actual_net.save_weights(model_param["weights_file_path"])
@@ -138,12 +187,21 @@ class Main(object):
             if episode_count % 1 == 0 and trained:
                 epsilon = self.policy.agent.calc_epsilon()
                 if training_param["use_per"]:
+<<<<<<< HEAD
                     print_template = "Running reward = {:.2f} ({:.2f}) at episode {}. Loss = {:.2f}. Epsilon = {:.2f}. Beta = {:.2f}."
                     print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon,
                                                          self.policy.agent.buffer.beta)
                 else:
                     print_template = "Running reward = {:.2f} ({:.2f}) at episode {}. Loss = {:.2f}. Epsilon = {:.2f}."
                     print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon)
+=======
+                    print_template = "Running reward = {:.3f} ({:.3f}) at episode {}. Loss = {:.3f}. Epsilon = {:.3f}. Beta = {:.3f}. Episode timer = {:.3f}"
+                    print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon,
+                                                         self.policy.agent.buffer.beta, time_taken)
+                else:
+                    print_template = "Running reward = {:.3f} ({:.3f}) at episode {}. Loss = {:.3f}. Epsilon = {:.3f}. Episode timer = {:.3f}"
+                    print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon, time_taken)
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
 
                 loss_list.append(loss)
                 episode_list.append(episode_count)
@@ -205,7 +263,11 @@ def sim_types(scenario_num, policy):
         "k0": 0,
         "replay": False,
         "vehicles": [
+<<<<<<< HEAD
             {"amount": 1, "model": KBModel(), "policy": policy},
+=======
+            {"amount": 1, "model": KBModel(), "policy": policy, "D_MAX": 160},
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             # {"amount": 2, "model": KBModel(), "policy": StepPolicy(10, [0.1, 0.5])},
             # {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
             # {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
@@ -226,7 +288,11 @@ def sim_types(scenario_num, policy):
         "k0": 0,
         "replay": False,
         "vehicles": [
+<<<<<<< HEAD
             {"amount": 1, "model": KBModel(), "policy": policy, "R": 0, "l": lane, "s": 0, "v": np.random.random(1)*30.0},
+=======
+            {"amount": 1, "model": KBModel(), "policy": policy, "R": 0, "l": lane, "s": 0, "v": np.random.random(1)*30.0, "D_MAX": 160},
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             # {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": lane, "s": 30, "v": 28},
         ]
     }
@@ -240,13 +306,22 @@ def sim_types(scenario_num, policy):
         "replay": False,
         "vehicles": [
             {"model": KBModel(), "policy": policy, "R": 0, "l": 0, "s": 0,
+<<<<<<< HEAD
              "v": random.randint(25, 28)},
+=======
+             "v": random.randint(25, 28), "D_MAX": 160},
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 0, "s": 50, "v": 28},
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 50, "v": 28},
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 3.6, "s": 120, "v": 28},
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 0, "s": 140, "v": 28},
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 140, "v": 28},
+<<<<<<< HEAD
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 300, "v": 28},            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 120, "v": 24},
+=======
+            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 300, "v": 28},
+            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 120, "v": 24},
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 0, "s": 300, "v": 28}
         ]
     }
@@ -260,7 +335,11 @@ def sim_types(scenario_num, policy):
         "replay": False,
         "vehicles": [
             {"model": KBModel(), "policy": policy, "R": 0, "l": 3.6, "s": 0,
+<<<<<<< HEAD
              "v": random.randint(25, 28)},
+=======
+             "v": random.randint(25, 28), "D_MAX": 160},
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 40, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 50, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 150, "v": 24},
@@ -277,7 +356,11 @@ def sim_types(scenario_num, policy):
         "replay": False,
         "vehicles": [
             {"model": KBModel(), "policy": policy, "R": 0, "l": 3.6, "s": 0,
+<<<<<<< HEAD
              "v": random.randint(25, 28)},
+=======
+             "v": random.randint(25, 28), "D_MAX": 160},
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 0, "v": 24}
         ]
@@ -292,7 +375,11 @@ def sim_types(scenario_num, policy):
         "replay": False,
         "vehicles": [
             {"model": KBModel(), "policy": policy, "R": 0, "l": -3.6, "s": 0,
+<<<<<<< HEAD
              "v": random.randint(25, 28)},
+=======
+             "v": random.randint(25, 28), "D_MAX": 160},
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 10, "v": 24}
         ]
@@ -307,7 +394,11 @@ def sim_types(scenario_num, policy):
         "replay": False,
         "vehicles": [
             {"model": KBModel(), "policy": policy, "R": 0, "l": 0, "s": 0,
+<<<<<<< HEAD
              "v": random.randint(25, 28)},
+=======
+             "v": random.randint(25, 28), "D_MAX": 160},
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 20, "v": 24},
@@ -340,13 +431,22 @@ if __name__=="__main__":
     with open('./logfiles/main.log', 'w'):
         pass  # Clear the log file of previous run
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
     SEED = config.seed
     tf.random.set_seed(SEED)
     np.random.seed(SEED)
 
     # Model parameters:
+<<<<<<< HEAD
     N_UNITS = (64, 32, 16)
     N_INPUTS = 54
+=======
+    N_UNITS = (32, 16, 0)
+    N_INPUTS = 55
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
     N_ACTIONS = 5
     ACT_FUNC = tf.nn.swish
     MODEL_FILE_PATH = "./models/model_weights"
@@ -363,6 +463,7 @@ if __name__=="__main__":
     pic.dump(model_param, open("./models/model_variables", "wb"))
 
     # Training parameters:
+<<<<<<< HEAD
     POLICY_ACTION_RATE = 8      # Number of simulator steps before new control action is taken
     MAX_TIMESTEPS = 2.5e3       # range: 5e3 - 10e3
     MAX_EPISODES = 5000 #1.2e3
@@ -376,6 +477,21 @@ if __name__=="__main__":
     EPSILON_MIN = 1.0           # Exploration
     EPSILON_MAX = 0.1           # Exploitation
     DECAY_RATE = 0.999997 #0.999992
+=======
+    POLICY_ACTION_RATE = 8     # Number of simulator steps before new control action is taken
+    MAX_TIMESTEPS = 2.5e3         # range: 5e3 - 10e3
+    MAX_EPISODES = 5000 #1.2e3
+    FINAL_RETURN = 0.91
+    SHOW_TRAIN_PLOTS = False
+    PLOT_FREQ = 50
+    SIM_TIMESTEPS = 200
+    SCENARIO_NUM = 0        # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
+    BUFFER_SIZE = 300000
+    BATCH_SIZE = 64          # range: 32 - 150
+    EPSILON_MIN = 1.0           # Exploration
+    EPSILON_MAX = 0.1           # Exploitation
+    DECAY_RATE = 0.999995 #0.999992
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
     MODEL_UPDATE_RATE = 1
     TARGET_UPDATE_RATE = 10e4
     LEARN_RATE = 0.0001         # range: 1e-3 - 1e-4
@@ -385,13 +501,22 @@ if __name__=="__main__":
     CLIP_GRADIENTS = True
     CLIP_NORM = 2
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
+<<<<<<< HEAD
     REWARD_WEIGHTS = np.array([1.0, 0.2, 0.9, 0.4, -5])
+=======
+    REWARD_WEIGHTS = np.array([1.0, 0.15, 0.8, 0.4, -5])
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
     STANDARDISE_RETURNS = True  # TODO additional variable for SPG
     USE_PER = False
     ALPHA = 0.75                # Priority scale: a=0:random, a=1:completely based on priority
     BETA = 0.2                  # Prioritisation factor
     BETA_INCREMENT = 0.001     # Rate of Beta annealing to 1 # TODO plotting of beta number
+<<<<<<< HEAD
     USE_DUELLING = True
+=======
+    USE_DUELLING = False
+    USE_DEEPSET = True
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
     # TODO comparitive plotting of standard DQN, DDQN, PER, and Duelling
     # TODO plotting of average reward of vehicle that just speeds up
     training_param = {
@@ -422,7 +547,12 @@ if __name__=="__main__":
         "alpha": ALPHA,
         "beta": BETA,
         "beta_increment": BETA_INCREMENT,
+<<<<<<< HEAD
         "use_duelling": USE_DUELLING
+=======
+        "use_duelling": USE_DUELLING,
+        "use_deepset": USE_DEEPSET
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
     }
     logging.critical("Training param:")
     logging.critical(training_param)
@@ -433,9 +563,15 @@ if __name__=="__main__":
 
     # Initialise models:
     # TODO Retrain on 3 network architectures
+<<<<<<< HEAD
     AC_net_single = AcNetworkSingleAction(model_param=model_param)
     spg_agent_single = SpgAgentSingle(network=AC_net_single, training_param=training_param)
     spg_policy_single = DiscreteSingleActionPolicy(agent=spg_agent_single)
+=======
+    # AC_net_single = AcNetworkSingleAction(model_param=model_param)
+    # spg_agent_single = SpgAgentSingle(network=AC_net_single, training_param=training_param)
+    # spg_policy_single = DiscreteSingleActionPolicy(agent=spg_agent_single)
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
 
     # TODO Fix Policies for double action as well as single action
     # AC_net_double = AcNetworkDoubleAction(model_param=model_param)
@@ -443,8 +579,17 @@ if __name__=="__main__":
     # spg_policy_double = DiscreteDoubleActionPolicy(agent=spg_agent_double)
 
     # TODO Compare DQN DDQN PER and DUELLING ON SAME RANDOM SEED!
+<<<<<<< HEAD
     if USE_DUELLING:
         DQ_net = DuellingDqnNetwork(model_param=model_param)
+=======
+    # if USE_DUELLING:
+    #     DQ_net = DuellingDqnNetwork(model_param=model_param)
+    # else:
+    #     DQ_net = DeepQNetwork(model_param=model_param)
+    if USE_DEEPSET:
+        DQ_net = DeepSetQNetwork(model_param=model_param)
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
     else:
         DQ_net = DeepQNetwork(model_param=model_param)
     dqn_agent = DqnAgent(network=DQ_net, training_param=training_param)
@@ -458,7 +603,13 @@ if __name__=="__main__":
     # main.policy.agent.Q_actual_net.load_weights(MODEL_FILE_PATH)
     main.policy.agent.evaluation = False
     # Train model:
+<<<<<<< HEAD
     main.train_policy()
+=======
+
+    # TODO Ensure Dmax is consistently 150 when merging the branch with master!!!!!
+    # main.train_policy()  # TODO !!!
+>>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
 
     # TODO Tidy up simulation part:
     # Simulate model:
