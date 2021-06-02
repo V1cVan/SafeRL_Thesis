@@ -1,20 +1,22 @@
 import tensorflow as tf
 from tensorflow import keras
+import datetime
 from tensorflow.keras import layers, Sequential
 import numpy as np
 from HelperClasses import EpisodeBuffer, DataLogger
 from DqnBuffers import TrainingBuffer, PerTrainingBuffer
-
 
 class DqnAgent(keras.models.Model):
     """
     double deep q network trainer
     """
 
-    def __init__(self, network, training_param):
+    def __init__(self, network, training_param, tb_logger):
         super(DqnAgent, self).__init__()
         tf.random.set_seed(training_param["seed"])
         np.random.seed(training_param["seed"])
+        self.tb_logger = tb_logger
+
         self.latest_experience = None
         self.is_action_taken = False
         self.Q_target_net = network
@@ -40,12 +42,8 @@ class DqnAgent(keras.models.Model):
                                             beta_increment=training_param["beta_increment"])
         else:
             self.buffer = TrainingBuffer(buffer_size=training_param["buffer_size"],
-<<<<<<< HEAD
-                                         batch_size=training_param["batch_size"])
-=======
                                          batch_size=training_param["batch_size"],
                                          use_deepset=training_param["use_deepset"])
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
         self.gamma = training_param["gamma"]
 
     def set_neg_collision_reward(self, timestep, punishment):
@@ -57,10 +55,7 @@ class DqnAgent(keras.models.Model):
         experience = (states, actions, rewards, next_states, done)
 
         if self.training_param["use_per"]:
-<<<<<<< HEAD
-=======
             # TODO add deepset implementation
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             # Calculate the TD-error for the Prioritised Replay Buffer
             states, actions, rewards, next_states, done = experience
             states = tf.expand_dims(tf.convert_to_tensor(states, dtype=np.float32), axis=0)
@@ -102,6 +97,7 @@ class DqnAgent(keras.models.Model):
     def get_action_choice(self, Q):
         """ Randomly choose from the available actions."""
         epsilon = self.calc_epsilon()
+        self.tb_logger.save_variable(name='epsilon', x=self.episode, y=epsilon)
 
         if np.random.rand() < epsilon and not self.evaluation:
             self.latest_action = np.random.randint(0, 5)
@@ -120,13 +116,10 @@ class DqnAgent(keras.models.Model):
             # Gather and convert data from the buffer (data from simulation):
             # Sample mini-batch from memory
             if self.training_param["use_per"]:
-<<<<<<< HEAD
-=======
                 # TODO add deepset implementation
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
                 states, actions, rewards, next_states, done, idxs, is_weight = self.buffer.get_training_samples()
                 one_hot_actions = tf.keras.utils.to_categorical(actions, num_classes=n_actions)
-                mean_batch_reward, loss, td_error = self.run_tape(
+                mean_batch_reward, loss, td_error, grads, clipped_grads = self.run_tape(
                     states=states,
                     actions=one_hot_actions,
                     rewards=rewards,
@@ -136,7 +129,7 @@ class DqnAgent(keras.models.Model):
             else:
                 states, actions, rewards, next_states, done = self.buffer.get_training_samples()
                 one_hot_actions = tf.keras.utils.to_categorical(actions, num_classes=n_actions)
-                mean_batch_reward, loss, td_error = self.run_tape(
+                mean_batch_reward, loss, td_error, grads, clipped_grads = self.run_tape(
                     states=states,
                     actions=one_hot_actions,
                     rewards=rewards,
@@ -154,7 +147,7 @@ class DqnAgent(keras.models.Model):
             #     gradients=np.squeeze(grads),
             #     model_weights=self.actor_critic_net.weights)
 
-            return mean_batch_reward, loss
+            return mean_batch_reward, loss, td_error, grads, clipped_grads
 
     @tf.function
     def run_tape(self,
@@ -182,28 +175,31 @@ class DqnAgent(keras.models.Model):
 
             loss_value = self.training_param["loss_func"](y_true=Q_target, y_pred=Q_predicted)
 
+
             # loss_value = self.training_param["loss_func"](Q_target, Q_predicted)
             # loss_value = tf.losses.MSE(y_true=target_output, y_pred=predicted_output)
             # loss_value = tf.reduce_mean(tf.square(Q_target - Q_predicted))
             if self.training_param["use_per"]:
-<<<<<<< HEAD
-=======
                 # TODO compute loss for each item in experience individually and then perform the huber loss calculation
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
                 loss_value = tf.reduce_mean(is_weight * loss_value)
 
         grads = tape.gradient(loss_value, self.Q_actual_net.trainable_variables)
+
+
         # Clip gradients
         if self.training_param["clip_gradients"]:
             norm = self.training_param["clip_norm"]
-            grads = [tf.clip_by_norm(g, norm)
+            clipped_grads = [tf.clip_by_norm(g, norm)
                      for g in grads]
+
+        if self.training_param["clip_gradients"]:
+            grads= clipped_grads
 
         self.training_param["optimiser"].apply_gradients(zip(grads, self.Q_actual_net.trainable_variables))
         sum_reward = tf.math.reduce_sum(rewards)
         mean_batch_reward = sum_reward / self.buffer.batch_size
 
-        return mean_batch_reward, loss_value, td_error
+        return mean_batch_reward, loss_value, td_error, grads, clipped_grads
 
 
 class SpgAgentSingle(keras.models.Model):
@@ -262,7 +258,7 @@ class SpgAgentSingle(keras.models.Model):
 
         return returns
 
-    # @tf.function
+    @tf.function
     def compute_loss(
             self,
             action_probs: tf.Tensor,

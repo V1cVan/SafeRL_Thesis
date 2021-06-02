@@ -5,8 +5,6 @@ import numpy as np
 from HelperClasses import EpisodeBuffer, DataLogger
 
 
-<<<<<<< HEAD
-=======
 class DeepSetQNetwork(keras.Model):
     """
     Builds a deep Q-network using DeepSetQ approach incorporating permutation invariance.
@@ -100,7 +98,6 @@ class DeepSetQNetwork(keras.Model):
 
 
 
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
 class DeepQNetwork(keras.Model):
     """
     Double Deep Q-network
@@ -121,19 +118,22 @@ class DeepQNetwork(keras.Model):
         var_scale = tf.keras.initializers.VarianceScaling(scale=2.0, mode='fan_in', distribution='truncated_normal')
 
         input_layer = layers.Input(shape=(n_inputs,),
-                                   name="inputStateLayer")
+                                   name="inputState")
 
         dense_layer1 = self.dense_layer(num_units=n_units[0],
                                         initialiser=he,
-                                        act_func=act_func)(input_layer)
+                                        act_func=act_func,
+                                        name="dense1")(input_layer)
         dense_layer2 = self.dense_layer(num_units=n_units[1],
                                         initialiser=he,
-                                        act_func=act_func)(dense_layer1)
+                                        act_func=act_func,
+                                        name="dense2")(dense_layer1)
         dense_layer3 = self.dense_layer(num_units=n_units[2],
                                         initialiser=he,
-                                        act_func=act_func)(dense_layer2)
+                                        act_func=act_func,
+                                        name="dense3")(dense_layer2)
         output_layer = layers.Dense(n_actions,
-                                    name="OutputLayerSteering",
+                                    name="Output",
                                     kernel_initializer=var_scale,
                                     bias_initializer=tf.keras.initializers.Constant(0))(dense_layer3)
 
@@ -143,11 +143,12 @@ class DeepQNetwork(keras.Model):
 
         self.display_overview()
 
-    def dense_layer(self, num_units, act_func, initialiser):
+    def dense_layer(self, num_units, act_func, initialiser, name):
         return layers.Dense(
             num_units,
             activation=act_func,
-            kernel_initializer=initialiser)
+            kernel_initializer=initialiser,
+            name=name)
 
     @tf.function
     def call(self, inputs: tf.Tensor):

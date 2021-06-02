@@ -10,58 +10,35 @@ def convert_state(veh):
     Assembles state vector in TF form to pass to neural network.
     Normalises certain state variables and excludes constants.
     """
-<<<<<<< HEAD
-=======
     D_MAX = veh.D_MAX
 
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
     # Normalise states and remove unnecessary states:
     lane_width = veh.s["laneC"]["width"]  # Excluded
     gap_to_road_edge = veh.s["gapB"] / (lane_width * 3)  # Normalised
     max_vel = veh.s["maxVel"]  # Excluded
-<<<<<<< HEAD
-    curr_vel = veh.s["vel"][0] / max_vel  # Normalised longitudinal component and lateral component excluded
-
-    # Current Lane:
-    offset_current_lane_center = veh.s["laneC"]["off"] / lane_width  # Normalised
-    rel_offset_back_center_lane = np.hstack((veh.s["laneC"]["relB"]["gap"][:, 0] / 150,
-=======
     curr_vel = veh.s["vel"] / max_vel  # Normalised
 
     # Current Lane:
     offset_current_lane_center = veh.s["laneC"]["off"] / lane_width  # Normalised
     rel_offset_back_center_lane = np.hstack((veh.s["laneC"]["relB"]["gap"][:, 0] / D_MAX,
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
                                              veh.s["laneC"]["relB"]["gap"][:,
                                              1] / lane_width))  # Normalised to Dmax default
     rel_vel_back_center_lane = np.matrix.flatten(veh.s["laneC"]["relB"]["vel"]) / max_vel  # Normalised
 
-<<<<<<< HEAD
-    rel_offset_front_center_lane = np.hstack((veh.s["laneC"]["relF"]["gap"][:, 0] / 150,
-=======
     rel_offset_front_center_lane = np.hstack((veh.s["laneC"]["relF"]["gap"][:, 0] / D_MAX,
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
                                               veh.s["laneC"]["relF"]["gap"][:,
                                               1] / lane_width))  # Normalised to Dmax default
     rel_vel_front_center_lane = np.matrix.flatten(veh.s["laneC"]["relF"]["vel"]) / max_vel  # Normalised
 
     # Left Lane:
     offset_left_lane_center = veh.s["laneL"]["off"] / lane_width  # Normalised
-<<<<<<< HEAD
-    rel_offset_back_left_lane = np.hstack((veh.s["laneL"]["relB"]["gap"][0][:, 0] / 150,
-=======
     rel_offset_back_left_lane = np.hstack((veh.s["laneL"]["relB"]["gap"][0][:, 0] / D_MAX,
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
                                            veh.s["laneL"]["relB"]["gap"][0][:,
                                            1] / lane_width))  # Normalised to Dmax default
     rel_offset_back_left_lane = np.squeeze(rel_offset_back_left_lane)
     rel_vel_back_left_lane = np.matrix.flatten(veh.s["laneL"]["relB"]["vel"]) / max_vel  # Normalised
 
-<<<<<<< HEAD
-    rel_offset_front_left_lane = np.hstack((veh.s["laneL"]["relF"]["gap"][0][:, 0] / 150,
-=======
     rel_offset_front_left_lane = np.hstack((veh.s["laneL"]["relF"]["gap"][0][:, 0] / D_MAX,
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
                                             veh.s["laneL"]["relF"]["gap"][0][:,
                                             1] / lane_width))  # Normalised to Dmax default
     rel_offset_front_left_lane = np.squeeze(rel_offset_front_left_lane)
@@ -69,21 +46,13 @@ def convert_state(veh):
 
     # Right Lane:
     offset_right_lane_center = veh.s["laneR"]["off"] / lane_width  # Normalised
-<<<<<<< HEAD
-    rel_offset_back_right_lane = np.hstack((veh.s["laneR"]["relB"]["gap"][0][:, 0] / 150,
-=======
     rel_offset_back_right_lane = np.hstack((veh.s["laneR"]["relB"]["gap"][0][:, 0] / D_MAX,
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
                                             veh.s["laneR"]["relB"]["gap"][0][:,
                                             1] / lane_width))  # Normalised to Dmax default
     rel_offset_back_right_lane = np.squeeze(rel_offset_back_right_lane)
     rel_vel_back_right_late = np.matrix.flatten(veh.s["laneR"]["relB"]["vel"]) / max_vel  # Normalised
 
-<<<<<<< HEAD
-    rel_offset_front_right_lane = np.hstack((veh.s["laneR"]["relF"]["gap"][0][:, 0] / 150,
-=======
     rel_offset_front_right_lane = np.hstack((veh.s["laneR"]["relF"]["gap"][0][:, 0] / D_MAX,
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
                                              veh.s["laneR"]["relF"]["gap"][0][:,
                                              1] / lane_width))  # Normalised to Dmax default
     rel_offset_front_right_lane = np.squeeze(rel_offset_front_right_lane)
@@ -100,9 +69,6 @@ def convert_state(veh):
 
     state = tf.convert_to_tensor(state, dtype=tf.float32, name="state_input")
     state = tf.expand_dims(state, 0)
-<<<<<<< HEAD
-    return state  # Can be overridden by subclasses
-=======
     return state
 
 
@@ -185,7 +151,6 @@ def decompose_state(veh):
     dynamic_state = tf.expand_dims(tf.convert_to_tensor(dynamic_state, dtype=tf.float32, name="dynamic_state_input"), 0)
 
     return [dynamic_state, static_state]
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
 
 
 class RewardFunction(object):
@@ -331,18 +296,18 @@ class DiscreteSingleActionPolicy(CustomPolicy):
         # s1, a1 = current vehicle state action pair
         veh.counter -= 1
 
+
+
+
         if veh.counter <= 0:
             veh.counter = self.STEP_TIME
             # Set current vehicle state and action pair
             veh.s1 = veh.s_raw
-<<<<<<< HEAD
-            veh.s1_mod = convert_state(veh)
-=======
             if self.agent.training_param["use_deepset"]:
                 veh.s1_mod = decompose_state(veh)
             else:
                 veh.s1_mod = convert_state(veh)
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
+
             Q = self.get_action(veh.s1_mod)
             veh.a1_mod = Q
             action_choice = self.agent.get_action_choice(Q)
@@ -356,30 +321,10 @@ class DiscreteSingleActionPolicy(CustomPolicy):
                 veh.reward = (self.rewards.get_reward(agent=self.agent, veh=veh) + np.sum(veh.rew_buffer))/self.STEP_TIME
                 if self.agent is not None and self.agent.training is True:
                     # Save action taken previously on previous state value
-<<<<<<< HEAD
-                    # action = velocity action, lane_change action
-                    action = veh.a0_mod[0][veh.a0_choice]
-
-                    # Save to buffer from the Buffer class in HelperClasses.py module
-                    # add_experience expects (timestep, state, vel_model_action, off_model_action,
-                    #                         vel_action_sim, offset_action_sim, vel_choice, off_choice, reward, critic)
-                    # experience = (np.squeeze(veh.s0_mod),
-                    #               veh.a0_choice,
-                    #               veh.reward,
-                    #               np.squeeze(veh.s1_mod),
-                    #               veh.flag)
-                    # self.agent.add_experience(experience)
-
-                    experience = (np.squeeze(veh.s0_mod),
-                                  veh.a0_choice,
-                                  veh.reward,
-                                  np.squeeze(veh.s1_mod))
-=======
                     experience = (veh.s0_mod,
                                   veh.a0_choice,
                                   veh.reward,
                                   veh.s1_mod)
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
                     self.agent.latest_experience = experience
                     self.agent.is_action_taken = True
 

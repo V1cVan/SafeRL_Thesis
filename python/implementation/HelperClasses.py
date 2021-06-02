@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import tensorflow as tf
 import pickle as pic
+import datetime
 from collections import deque
 import random
 
@@ -15,6 +16,52 @@ import random
         Buffer - for temporarily handling and data during a RL episode.
         Timer - for timing of python tasks.
 """
+
+class TbLogger(object):
+    """
+    Logs training variables of training runs to tensorboard.
+    """
+    def __init__(self, save_training, seed, log_freq):
+        # Tensorboard data logger
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d - %Hh%Mm%Ss")
+        self.tb_dir = "logfiles/tb/" + current_time + " - Seed" + str(seed)
+        self.tb_writer = tf.summary.create_file_writer(self.tb_dir)
+        self.log_freq = log_freq
+        self.save_training = save_training
+
+
+    def save_variable(self, name, x, y):
+        if self.save_training:
+            with self.tb_writer.as_default():
+                tf.summary.scalar(name, y, step=x)
+
+    def save_histogram(self, name, x, y):
+        if self.save_training:
+            with self.tb_writer.as_default():
+                tf.summary.histogram(name, y, x)
+
+    def save_weights_gradients(self, episode, model, grads, clipped_grads=None):
+        if self.save_training:
+            model_trainable_parameters = model.get_weights()
+            layer_names = [layer.name for layer in model._layers[-1].layers][1::]
+            layer_count = 0
+            for layer_ind in np.arange(0, len(model_trainable_parameters), 2):
+                with self.tb_writer.as_default():
+
+                    tf.summary.histogram("Layer (" + layer_names[layer_count] + ") weights", model_trainable_parameters[layer_ind],
+                                         episode)
+                    tf.summary.histogram("Layer (" + layer_names[layer_count] + ") biases", model_trainable_parameters[layer_ind + 1],
+                                         episode)
+                    tf.summary.histogram("Layer (" + layer_names[layer_count] + ") weight unclipped gradients", grads[layer_ind],
+                                         episode)
+                    tf.summary.histogram("Layer (" + layer_names[layer_count] + ") bias unclipped gradients",
+                                         grads[layer_ind + 1], episode)
+                    if clipped_grads is not None:
+                        tf.summary.histogram("Layer (" + layer_names[layer_count] + ") weight clipped gradients",
+                                             clipped_grads[layer_ind], episode)
+                        tf.summary.histogram("Layer (" + layer_names[layer_count] + ") bias clipped gradients",
+                                             clipped_grads[layer_ind + 1], episode)
+                    layer_count += 1
 
 class DataLogger(object):
     """
@@ -401,10 +448,7 @@ class Timer(object):
         self.all_timers.append(time_taken)
         return time_taken
 
-<<<<<<< HEAD
-=======
 
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
     def getMeanTime(self):
         return sum(self.all_timers) / len(self.all_timers)
 

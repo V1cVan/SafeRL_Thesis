@@ -2,10 +2,7 @@ import numpy as np
 from collections import deque
 import tensorflow as tf
 import random
-<<<<<<< HEAD
-=======
 from HelperClasses import Timer
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
 
 
 class TrainingBuffer(object):
@@ -15,26 +12,16 @@ class TrainingBuffer(object):
     the network 'forgets' good actions that it learnt previously.
     """
 
-<<<<<<< HEAD
-    def __init__(self, buffer_size, batch_size):
-        self.buffer_size = buffer_size
-        self.buffer = deque(maxlen=buffer_size)
-        self.batch_size = batch_size
-=======
     def __init__(self, buffer_size, batch_size, use_deepset=False):
         self.buffer_size = buffer_size
         self.buffer = deque(maxlen=buffer_size)
         self.batch_size = batch_size
         self.use_deepset = use_deepset
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
 
     def add_experience(self, experience):
         """
         Add an experience (s_k, a_k, r_k, s_k+1) to the training buffer.
         """
-<<<<<<< HEAD
-        self.buffer.append(experience)
-=======
         if self.use_deepset:
             states, actions, rewards, next_states, done = experience
             dynamic_states = np.squeeze(states[0])
@@ -50,18 +37,10 @@ class TrainingBuffer(object):
             states, actions, rewards, next_states, done = experience
             experience = (np.squeeze(states), actions, rewards, np.squeeze(next_states), done)
             self.buffer.append(experience)
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
 
     def get_training_samples(self):
         """ Get minibatch for training. """
         mini_batch = random.sample(self.buffer, self.batch_size)
-<<<<<<< HEAD
-        states = tf.squeeze(tf.convert_to_tensor([each[0] for each in mini_batch], dtype=np.float32))
-        actions = tf.squeeze(tf.convert_to_tensor(np.array([each[1] for each in mini_batch])))
-        rewards = tf.squeeze(tf.convert_to_tensor(np.array([each[2] for each in mini_batch], dtype=np.float32)))
-        next_states = tf.squeeze(tf.convert_to_tensor(np.array([each[3] for each in mini_batch], dtype=np.float32)))
-        done = tf.cast([each[4] for each in mini_batch], dtype=tf.float32)
-=======
         # TODO Remove additional for loops to speed up training
         if self.use_deepset:
             dynamic_states = tf.squeeze(tf.convert_to_tensor([each[0] for each in mini_batch], dtype=np.float32))
@@ -83,7 +62,6 @@ class TrainingBuffer(object):
             next_states = tf.squeeze(tf.convert_to_tensor(np.array([each[3] for each in mini_batch], dtype=np.float32)))
             done = tf.cast([each[4] for each in mini_batch], dtype=tf.float32)
 
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
         return states, actions, rewards, next_states, done
 
     def alter_buffer_stop_flag(self, flag):
@@ -140,19 +118,13 @@ class PerTrainingBuffer(object):  # stored as ( s, a, r, s_ ) in SumTree
             batch.append(data)
             idxs.append(idx)
 
-<<<<<<< HEAD
-=======
         # TODO fix the division by self.tree.total() and rather just divide by the value of the root node
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
         sampling_probabilities = priorities / self.tree.total()
         is_weight = np.power(self.tree.n_entries * sampling_probabilities, -self.beta)
         is_weight /= is_weight.max()
         is_weight = tf.squeeze(tf.convert_to_tensor(is_weight, dtype=np.float32))
 
-<<<<<<< HEAD
-=======
         # TODO add deepset functionality to the PER as in the normal training buffer
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
         states = tf.squeeze(tf.convert_to_tensor([each[0] for each in batch], dtype=np.float32))
         actions = tf.squeeze(tf.convert_to_tensor(np.array([each[1] for each in batch], dtype=np.float32)))
         rewards = tf.squeeze(tf.convert_to_tensor(np.array([each[2] for each in batch], dtype=np.float32)))

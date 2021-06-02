@@ -1,6 +1,6 @@
 import os
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "None"  # specify which GPU(s) to be used (1)
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # specify which GPU(s) to be used (1)
 import pickle
 
 from hwsim import Simulation, BasicPolicy, StepPolicy, SwayPolicy, IMPolicy, KBModel, TrackPolicy, CustomPolicy, config
@@ -19,6 +19,7 @@ from Models import *
 import logging
 from matplotlib import pyplot as plt
 import time
+import datetime
 
 # tf.config.experimental.set_visible_devices([0], "GPU")
 
@@ -32,11 +33,7 @@ class Main(object):
         # Create object for data logging and visualisation
         self.data_logger = DataLogger(model_param, training_param)
         self.plotTimer = Timer("Plotting")
-<<<<<<< HEAD
-        self.trainerTimer = Timer("the Trainer")
-=======
 
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
         self.episodeTimer = Timer("Episode")
 
     # ...
@@ -77,9 +74,9 @@ class Main(object):
         max_timesteps = training_param["max_timesteps"]
         max_episodes = training_param["max_episodes"]
         trained = False
-        episode_list = []
-        running_reward_list = []
-        loss_list = []
+        # episode_list = []
+        # running_reward_list = []
+        # loss_list = []
         # plot_items = self.data_logger.init_training_plot()
         train_counter = 1
         model_update_counter = 1
@@ -87,6 +84,10 @@ class Main(object):
         while episode_count <= max_episodes:
             self.policy.agent.episode = episode_count
             episode_reward_list = []
+            episode_mean_batch_rewards = []
+            episode_losses = []
+            episode_td_errors = []
+
             if episode_count % plot_freq == 0 and show_plots:
                 self.policy.agent.prev_epsilon = self.policy.agent.epsilon
                 self.simulate(training_param["sim_timesteps"])
@@ -95,43 +96,6 @@ class Main(object):
             # print("Episode number: %0.2f" % episode_count)
             logging.critical("Episode number: %0.2f" % episode_count)
 
-<<<<<<< HEAD
-            # Set simulation environment
-            with self.sim:
-                # Loop through each timestep in episode.
-                with self.episodeTimer:
-                    # Run the model for one episode to collect training data
-                    # Saves actions values, critic values, and rewards in policy class variables
-                    for t in np.arange(1, max_timesteps+1):
-                        # logging.critical("Timestep of episode: %0.2f" % self.sim.k)
-
-                        # Perform one simulations step:
-                        if not self.sim.stopped:
-                            self.sim.step()  # Calls AcPolicy.customAction method.
-
-                            done = self.sim.stopped  # or self.sim._collision
-                            if self.policy.agent.is_action_taken:
-                                self.policy.agent.add_experience(done)
-                                episode_reward_list.append(self.policy.agent.latest_experience[2])
-
-                        if t % training_param["policy_rate"] == 0:
-                            train_counter += 1
-                            self.policy.agent.epsilon_decay_count = train_counter
-                            self.policy.agent.timestep = np.int(t / training_param["policy_rate"])
-                            if self.policy.agent.buffer.is_buffer_min_size():
-                                model_update_counter += 1
-                                if model_update_counter % training_param["model_update_rate"] == 0:
-                                    # TODO add data to episode buffer to get episode rewards while training.
-                                    _, loss = self.policy.agent.train_step()
-                                    trained = True
-
-                                if model_update_counter % training_param["target_update_rate"] == 0:
-                                    self.policy.agent.update_target_net()
-                                    # print("Updated target net.")
-
-            reward = np.sum(episode_reward_list)/len(episode_reward_list)
-
-=======
             self.episodeTimer.startTime()
             # Set simulation environment
             with self.sim:
@@ -163,7 +127,10 @@ class Main(object):
                             model_update_counter += 1
                             if model_update_counter % training_param["model_update_rate"] == 0:
                                 # TODO add data to episode buffer to get episode rewards while training.
-                                _, loss = self.policy.agent.train_step()
+                                mean_batch_reward, loss, td_error, grads, clipped_grads = self.policy.agent.train_step()
+                                episode_mean_batch_rewards.append(mean_batch_reward)
+                                episode_losses.append(loss)
+                                episode_td_errors.append(td_error)
                                 trained = True
 
                             if model_update_counter % training_param["target_update_rate"] == 0:
@@ -172,9 +139,8 @@ class Main(object):
 
             reward = np.sum(episode_reward_list)/len(episode_reward_list)
 
-            time_taken = self.episodeTimer.endTime()
+            time_taken_episode = self.episodeTimer.endTime()
 
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             if trained:
                 if 0.05 * reward + (1 - 0.05) * running_reward > running_reward and episode_count % 50 == 0:
                     self.policy.agent.Q_actual_net.save_weights(model_param["weights_file_path"])
@@ -187,28 +153,37 @@ class Main(object):
             if episode_count % 1 == 0 and trained:
                 epsilon = self.policy.agent.calc_epsilon()
                 if training_param["use_per"]:
-<<<<<<< HEAD
-                    print_template = "Running reward = {:.2f} ({:.2f}) at episode {}. Loss = {:.2f}. Epsilon = {:.2f}. Beta = {:.2f}."
-                    print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon,
-                                                         self.policy.agent.buffer.beta)
-                else:
-                    print_template = "Running reward = {:.2f} ({:.2f}) at episode {}. Loss = {:.2f}. Epsilon = {:.2f}."
-                    print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon)
-=======
                     print_template = "Running reward = {:.3f} ({:.3f}) at episode {}. Loss = {:.3f}. Epsilon = {:.3f}. Beta = {:.3f}. Episode timer = {:.3f}"
                     print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon,
-                                                         self.policy.agent.buffer.beta, time_taken)
+                                                         self.policy.agent.buffer.beta, time_taken_episode)
                 else:
                     print_template = "Running reward = {:.3f} ({:.3f}) at episode {}. Loss = {:.3f}. Epsilon = {:.3f}. Episode timer = {:.3f}"
-                    print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon, time_taken)
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
+                    print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon, time_taken_episode)
 
-                loss_list.append(loss)
-                episode_list.append(episode_count)
-                running_reward_list.append(running_reward)
-                training_var = (episode_list, running_reward_list, loss_list)
                 print(print_output)
                 logging.critical(print_output)
+                # loss_list.append(loss)
+                # episode_list.append(episode_count)
+                # running_reward_list.append(running_reward)
+                # training_var = (episode_list, running_reward_list, loss_list)
+
+            # Save episode training variables to tensorboard
+            tb_logger.save_histogram("Episode mean batch rewards", x=episode_count, y=episode_mean_batch_rewards)
+            tb_logger.save_histogram("Episode losses", x=episode_count, y=episode_losses)
+            tb_logger.save_histogram("Episode TD errors", x=episode_count, y=episode_td_errors)
+            tb_logger.save_variable("Total episode reward (sum)", x=episode_count, y=np.sum(episode_reward_list))
+            tb_logger.save_variable("Mean episode reward", x=episode_count, y=np.sum(episode_reward_list)/len(episode_reward_list))
+            tb_logger.save_variable("Running reward", x=episode_count, y=running_reward)
+            tb_logger.save_variable("Total time taken for episode", x=episode_count, y=time_taken_episode)
+            # TODO time taken for inferenece and time taken for training step
+
+            # Save model weights and biases and gradients of backprop.
+            tb_logger.save_weights_gradients(episode=episode_count,
+                                             model=self.policy.agent.Q_actual_net,
+                                             grads=grads,
+                                             clipped_grads=clipped_grads)
+
+
 
                 # self.data_logger.save_xls("./models/training_variables.xls")
             if running_reward >= training_param["final_return"] \
@@ -217,7 +192,7 @@ class Main(object):
                 print(print_output)
                 logging.critical(print_output)
                 self.policy.agent.Q_actual_net.save_weights(model_param["weights_file_path"])
-                pic.dump(training_var, open("./models/train_output", "wb"))
+                # pic.dump(training_var, open("./models/train_output", "wb"))
                 # self.data_logger.plot_training_data(plot_items)
                 # self.data_logger.save_training_data("./models/training_variables.p")
                 break
@@ -263,11 +238,7 @@ def sim_types(scenario_num, policy):
         "k0": 0,
         "replay": False,
         "vehicles": [
-<<<<<<< HEAD
-            {"amount": 1, "model": KBModel(), "policy": policy},
-=======
             {"amount": 1, "model": KBModel(), "policy": policy, "D_MAX": 160},
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             # {"amount": 2, "model": KBModel(), "policy": StepPolicy(10, [0.1, 0.5])},
             # {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
             # {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
@@ -288,11 +259,7 @@ def sim_types(scenario_num, policy):
         "k0": 0,
         "replay": False,
         "vehicles": [
-<<<<<<< HEAD
-            {"amount": 1, "model": KBModel(), "policy": policy, "R": 0, "l": lane, "s": 0, "v": np.random.random(1)*30.0},
-=======
             {"amount": 1, "model": KBModel(), "policy": policy, "R": 0, "l": lane, "s": 0, "v": np.random.random(1)*30.0, "D_MAX": 160},
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             # {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": lane, "s": 30, "v": 28},
         ]
     }
@@ -306,22 +273,14 @@ def sim_types(scenario_num, policy):
         "replay": False,
         "vehicles": [
             {"model": KBModel(), "policy": policy, "R": 0, "l": 0, "s": 0,
-<<<<<<< HEAD
-             "v": random.randint(25, 28)},
-=======
              "v": random.randint(25, 28), "D_MAX": 160},
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 0, "s": 50, "v": 28},
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 50, "v": 28},
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 3.6, "s": 120, "v": 28},
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 0, "s": 140, "v": 28},
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 140, "v": 28},
-<<<<<<< HEAD
-            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 300, "v": 28},            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 120, "v": 24},
-=======
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 300, "v": 28},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 120, "v": 24},
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 0, "s": 300, "v": 28}
         ]
     }
@@ -335,11 +294,7 @@ def sim_types(scenario_num, policy):
         "replay": False,
         "vehicles": [
             {"model": KBModel(), "policy": policy, "R": 0, "l": 3.6, "s": 0,
-<<<<<<< HEAD
-             "v": random.randint(25, 28)},
-=======
              "v": random.randint(25, 28), "D_MAX": 160},
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 40, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 50, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 150, "v": 24},
@@ -356,11 +311,7 @@ def sim_types(scenario_num, policy):
         "replay": False,
         "vehicles": [
             {"model": KBModel(), "policy": policy, "R": 0, "l": 3.6, "s": 0,
-<<<<<<< HEAD
-             "v": random.randint(25, 28)},
-=======
              "v": random.randint(25, 28), "D_MAX": 160},
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 0, "v": 24}
         ]
@@ -375,11 +326,7 @@ def sim_types(scenario_num, policy):
         "replay": False,
         "vehicles": [
             {"model": KBModel(), "policy": policy, "R": 0, "l": -3.6, "s": 0,
-<<<<<<< HEAD
-             "v": random.randint(25, 28)},
-=======
              "v": random.randint(25, 28), "D_MAX": 160},
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 10, "v": 24}
         ]
@@ -394,11 +341,7 @@ def sim_types(scenario_num, policy):
         "replay": False,
         "vehicles": [
             {"model": KBModel(), "policy": policy, "R": 0, "l": 0, "s": 0,
-<<<<<<< HEAD
-             "v": random.randint(25, 28)},
-=======
              "v": random.randint(25, 28), "D_MAX": 160},
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 20, "v": 24},
             {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 20, "v": 24},
@@ -425,30 +368,23 @@ if __name__=="__main__":
     SC_PATH = ROOT.joinpath("scenarios/scenarios.h5")
     config.scenarios_path = str(SC_PATH)
 
+    # TODO check that hwsim config seed is set properly
+    SEED = 10
+    config.seed = SEED
+    tf.random.set_seed(SEED)
+    np.random.seed(SEED)
+
     # Logging
     logging.basicConfig(level=logging.INFO, filename="./logfiles/main.log")
     # logging.disable(logging.ERROR) # Temporarily disable error tf logs.
     with open('./logfiles/main.log', 'w'):
         pass  # Clear the log file of previous run
 
-<<<<<<< HEAD
-=======
-
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
-    SEED = config.seed
-    tf.random.set_seed(SEED)
-    np.random.seed(SEED)
-
     # Model parameters:
-<<<<<<< HEAD
-    N_UNITS = (64, 32, 16)
-    N_INPUTS = 54
-=======
-    N_UNITS = (32, 16, 0)
+    N_UNITS = (32, 16, 8)  # TODO Change model size variability between deepset and baseline
     N_INPUTS = 55
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
     N_ACTIONS = 5
-    ACT_FUNC = tf.nn.swish
+    ACT_FUNC = tf.nn.relu
     MODEL_FILE_PATH = "./models/model_weights"
     model_param = {
         "n_units": N_UNITS,
@@ -463,26 +399,13 @@ if __name__=="__main__":
     pic.dump(model_param, open("./models/model_variables", "wb"))
 
     # Training parameters:
-<<<<<<< HEAD
-    POLICY_ACTION_RATE = 8      # Number of simulator steps before new control action is taken
-    MAX_TIMESTEPS = 2.5e3       # range: 5e3 - 10e3
-    MAX_EPISODES = 5000 #1.2e3
-    FINAL_RETURN = 0.93
-    SHOW_TRAIN_PLOTS = False
-    PLOT_FREQ = 50
-    SIM_TIMESTEPS = 200
-    SCENARIO_NUM = 0            # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
-    BUFFER_SIZE = 1000000
-    BATCH_SIZE = 64             # range: 32 - 150
-    EPSILON_MIN = 1.0           # Exploration
-    EPSILON_MAX = 0.1           # Exploitation
-    DECAY_RATE = 0.999997 #0.999992
-=======
     POLICY_ACTION_RATE = 8     # Number of simulator steps before new control action is taken
     MAX_TIMESTEPS = 2.5e3         # range: 5e3 - 10e3
     MAX_EPISODES = 5000 #1.2e3
     FINAL_RETURN = 0.91
     SHOW_TRAIN_PLOTS = False
+    SAVE_TRAINING = True
+    LOG_FREQ = 0              # TODO implement log frequency
     PLOT_FREQ = 50
     SIM_TIMESTEPS = 200
     SCENARIO_NUM = 0        # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
@@ -491,7 +414,6 @@ if __name__=="__main__":
     EPSILON_MIN = 1.0           # Exploration
     EPSILON_MAX = 0.1           # Exploitation
     DECAY_RATE = 0.999995 #0.999992
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
     MODEL_UPDATE_RATE = 1
     TARGET_UPDATE_RATE = 10e4
     LEARN_RATE = 0.0001         # range: 1e-3 - 1e-4
@@ -501,22 +423,16 @@ if __name__=="__main__":
     CLIP_GRADIENTS = True
     CLIP_NORM = 2
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
-<<<<<<< HEAD
-    REWARD_WEIGHTS = np.array([1.0, 0.2, 0.9, 0.4, -5])
-=======
     REWARD_WEIGHTS = np.array([1.0, 0.15, 0.8, 0.4, -5])
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
     STANDARDISE_RETURNS = True  # TODO additional variable for SPG
     USE_PER = False
     ALPHA = 0.75                # Priority scale: a=0:random, a=1:completely based on priority
     BETA = 0.2                  # Prioritisation factor
     BETA_INCREMENT = 0.001     # Rate of Beta annealing to 1 # TODO plotting of beta number
-<<<<<<< HEAD
-    USE_DUELLING = True
-=======
+    # Model types:
     USE_DUELLING = False
-    USE_DEEPSET = True
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
+    USE_DEEPSET = False
+
     # TODO comparitive plotting of standard DQN, DDQN, PER, and Duelling
     # TODO plotting of average reward of vehicle that just speeds up
     training_param = {
@@ -524,6 +440,8 @@ if __name__=="__main__":
         "max_episodes": MAX_EPISODES,
         "final_return": FINAL_RETURN,
         "show_train_plots": SHOW_TRAIN_PLOTS,
+        "save_training": SAVE_TRAINING,
+        "log_freq": LOG_FREQ,
         "plot_freq": PLOT_FREQ,
         "sim_timesteps": SIM_TIMESTEPS,
         "buffer_size": BUFFER_SIZE,
@@ -547,12 +465,8 @@ if __name__=="__main__":
         "alpha": ALPHA,
         "beta": BETA,
         "beta_increment": BETA_INCREMENT,
-<<<<<<< HEAD
-        "use_duelling": USE_DUELLING
-=======
         "use_duelling": USE_DUELLING,
         "use_deepset": USE_DEEPSET
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
     }
     logging.critical("Training param:")
     logging.critical(training_param)
@@ -561,17 +475,14 @@ if __name__=="__main__":
     training_param_save.pop("optimiser")
     pic.dump(training_param_save, open("./models/training_variables", "wb"))
 
+
+    tb_logger = TbLogger(save_training=SAVE_TRAINING, seed=SEED, log_freq=LOG_FREQ)
+
     # Initialise models:
     # TODO Retrain on 3 network architectures
-<<<<<<< HEAD
-    AC_net_single = AcNetworkSingleAction(model_param=model_param)
-    spg_agent_single = SpgAgentSingle(network=AC_net_single, training_param=training_param)
-    spg_policy_single = DiscreteSingleActionPolicy(agent=spg_agent_single)
-=======
     # AC_net_single = AcNetworkSingleAction(model_param=model_param)
     # spg_agent_single = SpgAgentSingle(network=AC_net_single, training_param=training_param)
     # spg_policy_single = DiscreteSingleActionPolicy(agent=spg_agent_single)
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
 
     # TODO Fix Policies for double action as well as single action
     # AC_net_double = AcNetworkDoubleAction(model_param=model_param)
@@ -579,20 +490,23 @@ if __name__=="__main__":
     # spg_policy_double = DiscreteDoubleActionPolicy(agent=spg_agent_double)
 
     # TODO Compare DQN DDQN PER and DUELLING ON SAME RANDOM SEED!
-<<<<<<< HEAD
-    if USE_DUELLING:
-        DQ_net = DuellingDqnNetwork(model_param=model_param)
-=======
     # if USE_DUELLING:
     #     DQ_net = DuellingDqnNetwork(model_param=model_param)
     # else:
     #     DQ_net = DeepQNetwork(model_param=model_param)
+
+    # tf.summary.trace_on(graph=True, profiler=True)
     if USE_DEEPSET:
         DQ_net = DeepSetQNetwork(model_param=model_param)
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
     else:
         DQ_net = DeepQNetwork(model_param=model_param)
-    dqn_agent = DqnAgent(network=DQ_net, training_param=training_param)
+
+    # with tb_writer.as_default():
+    #     x = tf.convert_to_tensor(np.zeros((1,55)))
+    #     y = DQ_net(x)
+    #     tf.summary.trace_export("model", step=1, profiler_outdir=tb_dir)
+
+    dqn_agent = DqnAgent(network=DQ_net, training_param=training_param, tb_logger=tb_logger)
     dqn_policy = DiscreteSingleActionPolicy(agent=dqn_agent)
 
     RewardFunction().plot_reward_functions()
@@ -603,13 +517,9 @@ if __name__=="__main__":
     # main.policy.agent.Q_actual_net.load_weights(MODEL_FILE_PATH)
     main.policy.agent.evaluation = False
     # Train model:
-<<<<<<< HEAD
-    main.train_policy()
-=======
 
     # TODO Ensure Dmax is consistently 150 when merging the branch with master!!!!!
-    # main.train_policy()  # TODO !!!
->>>>>>> a72c135a1634d848ccc2a5fbbfa020bbb9279842
+    main.train_policy()  # TODO !!!
 
     # TODO Tidy up simulation part:
     # Simulate model:
