@@ -87,6 +87,7 @@ class Main(object):
             episode_mean_batch_rewards = []
             episode_losses = []
             episode_td_errors = []
+            vehicle_speeds = []
 
             if episode_count % plot_freq == 0 and show_plots:
                 self.policy.agent.prev_epsilon = self.policy.agent.epsilon
@@ -118,6 +119,8 @@ class Main(object):
                         if self.policy.agent.is_action_taken:
                             self.policy.agent.add_experience(done)
                             episode_reward_list.append(self.policy.agent.latest_experience[2])
+                            curr_veh_speed = self.sim.vehicles[0].s["vel"][0]*3.6
+                            vehicle_speeds.append(curr_veh_speed)
 
                     if t % training_param["policy_rate"] == 0:
                         train_counter += 1
@@ -175,9 +178,13 @@ class Main(object):
             tb_logger.save_variable("Mean episode reward", x=episode_count, y=np.sum(episode_reward_list)/len(episode_reward_list))
             tb_logger.save_variable("Running reward", x=episode_count, y=running_reward)
             tb_logger.save_variable("Total time taken for episode", x=episode_count, y=time_taken_episode)
+            tb_logger.save_variable("Mean vehicle speed for episode", x=episode_count, y=np.mean(vehicle_speeds))
+            if training_param["use_per"]:
+                tb_logger.save_variable("Beta increment", x=episode_count, y=self.policy.agent.buffer.beta)
             # TODO time taken for inferenece and time taken for training step
 
             # Save model weights and biases and gradients of backprop.
+            # TODO fix deepset model so that we can save layer names
             tb_logger.save_weights_gradients(episode=episode_count,
                                              model=self.policy.agent.Q_actual_net,
                                              grads=grads,
@@ -384,7 +391,7 @@ if __name__=="__main__":
     N_UNITS = (32, 16, 8)  # TODO Change model size variability between deepset and baseline
     N_INPUTS = 55
     N_ACTIONS = 5
-    ACT_FUNC = tf.nn.relu
+    ACT_FUNC = tf.nn.selu
     MODEL_FILE_PATH = "./models/model_weights"
     model_param = {
         "n_units": N_UNITS,
@@ -410,28 +417,28 @@ if __name__=="__main__":
     SIM_TIMESTEPS = 200
     SCENARIO_NUM = 0        # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
     BUFFER_SIZE = 300000
-    BATCH_SIZE = 64          # range: 32 - 150
+    BATCH_SIZE = 32          # range: 32 - 150
     EPSILON_MIN = 1.0           # Exploration
     EPSILON_MAX = 0.1           # Exploitation
-    DECAY_RATE = 0.999995 #0.999992
+    DECAY_RATE = 0.9999 #0.999992
     MODEL_UPDATE_RATE = 1
     TARGET_UPDATE_RATE = 10e4
     LEARN_RATE = 0.0001         # range: 1e-3 - 1e-4
     OPTIMISER = tf.optimizers.Adam(learning_rate=LEARN_RATE)
-    LOSS_FUNC = tf.losses.Huber()
+    LOSS_FUNC = tf.losses.MeanSquaredError()  #tf.losses.Huber()  # PER loss function is MSE
     GAMMA = 0.99                # range: 0.95 - 0.99
-    CLIP_GRADIENTS = True
+    CLIP_GRADIENTS = False
     CLIP_NORM = 2
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
     REWARD_WEIGHTS = np.array([1.0, 0.15, 0.8, 0.4, -5])
     STANDARDISE_RETURNS = True  # TODO additional variable for SPG
-    USE_PER = False
+    USE_PER = True
     ALPHA = 0.75                # Priority scale: a=0:random, a=1:completely based on priority
     BETA = 0.2                  # Prioritisation factor
-    BETA_INCREMENT = 0.001     # Rate of Beta annealing to 1 # TODO plotting of beta number
+    BETA_INCREMENT = 0.00004 * MODEL_UPDATE_RATE    # Rate of Beta annealing to 1
     # Model types:
     USE_DUELLING = False
-    USE_DEEPSET = False
+    USE_DEEPSET = True
 
     # TODO comparitive plotting of standard DQN, DDQN, PER, and Duelling
     # TODO plotting of average reward of vehicle that just speeds up
@@ -474,7 +481,6 @@ if __name__=="__main__":
     training_param_save.pop("loss_func")
     training_param_save.pop("optimiser")
     pic.dump(training_param_save, open("./models/training_variables", "wb"))
-
 
     tb_logger = TbLogger(save_training=SAVE_TRAINING, seed=SEED, log_freq=LOG_FREQ)
 

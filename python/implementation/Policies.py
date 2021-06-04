@@ -291,13 +291,13 @@ class DiscreteSingleActionPolicy(CustomPolicy):
         veh.flag = None
         self.agent.is_action_taken = False
 
+    def get_vehicle_speed(self):
+        return veh.s["vel"][0]
+
     def custom_action(self, veh):
         # s0, a0 = previous vehicle state action pair
         # s1, a1 = current vehicle state action pair
         veh.counter -= 1
-
-
-
 
         if veh.counter <= 0:
             veh.counter = self.STEP_TIME

@@ -22,7 +22,6 @@ class DqnAgent(keras.models.Model):
         self.Q_target_net = network
         self.Q_actual_net = network
         self.reward_weights = training_param["reward_weights"]
-        # TODO implement data logging class for debugging training
         self.training = True
         self.training_param = training_param
         self.stop_flags = None
@@ -39,7 +38,8 @@ class DqnAgent(keras.models.Model):
                                             batch_size=training_param["batch_size"],
                                             alpha=training_param["alpha"],
                                             beta=training_param["beta"],
-                                            beta_increment=training_param["beta_increment"])
+                                            beta_increment=training_param["beta_increment"],
+                                            use_deepset=training_param["use_deepset"])
         else:
             self.buffer = TrainingBuffer(buffer_size=training_param["buffer_size"],
                                          batch_size=training_param["batch_size"],
@@ -55,19 +55,40 @@ class DqnAgent(keras.models.Model):
         experience = (states, actions, rewards, next_states, done)
 
         if self.training_param["use_per"]:
-            # TODO add deepset implementation
+            # TODO add deepset implementation for PER
             # Calculate the TD-error for the Prioritised Replay Buffer
-            states, actions, rewards, next_states, done = experience
-            states = tf.expand_dims(tf.convert_to_tensor(states, dtype=np.float32), axis=0)
-            actions = tf.squeeze(tf.convert_to_tensor(actions, dtype=np.float32))
-            rewards = tf.squeeze(tf.convert_to_tensor(rewards, dtype=np.float32))
-            next_states = tf.expand_dims(tf.convert_to_tensor(next_states, dtype=np.float32), axis=0)
-            done = tf.cast(done, dtype=tf.float32)
-            td_error = self.compute_td_error(states=states,
-                                             rewards=rewards,
-                                             next_states=next_states,
-                                             done=done)
-            self.buffer.add_experience(td_error, (states, actions, rewards, next_states, done))
+            if self.training_param["use_deepset"]:
+                dyn_states = tf.convert_to_tensor(states[0], dtype=np.float32)
+                stat_states = tf.convert_to_tensor(states[1], dtype=np.float32)
+                # states = (dyn_states, stat_states)
+
+                actions = tf.squeeze(tf.convert_to_tensor(actions, dtype=np.float32))
+                rewards = tf.squeeze(tf.convert_to_tensor(rewards, dtype=np.float32))
+
+                dyn_next_states = tf.convert_to_tensor(next_states[0], dtype=np.float32)
+                stat_next_states = tf.convert_to_tensor(next_states[1], dtype=np.float32)
+                # next_states = (dyn_next_states, stat_next_states)
+
+                done = tf.cast(done, dtype=tf.float32)
+                td_error = self.compute_td_error(states=states,
+                                                 rewards=rewards,
+                                                 next_states=next_states,
+                                                 done=done)
+                self.buffer.add_experience(td_error, (dyn_states, stat_states,
+                                                      actions, rewards,
+                                                      dyn_next_states, stat_next_states,
+                                                      done))
+            else:
+                states = tf.convert_to_tensor(states, dtype=np.float32)
+                actions = tf.squeeze(tf.convert_to_tensor(actions, dtype=np.float32))
+                rewards = tf.squeeze(tf.convert_to_tensor(rewards, dtype=np.float32))
+                next_states = tf.convert_to_tensor(next_states, dtype=np.float32)
+                done = tf.cast(done, dtype=tf.float32)
+                td_error = self.compute_td_error(states=states,
+                                                 rewards=rewards,
+                                                 next_states=next_states,
+                                                 done=done)
+                self.buffer.add_experience(td_error, (states, actions, rewards, next_states, done))
         else:
             self.buffer.add_experience(experience)
 
@@ -173,15 +194,14 @@ class DqnAgent(keras.models.Model):
 
             td_error = Q_target - Q_predicted
 
-            loss_value = self.training_param["loss_func"](y_true=Q_target, y_pred=Q_predicted)
-
-
             # loss_value = self.training_param["loss_func"](Q_target, Q_predicted)
             # loss_value = tf.losses.MSE(y_true=target_output, y_pred=predicted_output)
             # loss_value = tf.reduce_mean(tf.square(Q_target - Q_predicted))
             if self.training_param["use_per"]:
                 # TODO compute loss for each item in experience individually and then perform the huber loss calculation
-                loss_value = tf.reduce_mean(is_weight * loss_value)
+                loss_value = tf.reduce_mean(tf.square( is_weight * (Q_target - Q_predicted)))
+            else:
+                loss_value = self.training_param["loss_func"](y_true=Q_target, y_pred=Q_predicted)
 
         grads = tape.gradient(loss_value, self.Q_actual_net.trainable_variables)
 
@@ -199,7 +219,10 @@ class DqnAgent(keras.models.Model):
         sum_reward = tf.math.reduce_sum(rewards)
         mean_batch_reward = sum_reward / self.buffer.batch_size
 
-        return mean_batch_reward, loss_value, td_error, grads, clipped_grads
+        if self.training_param["clip_gradients"]:
+            return mean_batch_reward, loss_value, td_error, grads, clipped_grads
+        else:
+            return mean_batch_reward, loss_value, td_error, grads, grads
 
 
 class SpgAgentSingle(keras.models.Model):

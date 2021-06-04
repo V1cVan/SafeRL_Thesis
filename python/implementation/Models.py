@@ -18,83 +18,61 @@ class DeepSetQNetwork(keras.Model):
         n_units = model_param["n_units"]
         n_units_phi = [16, 32]
         n_units_rho = [32, 16]
-        n_inputs_static = (7,)
-        n_inputs_dynamic = (4,)
+        n_inputs_static = 7
+        n_inputs_dynamic = 4
         n_actions = model_param["n_actions"]
 
         he = tf.keras.initializers.HeUniform()
 
-        self.static_input_layer = layers.Input(shape=n_inputs_static, name="StaticStateInput")
-        self.dynamic_input_layer = layers.Input(shape=n_inputs_dynamic, name="DynamicStateInput")
+        self.static_input_layer = layers.Input(shape=(n_inputs_static), name="StaticStateInput")
+        self.dynamic_input_layer = layers.Input(shape=tf.TensorShape([12,n_inputs_dynamic]), name="DynamicStateInput")
 
-        self.phi_layer_1 = layers.Dense(n_units_phi[0], activation=act_func, kernel_initializer=he, name="PhiLayer1")
-        self.phi_layer_2 = layers.Dense(n_units_phi[1], activation=act_func, kernel_initializer=he, name="PhiLayer2")
+        self.phi_layer_1 = layers.Dense(n_units_phi[0], activation=act_func, kernel_initializer=he, name="PhiLayer1")(
+            self.dynamic_input_layer)
+        self.phi_layer_2 = layers.Dense(n_units_phi[1], activation=act_func, kernel_initializer=he, name="PhiLayer2")(
+            self.phi_layer_1)
 
-        self.sum_layer = layers.Add()
+        self.sum_layer = layers.Add(name="Summation_layer")([self.phi_layer_2[:,0,:],
+                                       self.phi_layer_2[:,1,:],
+                                       self.phi_layer_2[:,2,:],
+                                       self.phi_layer_2[:,3,:],
+                                       self.phi_layer_2[:,4,:],
+                                       self.phi_layer_2[:,5,:],
+                                       self.phi_layer_2[:,6,:],
+                                       self.phi_layer_2[:,7,:],
+                                       self.phi_layer_2[:,8,:],
+                                       self.phi_layer_2[:,9,:],
+                                       self.phi_layer_2[:,10,:],
+                                       self.phi_layer_2[:,11,:]])
 
-        self.rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func, kernel_initializer=he, name="rhoLayer1")
-        self.rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func, kernel_initializer=he, name="rhoLayer2")
+        self.rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func, kernel_initializer=he, name="rhoLayer1")(self.sum_layer)
+        self.rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func, kernel_initializer=he, name="rhoLayer2")(self.rho_layer_1)
 
-        self.concat_layer = layers.Concatenate()
+        self.concat_layer = layers.Concatenate()([self.rho_layer_2, self.static_input_layer])
 
-        self.Q_layer_1 = layers.Dense(n_units[0], activation=act_func, kernel_initializer=he, name="QLayer1")
-        self.Q_layer_2 = layers.Dense(n_units[1], activation=act_func, kernel_initializer=he, name="QLayer2")
+        self.Q_layer_1 = layers.Dense(n_units[0], activation=act_func, kernel_initializer=he, name="QLayer1")(self.concat_layer)
+        self.Q_layer_2 = layers.Dense(n_units[1], activation=act_func, kernel_initializer=he, name="QLayer2")(self.Q_layer_1)
 
-        self.output_layer = layers.Dense(n_actions)
-        # TODO add Duelling to the permutation invariant network
-        # TODO reformat so that we call self.model()
+        self.output_layer = layers.Dense(n_actions)(self.Q_layer_2)
 
-    def call(self, inputs):
-        # Inputs into static and dynamic components
-        dynamic_input = inputs[0]
-        static_input = inputs[1]
+        self.model = keras.Model(inputs=[self.dynamic_input_layer, self.static_input_layer],
+                                 outputs=self.output_layer,
+                                 name="Deepset_DDQN")
 
-        # Dynamic inputs to phi network
-        x0 = self.phi_layer_1(dynamic_input[:, 0, :])
-        x0 = self.phi_layer_2(x0)
-        x1 = self.phi_layer_1(dynamic_input[:, 1, :])
-        x1 = self.phi_layer_2(x1)
-        x2 = self.phi_layer_1(dynamic_input[:, 2, :])
-        x2 = self.phi_layer_2(x2)
-        x3 = self.phi_layer_1(dynamic_input[:, 3, :])
-        x3 = self.phi_layer_2(x3)
-        x4 = self.phi_layer_1(dynamic_input[:, 4, :])
-        x4 = self.phi_layer_2(x4)
-        x5 = self.phi_layer_1(dynamic_input[:, 5, :])
-        x5 = self.phi_layer_2(x5)
-        x6 = self.phi_layer_1(dynamic_input[:, 6, :])
-        x6 = self.phi_layer_2(x6)
-        x7 = self.phi_layer_1(dynamic_input[:, 7, :])
-        x7 = self.phi_layer_2(x7)
-        x8 = self.phi_layer_1(dynamic_input[:, 8, :])
-        x8 = self.phi_layer_2(x8)
-        x9 = self.phi_layer_1(dynamic_input[:, 9, :])
-        x9 = self.phi_layer_2(x9)
-        x10 = self.phi_layer_1(dynamic_input[:, 10, :])
-        x10 = self.phi_layer_2(x10)
-        x11 = self.phi_layer_1(dynamic_input[:, 11, :])
-        x11 = self.phi_layer_2(x11)
+        self.display_overview()
 
-        # Summation of phi network outputs
-        x = [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11]
-        x_sum = self.sum_layer(x)
+    @tf.function
+    def call(self, inputs: tf.Tensor):
+        """ Returns the output of the model given an input. """
+        return self.model(inputs)
 
-        # Rho network
-        x = self.rho_layer_1(x_sum)
-        x = self.rho_layer_2(x)
-
-        # Q network
-        x = self.concat_layer([x, static_input])
-        x = self.Q_layer_1(x)
-        x = self.Q_layer_2(x)
-        q = self.output_layer(x)
-
-        return q
-
-    @staticmethod
-    def display_overview():
+    def display_overview(self):
         """ Displays an overview of the model. """
-        print("DeepQSet model does not have a summary to call")
+        self.model.summary()
+        keras.utils.plot_model(self.model,
+                               show_shapes=True,
+                               show_layer_names=True,
+                               to_file='./models/Deepset_Q_network.png')
 
 
 

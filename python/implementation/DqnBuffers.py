@@ -78,7 +78,7 @@ class TrainingBuffer(object):
 
 class PerTrainingBuffer(object):  # stored as ( s, a, r, s_ ) in SumTree
 
-    def __init__(self, buffer_size, batch_size, alpha, beta, beta_increment):
+    def __init__(self, buffer_size, batch_size, alpha, beta, beta_increment, use_deepset = False):
         self.tree = SumTree(buffer_size)
         self.capacity = buffer_size
         self.batch_size = batch_size
@@ -86,6 +86,7 @@ class PerTrainingBuffer(object):  # stored as ( s, a, r, s_ ) in SumTree
         self.beta = beta
         self.beta_increment = beta_increment
         self.e = 0.01
+        self.use_deepset = use_deepset
 
     def alter_buffer_stop_flag(self, flag):
         done_flag = flag
@@ -101,7 +102,7 @@ class PerTrainingBuffer(object):  # stored as ( s, a, r, s_ ) in SumTree
         self.tree.add(p, experience)
 
     def get_training_samples(self):
-        batch = []
+        mini_batch = []
         idxs = []
         segment = self.tree.total() / self.batch_size
         priorities = []
@@ -115,21 +116,36 @@ class PerTrainingBuffer(object):  # stored as ( s, a, r, s_ ) in SumTree
             s = random.uniform(a, b)
             (idx, p, data) = self.tree.get(s)
             priorities.append(p)
-            batch.append(data)
+            mini_batch.append(data)
             idxs.append(idx)
 
         # TODO fix the division by self.tree.total() and rather just divide by the value of the root node
         sampling_probabilities = priorities / self.tree.total()
-        is_weight = np.power(self.tree.n_entries * sampling_probabilities, -self.beta)
+        is_weight = np.power(sampling_probabilities, -self.beta)
         is_weight /= is_weight.max()
         is_weight = tf.squeeze(tf.convert_to_tensor(is_weight, dtype=np.float32))
 
-        # TODO add deepset functionality to the PER as in the normal training buffer
-        states = tf.squeeze(tf.convert_to_tensor([each[0] for each in batch], dtype=np.float32))
-        actions = tf.squeeze(tf.convert_to_tensor(np.array([each[1] for each in batch], dtype=np.float32)))
-        rewards = tf.squeeze(tf.convert_to_tensor(np.array([each[2] for each in batch], dtype=np.float32)))
-        next_states = tf.squeeze(tf.convert_to_tensor(np.array([each[3] for each in batch], dtype=np.float32)))
-        done = tf.cast([each[4] for each in batch], dtype=tf.float32)
+        # Get minibatch for training
+        # TODO Remove additional for loops to speed up training
+        if self.use_deepset:
+            dynamic_states = tf.squeeze(tf.convert_to_tensor([each[0] for each in mini_batch], dtype=np.float32))
+            static_states = tf.squeeze(tf.convert_to_tensor([each[1] for each in mini_batch], dtype=np.float32))
+            states = (dynamic_states, static_states)
+
+            actions = tf.squeeze(tf.convert_to_tensor(np.array([each[2] for each in mini_batch])))
+            rewards = tf.squeeze(tf.convert_to_tensor(np.array([each[3] for each in mini_batch], dtype=np.float32)))
+
+            dynamic_next_states = tf.squeeze(tf.convert_to_tensor([each[4] for each in mini_batch], dtype=np.float32))
+            static_next_states = tf.squeeze(tf.convert_to_tensor([each[5] for each in mini_batch], dtype=np.float32))
+            next_states = (dynamic_next_states, static_next_states)
+
+            done = tf.cast([each[6] for each in mini_batch], dtype=tf.float32)
+        else:
+            states = tf.squeeze(tf.convert_to_tensor([each[0] for each in mini_batch], dtype=np.float32))
+            actions = tf.squeeze(tf.convert_to_tensor(np.array([each[1] for each in mini_batch])))
+            rewards = tf.squeeze(tf.convert_to_tensor(np.array([each[2] for each in mini_batch], dtype=np.float32)))
+            next_states = tf.squeeze(tf.convert_to_tensor(np.array([each[3] for each in mini_batch], dtype=np.float32)))
+            done = tf.cast([each[4] for each in mini_batch], dtype=tf.float32)
 
         return states, actions, rewards, next_states, done, idxs, is_weight
 
