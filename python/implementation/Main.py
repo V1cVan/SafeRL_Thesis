@@ -392,6 +392,7 @@ if __name__=="__main__":
     N_INPUTS = 55
     N_ACTIONS = 5
     ACT_FUNC = tf.nn.selu
+
     MODEL_FILE_PATH = "./models/model_weights"
     model_param = {
         "n_units": N_UNITS,
@@ -400,6 +401,9 @@ if __name__=="__main__":
         "activation_function": ACT_FUNC,
         "weights_file_path": MODEL_FILE_PATH,
         "seed": SEED
+        # TODO add parameters for the tuning of the deepset and CNN models
+        # TODO add initialiser
+        # Add batch normalisation
     }
     logging.critical("Model Parameters:")
     logging.critical(model_param)
@@ -432,13 +436,14 @@ if __name__=="__main__":
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
     REWARD_WEIGHTS = np.array([1.0, 0.15, 0.8, 0.4, -5])
     STANDARDISE_RETURNS = True  # TODO additional variable for SPG
-    USE_PER = True
+    USE_PER = False
     ALPHA = 0.75                # Priority scale: a=0:random, a=1:completely based on priority
     BETA = 0.2                  # Prioritisation factor
     BETA_INCREMENT = 0.00004 * MODEL_UPDATE_RATE    # Rate of Beta annealing to 1
     # Model types:
     USE_DUELLING = False
-    USE_DEEPSET = True
+    USE_DEEPSET = False
+    USE_CNN = True
 
     # TODO comparitive plotting of standard DQN, DDQN, PER, and Duelling
     # TODO plotting of average reward of vehicle that just speeds up
@@ -473,7 +478,8 @@ if __name__=="__main__":
         "beta": BETA,
         "beta_increment": BETA_INCREMENT,
         "use_duelling": USE_DUELLING,
-        "use_deepset": USE_DEEPSET
+        "use_deepset": USE_DEEPSET,
+        "use_CNN": USE_CNN
     }
     logging.critical("Training param:")
     logging.critical(training_param)
@@ -501,16 +507,15 @@ if __name__=="__main__":
     # else:
     #     DQ_net = DeepQNetwork(model_param=model_param)
 
-    # tf.summary.trace_on(graph=True, profiler=True)
-    if USE_DEEPSET:
+    if USE_DEEPSET and not USE_CNN:
         DQ_net = DeepSetQNetwork(model_param=model_param)
-    else:
+    elif not USE_DEEPSET and USE_CNN:
+        DQ_net = CNN(model_param=model_param)
+    elif not USE_DEEPSET and not USE_CNN:
         DQ_net = DeepQNetwork(model_param=model_param)
-
-    # with tb_writer.as_default():
-    #     x = tf.convert_to_tensor(np.zeros((1,55)))
-    #     y = DQ_net(x)
-    #     tf.summary.trace_export("model", step=1, profiler_outdir=tb_dir)
+    else:
+        print("Error: Cannot use Deepset and CNN methods together!")
+        exit()
 
     dqn_agent = DqnAgent(network=DQ_net, training_param=training_param, tb_logger=tb_logger)
     dqn_policy = DiscreteSingleActionPolicy(agent=dqn_agent)

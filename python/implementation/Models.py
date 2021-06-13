@@ -5,6 +5,66 @@ import numpy as np
 from HelperClasses import EpisodeBuffer, DataLogger
 
 
+class CNN(keras.Model):
+    """
+    Builds a convolutional neural network to handle the dynamic part of the state vector.
+    """
+    def __init__(self, model_param):
+        super(CNN, self).__init__()
+        self.model_param = model_param
+        tf.random.set_seed(model_param["seed"])
+        np.random.seed(model_param["seed"])
+        act_func = model_param["activation_function"]
+        n_units = model_param["n_units"]
+        n_inputs = model_param["n_inputs"]
+        n_actions = model_param["n_actions"]
+        # TODO add number of conv layers to model_params for easier tuning
+        # TODO add n_filters, conv_width(kernel_size) to model_params
+        n_filters = 6   # Dimensionality of output space
+        kernel_size = (3,)  # Convolution width
+        n_inputs_static = 7
+        n_vehicles = 12  # Defined by DMax default
+        n_inputs_dynamic = 4  # lat. and long. vel. and pos. rel to ego vehicle
+
+
+        # input shape = (batch_size, 12 [n_vehicles], 4 [rel pos and vel])
+        self.static_input_layer = layers.Input(shape=(n_inputs_static), name="StaticStateInput")
+        self.dynamic_input_layer = layers.Input(shape=tf.TensorShape([n_inputs_dynamic, n_vehicles]), name="DynamicStateInput")
+
+        self.conv_layer_1 = layers.Conv1D(filters=n_filters,
+                                          kernel_size=kernel_size,
+                                          activation=act_func,
+                                          padding='same',
+                                          name="ConvolutionalLayer1")(self.dynamic_input_layer)
+
+        self.flatten_layer = layers.Flatten(name="FlattenLayer")(self.conv_layer_1)
+
+        self.concat_layer = layers.Concatenate(name="ConcatenationLayer")([self.flatten_layer, self.static_input_layer])
+
+        self.Q_layer_1 = layers.Dense(n_units[1], activation=act_func, name="QLayer1")(self.concat_layer)
+        self.Q_layer_2 = layers.Dense(n_units[2], activation=act_func, name="QLayer2")(self.Q_layer_1)
+
+        self.output_layer = layers.Dense(n_actions)(self.Q_layer_2)
+
+        self.model = keras.Model(inputs=[self.dynamic_input_layer, self.static_input_layer],
+                                         outputs=self.output_layer,
+                                         name="CNN_DQN")
+
+        self.display_overview()
+
+    @tf.function
+    def call(self, inputs: tf.Tensor):
+        """ Returns the output of the model given an input. """
+        return self.model(inputs)
+
+    def display_overview(self):
+        """ Displays an overview of the model. """
+        self.model.summary()
+        keras.utils.plot_model(self.model,
+                               show_shapes=True,
+                               show_layer_names=True,
+                               to_file='./models/Convolutional_DQN.png')
+
 class DeepSetQNetwork(keras.Model):
     """
     Builds a deep Q-network using DeepSetQ approach incorporating permutation invariance.
@@ -15,17 +75,19 @@ class DeepSetQNetwork(keras.Model):
         tf.random.set_seed(model_param["seed"])
         np.random.seed(model_param["seed"])
         act_func = model_param["activation_function"]
+        # TODO Add n_units for deepset parts of network to the main script to change network size easily
         n_units = model_param["n_units"]
         n_units_phi = [16, 32]
         n_units_rho = [32, 16]
         n_inputs_static = 7
         n_inputs_dynamic = 4
+        n_vehicles = 12  # Defined by default D_max size
         n_actions = model_param["n_actions"]
 
         he = tf.keras.initializers.HeUniform()
 
         self.static_input_layer = layers.Input(shape=(n_inputs_static), name="StaticStateInput")
-        self.dynamic_input_layer = layers.Input(shape=tf.TensorShape([12,n_inputs_dynamic]), name="DynamicStateInput")
+        self.dynamic_input_layer = layers.Input(shape=tf.TensorShape([n_vehicles, n_inputs_dynamic]), name="DynamicStateInput")
 
         self.phi_layer_1 = layers.Dense(n_units_phi[0], activation=act_func, kernel_initializer=he, name="PhiLayer1")(
             self.dynamic_input_layer)
@@ -48,7 +110,7 @@ class DeepSetQNetwork(keras.Model):
         self.rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func, kernel_initializer=he, name="rhoLayer1")(self.sum_layer)
         self.rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func, kernel_initializer=he, name="rhoLayer2")(self.rho_layer_1)
 
-        self.concat_layer = layers.Concatenate()([self.rho_layer_2, self.static_input_layer])
+        self.concat_layer = layers.Concatenate(name="ConcatenationLayer")([self.rho_layer_2, self.static_input_layer])
 
         self.Q_layer_1 = layers.Dense(n_units[0], activation=act_func, kernel_initializer=he, name="QLayer1")(self.concat_layer)
         self.Q_layer_2 = layers.Dense(n_units[1], activation=act_func, kernel_initializer=he, name="QLayer2")(self.Q_layer_1)

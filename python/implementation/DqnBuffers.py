@@ -12,17 +12,17 @@ class TrainingBuffer(object):
     the network 'forgets' good actions that it learnt previously.
     """
 
-    def __init__(self, buffer_size, batch_size, use_deepset=False):
+    def __init__(self, buffer_size, batch_size, use_deepset_or_cnn=False):
         self.buffer_size = buffer_size
         self.buffer = deque(maxlen=buffer_size)
         self.batch_size = batch_size
-        self.use_deepset = use_deepset
+        self.use_deepset_or_cnn = use_deepset_or_cnn
 
     def add_experience(self, experience):
         """
         Add an experience (s_k, a_k, r_k, s_k+1) to the training buffer.
         """
-        if self.use_deepset:
+        if self.use_deepset_or_cnn:
             states, actions, rewards, next_states, done = experience
             dynamic_states = np.squeeze(states[0])
             static_states = np.squeeze(states[1])
@@ -42,7 +42,7 @@ class TrainingBuffer(object):
         """ Get minibatch for training. """
         mini_batch = random.sample(self.buffer, self.batch_size)
         # TODO Remove additional for loops to speed up training
-        if self.use_deepset:
+        if self.use_deepset_or_cnn:
             dynamic_states = tf.squeeze(tf.convert_to_tensor([each[0] for each in mini_batch], dtype=np.float32))
             static_states = tf.squeeze(tf.convert_to_tensor([each[1] for each in mini_batch], dtype=np.float32))
             states = (dynamic_states, static_states)
@@ -78,7 +78,7 @@ class TrainingBuffer(object):
 
 class PerTrainingBuffer(object):  # stored as ( s, a, r, s_ ) in SumTree
 
-    def __init__(self, buffer_size, batch_size, alpha, beta, beta_increment, use_deepset = False):
+    def __init__(self, buffer_size, batch_size, alpha, beta, beta_increment, use_deepset_or_cnn = False):
         self.tree = SumTree(buffer_size)
         self.capacity = buffer_size
         self.batch_size = batch_size
@@ -86,7 +86,7 @@ class PerTrainingBuffer(object):  # stored as ( s, a, r, s_ ) in SumTree
         self.beta = beta
         self.beta_increment = beta_increment
         self.e = 0.01
-        self.use_deepset = use_deepset
+        self.use_deepset_or_cnn = use_deepset_or_cnn
 
     def alter_buffer_stop_flag(self, flag):
         done_flag = flag
@@ -127,7 +127,7 @@ class PerTrainingBuffer(object):  # stored as ( s, a, r, s_ ) in SumTree
 
         # Get minibatch for training
         # TODO Remove additional for loops to speed up training
-        if self.use_deepset:
+        if self.use_deepset_or_cnn:
             dynamic_states = tf.squeeze(tf.convert_to_tensor([each[0] for each in mini_batch], dtype=np.float32))
             static_states = tf.squeeze(tf.convert_to_tensor([each[1] for each in mini_batch], dtype=np.float32))
             states = (dynamic_states, static_states)

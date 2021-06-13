@@ -33,17 +33,21 @@ class DqnAgent(keras.models.Model):
         self.epsilon_decay_count = 1
         self.evaluation = False
         self.episode = 1
+        if training_param["use_deepset"] or training_param["use_CNN"]:
+            use_deepset_or_cnn = True
+        else:
+            use_deepset_or_cnn = False
         if training_param["use_per"]:
             self.buffer = PerTrainingBuffer(buffer_size=training_param["buffer_size"],
                                             batch_size=training_param["batch_size"],
                                             alpha=training_param["alpha"],
                                             beta=training_param["beta"],
                                             beta_increment=training_param["beta_increment"],
-                                            use_deepset=training_param["use_deepset"])
+                                            use_deepset_or_cnn=use_deepset_or_cnn)
         else:
             self.buffer = TrainingBuffer(buffer_size=training_param["buffer_size"],
                                          batch_size=training_param["batch_size"],
-                                         use_deepset=training_param["use_deepset"])
+                                         use_deepset_or_cnn=use_deepset_or_cnn)
         self.gamma = training_param["gamma"]
 
     def set_neg_collision_reward(self, timestep, punishment):

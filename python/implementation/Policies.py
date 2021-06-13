@@ -291,9 +291,6 @@ class DiscreteSingleActionPolicy(CustomPolicy):
         veh.flag = None
         self.agent.is_action_taken = False
 
-    def get_vehicle_speed(self):
-        return veh.s["vel"][0]
-
     def custom_action(self, veh):
         # s0, a0 = previous vehicle state action pair
         # s1, a1 = current vehicle state action pair
@@ -303,8 +300,14 @@ class DiscreteSingleActionPolicy(CustomPolicy):
             veh.counter = self.STEP_TIME
             # Set current vehicle state and action pair
             veh.s1 = veh.s_raw
-            if self.agent.training_param["use_deepset"]:
+            if self.agent.training_param["use_deepset"] or self.agent.training_param["use_CNN"]:
                 veh.s1_mod = decompose_state(veh)
+                # Reshape dynamic state vector to appropriate form for CNN
+                if self.agent.training_param["use_CNN"]:
+                    dynamic_input = veh.s1_mod[0]
+                    batch_size, x1, x2 = dynamic_input.shape
+                    dynamic_input = tf.reshape(dynamic_input, [batch_size, x2, x1])
+                    veh.s1_mod[0] = dynamic_input
             else:
                 veh.s1_mod = convert_state(veh)
 
