@@ -18,24 +18,71 @@ class CNN(keras.Model):
         n_units = model_param["n_units"]
         n_inputs = model_param["n_inputs"]
         n_actions = model_param["n_actions"]
+
         # TODO add number of conv layers to model_params for easier tuning
         # TODO add n_filters, conv_width(kernel_size) to model_params
-        n_filters = 6   # Dimensionality of output space
-        kernel_size = (3,)  # Convolution width
+        # Pooling layers? ??
+
+        cnn_config = model_param["cnn_param"]["config"]
         n_inputs_static = 7
         n_vehicles = 12  # Defined by DMax default
         n_inputs_dynamic = 4  # lat. and long. vel. and pos. rel to ego vehicle
 
-
-        # input shape = (batch_size, 12 [n_vehicles], 4 [rel pos and vel])
         self.static_input_layer = layers.Input(shape=(n_inputs_static), name="StaticStateInput")
-        self.dynamic_input_layer = layers.Input(shape=tf.TensorShape([n_inputs_dynamic, n_vehicles]), name="DynamicStateInput")
+        # TODO Check 2DConvolutions For comparisons!
+        # TODO investigate multiple CNN layers and parameters
+        if cnn_config == 0:     # 0=1D conv. on vehicle dim.,
+            n_filters = model_param["cnn_param"]["n_filters_0"]  # Dimensionality of output space
+            kernel_size = model_param["cnn_param"]["kernel_size_0"]  # Convolution width
+            input_matrix = tf.TensorShape([n_inputs_dynamic, n_vehicles])
 
-        self.conv_layer_1 = layers.Conv1D(filters=n_filters,
-                                          kernel_size=kernel_size,
-                                          activation=act_func,
-                                          padding='same',
-                                          name="ConvolutionalLayer1")(self.dynamic_input_layer)
+            # input shape = (batch_size, 4 [rel pos and vel], 12 [n_vehicles])
+            self.dynamic_input_layer = layers.Input(shape=input_matrix, name="DynamicStateInput")
+            self.conv_layer_1 = layers.Conv1D(filters=n_filters,
+                                              kernel_size=kernel_size,
+                                              activation=act_func,
+                                              padding='same',
+                                              name="ConvolutionalLayer1")(self.dynamic_input_layer)
+
+        elif cnn_config == 1:       # 1=1D conv. on measurements dim.,
+            n_filters = model_param["cnn_param"]["n_filters_1"]  # Dimensionality of output space
+            kernel_size = model_param["cnn_param"]["kernel_size_1"]  # Convolution width
+            input_matrix = tf.TensorShape([n_vehicles, n_inputs_dynamic])
+            # input shape = (batch_size, 12 [n_vehicles], 4 [rel pos and vel])
+            self.dynamic_input_layer = layers.Input(shape=input_matrix, name="DynamicStateInput")
+            self.conv_layer_1 = layers.Conv1D(filters=n_filters,
+                                              kernel_size=kernel_size,
+                                              activation=act_func,
+                                              padding='same',
+                                              name="ConvolutionalLayer1")(self.dynamic_input_layer)
+
+        elif cnn_config == 2:       # 2=2D conv. on vehicle and measurements dimensions,
+            n_filters = model_param["cnn_param"]["n_filters_2"]  # Dimensionality of output space
+            kernel_size = model_param["cnn_param"]["kernel_size_2"]  # Convolution width
+            n_timesteps = 1  # Number of stacked measurements considered
+            input_matrix = tf.TensorShape([n_vehicles, n_inputs_dynamic, n_timesteps])
+            # input shape = (batch_size, 12 [n_vehicles], 4 [rel pos and vel])
+            self.dynamic_input_layer = layers.Input(shape=input_matrix, name="DynamicStateInput")
+            self.conv_layer_1 = layers.Conv2D(filters=n_filters,
+                                              kernel_size=kernel_size,
+                                              activation=act_func,
+                                              padding='same',
+                                              name="ConvolutionalLayer1")(self.dynamic_input_layer)
+
+        elif cnn_config == 3:       # 3=3D conv. on vehicle and measurement dimensions through time
+            n_filters = model_param["cnn_param"]["n_filters_3"]  # Dimensionality of output space
+            kernel_size = model_param["cnn_param"]["kernel_size_3"]  # Convolution width
+            n_timesteps = 2  # Number of stacked measurements considered
+            input_matrix = tf.TensorShape([n_vehicles, n_inputs_dynamic, n_timesteps, 1])
+            # input shape = (batch_size, 12 [n_vehicles], 4 [rel pos and vel], 2 [t_0, t_1, ..])
+            self.dynamic_input_layer = layers.Input(shape=input_matrix, name="DynamicStateInput")
+            self.conv_layer_1 = layers.Conv3D(filters=n_filters,
+                                              kernel_size=kernel_size,
+                                              activation=act_func,
+                                              padding='same',
+                                              name="ConvolutionalLayer1")(self.dynamic_input_layer)
+
+
 
         self.flatten_layer = layers.Flatten(name="FlattenLayer")(self.conv_layer_1)
 

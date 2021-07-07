@@ -392,7 +392,7 @@ if __name__=="__main__":
     N_INPUTS = 55
     N_ACTIONS = 5
     ACT_FUNC = tf.nn.selu
-
+    N_STACKED_TIMESTEPS = 2
     MODEL_FILE_PATH = "./models/model_weights"
     model_param = {
         "n_units": N_UNITS,
@@ -400,8 +400,27 @@ if __name__=="__main__":
         "n_actions": N_ACTIONS,
         "activation_function": ACT_FUNC,
         "weights_file_path": MODEL_FILE_PATH,
-        "seed": SEED
-        # TODO add parameters for the tuning of the deepset and CNN models
+        "seed": SEED,
+        # TODO add parameters for the tuning of the deepset
+        "cnn_param": {
+            "config": 3,             # 0=1D conv. on vehicle dim.,
+                                    # 1=1D conv. on measurements dim.,
+                                    # 2=2D conv. on vehicle and measurements dimensions,
+                                    # 3=3D conv. on vehicle and measurement dimensions through time
+            # Config 0:
+            "n_filters_0": 6,    # Dimensionality of output space
+            "kernel_size_0": (2,),  # Convolution width
+            # Config 1:
+            "n_filters_1": 6,  # Dimensionality of output space
+            "kernel_size_1": (2,),  # Convolution width
+            # Config 2:
+            "n_filters_2": 6,  # Dimensionality of output space
+            "kernel_size_2": (4,2),  # Convolution width
+            # Config 3:
+            "n_filters_3": 6,  # Dimensionality of output space
+            "n_timesteps": N_STACKED_TIMESTEPS,
+            "kernel_size_3": (4,2,N_STACKED_TIMESTEPS)  # Convolution width
+        }
         # TODO add initialiser
         # Add batch normalisation
     }
