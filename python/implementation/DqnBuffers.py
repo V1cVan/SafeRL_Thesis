@@ -12,11 +12,12 @@ class TrainingBuffer(object):
     the network 'forgets' good actions that it learnt previously.
     """
 
-    def __init__(self, buffer_size, batch_size, use_deepset_or_cnn=False):
+    def __init__(self, buffer_size, batch_size, use_deepset_or_cnn=False, cnn_config=None):
         self.buffer_size = buffer_size
         self.buffer = deque(maxlen=buffer_size)
         self.batch_size = batch_size
         self.use_deepset_or_cnn = use_deepset_or_cnn
+        self.cnn_config = cnn_config
 
     def add_experience(self, experience):
         """
@@ -78,7 +79,7 @@ class TrainingBuffer(object):
 
 class PerTrainingBuffer(object):  # stored as ( s, a, r, s_ ) in SumTree
 
-    def __init__(self, buffer_size, batch_size, alpha, beta, beta_increment, use_deepset_or_cnn = False):
+    def __init__(self, buffer_size, batch_size, alpha, beta, beta_increment, use_deepset_or_cnn = False, cnn_config=None):
         self.tree = SumTree(buffer_size)
         self.capacity = buffer_size
         self.batch_size = batch_size
@@ -87,6 +88,7 @@ class PerTrainingBuffer(object):  # stored as ( s, a, r, s_ ) in SumTree
         self.beta_increment = beta_increment
         self.e = 0.01
         self.use_deepset_or_cnn = use_deepset_or_cnn
+        self.cnn_config = cnn_config
 
     def alter_buffer_stop_flag(self, flag):
         done_flag = flag

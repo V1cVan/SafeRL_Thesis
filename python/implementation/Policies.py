@@ -302,12 +302,6 @@ class DiscreteSingleActionPolicy(CustomPolicy):
             veh.s1 = veh.s_raw
             if self.agent.training_param["use_deepset"] or self.agent.training_param["use_CNN"]:
                 veh.s1_mod = decompose_state(veh)
-                # Reshape dynamic state vector to appropriate form for CNN
-                if self.agent.training_param["use_CNN"]:
-                    dynamic_input = veh.s1_mod[0]
-                    batch_size, x1, x2 = dynamic_input.shape
-                    dynamic_input = tf.reshape(dynamic_input, [batch_size, x2, x1])
-                    veh.s1_mod[0] = dynamic_input
             else:
                 veh.s1_mod = convert_state(veh)
 

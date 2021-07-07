@@ -403,7 +403,7 @@ if __name__=="__main__":
         "seed": SEED,
         # TODO add parameters for the tuning of the deepset
         "cnn_param": {
-            "config": 3,             # 0=1D conv. on vehicle dim.,
+            "config": 0,            # 0=1D conv. on vehicle dim.,
                                     # 1=1D conv. on measurements dim.,
                                     # 2=2D conv. on vehicle and measurements dimensions,
                                     # 3=3D conv. on vehicle and measurement dimensions through time

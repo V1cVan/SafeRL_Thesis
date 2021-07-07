@@ -23,7 +23,7 @@ class CNN(keras.Model):
         # TODO add n_filters, conv_width(kernel_size) to model_params
         # Pooling layers? ??
 
-        cnn_config = model_param["cnn_param"]["config"]
+        self.cnn_config = model_param["cnn_param"]["config"]
         n_inputs_static = 7
         n_vehicles = 12  # Defined by DMax default
         n_inputs_dynamic = 4  # lat. and long. vel. and pos. rel to ego vehicle
@@ -31,7 +31,7 @@ class CNN(keras.Model):
         self.static_input_layer = layers.Input(shape=(n_inputs_static), name="StaticStateInput")
         # TODO Check 2DConvolutions For comparisons!
         # TODO investigate multiple CNN layers and parameters
-        if cnn_config == 0:     # 0=1D conv. on vehicle dim.,
+        if self.cnn_config == 0:     # 0=1D conv. on vehicle dim.,
             n_filters = model_param["cnn_param"]["n_filters_0"]  # Dimensionality of output space
             kernel_size = model_param["cnn_param"]["kernel_size_0"]  # Convolution width
             input_matrix = tf.TensorShape([n_inputs_dynamic, n_vehicles])
@@ -43,8 +43,9 @@ class CNN(keras.Model):
                                               activation=act_func,
                                               padding='same',
                                               name="ConvolutionalLayer1")(self.dynamic_input_layer)
+            # Output_shape = (batch_size, 4 [rel pos and vel], 6 n_filters)
 
-        elif cnn_config == 1:       # 1=1D conv. on measurements dim.,
+        elif self.cnn_config == 1:       # 1=1D conv. on measurements dim.,
             n_filters = model_param["cnn_param"]["n_filters_1"]  # Dimensionality of output space
             kernel_size = model_param["cnn_param"]["kernel_size_1"]  # Convolution width
             input_matrix = tf.TensorShape([n_vehicles, n_inputs_dynamic])
@@ -55,8 +56,9 @@ class CNN(keras.Model):
                                               activation=act_func,
                                               padding='same',
                                               name="ConvolutionalLayer1")(self.dynamic_input_layer)
+            # Output_shape = (batch_size, 12 n_vehicles, n_filters)
 
-        elif cnn_config == 2:       # 2=2D conv. on vehicle and measurements dimensions,
+        elif self.cnn_config == 2:       # 2=2D conv. on vehicle and measurements dimensions,
             n_filters = model_param["cnn_param"]["n_filters_2"]  # Dimensionality of output space
             kernel_size = model_param["cnn_param"]["kernel_size_2"]  # Convolution width
             n_timesteps = 1  # Number of stacked measurements considered
@@ -68,8 +70,10 @@ class CNN(keras.Model):
                                               activation=act_func,
                                               padding='same',
                                               name="ConvolutionalLayer1")(self.dynamic_input_layer)
+            # Output shape = (batch_size, n_vehicles, n_measurements, n_filters)
+            # TODO consider pooling functionality
 
-        elif cnn_config == 3:       # 3=3D conv. on vehicle and measurement dimensions through time
+        elif self.cnn_config == 3:       # 3=3D conv. on vehicle and measurement dimensions through time
             n_filters = model_param["cnn_param"]["n_filters_3"]  # Dimensionality of output space
             kernel_size = model_param["cnn_param"]["kernel_size_3"]  # Convolution width
             n_timesteps = 2  # Number of stacked measurements considered
@@ -101,6 +105,12 @@ class CNN(keras.Model):
 
     @tf.function
     def call(self, inputs: tf.Tensor):
+        if self.cnn_config == 0:
+            dynamic_input = inputs[0]
+            static_input = inputs[1]
+            batch_size, x1, x2 = dynamic_input.shape
+            dynamic_input = tf.reshape(dynamic_input, [batch_size, x2, x1])
+            inputs = (dynamic_input, static_input)
         """ Returns the output of the model given an input. """
         return self.model(inputs)
 
