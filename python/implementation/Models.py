@@ -5,6 +5,42 @@ import numpy as np
 from HelperClasses import EpisodeBuffer, DataLogger
 
 
+class LSTM_DRQN(keras.Model):
+    """
+    Builds a LSTM, recurrent model to learn temporal relationships between states.
+    """
+    def __init__(self, model_param):
+        super(LSTM_DRQN, self).__init__()
+        self.model_param = model_param
+        tf.random.set_seed(model_param["seed"])
+        np.random.seed(model_param["seed"])
+        act_func = model_param["activation_function"]
+        n_units = model_param["n_units"]
+        n_inputs = model_param["n_inputs"]
+        n_actions = model_param["n_actions"]
+
+        input_layer = layers.Input(shape=(n_inputs,), name="inputState")
+        LSTM_layer = layers.LSTM(units=n_units[0], name="LSTM")(input_layer)
+        dense_layer1 = layers.Dense(units=n_units[1], activation=act_func, name="dense1")(LSTM_layer)
+        dense_layer2 = layers.Dense(units=n_units[2], activation=act_func, name="dense3")(dense_layer1)
+        output_layer = layers.Dense(n_actions, name="Output")(dense_layer2)
+        self.model = keras.Model(inputs=input_layer, outputs=output_layer, name="LSTM_DRQN")
+        self.display_overview()
+
+    @tf.function
+    def call(self, inputs: tf.Tensor):
+        """ Returns the output of the model given an input. """
+        return self.model(inputs)
+
+    def display_overview(self):
+        """ Displays an overview of the model. """
+        self.model.summary()
+        keras.utils.plot_model(self.model,
+                               show_shapes=True,
+                               show_layer_names=True,
+                               to_file='./models/LSTM_DRQN.png')
+
+
 class CNN(keras.Model):
     """
     Builds a convolutional neural network to handle the dynamic part of the state vector.

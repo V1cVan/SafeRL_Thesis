@@ -388,7 +388,7 @@ if __name__=="__main__":
         pass  # Clear the log file of previous run
 
     # Model parameters:
-    N_UNITS = (32, 16, 8)  # TODO Change model size variability between deepset and baseline
+    N_UNITS = (32, 16, 8)  # TODO NB Change model size variability between deepset and baseline!!!!
     N_INPUTS = 55
     N_ACTIONS = 5
     ACT_FUNC = tf.nn.selu
@@ -450,7 +450,7 @@ if __name__=="__main__":
     OPTIMISER = tf.optimizers.Adam(learning_rate=LEARN_RATE)
     LOSS_FUNC = tf.losses.MeanSquaredError()  #tf.losses.Huber()  # PER loss function is MSE
     GAMMA = 0.99                # range: 0.95 - 0.99
-    CLIP_GRADIENTS = False
+    CLIP_GRADIENTS = True
     CLIP_NORM = 2
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
     REWARD_WEIGHTS = np.array([1.0, 0.15, 0.8, 0.4, -5])
@@ -462,7 +462,8 @@ if __name__=="__main__":
     # Model types:
     USE_DUELLING = False
     USE_DEEPSET = False
-    USE_CNN = True
+    USE_CNN = False
+    USE_LSTM = False
 
     # TODO comparitive plotting of standard DQN, DDQN, PER, and Duelling
     # TODO plotting of average reward of vehicle that just speeds up
@@ -498,7 +499,8 @@ if __name__=="__main__":
         "beta_increment": BETA_INCREMENT,
         "use_duelling": USE_DUELLING,
         "use_deepset": USE_DEEPSET,
-        "use_CNN": USE_CNN
+        "use_CNN": USE_CNN,
+        "use_LSTM": USE_LSTM
     }
     logging.critical("Training param:")
     logging.critical(training_param)
@@ -531,7 +533,10 @@ if __name__=="__main__":
     elif not USE_DEEPSET and USE_CNN:
         DQ_net = CNN(model_param=model_param)
     elif not USE_DEEPSET and not USE_CNN:
-        DQ_net = DeepQNetwork(model_param=model_param)
+        if USE_LSTM:
+            DQ_net = LSTM_DRQN(model_param=model_param)
+        else:
+            DQ_net = DeepQNetwork(model_param=model_param)
     else:
         print("Error: Cannot use Deepset and CNN methods together!")
         exit()
