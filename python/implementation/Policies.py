@@ -3,6 +3,7 @@ import tensorflow as tf
 import numpy as np
 import random
 from matplotlib import pyplot as plt
+from collections import deque
 
 
 def add_state_noise(state, is_normal=False, is_uniform=False, magnitude=0.0, mu=0.0, sigma=0.0):
@@ -340,6 +341,14 @@ class DiscreteSingleActionPolicy(CustomPolicy):
         self.agent = agent  # agent = f(NN_model)
         self.STEP_TIME = self.agent.training_param["policy_rate"]
         self.rewards = RewardFunction()
+        cnn_config = self.agent.Q_actual_net.model_param['cnn_param']['config']
+        self.stack_cnn_frames = (self.agent.training_param["use_CNN"] and cnn_config == 3)
+        self.stack_LSTM_frames = self.agent.training_param["use_LSTM"]
+        if self.stack_cnn_frames or self.stack_LSTM_frames:
+            self.stack_frames = True
+            self.frame_stack_type = self.agent.training_param["frame_stack_type"]  # 0=stack agent frames , 1=stack simulator frames
+            self.frame_stack_buffer = deque(maxlen=4)
+
 
     def init_vehicle(self, veh):
         # Book-keeping of last states and actions
@@ -384,6 +393,28 @@ class DiscreteSingleActionPolicy(CustomPolicy):
                                              magnitude=self.agent.training_param["noise_param"]["magnitude"],
                                              mu=self.agent.training_param["noise_param"]["mu"],
                                              sigma=self.agent.training_param["noise_param"]["sigma"])
+
+            if self.stack_frames:
+                if self.stack_LSTM_frames:
+                    current_buffer_size = len(self.frame_stack_buffer)
+                    if current_buffer_size < 3:
+                        for item in range(3-current_buffer_size):
+                            self.frame_stack_buffer.append(veh.s1_mod)
+                    self.frame_stack_buffer.append(veh.s1_mod)
+                    stacked_state = tf.convert_to_tensor(list(self.frame_stack_buffer))
+                    # Transpose into shape suitable for LSTM
+                    veh.s1_mod = tf.transpose(stacked_state, perm=[1,0,2])
+                if self.stack_cnn_frames:
+                    current_buffer_size = len(self.frame_stack_buffer)
+                    if current_buffer_size < 3:
+                        for item in range(3-current_buffer_size):
+                            self.frame_stack_buffer.append(veh.s1_mod[0])
+                    self.frame_stack_buffer.append(veh.s1_mod[0])
+                    dynamic_stacked_state = tf.convert_to_tensor(list(self.frame_stack_buffer))
+                    # Transpose into shape suitable for the CNN
+                    dynamic_stacked_state = tf.expand_dims(tf.transpose(dynamic_stacked_state, perm=[0,2,3,1]),axis=0)
+                    veh.s1_mod = [dynamic_stacked_state,
+                                  veh.s1_mod[1]]
 
             Q = self.get_action(veh.s1_mod)
             veh.a1_mod = Q

@@ -16,10 +16,11 @@ class LSTM_DRQN(keras.Model):
         np.random.seed(model_param["seed"])
         act_func = model_param["activation_function"]
         n_units = model_param["n_units"]
-        n_inputs = model_param["n_inputs"]
+        n_inputs = model_param["n_inputs"]  # Number of items in state matrix
         n_actions = model_param["n_actions"]
+        n_timesteps = 4  # Number of stacked measurements considered
 
-        input_layer = layers.Input(shape=(n_inputs,), name="inputState")
+        input_layer = layers.Input(shape=(n_timesteps, n_inputs,), name="inputState")
         LSTM_layer = layers.LSTM(units=n_units[0], name="LSTM")(input_layer)
         dense_layer1 = layers.Dense(units=n_units[1], activation=act_func, name="dense1")(LSTM_layer)
         dense_layer2 = layers.Dense(units=n_units[2], activation=act_func, name="dense3")(dense_layer1)
@@ -112,17 +113,15 @@ class CNN(keras.Model):
         elif self.cnn_config == 3:       # 3=3D conv. on vehicle and measurement dimensions through time
             n_filters = model_param["cnn_param"]["n_filters_3"]  # Dimensionality of output space
             kernel_size = model_param["cnn_param"]["kernel_size_3"]  # Convolution width
-            n_timesteps = 2  # Number of stacked measurements considered
-            input_matrix = tf.TensorShape([n_vehicles, n_inputs_dynamic, n_timesteps, 1])
-            # input shape = (batch_size, 12 [n_vehicles], 4 [rel pos and vel], 2 [t_0, t_1, ..])
+            n_timesteps = 4  # Number of stacked measurements considered
+            input_matrix = tf.TensorShape([n_timesteps,n_vehicles, n_inputs_dynamic, 1])
+            # input shape = (batch_size, 12 [n_vehicles], 4 [rel pos and vel], 4 [t_0, t_1, ..])
             self.dynamic_input_layer = layers.Input(shape=input_matrix, name="DynamicStateInput")
             self.conv_layer_1 = layers.Conv3D(filters=n_filters,
                                               kernel_size=kernel_size,
                                               activation=act_func,
                                               padding='same',
                                               name="ConvolutionalLayer1")(self.dynamic_input_layer)
-
-
 
         self.flatten_layer = layers.Flatten(name="FlattenLayer")(self.conv_layer_1)
 

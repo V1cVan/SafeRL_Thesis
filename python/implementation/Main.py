@@ -403,7 +403,7 @@ if __name__=="__main__":
         "seed": SEED,
         # TODO add parameters for the tuning of the deepset
         "cnn_param": {
-            "config": 2,            # 0=1D conv. on vehicle dim.,
+            "config": 3,            # 0=1D conv. on vehicle dim.,
                                     # 1=1D conv. on measurements dim.,
                                     # 2=2D conv. on vehicle and measurements dimensions,
                                     # 3=3D conv. on vehicle and measurement dimensions through time
@@ -419,7 +419,7 @@ if __name__=="__main__":
             # Config 3:
             "n_filters_3": 6,  # Dimensionality of output space
             "n_timesteps": N_STACKED_TIMESTEPS,
-            "kernel_size_3": (4,2,N_STACKED_TIMESTEPS)  # Convolution width
+            "kernel_size_3": (N_STACKED_TIMESTEPS,4,2)  # Convolution width
         }
         # TODO add initialiser
         # Add batch normalisation
@@ -430,8 +430,8 @@ if __name__=="__main__":
 
     # Training parameters:
     POLICY_ACTION_RATE = 8     # Number of simulator steps before new control action is taken
-    MAX_TIMESTEPS = 2.5e3         # range: 5e3 - 10e3
-    MAX_EPISODES = 5000 #1.2e3
+    MAX_TIMESTEPS = 1e4         # range: 5e3 - 10e3
+    MAX_EPISODES = 2000
     FINAL_RETURN = 0.91
     SHOW_TRAIN_PLOTS = False
     SAVE_TRAINING = True
@@ -455,7 +455,7 @@ if __name__=="__main__":
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
     REWARD_WEIGHTS = np.array([1.0, 0.15, 0.8, 0.4, -5])
     STANDARDISE_RETURNS = True  # TODO additional variable for SPG
-    USE_PER = True
+    USE_PER = False
     ALPHA = 0.75                # Priority scale: a=0:random, a=1:completely based on priority
     BETA = 0.2                  # Prioritisation factor
     BETA_INCREMENT = 0.00004 * MODEL_UPDATE_RATE    # Rate of Beta annealing to 1
@@ -463,8 +463,9 @@ if __name__=="__main__":
     USE_DUELLING = False
     USE_DEEPSET = False
     USE_CNN = False
-    USE_LSTM = False
-    ADD_NOISE = True
+    USE_LSTM = True
+    FRAME_STACK_TYPE = 0  # 0-Stack last agent action frames, 1=stack simulator frames
+    ADD_NOISE = False
 
 
     # TODO comparitive plotting of standard DQN, DDQN, PER, and Duelling
@@ -503,6 +504,7 @@ if __name__=="__main__":
         "use_deepset": USE_DEEPSET,
         "use_CNN": USE_CNN,
         "use_LSTM": USE_LSTM,
+        "frame_stack_type": FRAME_STACK_TYPE,
         "noise_param": {"use_noise":ADD_NOISE,"magnitude":0.1, "normal": True, "mu":0.0, "sigma":0.1, "uniform": True}
     }
     logging.critical("Training param:")
