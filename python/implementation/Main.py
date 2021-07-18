@@ -1,6 +1,6 @@
 import os
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # specify which GPU(s) to be used (1)
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # specify which GPU(s) to be used (1)
 import pickle
 
 from hwsim import Simulation, BasicPolicy, StepPolicy, SwayPolicy, IMPolicy, KBModel, TrackPolicy, CustomPolicy, config
@@ -22,6 +22,8 @@ import time
 import datetime
 
 # tf.config.experimental.set_visible_devices([0], "GPU")
+physical_devices = tf.config.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 class Main(object):
 
@@ -35,6 +37,8 @@ class Main(object):
         self.plotTimer = Timer("Plotting")
 
         self.episodeTimer = Timer("Episode")
+        self.custom_action_timer = Timer("Custom_action_timer")
+        self.training_timer = Timer("Training_timer")
 
     # ...
     def create_plot(self):
@@ -108,7 +112,9 @@ class Main(object):
 
                     # Perform one simulations step:
                     if not self.sim.stopped:
+                        self.custom_action_timer.startTime()
                         self.sim.step()  # Calls AcPolicy.customAction method.
+                        custom_action_time = self.custom_action_timer.endTime()
 
                         # TODO Reformat so that check is done after sim.step()
                         # TODO maybe add penalties for collisions
@@ -130,7 +136,9 @@ class Main(object):
                             model_update_counter += 1
                             if model_update_counter % training_param["model_update_rate"] == 0:
                                 # TODO add data to episode buffer to get episode rewards while training.
+                                self.training_timer.startTime()
                                 mean_batch_reward, loss, td_error, grads, clipped_grads = self.policy.agent.train_step()
+                                train_time = self.training_timer.endTime()
                                 episode_mean_batch_rewards.append(mean_batch_reward)
                                 episode_losses.append(loss)
                                 episode_td_errors.append(td_error)
@@ -178,6 +186,8 @@ class Main(object):
             tb_logger.save_variable("Mean episode reward", x=episode_count, y=np.sum(episode_reward_list)/len(episode_reward_list))
             tb_logger.save_variable("Running reward", x=episode_count, y=running_reward)
             tb_logger.save_variable("Total time taken for episode", x=episode_count, y=time_taken_episode)
+            tb_logger.save_variable("Total time taken for custom action", x=episode_count, y=custom_action_time)
+            tb_logger.save_variable("Total time taken for training iteration", x=episode_count, y=train_time)
             tb_logger.save_variable("Mean vehicle speed for episode", x=episode_count, y=np.mean(vehicle_speeds))
             if training_param["use_per"]:
                 tb_logger.save_variable("Beta increment", x=episode_count, y=self.policy.agent.buffer.beta)
@@ -462,8 +472,8 @@ if __name__=="__main__":
     # Model types:
     USE_DUELLING = False
     USE_DEEPSET = False
-    USE_CNN = False
-    USE_LSTM = True
+    USE_CNN = True  # TODO Fix so that CNN type 3 and LSTM work with PER
+    USE_LSTM = False
     FRAME_STACK_TYPE = 0  # 0-Stack last agent action frames, 1=stack simulator frames
     ADD_NOISE = False
 

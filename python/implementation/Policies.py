@@ -403,7 +403,8 @@ class DiscreteSingleActionPolicy(CustomPolicy):
                     self.frame_stack_buffer.append(veh.s1_mod)
                     stacked_state = tf.convert_to_tensor(list(self.frame_stack_buffer))
                     # Transpose into shape suitable for LSTM
-                    veh.s1_mod = tf.transpose(stacked_state, perm=[1,0,2])
+                    stacked_state = tf.transpose(stacked_state, perm=[1,0,2])
+                    Q = self.get_action(stacked_state)
                 if self.stack_cnn_frames:
                     current_buffer_size = len(self.frame_stack_buffer)
                     if current_buffer_size < 3:
@@ -413,10 +414,12 @@ class DiscreteSingleActionPolicy(CustomPolicy):
                     dynamic_stacked_state = tf.convert_to_tensor(list(self.frame_stack_buffer))
                     # Transpose into shape suitable for the CNN
                     dynamic_stacked_state = tf.expand_dims(tf.transpose(dynamic_stacked_state, perm=[0,2,3,1]),axis=0)
-                    veh.s1_mod = [dynamic_stacked_state,
-                                  veh.s1_mod[1]]
+                    full_stacked_state = [dynamic_stacked_state,
+                                             veh.s1_mod[1]]
+                    Q = self.get_action(full_stacked_state)
+            else:  # No frame stacking
+                Q = self.get_action(veh.s1_mod)
 
-            Q = self.get_action(veh.s1_mod)
             veh.a1_mod = Q
             action_choice = self.agent.get_action_choice(Q)
             veh.a1_choice = action_choice

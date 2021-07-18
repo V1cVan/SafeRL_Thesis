@@ -56,17 +56,24 @@ class TrainingBuffer(object):
 
             # Check if mini_batch values include terminal states and remove them.
             # TODO Resample instead of discarding if stacked frame contains terminal state
-            if self.use_deepset_or_cnn:
-                done = [each[6] for each in stacked_mini_batch]
-            else:
-                done = [each[4] for each in stacked_mini_batch]
-            done = tf.reshape(done, stacked_index_matrix.shape)
-            mask = tf.cast(tf.reduce_all(tf.math.logical_not(done), axis=1, keepdims=True), dtype=tf.float32)
-            mask = mask*np.array([[1, 1, 1, 1]])  # Convert mask to matrix instead of vector
-            stacked_index_matrix = tf.boolean_mask(stacked_index_matrix, mask)
-            stacked_index_matrix = tf.reshape(stacked_index_matrix, tf.shape(mask))
-            stacked_mini_batch = [self.buffer[index] for index in tf.reshape(stacked_index_matrix, [-1])]
-            altered_batch_size = stacked_index_matrix.shape[0]
+            # if self.use_deepset_or_cnn:
+            #     done = [each[6] for each in stacked_mini_batch]
+            # else:
+            #     done = [each[4] for each in stacked_mini_batch]
+            # done = tf.reshape(done, stacked_index_matrix.shape)
+            # mask = tf.cast(tf.reduce_all(tf.math.logical_not(done), axis=1, keepdims=True), dtype=tf.float32)
+            # mask = mask*np.array([[1, 1, 1, 1]])  # Convert mask to matrix instead of vector
+            # not_done_mask_shape = tf.cast(tf.shape(tf.where(tf.math.equal(mask,1)))[0]/number_stacked_frames,dtype=tf.int32)
+            #
+            # stacked_index_matrix = tf.boolean_mask(stacked_index_matrix, mask)
+            # if tf.math.reduce_any(done==True):
+            #     x = 5
+            #     y = x
+            #     print(y)
+            # stacked_index_matrix = tf.reshape(stacked_index_matrix, tf.TensorShape([not_done_mask_shape, number_stacked_frames]))
+            # stacked_mini_batch = [self.buffer[index] for index in tf.reshape(stacked_index_matrix, [-1])]
+            # altered_batch_size = stacked_index_matrix.shape[0]
+            altered_batch_size = self.batch_size
         else:
             # TODO ! Different frames for the LSTM network
             mini_batch = random.sample(self.buffer, self.batch_size)
@@ -84,14 +91,14 @@ class TrainingBuffer(object):
             if self.stack_frames:
                 for each in stacked_mini_batch:
                     dynamic_states.append(each[0])
-                    static_states.append(each[1])
                     dynamic_next_states.append(each[4])
-                    static_next_states.append(each[5])
                 for each in mini_batch:
+                    static_states.append(each[1])
                     actions.append(each[2])
                     rewards.append(each[3])
+                    static_next_states.append(each[5])
                     done.append(each[6])
-            else:
+            else:  # Not stacking frames
                 for each in mini_batch:
                     dynamic_states.append(each[0])
                     static_states.append(each[1])
@@ -108,24 +115,18 @@ class TrainingBuffer(object):
             actions = tf.squeeze(tf.convert_to_tensor(actions, dtype=tf.float32))
             rewards = tf.squeeze(tf.convert_to_tensor(rewards, dtype=tf.float32))
             done = tf.cast(done, dtype=tf.float32)
-
+            # TODO Check that static state and dynamic state correspond to the same timesteps
             # Convert stacked frames into shape suitable for CNN networks:
             if self.stack_frames:
 
                 dynamic_states = tf.reshape(dynamic_states, (altered_batch_size,
+                                                             number_stacked_frames,
                                                              dynamic_states.shape[1],
-                                                             dynamic_states.shape[2],
-                                                             number_stacked_frames))
-                static_states = tf.reshape(static_states, (altered_batch_size,
-                                                           static_states.shape[1],
-                                                           number_stacked_frames))
+                                                             dynamic_states.shape[2]))
                 dynamic_next_states = tf.reshape(dynamic_next_states, (altered_batch_size,
+                                                                       number_stacked_frames,
                                                                        dynamic_next_states.shape[1],
-                                                                       dynamic_next_states.shape[2],
-                                                                        number_stacked_frames))
-                static_next_states = tf.reshape(static_next_states, (altered_batch_size,
-                                                                     static_next_states.shape[1],
-                                                                     number_stacked_frames))
+                                                                       dynamic_next_states.shape[2]))
 
             states = (dynamic_states, static_states)
             next_states = (dynamic_next_states, static_next_states)
@@ -175,11 +176,11 @@ class TrainingBuffer(object):
             # Reshape state matrices into form suitable for the LSTM networks
             if self.stack_frames:
                 states = tf.reshape(states, (altered_batch_size,
-                                             states.shape[1],
-                                             number_stacked_frames))
+                                             number_stacked_frames,
+                                             states.shape[1]))
                 next_states = tf.reshape(next_states, (altered_batch_size,
-                                                       next_states.shape[1],
-                                                       number_stacked_frames))
+                                                       number_stacked_frames,
+                                                       next_states.shape[1]))
             # TODO check if it works
             # states = tf.squeeze(tf.convert_to_tensor([each[0] for each in mini_batch], dtype=np.float32))
             # actions = tf.squeeze(tf.convert_to_tensor(np.array([each[1] for each in mini_batch])))
