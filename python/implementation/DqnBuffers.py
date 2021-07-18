@@ -42,7 +42,6 @@ class TrainingBuffer(object):
     def get_training_samples(self):
         """ Get mini-batch for training. """
         number_stacked_frames = 4
-        self.stack_frames = True # TODO REMOVE!!!!!!!
         if self.stack_frames:
             """If frames are stacked additional samples are extracted from the buffer to capture temporal variations"""
             # Sample random indices

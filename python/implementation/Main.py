@@ -403,7 +403,7 @@ if __name__=="__main__":
         "seed": SEED,
         # TODO add parameters for the tuning of the deepset
         "cnn_param": {
-            "config": 0,            # 0=1D conv. on vehicle dim.,
+            "config": 2,            # 0=1D conv. on vehicle dim.,
                                     # 1=1D conv. on measurements dim.,
                                     # 2=2D conv. on vehicle and measurements dimensions,
                                     # 3=3D conv. on vehicle and measurement dimensions through time
@@ -455,7 +455,7 @@ if __name__=="__main__":
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
     REWARD_WEIGHTS = np.array([1.0, 0.15, 0.8, 0.4, -5])
     STANDARDISE_RETURNS = True  # TODO additional variable for SPG
-    USE_PER = False
+    USE_PER = True
     ALPHA = 0.75                # Priority scale: a=0:random, a=1:completely based on priority
     BETA = 0.2                  # Prioritisation factor
     BETA_INCREMENT = 0.00004 * MODEL_UPDATE_RATE    # Rate of Beta annealing to 1
@@ -464,6 +464,8 @@ if __name__=="__main__":
     USE_DEEPSET = False
     USE_CNN = False
     USE_LSTM = False
+    ADD_NOISE = True
+
 
     # TODO comparitive plotting of standard DQN, DDQN, PER, and Duelling
     # TODO plotting of average reward of vehicle that just speeds up
@@ -500,7 +502,8 @@ if __name__=="__main__":
         "use_duelling": USE_DUELLING,
         "use_deepset": USE_DEEPSET,
         "use_CNN": USE_CNN,
-        "use_LSTM": USE_LSTM
+        "use_LSTM": USE_LSTM,
+        "noise_param": {"use_noise":ADD_NOISE,"magnitude":0.1, "normal": True, "mu":0.0, "sigma":0.1, "uniform": True}
     }
     logging.critical("Training param:")
     logging.critical(training_param)

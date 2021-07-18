@@ -36,9 +36,9 @@ class DqnAgent(keras.models.Model):
 
         # Set parameter which changes behaviour of the training buffer if CNN or deepset models are used
         if training_param["use_deepset"] or training_param["use_CNN"]:
-            use_deepset_or_cnn = True
+            self.use_deepset_or_cnn = True
         else:
-            use_deepset_or_cnn = False
+            self.use_deepset_or_cnn = False
 
         # Set parameter which changes sampling behaviour of training buffer if a certain CNN or LSTM are used
         if training_param["use_LSTM"] or network.model_param["cnn_param"]["config"]==3:
@@ -52,12 +52,12 @@ class DqnAgent(keras.models.Model):
                                             alpha=training_param["alpha"],
                                             beta=training_param["beta"],
                                             beta_increment=training_param["beta_increment"],
-                                            use_deepset_or_cnn=use_deepset_or_cnn,
+                                            use_deepset_or_cnn=self.use_deepset_or_cnn,
                                             stack_frames=use_frame_stacking)
         else:
             self.buffer = TrainingBuffer(buffer_size=training_param["buffer_size"],
                                          batch_size=training_param["batch_size"],
-                                         use_deepset_or_cnn=use_deepset_or_cnn,
+                                         use_deepset_or_cnn=self.use_deepset_or_cnn,
                                          stack_frames=use_frame_stacking)
 
     def set_neg_collision_reward(self, timestep, punishment):
@@ -71,7 +71,7 @@ class DqnAgent(keras.models.Model):
         if self.training_param["use_per"]:
             # TODO add deepset implementation for PER
             # Calculate the TD-error for the Prioritised Replay Buffer
-            if self.training_param["use_deepset"]:
+            if self.use_deepset_or_cnn:
                 dyn_states = tf.convert_to_tensor(states[0], dtype=np.float32)
                 stat_states = tf.convert_to_tensor(states[1], dtype=np.float32)
                 # states = (dyn_states, stat_states)

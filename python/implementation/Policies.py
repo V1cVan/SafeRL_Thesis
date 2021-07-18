@@ -5,6 +5,78 @@ import random
 from matplotlib import pyplot as plt
 
 
+def add_state_noise(state, is_normal=False, is_uniform=False, magnitude=0.0, mu=0.0, sigma=0.0):
+    """
+    Adds sensor simulated sensor noise to state measurements to make the learning setting more difficult.
+        mu = mean for gaussian noise
+        sigma = std dev. for gaussian noise
+        magnitude = magnitude of gaussian and uniform noise
+    """
+
+    show_noise_plot = False
+    if show_noise_plot:
+        plt.figure()
+        plt.subplot(211)
+        normal_noise = np.random.normal(mu, sigma, size=1000)
+        plt.hist(normal_noise, bins=50, density=True)
+        plt.title("Normal Noise")
+        plt.grid(True)
+        plt.subplot(212)
+        low, high = -0.1, 0.1
+        uniform_noise = np.random.uniform(low, high, size=1000)
+        plt.hist(uniform_noise, bins=50, density=True)
+        plt.title("Uniform Noise")
+        plt.grid(True)
+        plt.show()
+
+    noisy_state = state
+    size_state = len(state)
+
+    if size_state == 1:  # Singular state matrix
+        shape = tf.shape(state)
+        normal_noise = magnitude * np.random.normal(mu, sigma, size=shape)
+        uniform_noise = magnitude * np.random.uniform(low=-0.3, high=0.3, size=shape)
+
+    else:  # State matrix has static and dynamic components
+        # Add noise to the dynamic part of the state matrix
+        state_0 = state[0]
+        shape_0 = tf.shape(state_0)
+        normal_noise_0 = magnitude * np.random.normal(mu, sigma, size=shape_0)
+        uniform_noise_0 = magnitude * np.random.uniform(low=-0.3, high=0.3, size=shape_0)
+
+        # Add noise to the static part of the state matrix
+        state_1 = state[1]
+        shape_1 = tf.shape(state_1)
+        normal_noise_1 = magnitude * np.random.normal(mu, sigma, size=shape_1)
+        uniform_noise_1 = magnitude * np.random.uniform(low=-0.3, high=0.3, size=shape_1)
+
+    if is_normal and is_uniform:
+        if size_state == 1:  # Singular state matrix
+            noisy_state = state + normal_noise + uniform_noise
+        else:  # State matrix has static and dynamic components
+            state_0 = state_0 + normal_noise_0 + uniform_noise_0
+            state_1 = state_1 + normal_noise_1 + uniform_noise_1
+            noisy_state = [state_0, state_1]
+    elif is_normal and not is_uniform:
+        if size_state == 1:  # Singular state matrix
+            noisy_state = state + normal_noise
+        else:  # State matrix has static and dynamic components
+            state_0 = state_0 + normal_noise_0
+            state_1 = state_1 + normal_noise_1
+            noisy_state = [state_0, state_1]
+    elif not is_normal and is_uniform:
+        if size_state == 1:  # Singular state matrix
+            noisy_state = state + uniform_noise
+        else:  # State matrix has static and dynamic components
+            state_0 = state_0 + uniform_noise_0
+            state_1 = state_1 + uniform_noise_1
+            noisy_state = [state_0, state_1]
+    else:
+        print("No noise to be added to state!")
+
+    return noisy_state
+
+
 def convert_state(veh):
     """
     Assembles state vector in TF form to pass to neural network.
@@ -304,6 +376,14 @@ class DiscreteSingleActionPolicy(CustomPolicy):
                 veh.s1_mod = decompose_state(veh)
             else:
                 veh.s1_mod = convert_state(veh)
+
+            if self.agent.training_param["noise_param"]["use_noise"]:
+                veh.s1_mod = add_state_noise(veh.s1_mod,
+                                             is_normal=self.agent.training_param["noise_param"]["normal"],
+                                             is_uniform=self.agent.training_param["noise_param"]["uniform"],
+                                             magnitude=self.agent.training_param["noise_param"]["magnitude"],
+                                             mu=self.agent.training_param["noise_param"]["mu"],
+                                             sigma=self.agent.training_param["noise_param"]["sigma"])
 
             Q = self.get_action(veh.s1_mod)
             veh.a1_mod = Q
