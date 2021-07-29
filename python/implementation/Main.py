@@ -20,6 +20,8 @@ import logging
 from matplotlib import pyplot as plt
 import time
 import datetime
+import multiprocessing as mp
+import sys
 
 tf.config.experimental.set_visible_devices([], "GPU")
 # physical_devices = tf.config.list_physical_devices('GPU')
@@ -40,7 +42,6 @@ class Main(object):
         self.custom_action_timer = Timer("Custom_action_timer")
         self.training_timer = Timer("Training_timer")
 
-    # ...
     def create_plot(self):
         shape = (4, 2)
         groups = [([0, 2], 0)]
@@ -99,7 +100,7 @@ class Main(object):
                 self.policy.agent.epsilon = self.policy.agent.prev_epsilon
 
             # print("Episode number: %0.2f" % episode_count)
-            logging.critical("Episode number: %0.2f" % episode_count)
+            # logging.critical("Episode number: %0.2f" % episode_count)
 
             self.episodeTimer.startTime()
             # Set simulation environment
@@ -172,7 +173,7 @@ class Main(object):
                     print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon, time_taken_episode)
 
                 print(print_output)
-                logging.critical(print_output)
+                # logging.critical(print_output)
                 # loss_list.append(loss)
                 # episode_list.append(episode_count)
                 # running_reward_list.append(running_reward)
@@ -207,7 +208,7 @@ class Main(object):
                     or episode_count == training_param["max_episodes"]:
                 print_output = "Solved at episode {}!".format(episode_count)
                 print(print_output)
-                logging.critical(print_output)
+                # logging.critical(print_output)
                 self.policy.agent.Q_actual_net.save_weights(model_param["weights_file_path"])
                 # pic.dump(training_var, open("./models/train_output", "wb"))
                 # self.data_logger.plot_training_data(plot_items)
@@ -215,7 +216,6 @@ class Main(object):
                 break
 
             episode_count += 1
-
 
     def simulate(self, simulation_timesteps):
         self.policy.agent.training = False
@@ -379,23 +379,53 @@ def sim_types(scenario_num, policy):
 
     return sim_config[scenario_num]
 
+def start_run(arg1, arg2):
+    # Start training loop using given arguments here..
+    print(f"Arg1:{arg1}; Arg2: {arg2}")
+
 if __name__=="__main__":
     LOG_DIR = "logs"
     ROOT = pathlib.Path(__file__).resolve().parents[2]
     SC_PATH = ROOT.joinpath("scenarios/scenarios.h5")
     config.scenarios_path = str(SC_PATH)
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d - %Hh%Mm%Ss")
+
+    # TODO CHECK that seeds are random in parallel processing
+    SEED = 10
+    RUN_TYPE = "train"  # "Test"
+    RUN_INFO = "Testing parallel process 0"
+    SAVE_DIRECTORY = "logfiles/tb/" + current_time + " - Seed" + str(SEED) + " - Details = " + str(RUN_INFO)
+    run_settings = {
+        "run_type": RUN_TYPE,
+        "run_info": RUN_INFO,
+        "save_directory": SAVE_DIRECTORY
+    }
+
+    # PROCS = 32  # Number of cores to use
+    # mp.set_start_method("spawn")  # Make sure different workers have different seeds if applicable
+    # P = mp.cpu_count()  # Number of available cores
+    # procs = max(min(PROCS, P), 1)  # Clip number of procs to [1;P]
+    # def param_gen():
+    #     # This function yields all the parameter combinations to try
+    #     for arg1 in ("DDQN_ER", "DDQN_PER", "D3QN_ER", "D3QN_PER"):
+    #         for arg2 in (100, 200):
+    #             yield arg1, arg2
+    #
+    # if procs > 1:
+    #     # Schedule all training runs in a parallel loop over multiple cores:
+    #     with mp.Pool(processes=procs) as pool:
+    #         pool.starmap(start_run, param_gen())
+    #         pool.close()
+    #         pool.join()
+    # else:
+    #     # Schedule on a single core:
+    #     for args in param_gen():
+    #         start_run(*args)
 
     # TODO check that hwsim config seed is set properly
-    SEED = 10
     config.seed = SEED
     tf.random.set_seed(SEED)
     np.random.seed(SEED)
-
-    # Logging
-    logging.basicConfig(level=logging.INFO, filename="./logfiles/main.log")
-    # logging.disable(logging.ERROR) # Temporarily disable error tf logs.
-    with open('./logfiles/main.log', 'w'):
-        pass  # Clear the log file of previous run
 
     # Model parameters:
     N_UNITS = (32, 16, 8)  # TODO NB Change model size variability between deepset and baseline!!!!
@@ -434,9 +464,6 @@ if __name__=="__main__":
         # TODO add initialiser
         # Add batch normalisation
     }
-    logging.critical("Model Parameters:")
-    logging.critical(model_param)
-    pic.dump(model_param, open("./models/model_variables", "wb"))
 
     # Training parameters:
     POLICY_ACTION_RATE = 8     # Number of simulator steps before new control action is taken
@@ -477,7 +504,6 @@ if __name__=="__main__":
     FRAME_STACK_TYPE = 0  # 0-Stack last agent action frames, 1=stack simulator frames
     ADD_NOISE = False
 
-
     # TODO comparitive plotting of standard DQN, DDQN, PER, and Duelling
     # TODO plotting of average reward of vehicle that just speeds up
     training_param = {
@@ -517,32 +543,23 @@ if __name__=="__main__":
         "frame_stack_type": FRAME_STACK_TYPE,
         "noise_param": {"use_noise":ADD_NOISE,"magnitude":0.1, "normal": True, "mu":0.0, "sigma":0.1, "uniform": True}
     }
-    logging.critical("Training param:")
-    logging.critical(training_param)
+
+    """ INIT SAVING OF ALL TRAINING PARAMETERS AND DATA """
+    # Init tensorboard saving of all the training data:
+    tb_logger = TbLogger(save_training=SAVE_TRAINING,
+                         directory=run_settings["save_directory"],
+                         log_freq=LOG_FREQ)
+    # Dump model parameters of run:
+    pic.dump(model_param, open(run_settings["save_directory"]+"/model_parameters", "wb"))
+    # Dump training parameters of run:
     training_param_save = training_param.copy()
     training_param_save.pop("loss_func")
     training_param_save.pop("optimiser")
-    pic.dump(training_param_save, open("./models/training_variables", "wb"))
-
-    tb_logger = TbLogger(save_training=SAVE_TRAINING, seed=SEED, log_freq=LOG_FREQ)
-
-    # Initialise models:
-    # TODO Retrain on 3 network architectures
-    # AC_net_single = AcNetworkSingleAction(model_param=model_param)
-    # spg_agent_single = SpgAgentSingle(network=AC_net_single, training_param=training_param)
-    # spg_policy_single = DiscreteSingleActionPolicy(agent=spg_agent_single)
-
-    # TODO Fix Policies for double action as well as single action
-    # AC_net_double = AcNetworkDoubleAction(model_param=model_param)
-    # spg_agent_double = SpgAgentDouble(network=AC_net_double, training_param=training_param)
-    # spg_policy_double = DiscreteDoubleActionPolicy(agent=spg_agent_double)
+    pic.dump(training_param_save, open(run_settings["save_directory"]+"/training_parameters", "wb"))
 
     # TODO Compare DQN DDQN PER and DUELLING ON SAME RANDOM SEED!
-    # if USE_DUELLING:
-    #     DQ_net = DuellingDqnNetwork(model_param=model_param)
-    # else:
-    #     DQ_net = DeepQNetwork(model_param=model_param)
 
+    # Initialise model type:
     if USE_DEEPSET and not USE_CNN:
         DQ_net = DeepSetQNetwork(model_param=model_param)
     elif not USE_DEEPSET and USE_CNN:
@@ -551,37 +568,45 @@ if __name__=="__main__":
         if USE_LSTM:
             DQ_net = LSTM_DRQN(model_param=model_param)
         else:
-            DQ_net = DeepQNetwork(model_param=model_param)
+            if USE_DUELLING:
+                DQ_net = DeepSetQNetwork(model_param=model_param)
+            else:
+                DQ_net = DeepQNetwork(model_param=model_param)
     else:
         print("Error: Cannot use Deepset and CNN methods together!")
         exit()
 
+    # Initialise agent and policy:
     dqn_agent = DqnAgent(network=DQ_net, training_param=training_param, tb_logger=tb_logger)
     dqn_policy = DiscreteSingleActionPolicy(agent=dqn_agent)
 
     RewardFunction().plot_reward_functions()
 
+    # TODO ensure all models have the same initialisation
+    # TODO check batch normalisation for all the models
+    # TODO check to make sure that deepset doesnt need tanh + batch norm ... tanh on other models too
     # Set up main class for running simulations:
     main = Main(scenario_num=SCENARIO_NUM, policy=dqn_policy)
-    time.sleep(0.01)
-    # main.policy.agent.Q_actual_net.load_weights(MODEL_FILE_PATH)
-    main.policy.agent.evaluation = False
+
+    if run_settings["run_type"] == "train":
+        main.policy.agent.evaluation = False
+    elif run_settings["run_type"] == "test":
+        main.policy.agent.evaluation = True
+    else:
+        print("Wrong run type inputted")
+        sys.exit()
+
     # Train model:
-
     # TODO Ensure Dmax is consistently 150 when merging the branch with master!!!!!
-    main.train_policy()  # TODO !!!
-
-    # TODO Tidy up simulation part:
-    # Simulate model:
-    main.policy.agent.Q_actual_net.load_weights(MODEL_FILE_PATH)
-    main.policy.agent.evaluation = True
-    main.simulate(1000)
-    # for i in range(0, 5):
-    #     for _ in range(2):
-    #         main = Main(sim_types(i))
-    #         main.simulate(1000)
-    #         # print("Simulation number %d complete" % i)
-    #         main.p.close()
+    if main.policy.agent.evaluation == True:
+        main.policy.agent.Q_actual_net.load_weights(MODEL_FILE_PATH)
+        # TODO Tidy up simulation part:
+        # Simulate model:
+        main.policy.agent.Q_actual_net.load_weights(MODEL_FILE_PATH)
+        main.policy.agent.evaluation = True
+        main.simulate(1000)
+    else:
+        main.train_policy()
 
     print("EOF")
 

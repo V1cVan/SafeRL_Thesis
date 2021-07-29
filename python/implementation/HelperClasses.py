@@ -22,11 +22,12 @@ class TbLogger(object):
     Logs training variables of training runs to tensorboard.
     """
     # TODO add x and y axis labels in plot descriptions or save images as matplotlib plots
-    def __init__(self, save_training, seed, log_freq):
+    def __init__(self, save_training, log_freq, directory):
         # Tensorboard data logger
         if save_training:
-            current_time = datetime.datetime.now().strftime("%Y-%m-%d - %Hh%Mm%Ss")
-            self.tb_dir = "logfiles/tb/" + current_time + " - Seed" + str(seed)
+            # current_time = datetime.datetime.now().strftime("%Y-%m-%d - %Hh%Mm%Ss")
+            # self.tb_dir = "logfiles/tb/" + current_time + " - Seed" + str(seed) + " - Details = " + str(run_info)
+            self.tb_dir = directory
             self.tb_writer = tf.summary.create_file_writer(self.tb_dir)
             self.log_freq = log_freq
         self.save_training = save_training
