@@ -144,6 +144,7 @@ class CNN(keras.Model):
             dynamic_input = inputs[0]
             static_input = inputs[1]
             batch_size, x1, x2 = dynamic_input.shape
+            # TODO check this reshape, maybe transpose would do !
             dynamic_input = tf.reshape(dynamic_input, [batch_size, x2, x1])
             inputs = (dynamic_input, static_input)
         """ Returns the output of the model given an input. """

@@ -299,21 +299,21 @@ class RewardFunction(object):
         vel = np.linspace(0, 130 / 3.6, 100)
         rew = self._get_velocity_reward(vel)
         axs[0, 0].plot(vel, rew)
-        axs[0, 0].set_title('Velocity reward')
+        axs[0, 0].set_title('Velocity')
         axs[0, 0].grid(True)
         axs[0, 0].set(xlabel='Velocity', ylabel='Reward')
 
         y = np.linspace(-3.6, 3.6, 100)
         rew = self._get_lane_centre_reward(y)
         axs[0, 1].plot(y, rew, 'tab:orange')
-        axs[0, 1].set_title('Lane Centre Reward')
+        axs[0, 1].set_title('Lane Centre')
         axs[0, 1].grid(True)
         axs[0, 1].set(xlabel='Lane position', ylabel='Reward')
 
         x = np.linspace(0, 50, 100)
         rew = self._get_follow_dist_reward(x)
         axs[1, 0].plot(x, rew, 'tab:green')
-        axs[1, 0].set_title('Following Distance Reward')
+        axs[1, 0].set_title('Following Distance')
         axs[1, 0].grid(True)
         axs[1, 0].set(xlabel='Following distance', ylabel='Reward')
 
@@ -321,7 +321,7 @@ class RewardFunction(object):
         y = np.linspace(0, road_width, 100)
         rew = self._get_right_lane_reward(road_width, y)
         axs[1, 1].plot(y, rew, 'tab:red')
-        axs[1, 1].set_title('Drive on Right Reward')
+        axs[1, 1].set_title('Lane Position')
         axs[1, 1].grid(True)
         axs[1, 1].set(xlabel='Distance from right road edge', ylabel='Reward')
 
@@ -348,6 +348,9 @@ class DiscreteSingleActionPolicy(CustomPolicy):
             self.stack_frames = True
             self.frame_stack_type = self.agent.training_param["frame_stack_type"]  # 0=stack agent frames , 1=stack simulator frames
             self.frame_stack_buffer = deque(maxlen=4)
+        else:
+            self.stack_frames = False
+
 
 
     def init_vehicle(self, veh):

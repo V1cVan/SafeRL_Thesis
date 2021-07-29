@@ -1,6 +1,6 @@
 import os
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # specify which GPU(s) to be used (1)
+os.environ["CUDA_VISIBLE_DEVICES"] = ""  # specify which GPU(s) to be used (1)
 import pickle
 
 from hwsim import Simulation, BasicPolicy, StepPolicy, SwayPolicy, IMPolicy, KBModel, TrackPolicy, CustomPolicy, config
@@ -21,9 +21,9 @@ from matplotlib import pyplot as plt
 import time
 import datetime
 
-# tf.config.experimental.set_visible_devices([0], "GPU")
-physical_devices = tf.config.list_physical_devices('GPU')
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
+tf.config.experimental.set_visible_devices([], "GPU")
+# physical_devices = tf.config.list_physical_devices('GPU')
+# tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 class Main(object):
 
@@ -401,7 +401,7 @@ if __name__=="__main__":
     N_UNITS = (32, 16, 8)  # TODO NB Change model size variability between deepset and baseline!!!!
     N_INPUTS = 55
     N_ACTIONS = 5
-    ACT_FUNC = tf.nn.selu
+    ACT_FUNC = tf.nn.relu
     N_STACKED_TIMESTEPS = 2
     MODEL_FILE_PATH = "./models/model_weights"
     model_param = {
@@ -440,8 +440,8 @@ if __name__=="__main__":
 
     # Training parameters:
     POLICY_ACTION_RATE = 8     # Number of simulator steps before new control action is taken
-    MAX_TIMESTEPS = 1e4         # range: 5e3 - 10e3
-    MAX_EPISODES = 2000
+    MAX_TIMESTEPS = 5e3         # range: 5e3 - 10e3
+    MAX_EPISODES = 3000
     FINAL_RETURN = 0.91
     SHOW_TRAIN_PLOTS = False
     SAVE_TRAINING = True
@@ -453,7 +453,7 @@ if __name__=="__main__":
     BATCH_SIZE = 32          # range: 32 - 150
     EPSILON_MIN = 1.0           # Exploration
     EPSILON_MAX = 0.1           # Exploitation
-    DECAY_RATE = 0.9999 #0.999992
+    DECAY_RATE = 0.99995 #0.999992
     MODEL_UPDATE_RATE = 1
     TARGET_UPDATE_RATE = 10e4
     LEARN_RATE = 0.0001         # range: 1e-3 - 1e-4
@@ -472,7 +472,7 @@ if __name__=="__main__":
     # Model types:
     USE_DUELLING = False
     USE_DEEPSET = False
-    USE_CNN = True  # TODO Fix so that CNN type 3 and LSTM work with PER
+    USE_CNN = False  # TODO Fix so that CNN type 3 and LSTM work with PER!
     USE_LSTM = False
     FRAME_STACK_TYPE = 0  # 0-Stack last agent action frames, 1=stack simulator frames
     ADD_NOISE = False
