@@ -1,6 +1,6 @@
 import os
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = ""  # specify which GPU(s) to be used (1)
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # specify which GPU(s) to be used (1)
 import pickle
 
 from hwsim import Simulation, BasicPolicy, StepPolicy, SwayPolicy, IMPolicy, KBModel, TrackPolicy, CustomPolicy, config
@@ -29,7 +29,7 @@ tf.config.experimental.set_visible_devices([], "GPU")
 
 class Main(object):
 
-    def __init__(self, scenario_num, policy):
+    def __init__(self, scenario_num, policy, model_param, training_param, tb_logger):
         # ...
         scenario = sim_types(scenario_num=scenario_num, policy=policy)
         self.sim = Simulation(scenario)
@@ -41,6 +41,9 @@ class Main(object):
         self.episodeTimer = Timer("Episode")
         self.custom_action_timer = Timer("Custom_action_timer")
         self.training_timer = Timer("Training_timer")
+        self.training_param = training_param
+        self.model_param = model_param
+        self.tb_logger = tb_logger
 
     def create_plot(self):
         shape = (4, 2)
@@ -74,10 +77,10 @@ class Main(object):
     def train_policy(self):
         running_reward = 0
         episode_count = 1
-        plot_freq = training_param["plot_freq"]
-        show_plots = training_param["show_train_plots"]
-        max_timesteps = training_param["max_timesteps"]
-        max_episodes = training_param["max_episodes"]
+        plot_freq = self.training_param["plot_freq"]
+        show_plots = self.training_param["show_train_plots"]
+        max_timesteps = self.training_param["max_timesteps"]
+        max_episodes = self.training_param["max_episodes"]
         trained = False
         # episode_list = []
         # running_reward_list = []
@@ -96,7 +99,7 @@ class Main(object):
 
             if episode_count % plot_freq == 0 and show_plots:
                 self.policy.agent.prev_epsilon = self.policy.agent.epsilon
-                self.simulate(training_param["sim_timesteps"])
+                self.simulate(self.training_param["sim_timesteps"])
                 self.policy.agent.epsilon = self.policy.agent.prev_epsilon
 
             # print("Episode number: %0.2f" % episode_count)
@@ -129,13 +132,13 @@ class Main(object):
                             curr_veh_speed = self.sim.vehicles[0].s["vel"][0]*3.6
                             vehicle_speeds.append(curr_veh_speed)
 
-                    if t % training_param["policy_rate"] == 0:
+                    if t % self.training_param["policy_rate"] == 0:
                         train_counter += 1
                         self.policy.agent.epsilon_decay_count = train_counter
-                        self.policy.agent.timestep = np.int(t / training_param["policy_rate"])
+                        self.policy.agent.timestep = np.int(t / self.training_param["policy_rate"])
                         if self.policy.agent.buffer.is_buffer_min_size():
                             model_update_counter += 1
-                            if model_update_counter % training_param["model_update_rate"] == 0:
+                            if model_update_counter % self.training_param["model_update_rate"] == 0:
                                 # TODO add data to episode buffer to get episode rewards while training.
                                 self.training_timer.startTime()
                                 mean_batch_reward, loss, td_error, grads, clipped_grads = self.policy.agent.train_step()
@@ -145,7 +148,7 @@ class Main(object):
                                 episode_td_errors.append(td_error)
                                 trained = True
 
-                            if model_update_counter % training_param["target_update_rate"] == 0:
+                            if model_update_counter % self.training_param["target_update_rate"] == 0:
                                 self.policy.agent.update_target_net()
                                 # print("Updated target net.")
 
@@ -155,7 +158,7 @@ class Main(object):
 
             if trained:
                 if 0.05 * reward + (1 - 0.05) * running_reward > running_reward and episode_count % 50 == 0:
-                    self.policy.agent.Q_actual_net.save_weights(model_param["weights_file_path"])
+                    self.policy.agent.Q_actual_net.save_weights(self.model_param["weights_file_path"])
                     print("Saved network weights.")
 
                 # Running reward smoothing effect
@@ -164,7 +167,7 @@ class Main(object):
 
             if episode_count % 1 == 0 and trained:
                 epsilon = self.policy.agent.calc_epsilon()
-                if training_param["use_per"]:
+                if self.training_param["use_per"]:
                     print_template = "Running reward = {:.3f} ({:.3f}) at episode {}. Loss = {:.3f}. Epsilon = {:.3f}. Beta = {:.3f}. Episode timer = {:.3f}"
                     print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon,
                                                          self.policy.agent.buffer.beta, time_taken_episode)
@@ -180,23 +183,23 @@ class Main(object):
                 # training_var = (episode_list, running_reward_list, loss_list)
 
             # Save episode training variables to tensorboard
-            tb_logger.save_histogram("Episode mean batch rewards", x=episode_count, y=episode_mean_batch_rewards)
-            tb_logger.save_histogram("Episode losses", x=episode_count, y=episode_losses)
-            tb_logger.save_histogram("Episode TD errors", x=episode_count, y=episode_td_errors)
-            tb_logger.save_variable("Total episode reward (sum)", x=episode_count, y=np.sum(episode_reward_list))
-            tb_logger.save_variable("Mean episode reward", x=episode_count, y=np.sum(episode_reward_list)/len(episode_reward_list))
-            tb_logger.save_variable("Running reward", x=episode_count, y=running_reward)
-            tb_logger.save_variable("Total time taken for episode", x=episode_count, y=time_taken_episode)
-            tb_logger.save_variable("Total time taken for custom action", x=episode_count, y=custom_action_time)
-            tb_logger.save_variable("Total time taken for training iteration", x=episode_count, y=train_time)
-            tb_logger.save_variable("Mean vehicle speed for episode", x=episode_count, y=np.mean(vehicle_speeds))
-            if training_param["use_per"]:
-                tb_logger.save_variable("Beta increment", x=episode_count, y=self.policy.agent.buffer.beta)
+            self.tb_logger.save_histogram("Episode mean batch rewards", x=episode_count, y=episode_mean_batch_rewards)
+            self.tb_logger.save_histogram("Episode losses", x=episode_count, y=episode_losses)
+            self.tb_logger.save_histogram("Episode TD errors", x=episode_count, y=episode_td_errors)
+            self.tb_logger.save_variable("Total episode reward (sum)", x=episode_count, y=np.sum(episode_reward_list))
+            self.tb_logger.save_variable("Mean episode reward", x=episode_count, y=np.sum(episode_reward_list)/len(episode_reward_list))
+            self.tb_logger.save_variable("Running reward", x=episode_count, y=running_reward)
+            self.tb_logger.save_variable("Total time taken for episode", x=episode_count, y=time_taken_episode)
+            self.tb_logger.save_variable("Total time taken for custom action", x=episode_count, y=custom_action_time)
+            self.tb_logger.save_variable("Total time taken for training iteration", x=episode_count, y=train_time)
+            self.tb_logger.save_variable("Mean vehicle speed for episode", x=episode_count, y=np.mean(vehicle_speeds))
+            if self.training_param["use_per"]:
+                self.tb_logger.save_variable("Beta increment", x=episode_count, y=self.policy.agent.buffer.beta)
             # TODO time taken for inferenece and time taken for training step
 
             # Save model weights and biases and gradients of backprop.
             # TODO fix deepset model so that we can save layer names
-            tb_logger.save_weights_gradients(episode=episode_count,
+            self.tb_logger.save_weights_gradients(episode=episode_count,
                                              model=self.policy.agent.Q_actual_net,
                                              grads=grads,
                                              clipped_grads=clipped_grads)
@@ -204,12 +207,12 @@ class Main(object):
 
 
                 # self.data_logger.save_xls("./models/training_variables.xls")
-            if running_reward >= training_param["final_return"] \
-                    or episode_count == training_param["max_episodes"]:
+            if running_reward >= self.training_param["final_return"] \
+                    or episode_count == self.training_param["max_episodes"]:
                 print_output = "Solved at episode {}!".format(episode_count)
                 print(print_output)
                 # logging.critical(print_output)
-                self.policy.agent.Q_actual_net.save_weights(model_param["weights_file_path"])
+                self.policy.agent.Q_actual_net.save_weights(self.model_param["weights_file_path"])
                 # pic.dump(training_var, open("./models/train_output", "wb"))
                 # self.data_logger.plot_training_data(plot_items)
                 # self.data_logger.save_training_data("./models/training_variables.p")
@@ -260,9 +263,9 @@ def sim_types(scenario_num, policy):
             # {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
             # {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
             # {"model": KBModel(), "policy": FixedLanePolicy(18), "R": 0, "l": 3.6, "s": random.random()*200, "v": 18},
-            {"amount": 16, "model": KBModel(), "policy": BasicPolicy("slow")},
-            {"amount": 8, "model": KBModel(), "policy": BasicPolicy("normal")},
-            {"amount": 4, "model": KBModel(), "policy": BasicPolicy("fast")}
+            {"amount": 5, "model": KBModel(), "policy": BasicPolicy("slow")},
+            {"amount": 15, "model": KBModel(), "policy": BasicPolicy("normal")},
+            {"amount": 5, "model": KBModel(), "policy": BasicPolicy("fast")}
         ]
     }
 
@@ -381,9 +384,6 @@ def sim_types(scenario_num, policy):
 
 def start_run(arg1, arg2):
     # Start training loop using given arguments here..
-    print(f"Arg1:{arg1}; Arg2: {arg2}")
-
-if __name__=="__main__":
     LOG_DIR = "logs"
     ROOT = pathlib.Path(__file__).resolve().parents[2]
     SC_PATH = ROOT.joinpath("scenarios/scenarios.h5")
@@ -391,7 +391,7 @@ if __name__=="__main__":
     current_time = datetime.datetime.now().strftime("%Y-%m-%d - %Hh%Mm%Ss")
 
     # TODO CHECK that seeds are random in parallel processing
-    SEED = 10
+    SEED = arg2
     RUN_TYPE = "train"  # "Test"
     RUN_INFO = "Testing parallel process 0"
     SAVE_DIRECTORY = "logfiles/tb/" + current_time + " - Seed" + str(SEED) + " - Details = " + str(RUN_INFO)
@@ -400,27 +400,6 @@ if __name__=="__main__":
         "run_info": RUN_INFO,
         "save_directory": SAVE_DIRECTORY
     }
-
-    # PROCS = 32  # Number of cores to use
-    # mp.set_start_method("spawn")  # Make sure different workers have different seeds if applicable
-    # P = mp.cpu_count()  # Number of available cores
-    # procs = max(min(PROCS, P), 1)  # Clip number of procs to [1;P]
-    # def param_gen():
-    #     # This function yields all the parameter combinations to try
-    #     for arg1 in ("DDQN_ER", "DDQN_PER", "D3QN_ER", "D3QN_PER"):
-    #         for arg2 in (100, 200):
-    #             yield arg1, arg2
-    #
-    # if procs > 1:
-    #     # Schedule all training runs in a parallel loop over multiple cores:
-    #     with mp.Pool(processes=procs) as pool:
-    #         pool.starmap(start_run, param_gen())
-    #         pool.close()
-    #         pool.join()
-    # else:
-    #     # Schedule on a single core:
-    #     for args in param_gen():
-    #         start_run(*args)
 
     # TODO check that hwsim config seed is set properly
     config.seed = SEED
@@ -443,59 +422,59 @@ if __name__=="__main__":
         "seed": SEED,
         # TODO add parameters for the tuning of the deepset
         "cnn_param": {
-            "config": 3,            # 0=1D conv. on vehicle dim.,
-                                    # 1=1D conv. on measurements dim.,
-                                    # 2=2D conv. on vehicle and measurements dimensions,
-                                    # 3=3D conv. on vehicle and measurement dimensions through time
+            "config": 3,  # 0=1D conv. on vehicle dim.,
+            # 1=1D conv. on measurements dim.,
+            # 2=2D conv. on vehicle and measurements dimensions,
+            # 3=3D conv. on vehicle and measurement dimensions through time
             # Config 0:
-            "n_filters_0": 6,    # Dimensionality of output space
+            "n_filters_0": 6,  # Dimensionality of output space
             "kernel_size_0": (2,),  # Convolution width
             # Config 1:
             "n_filters_1": 6,  # Dimensionality of output space
             "kernel_size_1": (2,),  # Convolution width
             # Config 2:
             "n_filters_2": 6,  # Dimensionality of output space
-            "kernel_size_2": (4,2),  # Convolution width
+            "kernel_size_2": (4, 2),  # Convolution width
             # Config 3:
             "n_filters_3": 6,  # Dimensionality of output space
             "n_timesteps": N_STACKED_TIMESTEPS,
-            "kernel_size_3": (N_STACKED_TIMESTEPS,4,2)  # Convolution width
+            "kernel_size_3": (N_STACKED_TIMESTEPS, 4, 2)  # Convolution width
         }
         # TODO add initialiser
         # Add batch normalisation
     }
 
     # Training parameters:
-    POLICY_ACTION_RATE = 8     # Number of simulator steps before new control action is taken
-    MAX_TIMESTEPS = 5e3         # range: 5e3 - 10e3
+    POLICY_ACTION_RATE = 8  # Number of simulator steps before new control action is taken
+    MAX_TIMESTEPS = 5e3  # range: 5e3 - 10e3
     MAX_EPISODES = 3000
     FINAL_RETURN = 0.91
     SHOW_TRAIN_PLOTS = False
     SAVE_TRAINING = True
-    LOG_FREQ = 0              # TODO implement log frequency
+    LOG_FREQ = 0  # TODO implement log frequency
     PLOT_FREQ = 50
     SIM_TIMESTEPS = 200
-    SCENARIO_NUM = 0        # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
+    SCENARIO_NUM = 0  # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
     BUFFER_SIZE = 300000
-    BATCH_SIZE = 32          # range: 32 - 150
-    EPSILON_MIN = 1.0           # Exploration
-    EPSILON_MAX = 0.1           # Exploitation
-    DECAY_RATE = 0.99995 #0.999992
+    BATCH_SIZE = 32  # range: 32 - 150
+    EPSILON_MIN = 1.0  # Exploration
+    EPSILON_MAX = 0.1  # Exploitation
+    DECAY_RATE = 0.99995  # 0.999992
     MODEL_UPDATE_RATE = 1
     TARGET_UPDATE_RATE = 10e4
-    LEARN_RATE = 0.0001         # range: 1e-3 - 1e-4
+    LEARN_RATE = 0.0001  # range: 1e-3 - 1e-4
     OPTIMISER = tf.optimizers.Adam(learning_rate=LEARN_RATE)
-    LOSS_FUNC = tf.losses.MeanSquaredError()  #tf.losses.Huber()  # PER loss function is MSE
-    GAMMA = 0.99                # range: 0.95 - 0.99
+    LOSS_FUNC = tf.losses.MeanSquaredError()  # tf.losses.Huber()  # PER loss function is MSE
+    GAMMA = 0.99  # range: 0.95 - 0.99
     CLIP_GRADIENTS = True
     CLIP_NORM = 2
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
     REWARD_WEIGHTS = np.array([1.0, 0.15, 0.8, 0.4, -5])
     STANDARDISE_RETURNS = True  # TODO additional variable for SPG
     USE_PER = False
-    ALPHA = 0.75                # Priority scale: a=0:random, a=1:completely based on priority
-    BETA = 0.2                  # Prioritisation factor
-    BETA_INCREMENT = 0.00004 * MODEL_UPDATE_RATE    # Rate of Beta annealing to 1
+    ALPHA = 0.75  # Priority scale: a=0:random, a=1:completely based on priority
+    BETA = 0.2  # Prioritisation factor
+    BETA_INCREMENT = 0.00004 * MODEL_UPDATE_RATE  # Rate of Beta annealing to 1
     # Model types:
     USE_DUELLING = False
     USE_DEEPSET = False
@@ -541,7 +520,8 @@ if __name__=="__main__":
         "use_CNN": USE_CNN,
         "use_LSTM": USE_LSTM,
         "frame_stack_type": FRAME_STACK_TYPE,
-        "noise_param": {"use_noise":ADD_NOISE,"magnitude":0.1, "normal": True, "mu":0.0, "sigma":0.1, "uniform": True}
+        "noise_param": {"use_noise": ADD_NOISE, "magnitude": 0.1, "normal": True, "mu": 0.0, "sigma": 0.1,
+                        "uniform": True}
     }
 
     """ INIT SAVING OF ALL TRAINING PARAMETERS AND DATA """
@@ -550,12 +530,12 @@ if __name__=="__main__":
                          directory=run_settings["save_directory"],
                          log_freq=LOG_FREQ)
     # Dump model parameters of run:
-    pic.dump(model_param, open(run_settings["save_directory"]+"/model_parameters", "wb"))
+    pic.dump(model_param, open(run_settings["save_directory"] + "/model_parameters", "wb"))
     # Dump training parameters of run:
     training_param_save = training_param.copy()
     training_param_save.pop("loss_func")
     training_param_save.pop("optimiser")
-    pic.dump(training_param_save, open(run_settings["save_directory"]+"/training_parameters", "wb"))
+    pic.dump(training_param_save, open(run_settings["save_directory"] + "/training_parameters", "wb"))
 
     # TODO Compare DQN DDQN PER and DUELLING ON SAME RANDOM SEED!
 
@@ -580,13 +560,17 @@ if __name__=="__main__":
     dqn_agent = DqnAgent(network=DQ_net, training_param=training_param, tb_logger=tb_logger)
     dqn_policy = DiscreteSingleActionPolicy(agent=dqn_agent)
 
-    RewardFunction().plot_reward_functions()
+    # RewardFunction().plot_reward_functions()
 
     # TODO ensure all models have the same initialisation
     # TODO check batch normalisation for all the models
     # TODO check to make sure that deepset doesnt need tanh + batch norm ... tanh on other models too
     # Set up main class for running simulations:
-    main = Main(scenario_num=SCENARIO_NUM, policy=dqn_policy)
+    main = Main(scenario_num=SCENARIO_NUM,
+                policy=dqn_policy,
+                model_param=model_param,
+                training_param=training_param,
+                tb_logger=tb_logger)
 
     if run_settings["run_type"] == "train":
         main.policy.agent.evaluation = False
@@ -608,6 +592,34 @@ if __name__=="__main__":
     else:
         main.train_policy()
 
+    print(f"Arg1:{arg1}; Arg2: {arg2}")
+
+if __name__=="__main__":
+
+    PROCS = 32  # Number of cores to use
+    mp.set_start_method("spawn")  # Make sure different workers have different seeds if applicable
+    P = mp.cpu_count()  # Number of available cores
+    procs = max(min(PROCS, P), 1)  # Clip number of procs to [1;P]
+
+
+    def param_gen():
+        # This function yields all the parameter combinations to try
+        for arg1 in ("DDQN"):
+            for arg2 in (100, 200, 300, 400, 500):
+                yield arg1, arg2
+
+
+    if procs > 1:
+        # Schedule all training runs in a parallel loop over multiple cores:
+        with mp.Pool(processes=procs) as pool:
+            pool.starmap(start_run, param_gen())
+            pool.close()
+            pool.join()
+    else:
+        # Schedule on a single core:
+        for args in param_gen():
+            start_run(*args)
+
+
+
     print("EOF")
-
-
