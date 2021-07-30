@@ -245,43 +245,59 @@ class DeepQNetwork(keras.Model):
         n_inputs = model_param["n_inputs"]
         n_actions = model_param["n_actions"]
 
-        he = tf.keras.initializers.HeUniform()
-        glorot = tf.keras.initializers.GlorotUniform()
-        normal = tf.keras.initializers.RandomUniform(minval=-0.01, maxval=0.01)
+        initialiser_name = model_param["initialiser"]
+        if initialiser_name == "he":
+            initialiser = tf.keras.initializers.HeUniform()
+        elif initialiser_name == "glorot":
+            initialiser = tf.keras.initializers.GlorotUniform()
+        elif initialiser_name == "uniform":
+            initialiser = tf.keras.initializers.RandomUniform(minval=-0.01, maxval=0.01)
         var_scale = tf.keras.initializers.VarianceScaling(scale=2.0, mode='fan_in', distribution='truncated_normal')
 
-        input_layer = layers.Input(shape=(n_inputs,),
-                                   name="inputState")
+        if initialiser_name == "none":
+            input_layer = layers.Input(shape=(n_inputs,),
+                                       name="inputState")
+            dense_layer1 = layers.Dense(units=n_units[0],
+                                        activation=act_func,
+                                        name='dense1')(input_layer)
+            dense_layer2 = layers.Dense(units=n_units[1],
+                                        activation=act_func,
+                                        name='dense2')(dense_layer1)
+            dense_layer3 = layers.Dense(units=n_units[2],
+                                        activation=act_func,
+                                        name='dense3')(dense_layer2)
+            output_layer = layers.Dense(n_actions,
+                                        name="Output")(dense_layer3)
+            self.model = keras.Model(inputs=input_layer,
+                                     outputs=output_layer,
+                                     name="DDQN")
+            self.display_overview()
+        else:
+            input_layer = layers.Input(shape=(n_inputs,),
+                                       name="inputState")
 
-        dense_layer1 = self.dense_layer(num_units=n_units[0],
-                                        initialiser=he,
-                                        act_func=act_func,
-                                        name="dense1")(input_layer)
-        dense_layer2 = self.dense_layer(num_units=n_units[1],
-                                        initialiser=he,
-                                        act_func=act_func,
-                                        name="dense2")(dense_layer1)
-        dense_layer3 = self.dense_layer(num_units=n_units[2],
-                                        initialiser=he,
-                                        act_func=act_func,
-                                        name="dense3")(dense_layer2)
-        output_layer = layers.Dense(n_actions,
-                                    name="Output",
-                                    kernel_initializer=var_scale,
-                                    bias_initializer=tf.keras.initializers.Constant(0))(dense_layer3)
+            dense_layer1 = layers.Dense(units=n_units[0],
+                                        activation=act_func,
+                                        kernel_initializer=initialiser,
+                                        name='dense1')(input_layer)
+            dense_layer2 = layers.Dense(units=n_units[1],
+                                        activation=act_func,
+                                        kernel_initializer=initialiser,
+                                        name='dense2')(dense_layer1)
+            dense_layer3 = layers.Dense(units=n_units[2],
+                                        activation=act_func,
+                                        kernel_initializer=initialiser,
+                                        name='dense3')(dense_layer2)
+            output_layer = layers.Dense(n_actions,
+                                        name="Output",
+                                        kernel_initializer=var_scale,
+                                        bias_initializer=tf.keras.initializers.Constant(0))(dense_layer3)
 
-        self.model = keras.Model(inputs=input_layer,
-                                 outputs=output_layer,
-                                 name="DDQN")
+            self.model = keras.Model(inputs=input_layer,
+                                     outputs=output_layer,
+                                     name="DDQN")
 
-        self.display_overview()
-
-    def dense_layer(self, num_units, act_func, initialiser, name):
-        return layers.Dense(
-            num_units,
-            activation=act_func,
-            kernel_initializer=initialiser,
-            name=name)
+            self.display_overview()
 
     @tf.function
     def call(self, inputs: tf.Tensor):

@@ -26,7 +26,7 @@ class TbLogger(object):
         # Tensorboard data logger
         if save_training:
             # current_time = datetime.datetime.now().strftime("%Y-%m-%d - %Hh%Mm%Ss")
-            # self.tb_dir = "logfiles/tb/" + current_time + " - Seed" + str(seed) + " - Details = " + str(run_info)
+            # self.tb_dir = "logfiles/DDQN_ER_initialisers/" + current_time + " - Seed" + str(seed) + " - Details = " + str(run_info)
             self.tb_dir = directory
             self.tb_writer = tf.summary.create_file_writer(self.tb_dir)
             self.log_freq = log_freq

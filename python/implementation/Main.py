@@ -29,9 +29,9 @@ tf.config.experimental.set_visible_devices([], "GPU")
 
 class Main(object):
 
-    def __init__(self, scenario_num, policy, model_param, training_param, tb_logger):
+    def __init__(self, n_vehicles, policy, model_param, training_param, tb_logger):
         # ...
-        scenario = sim_types(scenario_num=scenario_num, policy=policy)
+        scenario = sim_type(policy=policy, n_vehicles=n_vehicles)
         self.sim = Simulation(scenario)
         self.policy = policy
         # Create object for data logging and visualisation
@@ -165,7 +165,7 @@ class Main(object):
                 running_reward = 0.05 * reward + (1 - 0.05) * running_reward
 
 
-            if episode_count % 1 == 0 and trained:
+            if episode_count % 10 == 0 and trained:
                 epsilon = self.policy.agent.calc_epsilon()
                 if self.training_param["use_per"]:
                     print_template = "Running reward = {:.3f} ({:.3f}) at episode {}. Loss = {:.3f}. Epsilon = {:.3f}. Beta = {:.3f}. Episode timer = {:.3f}"
@@ -183,15 +183,19 @@ class Main(object):
                 # training_var = (episode_list, running_reward_list, loss_list)
 
             # Save episode training variables to tensorboard
-            self.tb_logger.save_histogram("Episode mean batch rewards", x=episode_count, y=episode_mean_batch_rewards)
-            self.tb_logger.save_histogram("Episode losses", x=episode_count, y=episode_losses)
-            self.tb_logger.save_histogram("Episode TD errors", x=episode_count, y=episode_td_errors)
-            self.tb_logger.save_variable("Total episode reward (sum)", x=episode_count, y=np.sum(episode_reward_list))
+            # TODO Variable to add logging of extended variables if needed
+            # self.tb_logger.save_histogram("Episode mean batch rewards", x=episode_count, y=episode_mean_batch_rewards)
+            # self.tb_logger.save_histogram("Episode losses", x=episode_count, y=episode_losses)
+            # self.tb_logger.save_histogram("Episode TD errors", x=episode_count, y=episode_td_errors)
+            self.tb_logger.save_variable("Episode mean batch rewards (sum)", x=episode_count, y=np.sum(episode_mean_batch_rewards))
+            self.tb_logger.save_variable("Episode losses (sum)", x=episode_count, y=np.sum(episode_losses))
+            self.tb_logger.save_variable("Episode TD errors (sum)", x=episode_count, y=np.sum(episode_td_errors))
+            # self.tb_logger.save_variable("Total episode reward (sum)", x=episode_count, y=np.sum(episode_reward_list))
             self.tb_logger.save_variable("Mean episode reward", x=episode_count, y=np.sum(episode_reward_list)/len(episode_reward_list))
-            self.tb_logger.save_variable("Running reward", x=episode_count, y=running_reward)
+            # self.tb_logger.save_variable("Running reward", x=episode_count, y=running_reward)
             self.tb_logger.save_variable("Total time taken for episode", x=episode_count, y=time_taken_episode)
-            self.tb_logger.save_variable("Total time taken for custom action", x=episode_count, y=custom_action_time)
-            self.tb_logger.save_variable("Total time taken for training iteration", x=episode_count, y=train_time)
+            # self.tb_logger.save_variable("Total time taken for custom action", x=episode_count, y=custom_action_time)
+            # self.tb_logger.save_variable("Total time taken for training iteration", x=episode_count, y=train_time)
             self.tb_logger.save_variable("Mean vehicle speed for episode", x=episode_count, y=np.mean(vehicle_speeds))
             if self.training_param["use_per"]:
                 self.tb_logger.save_variable("Beta increment", x=episode_count, y=self.policy.agent.buffer.beta)
@@ -199,10 +203,10 @@ class Main(object):
 
             # Save model weights and biases and gradients of backprop.
             # TODO fix deepset model so that we can save layer names
-            self.tb_logger.save_weights_gradients(episode=episode_count,
-                                             model=self.policy.agent.Q_actual_net,
-                                             grads=grads,
-                                             clipped_grads=clipped_grads)
+            # self.tb_logger.save_weights_gradients(episode=episode_count,
+            #                                  model=self.policy.agent.Q_actual_net,
+            #                                  grads=grads,
+            #                                  clipped_grads=clipped_grads)
 
 
 
@@ -248,11 +252,13 @@ class Main(object):
             self.policy.agent.training = True
 
 
-def sim_types(scenario_num, policy):
-    # TODO make variation in sims
+def sim_type(policy, n_vehicles):
     # Randomised highway
-    sim_config_0 = {
-        "name": "AC_policy_dense_highway",
+    n_slow_veh = n_vehicles["slow"]
+    n_normal_veh = n_vehicles["medium"]
+    n_fast_veh = n_vehicles["fast"]
+    sim_config = {
+        "name": "Dense_Highway_Circuit",
         "scenario": "CIRCUIT",
         # "kM": 0,  # Max timesteps per episode enforced by simulator
         "k0": 0,
@@ -263,142 +269,32 @@ def sim_types(scenario_num, policy):
             # {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
             # {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
             # {"model": KBModel(), "policy": FixedLanePolicy(18), "R": 0, "l": 3.6, "s": random.random()*200, "v": 18},
-            {"amount": 5, "model": KBModel(), "policy": BasicPolicy("slow")},
-            {"amount": 15, "model": KBModel(), "policy": BasicPolicy("normal")},
-            {"amount": 5, "model": KBModel(), "policy": BasicPolicy("fast")}
+            {"amount": n_slow_veh, "model": KBModel(), "policy": BasicPolicy("slow")},
+            {"amount": n_normal_veh, "model": KBModel(), "policy": BasicPolicy("normal")},
+            {"amount": n_fast_veh, "model": KBModel(), "policy": BasicPolicy("fast")}
         ]
     }
-
-    # TODO Add additional randomness to fixedlane policy
-    lane = random.randint(-1, 1)*3.6
-    # Empty highway without cars
-    sim_config_1 = {
-        "name": "AC_policy_no_cars",
-        "scenario": "CIRCUIT",
-        # "kM": 0,  # Max timesteps per episode enforced by simulator
-        "k0": 0,
-        "replay": False,
-        "vehicles": [
-            {"amount": 1, "model": KBModel(), "policy": policy, "R": 0, "l": lane, "s": 0, "v": np.random.random(1)*30.0, "D_MAX": 160},
-            # {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": lane, "s": 30, "v": 28},
-        ]
-    }
-
-    # Single car overtake
-    sim_config_2 = {
-        "name": "AC_policy_single_overtake",
-        "scenario": "CIRCUIT",
-        # "kM": 0,  # Max timesteps per episode enforced by simulator
-        "k0": 0,
-        "replay": False,
-        "vehicles": [
-            {"model": KBModel(), "policy": policy, "R": 0, "l": 0, "s": 0,
-             "v": random.randint(25, 28), "D_MAX": 160},
-            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 0, "s": 50, "v": 28},
-            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 50, "v": 28},
-            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 3.6, "s": 120, "v": 28},
-            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 0, "s": 140, "v": 28},
-            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 140, "v": 28},
-            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": -3.6, "s": 300, "v": 28},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 120, "v": 24},
-            {"model": KBModel(), "policy": FixedLanePolicy(28), "R": 0, "l": 0, "s": 300, "v": 28}
-        ]
-    }
-
-    # Double car overtake
-    sim_config_3 = {
-        "name": "AC_policy_double_overtake",
-        "scenario": "CIRCUIT",
-        # "kM": 0,  # Max timesteps per episode enforced by simulator
-        "k0": 0,
-        "replay": False,
-        "vehicles": [
-            {"model": KBModel(), "policy": policy, "R": 0, "l": 3.6, "s": 0,
-             "v": random.randint(25, 28), "D_MAX": 160},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 40, "v": 24},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 50, "v": 24},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 150, "v": 24},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 125, "v": 24}
-        ]
-    }
-
-    # Slow down car overtake right
-    sim_config_4 = {
-        "name": "AC_policy_slow_down_overtake_right",
-        "scenario": "CIRCUIT",
-        # "kM": 0,  # Max timesteps per episode enforced by simulator
-        "k0": 0,
-        "replay": False,
-        "vehicles": [
-            {"model": KBModel(), "policy": policy, "R": 0, "l": 3.6, "s": 0,
-             "v": random.randint(25, 28), "D_MAX": 160},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 20, "v": 24},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 0, "v": 24}
-        ]
-    }
-
-    # Slow down car overtake left
-    sim_config_5 = {
-        "name": "AC_policy_slow_down_overtake_left",
-        "scenario": "CIRCUIT",
-        # "kM": 0,  # Max timesteps per episode enforced by simulator
-        "k0": 0,
-        "replay": False,
-        "vehicles": [
-            {"model": KBModel(), "policy": policy, "R": 0, "l": -3.6, "s": 0,
-             "v": random.randint(25, 28), "D_MAX": 160},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 20, "v": 24},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 10, "v": 24}
-        ]
-    }
-
-    # Boxed in performance
-    sim_config_6 = {
-        "name": "AC_policy_boxed_in",
-        "scenario": "CIRCUIT",
-        # "kM": 0,  # Max timesteps per episode enforced by simulator
-        "k0": 0,
-        "replay": False,
-        "vehicles": [
-            {"model": KBModel(), "policy": policy, "R": 0, "l": 0, "s": 0,
-             "v": random.randint(25, 28), "D_MAX": 160},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": 20, "v": 24},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 0, "s": 20, "v": 24},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 20, "v": 24},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": -3.6, "s": -5, "v": 24},
-            {"model": KBModel(), "policy": FixedLanePolicy(24), "R": 0, "l": 3.6, "s": 0, "v": 24},
-        ]
-    }
-
-    sim_config = [
-        sim_config_0,
-        sim_config_1,
-        sim_config_2,
-        sim_config_3,
-        sim_config_4,
-        sim_config_5,
-        sim_config_6
-    ]
-
-    return sim_config[scenario_num]
+    return sim_config
 
 def start_run(arg1, arg2):
     # Start training loop using given arguments here..
-    LOG_DIR = "logs"
     ROOT = pathlib.Path(__file__).resolve().parents[2]
     SC_PATH = ROOT.joinpath("scenarios/scenarios.h5")
     config.scenarios_path = str(SC_PATH)
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d - %Hh%Mm%Ss")
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d-%Hh%Mm")
 
     # TODO CHECK that seeds are random in parallel processing
     SEED = arg2
     RUN_TYPE = "train"  # "Test"
-    RUN_INFO = "Testing parallel process 0"
-    SAVE_DIRECTORY = "logfiles/tb/" + current_time + " - Seed" + str(SEED) + " - Details = " + str(RUN_INFO)
+    RUN_NAME = "DDQN_ER_initialisers"
+    RUN_INFO = arg1
+    SAVE_DIRECTORY = "logfiles/" + RUN_NAME + "/" + current_time + "-Seed" + str(SEED) + "-Details=" + str(RUN_INFO)
     run_settings = {
         "run_type": RUN_TYPE,
+        "run_name": RUN_NAME,
         "run_info": RUN_INFO,
-        "save_directory": SAVE_DIRECTORY
+        "save_directory": SAVE_DIRECTORY,
+        "n_vehicles": {"slow": 5, "medium": 15, "fast": 5}
     }
 
     # TODO check that hwsim config seed is set properly
@@ -411,13 +307,15 @@ def start_run(arg1, arg2):
     N_INPUTS = 55
     N_ACTIONS = 5
     ACT_FUNC = tf.nn.relu
+    initialiser = arg1
     N_STACKED_TIMESTEPS = 2
-    MODEL_FILE_PATH = "./models/model_weights"
+    MODEL_FILE_PATH = SAVE_DIRECTORY+"/model_weights"
     model_param = {
         "n_units": N_UNITS,
         "n_inputs": N_INPUTS,
         "n_actions": N_ACTIONS,
         "activation_function": ACT_FUNC,
+        "initialiser": initialiser,
         "weights_file_path": MODEL_FILE_PATH,
         "seed": SEED,
         # TODO add parameters for the tuning of the deepset
@@ -445,21 +343,20 @@ def start_run(arg1, arg2):
     }
 
     # Training parameters:
-    POLICY_ACTION_RATE = 8  # Number of simulator steps before new control action is taken
+    POLICY_ACTION_RATE = 10  # Number of simulator steps before new control action is taken
     MAX_TIMESTEPS = 5e3  # range: 5e3 - 10e3
-    MAX_EPISODES = 3000
-    FINAL_RETURN = 0.91
+    MAX_EPISODES = 1500
+    FINAL_RETURN = 1
     SHOW_TRAIN_PLOTS = False
     SAVE_TRAINING = True
     LOG_FREQ = 0  # TODO implement log frequency
     PLOT_FREQ = 50
     SIM_TIMESTEPS = 200
-    SCENARIO_NUM = 0  # 0-random_policies, 1-empty, 2-single_overtake, 3-double_overtake, etc.
     BUFFER_SIZE = 300000
     BATCH_SIZE = 32  # range: 32 - 150
     EPSILON_MIN = 1.0  # Exploration
     EPSILON_MAX = 0.1  # Exploitation
-    DECAY_RATE = 0.99995  # 0.999992
+    DECAY_RATE = 0.999982  # 0.999992
     MODEL_UPDATE_RATE = 1
     TARGET_UPDATE_RATE = 10e4
     LEARN_RATE = 0.0001  # range: 1e-3 - 1e-4
@@ -470,7 +367,7 @@ def start_run(arg1, arg2):
     CLIP_NORM = 2
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
     REWARD_WEIGHTS = np.array([1.0, 0.15, 0.8, 0.4, -5])
-    STANDARDISE_RETURNS = True  # TODO additional variable for SPG
+    STANDARDISE_RETURNS = True
     USE_PER = False
     ALPHA = 0.75  # Priority scale: a=0:random, a=1:completely based on priority
     BETA = 0.2  # Prioritisation factor
@@ -562,11 +459,16 @@ def start_run(arg1, arg2):
 
     # RewardFunction().plot_reward_functions()
 
+    # TODO check LSTM inputs dimensions to and from buffers and to and from models
+    # TODO check deepset dimensions to and from buffers and to and from models
+    # TODO check CNN dimensions to and from buffers and to and from models
+    # TODO tune deepset, CNN, lstm
+    # TODO add CNN mean/max pooling layers
     # TODO ensure all models have the same initialisation
     # TODO check batch normalisation for all the models
     # TODO check to make sure that deepset doesnt need tanh + batch norm ... tanh on other models too
     # Set up main class for running simulations:
-    main = Main(scenario_num=SCENARIO_NUM,
+    main = Main(n_vehicles=run_settings["n_vehicles"],
                 policy=dqn_policy,
                 model_param=model_param,
                 training_param=training_param,
@@ -604,9 +506,10 @@ if __name__=="__main__":
 
     def param_gen():
         # This function yields all the parameter combinations to try
-        for arg1 in ("DDQN"):
-            for arg2 in (100, 200, 300, 400, 500):
-                yield arg1, arg2
+        for arg1 in ("he", "glorot", "uniform", "none"):
+            # for item in np.arange(5):
+            arg2 = 500 # np.random.randint(1, 5000)
+            yield arg1, arg2
 
 
     if procs > 1:

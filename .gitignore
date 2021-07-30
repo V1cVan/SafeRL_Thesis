@@ -13,4 +13,5 @@ CMakeLists.txt
 readme.md
 python/examples/*
 python/hwsim/*
+python/implementation/logfiles
 CMakeLists.txt
