@@ -18,6 +18,7 @@ class DqnAgent(keras.models.Model):
         self.tb_logger = tb_logger
 
         self.latest_experience = None
+        self.latest_reward = 0
         self.is_action_taken = False
         self.Q_target_net = network
         self.Q_actual_net = network

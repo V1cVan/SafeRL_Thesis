@@ -2,12 +2,13 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
 import tensorboard as tb
-from tensorboard.backend.event_processing import event_multiplexer
+
 
 """
 For uploading experiment to Tensorboard:
-    tensorboard dev upload --logdir=="./logfiles/DDQN_ER_initialisers \
-        --name "Name of the experiment" \
+    tensorboard dev upload 
+        --logdir=="./logfiles/TRAIN OR TEST/experiment 
+        --name "Name of the experiment" 
         --description "Description of the experiment"
 
 For listing all the experiments you have done: 
@@ -19,24 +20,28 @@ For deleting experiment from Tensorboard:
 
 if __name__ == "__main__":
     experiment_ids = {
-        "DDQN_ER_initialisers": "8viGslanQLWtMaORGizRaQ"
+        "DDQN_ER_initialisers": "8viGslanQLWtMaORGizRaQ",
+        "DDQN_ER_tuning": "FBSk7V7QSWG3vrIYvdEG9A"
     }
     experiment_paths = {
-        "DDQN_ER_initialisers": "./logfiles/DDQN_ER_initialisers"
+        "DDQN_ER_initialisers": "./logfiles/DDQN_ER_initialisers",
+        "DDQN_ER_tuning": "./logfiles/DDQN_ER_tuning"
     }
 
     experiment_names = list(experiment_ids.keys())
 
-    experiment_id = experiment_ids["DDQN_ER_initialisers"]
+    experiment_id = experiment_ids["DDQN_ER_tuning"]
     experiment = tb.data.experimental.ExperimentFromDev(experiment_id)
     results = experiment.get_scalars(pivot=True)
 
 
-    csv_path = experiment_paths["DDQN_ER_initialisers"] + "./" + experiment_names[0] + '.csv'
+    csv_path = experiment_paths["DDQN_ER_tuning"] + "./" + experiment_names[0] + '.csv'
     results.to_csv(csv_path, index=False)
     results_df = pd.read_csv(csv_path)
     pd.testing.assert_frame_equal(results_df, results)
     print("Keys for dataframe: " + results_df.keys())
+
+    # TODO manage to group the runs as sub-column-headings under main headings being td-errors etc.
 
     td_errors_df = results_df[["run", "step", "Episode TD errors (sum)"]]
     losses_df = results_df[["run", "step", "Episode losses (sum)"]]

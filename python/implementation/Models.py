@@ -9,6 +9,8 @@ class LSTM_DRQN(keras.Model):
     """
     Builds a LSTM, recurrent model to learn temporal relationships between states.
     """
+    # TODO batch norm layer?
+    # TODO parameters for tuning the lstm network easily
     def __init__(self, model_param):
         super(LSTM_DRQN, self).__init__()
         self.model_param = model_param
@@ -25,7 +27,10 @@ class LSTM_DRQN(keras.Model):
         dense_layer1 = layers.Dense(units=n_units[1], activation=act_func, name="dense1")(LSTM_layer)
         dense_layer2 = layers.Dense(units=n_units[2], activation=act_func, name="dense3")(dense_layer1)
         output_layer = layers.Dense(n_actions, name="Output")(dense_layer2)
-        self.model = keras.Model(inputs=input_layer, outputs=output_layer, name="LSTM_DRQN")
+        self.model = keras.Model(inputs=input_layer,
+                                 outputs=output_layer,
+                                 trainable=self.model_param["trainable"],
+                                 name="LSTM_DRQN")
         self.display_overview()
 
     @tf.function
@@ -56,9 +61,9 @@ class CNN(keras.Model):
         n_inputs = model_param["n_inputs"]
         n_actions = model_param["n_actions"]
 
+        # TODO mean pooling layers + parameters for tuning easily
         # TODO add number of conv layers to model_params for easier tuning
         # TODO add n_filters, conv_width(kernel_size) to model_params
-        # Pooling layers? ??
 
         self.cnn_config = model_param["cnn_param"]["config"]
         n_inputs_static = 7
@@ -133,8 +138,9 @@ class CNN(keras.Model):
         self.output_layer = layers.Dense(n_actions)(self.Q_layer_2)
 
         self.model = keras.Model(inputs=[self.dynamic_input_layer, self.static_input_layer],
-                                         outputs=self.output_layer,
-                                         name="CNN_DQN")
+                                 outputs=self.output_layer,
+                                 trainable=self.model_param["trainable"],
+                                 name="CNN_DQN")
 
         self.display_overview()
 
@@ -168,49 +174,83 @@ class DeepSetQNetwork(keras.Model):
         tf.random.set_seed(model_param["seed"])
         np.random.seed(model_param["seed"])
         act_func = model_param["activation_function"]
-        # TODO Add n_units for deepset parts of network to the main script to change network size easily
+        # TODO mean pooling layer option on top of sum pooling layer
         n_units = model_param["n_units"]
-        n_units_phi = [16, 32]
-        n_units_rho = [32, 16]
+        n_units_phi = model_param["deepset_param"]["n_units_phi"]
+        n_units_rho = model_param["deepset_param"]["n_units_rho"]
         n_inputs_static = 7
         n_inputs_dynamic = 4
         n_vehicles = 12  # Defined by default D_max size
         n_actions = model_param["n_actions"]
 
-        he = tf.keras.initializers.HeUniform()
-
         self.static_input_layer = layers.Input(shape=(n_inputs_static), name="StaticStateInput")
         self.dynamic_input_layer = layers.Input(shape=tf.TensorShape([n_vehicles, n_inputs_dynamic]), name="DynamicStateInput")
 
-        self.phi_layer_1 = layers.Dense(n_units_phi[0], activation=act_func, kernel_initializer=he, name="PhiLayer1")(
-            self.dynamic_input_layer)
-        self.phi_layer_2 = layers.Dense(n_units_phi[1], activation=act_func, kernel_initializer=he, name="PhiLayer2")(
-            self.phi_layer_1)
+        if len(n_units_phi) == 3:
+            self.phi_layer_1 = layers.Dense(n_units_phi[0], activation=act_func, name="PhiLayer1")(
+                self.dynamic_input_layer)
+            self.phi_layer_2 = layers.Dense(n_units_phi[1], activation=act_func, name="PhiLayer2")(
+                self.phi_layer_1)
+            self.phi_layer_3 = layers.Dense(n_units_phi[2], activation=act_func, name="PhiLayer3")(
+                self.phi_layer_2)
+            self.sum_layer = layers.Add(name="Summation_layer")([self.phi_layer_3[:, 0, :],
+                                                                 self.phi_layer_3[:, 1, :],
+                                                                 self.phi_layer_3[:, 2, :],
+                                                                 self.phi_layer_3[:, 3, :],
+                                                                 self.phi_layer_3[:, 4, :],
+                                                                 self.phi_layer_3[:, 5, :],
+                                                                 self.phi_layer_3[:, 6, :],
+                                                                 self.phi_layer_3[:, 7, :],
+                                                                 self.phi_layer_3[:, 8, :],
+                                                                 self.phi_layer_3[:, 9, :],
+                                                                 self.phi_layer_3[:, 10, :],
+                                                                 self.phi_layer_3[:, 11, :]])
+        else:
+            self.phi_layer_1 = layers.Dense(n_units_phi[0], activation=act_func, name="PhiLayer1")(
+                self.dynamic_input_layer)
+            self.phi_layer_2 = layers.Dense(n_units_phi[1], activation=act_func, name="PhiLayer2")(
+                self.phi_layer_1)
+            self.sum_layer = layers.Add(name="Summation_layer")([self.phi_layer_2[:,0,:],
+                                                                 self.phi_layer_2[:,1,:],
+                                                                 self.phi_layer_2[:,2,:],
+                                                                 self.phi_layer_2[:,3,:],
+                                                                 self.phi_layer_2[:,4,:],
+                                                                 self.phi_layer_2[:,5,:],
+                                                                 self.phi_layer_2[:,6,:],
+                                                                 self.phi_layer_2[:,7,:],
+                                                                 self.phi_layer_2[:,8,:],
+                                                                 self.phi_layer_2[:,9,:],
+                                                                 self.phi_layer_2[:,10,:],
+                                                                 self.phi_layer_2[:,11,:]])
 
-        self.sum_layer = layers.Add(name="Summation_layer")([self.phi_layer_2[:,0,:],
-                                       self.phi_layer_2[:,1,:],
-                                       self.phi_layer_2[:,2,:],
-                                       self.phi_layer_2[:,3,:],
-                                       self.phi_layer_2[:,4,:],
-                                       self.phi_layer_2[:,5,:],
-                                       self.phi_layer_2[:,6,:],
-                                       self.phi_layer_2[:,7,:],
-                                       self.phi_layer_2[:,8,:],
-                                       self.phi_layer_2[:,9,:],
-                                       self.phi_layer_2[:,10,:],
-                                       self.phi_layer_2[:,11,:]])
+        if len(n_units_rho) == 3:
+            self.rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func, name="rhoLayer1")(self.sum_layer)
+            self.rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func, name="rhoLayer2")(self.rho_layer_1)
+            self.rho_layer_3 = layers.Dense(n_units_rho[2], activation=act_func, name="rhoLayer3")(self.rho_layer_2)
+            if model_param["batch_normalisation"] == True:
+                self.batch_norm_layer = layers.BatchNormalization(name="batch_norm")(self.rho_layer_3)
+                self.concat_layer = layers.Concatenate(name="ConcatenationLayer")(
+                    [self.batch_norm_layer, self.static_input_layer])
+            else:
+                self.concat_layer = layers.Concatenate(name="ConcatenationLayer")(
+                    [self.rho_layer_3, self.static_input_layer])
+        else:
+            self.rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func, name="rhoLayer1")(self.sum_layer)
+            self.rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func, name="rhoLayer2")(self.rho_layer_1)
+            if model_param["batch_normalisation"]==True:
+                self.batch_norm_layer = layers.BatchNormalization(name="batch_norm")(self.rho_layer_2)
+                self.concat_layer = layers.Concatenate(name="ConcatenationLayer")(
+                    [self.batch_norm_layer, self.static_input_layer])
+            else:
+                self.concat_layer = layers.Concatenate(name="ConcatenationLayer")([self.rho_layer_2, self.static_input_layer])
 
-        self.rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func, kernel_initializer=he, name="rhoLayer1")(self.sum_layer)
-        self.rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func, kernel_initializer=he, name="rhoLayer2")(self.rho_layer_1)
-
-        self.concat_layer = layers.Concatenate(name="ConcatenationLayer")([self.rho_layer_2, self.static_input_layer])
-
-        self.Q_layer_1 = layers.Dense(n_units[0], activation=act_func, kernel_initializer=he, name="QLayer1")(self.concat_layer)
-        self.Q_layer_2 = layers.Dense(n_units[1], activation=act_func, kernel_initializer=he, name="QLayer2")(self.Q_layer_1)
+        self.Q_layer_1 = layers.Dense(n_units[0], activation=act_func, name="QLayer1")(self.concat_layer)
+        self.Q_layer_2 = layers.Dense(n_units[1], activation=act_func, name="QLayer2")(self.Q_layer_1)
 
         self.output_layer = layers.Dense(n_actions)(self.Q_layer_2)
 
         self.model = keras.Model(inputs=[self.dynamic_input_layer, self.static_input_layer],
+                                 trainable=self.model_param["trainable"],
                                  outputs=self.output_layer,
                                  name="Deepset_DDQN")
 
@@ -245,59 +285,45 @@ class DeepQNetwork(keras.Model):
         n_inputs = model_param["n_inputs"]
         n_actions = model_param["n_actions"]
 
-        initialiser_name = model_param["initialiser"]
-        if initialiser_name == "he":
-            initialiser = tf.keras.initializers.HeUniform()
-        elif initialiser_name == "glorot":
-            initialiser = tf.keras.initializers.GlorotUniform()
-        elif initialiser_name == "uniform":
-            initialiser = tf.keras.initializers.RandomUniform(minval=-0.01, maxval=0.01)
-        var_scale = tf.keras.initializers.VarianceScaling(scale=2.0, mode='fan_in', distribution='truncated_normal')
-
-        if initialiser_name == "none":
-            input_layer = layers.Input(shape=(n_inputs,),
-                                       name="inputState")
+        input_layer = layers.Input(shape=(n_inputs,),
+                                   name="inputState")
+        if len(n_units) == 2:
             dense_layer1 = layers.Dense(units=n_units[0],
                                         activation=act_func,
                                         name='dense1')(input_layer)
             dense_layer2 = layers.Dense(units=n_units[1],
                                         activation=act_func,
                                         name='dense2')(dense_layer1)
-            dense_layer3 = layers.Dense(units=n_units[2],
-                                        activation=act_func,
-                                        name='dense3')(dense_layer2)
-            output_layer = layers.Dense(n_actions,
-                                        name="Output")(dense_layer3)
-            self.model = keras.Model(inputs=input_layer,
-                                     outputs=output_layer,
-                                     name="DDQN")
-            self.display_overview()
+            if model_param["batch_normalisation"] == True:
+                normalisation_layer = layers.BatchNormalization()(dense_layer2)
+                output_layer = layers.Dense(n_actions,
+                                            name="Output")(normalisation_layer)
+            else:
+                output_layer = layers.Dense(n_actions,
+                                            name="Output")(dense_layer2)
         else:
-            input_layer = layers.Input(shape=(n_inputs,),
-                                       name="inputState")
-
             dense_layer1 = layers.Dense(units=n_units[0],
                                         activation=act_func,
-                                        kernel_initializer=initialiser,
                                         name='dense1')(input_layer)
             dense_layer2 = layers.Dense(units=n_units[1],
                                         activation=act_func,
-                                        kernel_initializer=initialiser,
                                         name='dense2')(dense_layer1)
             dense_layer3 = layers.Dense(units=n_units[2],
                                         activation=act_func,
-                                        kernel_initializer=initialiser,
                                         name='dense3')(dense_layer2)
-            output_layer = layers.Dense(n_actions,
-                                        name="Output",
-                                        kernel_initializer=var_scale,
-                                        bias_initializer=tf.keras.initializers.Constant(0))(dense_layer3)
+            if model_param["batch_normalisation"] == True:
+                normalisation_layer = layers.BatchNormalization(name="batch_norm")(dense_layer3)
+                output_layer = layers.Dense(n_actions,
+                                            name="Output")(normalisation_layer)
+            else:
+                output_layer = layers.Dense(n_actions,
+                                            name="Output")(dense_layer3)
 
-            self.model = keras.Model(inputs=input_layer,
-                                     outputs=output_layer,
-                                     name="DDQN")
-
-            self.display_overview()
+        self.model = keras.Model(inputs=input_layer,
+                                 outputs=output_layer,
+                                 trainable=self.model_param["trainable"],
+                                 name="DDQN")
+        self.display_overview()
 
     @tf.function
     def call(self, inputs: tf.Tensor):
@@ -327,25 +353,19 @@ class DuellingDqnNetwork(keras.Model):
         n_inputs = model_param["n_inputs"]
         n_actions = model_param["n_actions"]
 
-        he = tf.keras.initializers.HeUniform()
-        glorot = tf.keras.initializers.GlorotUniform()
-        normal = tf.keras.initializers.RandomUniform(minval=-0.01, maxval=0.01)
-        var_scale = tf.keras.initializers.VarianceScaling(scale=2.0, mode='fan_in', distribution='truncated_normal')
 
         input_layer = layers.Input(shape=(n_inputs,),
                                    name="inputStateLayer")
 
-        dense_layer1 = self.dense_layer(num_units=n_units[0],
-                                        initialiser=he,
-                                        act_func=act_func)(input_layer)
-        dense_layer2 = self.dense_layer(num_units=n_units[1],
-                                        initialiser=he,
-                                        act_func=act_func)(dense_layer1)
-        dense_layer3 = self.dense_layer(num_units=n_units[2],
-                                        initialiser=he,
-                                        act_func=act_func)(dense_layer2)
-
-        value_layer, advantage_layer = layers.Lambda(lambda w: tf.split(w, 2, 1))(dense_layer3)
+        if len(n_units) == 2:
+            dense_layer1 = layers.Dense(n_units[0], activation=act_func)(input_layer)
+            dense_layer2 = layers.Dense(n_units[1], activation=act_func)(dense_layer1)
+            value_layer, advantage_layer = layers.Lambda(lambda w: tf.split(w, 2, 1))(dense_layer2)
+        else:
+            dense_layer1 = layers.Dense(n_units[0], activation=act_func)(input_layer)
+            dense_layer2 = layers.Dense(n_units[1], activation=act_func)(dense_layer1)
+            dense_layer3 = layers.Dense(n_units[2], activation=act_func)(dense_layer2)
+            value_layer, advantage_layer = layers.Lambda(lambda w: tf.split(w, 2, 1))(dense_layer3)
 
         value_layer = layers.Dense(1)(value_layer)
         advantage_layer = layers.Dense(n_actions)(advantage_layer)
@@ -357,13 +377,9 @@ class DuellingDqnNetwork(keras.Model):
 
         self.model = keras.Model(inputs=input_layer,
                                  outputs=output_layer,
+                                 trainable=self.model_param["trainable"],
                                  name="DuellingDQN")
 
-    def dense_layer(self, num_units, act_func, initialiser):
-        return layers.Dense(
-            num_units,
-            activation=act_func,
-            kernel_initializer=initialiser)
 
     def display_overview(self):
         """ Displays an overview of the model. """
@@ -380,141 +396,141 @@ class DuellingDqnNetwork(keras.Model):
         return y
 
 
-class AcNetworkSingleAction(keras.Model):
-    """
-    Neural network architecture for the actor and critic.
-    Actor and critic networks are separate.
-    Actions feed into critic network.
-    Single action output for combinations of steering and velocity commands.
-    """
-    def __init__(self, model_param):
-        super(AcNetworkSingleAction, self).__init__()
-        self.model_param = model_param
-        tf.random.set_seed(model_param["seed"])
-        np.random.seed(model_param["seed"])
-        act_func = model_param["activation_function"]
-        n_units = model_param["n_units"]
-        n_inputs = model_param["n_inputs"]
-        n_actions = model_param["n_actions"]
-
-        he = tf.keras.initializers.HeUniform()
-        glorot = tf.keras.initializers.GlorotUniform()
-        normal = tf.keras.initializers.RandomUniform(minval=-0.01, maxval=0.01)
-        var_scale = tf.keras.initializers.VarianceScaling(scale=2.0, mode='fan_in', distribution='truncated_normal')
-
-        input_layer = layers.Input(shape=(n_inputs,),
-                                   name="inputStateLayer")
-
-        # Actor net:
-        dense_actor_layer1 = self.dense_layer(num_units=n_units[0], init=he, act_func=act_func)(input_layer)
-        dense_actor_layer2 = self.dense_layer(num_units=n_units[1], init=he, act_func=act_func)(dense_actor_layer1)
-        output_action_layer = layers.Dense(n_actions,
-                                           name="OutputActionLayer",
-                                           activation=tf.nn.softmax,
-                                           kernel_initializer=var_scale,
-                                           bias_initializer=tf.keras.initializers.Constant(0))(dense_actor_layer2)
-
-        # Critic net:
-        dense_critic_layer1 = self.dense_layer(num_units=n_units[0], init=he, act_func=act_func)(
-            layers.concatenate([output_action_layer, input_layer]))
-        dense_critic_layer2 = self.dense_layer(num_units=n_units[1], init=he, act_func=act_func)(dense_critic_layer1)
-        output_layer_critic = layers.Dense(1, name="OutputLayerCritic")(dense_critic_layer2)
-
-        self.model = keras.Model(inputs=input_layer,
-                                 outputs=[output_action_layer, output_layer_critic],
-                                 name="ActorCriticNetworkSingleAction")
-
-        self.display_overview()
-
-    def dense_layer(self, num_units, act_func, init):
-        return layers.Dense(
-            num_units,
-            activation=act_func,
-            kernel_initializer=init)
-
-    @tf.function
-    def call(self, inputs: tf.Tensor):
-        """ Returns the output of the model given an input. """
-        return self.model(inputs)
-
-    def display_overview(self):
-        """ Displays an overview of the model. """
-        self.model.summary()
-        keras.utils.plot_model(self.model,
-                               show_shapes=True,
-                               show_layer_names=True,
-                               to_file='./models/ActorCriticNetworkSingleAction.png')
-
-
-class AcNetworkDoubleAction(keras.Model):
-    """
-    Neural network architecture for the actor and critic.
-    Actor and critic networks are separate.
-    Actions feed into critic network.
-    Actor network has two actions, one for steering and one for velocity.
-    """
-    def __init__(self, model_param):
-        super(AcNetworkDoubleAction, self).__init__()
-        self.model_param = model_param
-        tf.random.set_seed(model_param["seed"])
-        np.random.seed(model_param["seed"])
-        act_func = model_param["activation_function"]
-        n_units = model_param["n_units"]
-        n_inputs = model_param["n_inputs"]
-        n_actions = model_param["n_actions"]
-
-        he = tf.keras.initializers.HeUniform()
-        glorot = tf.keras.initializers.GlorotUniform()
-        normal = tf.keras.initializers.RandomUniform(minval=-0.01, maxval=0.01)
-        var_scale = tf.keras.initializers.VarianceScaling(scale=2.0, mode='fan_in', distribution='truncated_normal')
-
-        input_layer = layers.Input(shape=(n_inputs,),
-                                   name="inputStateLayer")
-
-        # Actor net:
-        dense_actor_layer1 = self.dense_layer(num_units=n_units[0], init=he, act_func=act_func)(input_layer)
-        dense_actor_layer2 = self.dense_layer(num_units=n_units[1], init=he, act_func=act_func)(dense_actor_layer1)
-        output_velocity_layer = layers.Dense(3,
-                                             name="OutputVelocityLayer",
-                                             activation=tf.nn.softmax,
-                                             kernel_initializer=var_scale,
-                                             bias_initializer=tf.keras.initializers.Constant(0))(dense_actor_layer2)
-        output_steering_layer = layers.Dense(3,
-                                             name="OutputSteeringLayer",
-                                             activation=tf.nn.softmax,
-                                             kernel_initializer=var_scale,
-                                             bias_initializer=tf.keras.initializers.Constant(0))(dense_actor_layer2)
-
-        # Critic net:
-        dense_critic_layer1 = self.dense_layer(num_units=n_units[0], init=he, act_func=act_func)(input_layer)
-        dense_critic_layer2 = self.dense_layer(num_units=n_units[1], init=he, act_func=act_func)(
-            layers.concatenate([output_velocity_layer, output_steering_layer, dense_critic_layer1]))
-        output_critic_layer = layers.Dense(1, name="OutputLayerCritic")(dense_critic_layer2)
-
-        self.model = keras.Model(inputs=input_layer,
-                                 outputs=[output_velocity_layer, output_steering_layer, output_critic_layer],
-                                 name="ActorCriticNetworkDoubleActions")
-
-        self.display_overview()
-
-    def dense_layer(self, num_units, act_func, init):
-        return layers.Dense(
-            num_units,
-            activation=act_func,
-            kernel_initializer=init)
-
-    @tf.function
-    def call(self, inputs: tf.Tensor):
-        """ Returns the output of the model given an input. """
-        return self.model(inputs)
-
-    def display_overview(self):
-        """ Displays an overview of the model. """
-        self.model.summary()
-        keras.utils.plot_model(self.model,
-                               show_shapes=True,
-                               show_layer_names=True,
-                               to_file='./models/ActorCriticNetworkDoubleActions.png')
+# class AcNetworkSingleAction(keras.Model):
+#     """
+#     Neural network architecture for the actor and critic.
+#     Actor and critic networks are separate.
+#     Actions feed into critic network.
+#     Single action output for combinations of steering and velocity commands.
+#     """
+#     def __init__(self, model_param):
+#         super(AcNetworkSingleAction, self).__init__()
+#         self.model_param = model_param
+#         tf.random.set_seed(model_param["seed"])
+#         np.random.seed(model_param["seed"])
+#         act_func = model_param["activation_function"]
+#         n_units = model_param["n_units"]
+#         n_inputs = model_param["n_inputs"]
+#         n_actions = model_param["n_actions"]
+#
+#         he = tf.keras.initializers.HeUniform()
+#         glorot = tf.keras.initializers.GlorotUniform()
+#         normal = tf.keras.initializers.RandomUniform(minval=-0.01, maxval=0.01)
+#         var_scale = tf.keras.initializers.VarianceScaling(scale=2.0, mode='fan_in', distribution='truncated_normal')
+#
+#         input_layer = layers.Input(shape=(n_inputs,),
+#                                    name="inputStateLayer")
+#
+#         # Actor net:
+#         dense_actor_layer1 = self.dense_layer(num_units=n_units[0], init=he, act_func=act_func)(input_layer)
+#         dense_actor_layer2 = self.dense_layer(num_units=n_units[1], init=he, act_func=act_func)(dense_actor_layer1)
+#         output_action_layer = layers.Dense(n_actions,
+#                                            name="OutputActionLayer",
+#                                            activation=tf.nn.softmax,
+#                                            kernel_initializer=var_scale,
+#                                            bias_initializer=tf.keras.initializers.Constant(0))(dense_actor_layer2)
+#
+#         # Critic net:
+#         dense_critic_layer1 = self.dense_layer(num_units=n_units[0], init=he, act_func=act_func)(
+#             layers.concatenate([output_action_layer, input_layer]))
+#         dense_critic_layer2 = self.dense_layer(num_units=n_units[1], init=he, act_func=act_func)(dense_critic_layer1)
+#         output_layer_critic = layers.Dense(1, name="OutputLayerCritic")(dense_critic_layer2)
+#
+#         self.model = keras.Model(inputs=input_layer,
+#                                  outputs=[output_action_layer, output_layer_critic],
+#                                  name="ActorCriticNetworkSingleAction")
+#
+#         self.display_overview()
+#
+#     def dense_layer(self, num_units, act_func, init):
+#         return layers.Dense(
+#             num_units,
+#             activation=act_func,
+#             kernel_initializer=init)
+#
+#     @tf.function
+#     def call(self, inputs: tf.Tensor):
+#         """ Returns the output of the model given an input. """
+#         return self.model(inputs)
+#
+#     def display_overview(self):
+#         """ Displays an overview of the model. """
+#         self.model.summary()
+#         keras.utils.plot_model(self.model,
+#                                show_shapes=True,
+#                                show_layer_names=True,
+#                                to_file='./models/ActorCriticNetworkSingleAction.png')
+#
+#
+# class AcNetworkDoubleAction(keras.Model):
+#     """
+#     Neural network architecture for the actor and critic.
+#     Actor and critic networks are separate.
+#     Actions feed into critic network.
+#     Actor network has two actions, one for steering and one for velocity.
+#     """
+#     def __init__(self, model_param):
+#         super(AcNetworkDoubleAction, self).__init__()
+#         self.model_param = model_param
+#         tf.random.set_seed(model_param["seed"])
+#         np.random.seed(model_param["seed"])
+#         act_func = model_param["activation_function"]
+#         n_units = model_param["n_units"]
+#         n_inputs = model_param["n_inputs"]
+#         n_actions = model_param["n_actions"]
+#
+#         he = tf.keras.initializers.HeUniform()
+#         glorot = tf.keras.initializers.GlorotUniform()
+#         normal = tf.keras.initializers.RandomUniform(minval=-0.01, maxval=0.01)
+#         var_scale = tf.keras.initializers.VarianceScaling(scale=2.0, mode='fan_in', distribution='truncated_normal')
+#
+#         input_layer = layers.Input(shape=(n_inputs,),
+#                                    name="inputStateLayer")
+#
+#         # Actor net:
+#         dense_actor_layer1 = self.dense_layer(num_units=n_units[0], init=he, act_func=act_func)(input_layer)
+#         dense_actor_layer2 = self.dense_layer(num_units=n_units[1], init=he, act_func=act_func)(dense_actor_layer1)
+#         output_velocity_layer = layers.Dense(3,
+#                                              name="OutputVelocityLayer",
+#                                              activation=tf.nn.softmax,
+#                                              kernel_initializer=var_scale,
+#                                              bias_initializer=tf.keras.initializers.Constant(0))(dense_actor_layer2)
+#         output_steering_layer = layers.Dense(3,
+#                                              name="OutputSteeringLayer",
+#                                              activation=tf.nn.softmax,
+#                                              kernel_initializer=var_scale,
+#                                              bias_initializer=tf.keras.initializers.Constant(0))(dense_actor_layer2)
+#
+#         # Critic net:
+#         dense_critic_layer1 = self.dense_layer(num_units=n_units[0], init=he, act_func=act_func)(input_layer)
+#         dense_critic_layer2 = self.dense_layer(num_units=n_units[1], init=he, act_func=act_func)(
+#             layers.concatenate([output_velocity_layer, output_steering_layer, dense_critic_layer1]))
+#         output_critic_layer = layers.Dense(1, name="OutputLayerCritic")(dense_critic_layer2)
+#
+#         self.model = keras.Model(inputs=input_layer,
+#                                  outputs=[output_velocity_layer, output_steering_layer, output_critic_layer],
+#                                  name="ActorCriticNetworkDoubleActions")
+#
+#         self.display_overview()
+#
+#     def dense_layer(self, num_units, act_func, init):
+#         return layers.Dense(
+#             num_units,
+#             activation=act_func,
+#             kernel_initializer=init)
+#
+#     @tf.function
+#     def call(self, inputs: tf.Tensor):
+#         """ Returns the output of the model given an input. """
+#         return self.model(inputs)
+#
+#     def display_overview(self):
+#         """ Displays an overview of the model. """
+#         self.model.summary()
+#         keras.utils.plot_model(self.model,
+#                                show_shapes=True,
+#                                show_layer_names=True,
+#                                to_file='./models/ActorCriticNetworkDoubleActions.png')
 
 
 
