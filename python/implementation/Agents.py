@@ -11,7 +11,7 @@ class DqnAgent(keras.models.Model):
     double deep q network trainer
     """
 
-    def __init__(self, network, training_param, tb_logger):
+    def __init__(self, network, target_network, training_param, tb_logger):
         super(DqnAgent, self).__init__()
         tf.random.set_seed(training_param["seed"])
         np.random.seed(training_param["seed"])
@@ -20,7 +20,7 @@ class DqnAgent(keras.models.Model):
         self.latest_experience = None
         self.latest_reward = 0
         self.is_action_taken = False
-        self.Q_target_net = network
+        self.Q_target_net = target_network
         self.Q_actual_net = network
         self.reward_weights = training_param["reward_weights"]
         self.training = True

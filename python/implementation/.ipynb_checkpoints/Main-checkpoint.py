@@ -164,7 +164,7 @@ class Main(object):
                 running_reward = 0.05 * reward + (1 - 0.05) * running_reward
 
 
-            if episode_count % 50 == 0 and trained:
+            if episode_count % 25 == 0 and trained:
                 epsilon = self.policy.agent.calc_epsilon()
                 if self.training_param["use_per"]:
                     print_template = "Running reward = {:.3f} ({:.3f}) at episode {}. Loss = {:.3f}. Epsilon = {:.3f}. Beta = {:.3f}. Episode timer = {:.3f}"
@@ -186,15 +186,16 @@ class Main(object):
             # self.tb_logger.save_histogram("Episode mean batch rewards", x=episode_count, y=episode_mean_batch_rewards)
             # self.tb_logger.save_histogram("Episode losses", x=episode_count, y=episode_losses)
             # self.tb_logger.save_histogram("Episode TD errors", x=episode_count, y=episode_td_errors)
-            # self.tb_logger.save_variable("Episode mean batch rewards (sum)", x=episode_count, y=np.sum(episode_mean_batch_rewards))
-            # self.tb_logger.save_variable("Episode losses (sum)", x=episode_count, y=np.sum(episode_losses))
-            # self.tb_logger.save_variable("Episode TD errors (sum)", x=episode_count, y=np.sum(episode_td_errors))
+            self.tb_logger.save_variable("Episode mean batch rewards (sum)", x=episode_count, y=np.sum(episode_mean_batch_rewards))
+            self.tb_logger.save_variable("Episode losses (sum)", x=episode_count, y=np.sum(episode_losses))
+            self.tb_logger.save_variable("Episode TD errors (sum)", x=episode_count, y=np.sum(episode_td_errors))
             # self.tb_logger.save_variable("Total episode reward (sum)", x=episode_count, y=np.sum(episode_reward_list))
-            self.tb_logger.save_variable("Episode reward", x=episode_count, y=np.sum(episode_reward_list)/len(episode_reward_list))
-            # self.tb_logger.save_variable("Total time taken for episode", x=episode_count, y=time_taken_episode)
+            self.tb_logger.save_variable("Mean episode reward", x=episode_count, y=np.sum(episode_reward_list)/len(episode_reward_list))
+            # self.tb_logger.save_variable("Running reward", x=episode_count, y=running_reward)
+            self.tb_logger.save_variable("Total time taken for episode", x=episode_count, y=time_taken_episode)
             # self.tb_logger.save_variable("Total time taken for custom action", x=episode_count, y=custom_action_time)
             # self.tb_logger.save_variable("Total time taken for training iteration", x=episode_count, y=train_time)
-            self.tb_logger.save_variable("Episode vehicle speed", x=episode_count, y=np.mean(vehicle_speeds))
+            self.tb_logger.save_variable("Mean vehicle speed for episode", x=episode_count, y=np.mean(vehicle_speeds))
             if self.training_param["use_per"]:
                 self.tb_logger.save_variable("Beta increment", x=episode_count, y=self.policy.agent.buffer.beta)
             # TODO time taken for inferenece and time taken for training step
@@ -256,9 +257,9 @@ class Main(object):
                     # self.p.plot()
                 # self.p.close()
             episode += 1
-            self.tb_logger.save_variable("Episode reward", x=episode,
+            self.tb_logger.save_variable("Mean episode reward", x=episode,
                                          y=np.sum(episode_reward_list) / len(episode_reward_list))
-            self.tb_logger.save_variable("Episode vehicle speed", x=episode, y=np.mean(vehicle_speeds))
+            self.tb_logger.save_variable("Mean vehicle speed for episode", x=episode, y=np.mean(vehicle_speeds))
         self.policy.agent.evaluation = False
         self.policy.agent.training = True
 
@@ -293,117 +294,124 @@ def start_run(arg0, arg1, arg2, arg3):
     config.scenarios_path = str(SC_PATH)
     # current_time = datetime.datetime.now().strftime("%Y-%m-%d-%Hh%Mm")
 
-    if arg1 == "Batch size":
+    if arg1 == "policy_rate":
         N_UNITS = (32, 16, 8)
         ACT_FUNC = tf.nn.relu
-        BATCH_SIZE = arg3
+        POLICY_ACTION_RATE = arg3
+        BATCH_SIZE = 32
+        TARGET_UPDATE_RATE = 10e4
         LEARN_RATE = 0.0001
         LOSS_FUNC = tf.losses.MeanSquaredError()
         CLIP_GRADIENTS = True
-        GAMMA = 0.95
-        TARGET_UPDATE_RATE = 1e4
-        STANDARDISE_RETURNS = False
-    elif arg1 == "Learning rate":
+        STANDARDISE_RETURNS = True
+    elif arg1 == "batch_size":
         N_UNITS = (32, 16, 8)
         ACT_FUNC = tf.nn.relu
+        POLICY_ACTION_RATE = 10
+        BATCH_SIZE = arg3
+        TARGET_UPDATE_RATE = 10e4
+        LEARN_RATE = 0.0001
+        LOSS_FUNC = tf.losses.MeanSquaredError()
+        CLIP_GRADIENTS = True
+        STANDARDISE_RETURNS = True
+    elif arg1 == "target_update_rate":
+        N_UNITS = (32, 16, 8)
+        ACT_FUNC = tf.nn.relu
+        POLICY_ACTION_RATE = 10
         BATCH_SIZE = 32
+        TARGET_UPDATE_RATE = arg3
+        LEARN_RATE = 0.0001
+        LOSS_FUNC = tf.losses.MeanSquaredError()
+        CLIP_GRADIENTS = True
+        STANDARDISE_RETURNS = True
+    elif arg1 == "learning_rate":
+        N_UNITS = (32, 16, 8)
+        ACT_FUNC = tf.nn.relu
+        POLICY_ACTION_RATE = 10
+        BATCH_SIZE = 32
+        TARGET_UPDATE_RATE = 10e4
         LEARN_RATE = arg3
         LOSS_FUNC = tf.losses.MeanSquaredError()
         CLIP_GRADIENTS = True
-        GAMMA = 0.95
-        TARGET_UPDATE_RATE = 1e4
-        STANDARDISE_RETURNS = False
-    elif arg1 == "Loss function":
+        STANDARDISE_RETURNS = True
+    elif arg1 == "loss_function":
         N_UNITS = (32, 16, 8)
         ACT_FUNC = tf.nn.relu
+        POLICY_ACTION_RATE = 10
         BATCH_SIZE = 32
+        TARGET_UPDATE_RATE = 10e4
         LEARN_RATE = 0.0001
         LOSS_FUNC = arg3
         CLIP_GRADIENTS = True
-        GAMMA = 0.95
-        TARGET_UPDATE_RATE = 1e4
-        STANDARDISE_RETURNS = False
-    elif arg1 == "Activation function":
+        STANDARDISE_RETURNS = True
+    elif arg1 == "activation":
         N_UNITS = (32, 16, 8)
         ACT_FUNC = arg3
+        POLICY_ACTION_RATE = 10
         BATCH_SIZE = 32
+        TARGET_UPDATE_RATE = 10e4
         LEARN_RATE = 0.0001
         LOSS_FUNC = tf.losses.MeanSquaredError()
         CLIP_GRADIENTS = True
-        GAMMA = 0.95
-        TARGET_UPDATE_RATE = 1e4
-        STANDARDISE_RETURNS = False
-    elif arg1 == "Model size":
+        STANDARDISE_RETURNS = True
+    elif arg1 == "model_size":
         N_UNITS = arg3
         ACT_FUNC = tf.nn.relu
+        POLICY_ACTION_RATE = 10
         BATCH_SIZE = 32
+        TARGET_UPDATE_RATE = 10e4
         LEARN_RATE = 0.0001
         LOSS_FUNC = tf.losses.MeanSquaredError()
         CLIP_GRADIENTS = True
-        GAMMA = 0.95
-        TARGET_UPDATE_RATE = 1e4
-        STANDARDISE_RETURNS = False
-    elif arg1 == "Clip gradients":
+        STANDARDISE_RETURNS = True
+    elif arg1 == "clip_grad":
         N_UNITS = (32, 16, 8)
         ACT_FUNC = tf.nn.relu
+        POLICY_ACTION_RATE = 10
         BATCH_SIZE = 32
+        TARGET_UPDATE_RATE = 10e4
         LEARN_RATE = 0.0001
         LOSS_FUNC = tf.losses.MeanSquaredError()
         CLIP_GRADIENTS = arg3
-        GAMMA = 0.95
-        TARGET_UPDATE_RATE = 1e4
-        STANDARDISE_RETURNS = False
-    elif arg1 == "Discount factor":
+        STANDARDISE_RETURNS = True
+    elif arg1 == "standardise_return":
         N_UNITS = (32, 16, 8)
         ACT_FUNC = tf.nn.relu
+        POLICY_ACTION_RATE = 10
         BATCH_SIZE = 32
+        TARGET_UPDATE_RATE = 10e4
         LEARN_RATE = 0.0001
         LOSS_FUNC = tf.losses.MeanSquaredError()
         CLIP_GRADIENTS = True
-        GAMMA = arg3
-        TARGET_UPDATE_RATE = 1e4
-        STANDARDISE_RETURNS = False
-    elif arg1 == "Target update rate":
-        N_UNITS = (32, 16, 8)
-        ACT_FUNC = tf.nn.relu
-        BATCH_SIZE = 32
-        LEARN_RATE = 0.0001
-        LOSS_FUNC = tf.losses.MeanSquaredError()
-        CLIP_GRADIENTS = True
-        GAMMA = 0.95
-        TARGET_UPDATE_RATE = arg3
-        STANDARDISE_RETURNS = False
-    elif arg1 == "Standardise returns":
-        N_UNITS = (32, 16, 8)
-        ACT_FUNC = tf.nn.relu
-        BATCH_SIZE = 32
-        LEARN_RATE = 0.0001
-        LOSS_FUNC = tf.losses.MeanSquaredError()
-        CLIP_GRADIENTS = True
-        GAMMA = 0.95
-        TARGET_UPDATE_RATE = 1e4
         STANDARDISE_RETURNS = arg3
+    elif arg1 == "gamma":
+        N_UNITS = (32, 16, 8)
+        ACT_FUNC = tf.nn.relu
+        POLICY_ACTION_RATE = 10
+        BATCH_SIZE = 32
+        TARGET_UPDATE_RATE = 10e4
+        LEARN_RATE = 0.0001
+        LOSS_FUNC = tf.losses.MeanSquaredError()
+        CLIP_GRADIENTS = True
+        STANDARDISE_RETURNS = True
+        GAMMA = arg3
 
     """RUN PARAMETERS:"""
     SEED = arg2
     RUN_TYPE = "train"  # "train"
     RUN_NAME = "DDQN_ER_tuning"
     if "MeanSquaredError" in str(arg3):
-        RUN_INFO = arg1 + "=" + "MeanSquaredError"
+        RUN_INFO = arg1 + "-" + "MeanSquaredError"
     elif "Huber" in str(arg3):
-        RUN_INFO = arg1 + "=" + "Huber"
-    elif "elu" in str(arg3):
-        if "relu" in str(arg3):
-            if "relu6" in str(arg3):
-                RUN_INFO = arg1 + "=" + "Relu6"
-            else:
-                RUN_INFO = arg1 + "=" + "Relu"
-        else:
-            RUN_INFO = arg1 + "=" + "Elu"
+        RUN_INFO = arg1 + "-" + "Huber"
+    elif "relu" in str(arg3):
+        RUN_INFO = arg1 + "-" + "Relu"
+    elif "swish" in str(arg3):
+        RUN_INFO = arg1 + "-" + "Swish"
     elif "tanh" in str(arg3):
-        RUN_INFO = arg1 + "=" + "Tanh"
+        RUN_INFO = arg1 + "-" + "Tanh"
     else:
-        RUN_INFO = arg1 + "=" + str(arg3)
+        RUN_INFO = arg1 + "-" + str(arg3)
 
     n_vehicles = arg0["slow"]+arg0["medium"]+arg0["fast"]
 
@@ -476,7 +484,7 @@ def start_run(arg0, arg1, arg2, arg3):
     }
 
     """TRAINING PARAMETERS:"""
-    POLICY_ACTION_RATE = 8  # Number of simulator steps before new control action is taken
+    # POLICY_ACTION_RATE = 10  # Number of simulator steps before new control action is taken
     MAX_TIMESTEPS = 5e3  # range: 5e3 - 10e3
     MAX_EPISODES = 1500
     FINAL_RETURN = 1
@@ -495,16 +503,16 @@ def start_run(arg0, arg1, arg2, arg3):
     EPSILON_MAX = 0.1  # Exploitation
     DECAY_RATE = 0.999982  # 0.999992
     MODEL_UPDATE_RATE = 1
-    # TARGET_UPDATE_RATE = 1e4
+    # TARGET_UPDATE_RATE = 10e4
     # LEARN_RATE = 0.0001  # range: 1e-3 - 1e-4
     OPTIMISER = tf.optimizers.Adam(learning_rate=LEARN_RATE)
     # LOSS_FUNC = tf.losses.MeanSquaredError()  # tf.losses.Huber()  # PER loss function is MSE
-    # GAMMA = 0.95  # range: 0.9 - 0.99
+    # GAMMA = 0.99  # range: 0.95 - 0.99
     # CLIP_GRADIENTS = True
     CLIP_NORM = 2
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
     REWARD_WEIGHTS = np.array([1.0, 0.15, 0.8, 0.4, -5])
-    # STANDARDISE_RETURNS = False
+    # STANDARDISE_RETURNS = True
     USE_PER = False
     ALPHA = 0.75  # Priority scale: a=0:random, a=1:completely based on priority
     BETA = 0.2  # Prioritisation factor
@@ -576,27 +584,22 @@ def start_run(arg0, arg1, arg2, arg3):
     # Initialise model type:
     if USE_DEEPSET and not USE_CNN:
         DQ_net = DeepSetQNetwork(model_param=model_param)
-        DQ_target_net = DeepSetQNetwork(model_param=model_param)
     elif not USE_DEEPSET and USE_CNN:
         DQ_net = CNN(model_param=model_param)
-        DQ_target_net = CNN(model_param=model_param)
     elif not USE_DEEPSET and not USE_CNN:
         if USE_LSTM:
             DQ_net = LSTM_DRQN(model_param=model_param)
-            DQ_target_net = LSTM_DRQN(model_param=model_param)
         else:
             if USE_DUELLING:
-                DQ_net = DuellingDqnNetwork(model_param=model_param)
-                DQ_target_net = DuellingDqnNetwork(model_param=model_param)
+                DQ_net = DeepSetQNetwork(model_param=model_param)
             else:
                 DQ_net = DeepQNetwork(model_param=model_param)
-                DQ_target_net = DeepQNetwork(model_param=model_param)
     else:
         print("Error: Cannot use Deepset and CNN methods together!")
         exit()
 
     # Initialise agent and policy:
-    dqn_agent = DqnAgent(network=DQ_net, target_network=DQ_target_net, training_param=training_param, tb_logger=tb_logger)
+    dqn_agent = DqnAgent(network=DQ_net, training_param=training_param, tb_logger=tb_logger)
     dqn_policy = DiscreteSingleActionPolicy(agent=dqn_agent)
 
     # RewardFunction().plot_reward_functions()
@@ -643,45 +646,43 @@ if __name__=="__main__":
     P = mp.cpu_count()  # Number of available cores
     procs = max(min(PROCS, P), 1)  # Clip number of procs to [1;P]
 
+
     def param_gen():
-        """
-        This function yields all the parameter combinations to try...
-        arguments:
-            arg0 = n_vehicles
-            arg1 = parameter
-            arg2 = seed
-            arg3 = parameter value
-        """
+        # This function yields all the parameter combinations to try
+        # For train parameter sweep:
         arg0 = {"slow": 10, "medium": 20, "fast": 5}
-        for arg1 in ("Batch size", "Learning rate", "Loss function", "Target update rate", "Standardise returns",
-                     "Activation function", "Model size", "Clip gradients", "Discount factor"):
-            for arg2 in (100, 200, 300, 400, 500):
-                if arg1 == "Batch size":
-                    for arg3 in (32, 64, 128):
+        for arg1 in ("policy_rate", "batch_size", "target_update_rate", "learning_rate", "loss_function",
+                     "activation", "model_size", "clip_grad", "standardise_return", "gamma"):
+            for arg2 in (100, 300, 500):
+                if arg1 == "policy_rate":
+                    for arg3 in (6, 8, 10):
                         yield arg0, arg1, arg2, arg3
-                elif arg1 == "Learning rate":
-                    for arg3 in (0.001, 0.0001, 0.0005):
+                elif arg1 == "batch_size":
+                    for arg3 in (32,50,100):
                         yield arg0, arg1, arg2, arg3
-                elif arg1 == "Loss function":
+                elif arg1 == "target_update_rate":
+                    for arg3 in (10**3,10**4,10**5):
+                        yield arg0, arg1, arg2, arg3
+                elif arg1 == "learning_rate":
+                    for arg3 in (0.001, 0.0005, 0.0001):
+                        yield arg0, arg1, arg2, arg3
+                elif arg1 == "loss_function":
                     for arg3 in (tf.losses.MeanSquaredError(), tf.losses.Huber()):
                         yield arg0, arg1, arg2, arg3
-                elif arg1 == "Activation function":
-                    for arg3 in (tf.nn.relu, tf.nn.relu6, tf.nn.tanh, tf.nn.elu):
+                elif arg1 == "activation":
+                    for arg3 in (tf.nn.relu, tf.nn.swish, tf.nn.tanh):
                         yield arg0, arg1, arg2, arg3
-                elif arg1 == "Model size":
+                elif arg1 == "model_size":
                     for arg3 in ((32,32), (64,64), (128,128), (256,256), (32,16,8), (64,32,16), (128,64,32)):
                         yield arg0, arg1, arg2, arg3
-                elif arg1 == "Clip gradients":
+                elif arg1 == "clip_grad":
+                    for arg3 in (True,False):
+                        yield arg0, arg1, arg2, arg3
+                elif arg1 == "standardise_return":
                     for arg3 in (True, False):
                         yield arg0, arg1, arg2, arg3
-                elif arg1 == "Discount factor":
+                elif arg1 == "gamma":
                     for arg3 in (0.9, 0.95, 0.99):
-                        yield arg0, arg1, arg2, arg3
-                elif arg1 == "Target update rate":
-                    for arg3 in (1e4, 1e5, 1e6):
-                        yield arg0, arg1, arg2, arg3
-                elif arg1 == "Standardise returns":
-                    for arg3 in (True, False):
                         yield arg0, arg1, arg2, arg3
                 else:
                     sys.exit()

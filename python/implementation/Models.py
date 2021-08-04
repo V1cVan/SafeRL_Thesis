@@ -21,7 +21,9 @@ class LSTM_DRQN(keras.Model):
         n_inputs = model_param["n_inputs"]  # Number of items in state matrix
         n_actions = model_param["n_actions"]
         n_timesteps = 4  # Number of stacked measurements considered
-
+        # TODO LSTM with attention mechanism vs lstm without attention mechanism !!!
+        # TODO LSTM without the need for frame stacking? I dont think so?
+        # https://levelup.gitconnected.com/building-seq2seq-lstm-with-luong-attention-in-keras-for-time-series-forecasting-1ee00958decb
         input_layer = layers.Input(shape=(n_timesteps, n_inputs,), name="inputState")
         LSTM_layer = layers.LSTM(units=n_units[0], name="LSTM")(input_layer)
         dense_layer1 = layers.Dense(units=n_units[1], activation=act_func, name="dense1")(LSTM_layer)
