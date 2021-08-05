@@ -29,7 +29,7 @@ class DqnAgent(keras.models.Model):
         self.eps_final = 0.1
         self.decay = training_param["decay_rate"]
         self.gamma = training_param["gamma"]
-        self.epsilon = training_param["epsilon_max"]
+        self.epsilon = training_param["epsilon_min"]
         self.prev_epsilon = self.epsilon
         self.epsilon_decay_count = 1
         self.evaluation = False
@@ -134,7 +134,6 @@ class DqnAgent(keras.models.Model):
     def get_action_choice(self, Q):
         """ Randomly choose from the available actions."""
         epsilon = self.calc_epsilon()
-        self.tb_logger.save_variable(name='epsilon', x=self.episode, y=epsilon)
 
         if np.random.rand() < epsilon and not self.evaluation:
             self.latest_action = np.random.randint(0, 5)

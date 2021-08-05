@@ -141,12 +141,14 @@ class Main(object):
                                 # TODO add data to episode buffer to get episode rewards while training.
                                 self.training_timer.startTime()
                                 mean_batch_reward, loss, td_error, grads, clipped_grads = self.policy.agent.train_step()
+                                epsilon = self.policy.agent.epsilon
                                 train_time = self.training_timer.endTime()
                                 episode_mean_batch_rewards.append(mean_batch_reward)
                                 episode_losses.append(loss)
                                 episode_td_errors.append(td_error)
                                 trained = True
-
+                                if self.training_param["use_per"]:
+                                    beta = self.policy.agent.buffer.beta
                             if model_update_counter % self.training_param["target_update_rate"] == 0:
                                 self.policy.agent.update_target_net()
                                 # print("Updated target net.")
@@ -165,11 +167,10 @@ class Main(object):
 
 
             if episode_count % 50 == 0 and trained:
-                epsilon = self.policy.agent.calc_epsilon()
                 if self.training_param["use_per"]:
                     print_template = "Running reward = {:.3f} ({:.3f}) at episode {}. Loss = {:.3f}. Epsilon = {:.3f}. Beta = {:.3f}. Episode timer = {:.3f}"
                     print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon,
-                                                         self.policy.agent.buffer.beta, time_taken_episode)
+                                                         beta, time_taken_episode)
                 else:
                     print_template = "Running reward = {:.3f} ({:.3f}) at episode {}. Loss = {:.3f}. Epsilon = {:.3f}. Episode timer = {:.3f}"
                     print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon, time_taken_episode)
@@ -190,13 +191,21 @@ class Main(object):
             # self.tb_logger.save_variable("Episode losses (sum)", x=episode_count, y=np.sum(episode_losses))
             # self.tb_logger.save_variable("Episode TD errors (sum)", x=episode_count, y=np.sum(episode_td_errors))
             # self.tb_logger.save_variable("Total episode reward (sum)", x=episode_count, y=np.sum(episode_reward_list))
-            self.tb_logger.save_variable("Episode reward", x=episode_count, y=np.sum(episode_reward_list)/len(episode_reward_list))
+            self.tb_logger.save_variable("Reward", x=episode_count, y=np.sum(episode_reward_list)/len(episode_reward_list))
             # self.tb_logger.save_variable("Total time taken for episode", x=episode_count, y=time_taken_episode)
             # self.tb_logger.save_variable("Total time taken for custom action", x=episode_count, y=custom_action_time)
             # self.tb_logger.save_variable("Total time taken for training iteration", x=episode_count, y=train_time)
-            self.tb_logger.save_variable("Episode vehicle speed", x=episode_count, y=np.mean(vehicle_speeds))
-            if self.training_param["use_per"]:
-                self.tb_logger.save_variable("Beta increment", x=episode_count, y=self.policy.agent.buffer.beta)
+            self.tb_logger.save_variable("Vehicle speed", x=episode_count, y=np.mean(vehicle_speeds))
+            if (episode_count % 25 == 0 or episode_count == 1):
+                if self.training_param["use_per"]:
+                    self.tb_logger.save_variable("Beta increment", x=episode_count, y=beta)
+                else:
+                    try:
+                        self.tb_logger.save_variable(name='Epsilon', x=episode_count, y=epsilon)
+                    except:
+                        self.tb_logger.save_variable(name='Epsilon', x=episode_count, y=self.policy.agent.epsilon)
+
+
             # TODO time taken for inferenece and time taken for training step
 
             # Save model weights and biases and gradients of backprop.
@@ -294,42 +303,42 @@ def start_run(arg0, arg1, arg2, arg3):
     # current_time = datetime.datetime.now().strftime("%Y-%m-%d-%Hh%Mm")
 
     if arg1 == "Batch size":
-        N_UNITS = (32, 16, 8)
+        N_UNITS = (32, 32)
         ACT_FUNC = tf.nn.relu
         BATCH_SIZE = arg3
         LEARN_RATE = 0.0001
-        LOSS_FUNC = tf.losses.MeanSquaredError()
-        CLIP_GRADIENTS = True
+        LOSS_FUNC = tf.losses.Huber()
+        CLIP_GRADIENTS = False
         GAMMA = 0.95
         TARGET_UPDATE_RATE = 1e4
         STANDARDISE_RETURNS = False
     elif arg1 == "Learning rate":
-        N_UNITS = (32, 16, 8)
+        N_UNITS = (32, 32)
         ACT_FUNC = tf.nn.relu
         BATCH_SIZE = 32
         LEARN_RATE = arg3
-        LOSS_FUNC = tf.losses.MeanSquaredError()
-        CLIP_GRADIENTS = True
+        LOSS_FUNC = tf.losses.Huber()
+        CLIP_GRADIENTS = False
         GAMMA = 0.95
         TARGET_UPDATE_RATE = 1e4
         STANDARDISE_RETURNS = False
     elif arg1 == "Loss function":
-        N_UNITS = (32, 16, 8)
+        N_UNITS = (32, 32)
         ACT_FUNC = tf.nn.relu
         BATCH_SIZE = 32
         LEARN_RATE = 0.0001
         LOSS_FUNC = arg3
-        CLIP_GRADIENTS = True
+        CLIP_GRADIENTS = False
         GAMMA = 0.95
         TARGET_UPDATE_RATE = 1e4
         STANDARDISE_RETURNS = False
     elif arg1 == "Activation function":
-        N_UNITS = (32, 16, 8)
+        N_UNITS = (32, 32)
         ACT_FUNC = arg3
         BATCH_SIZE = 32
         LEARN_RATE = 0.0001
-        LOSS_FUNC = tf.losses.MeanSquaredError()
-        CLIP_GRADIENTS = True
+        LOSS_FUNC = tf.losses.Huber()
+        CLIP_GRADIENTS = False
         GAMMA = 0.95
         TARGET_UPDATE_RATE = 1e4
         STANDARDISE_RETURNS = False
@@ -338,48 +347,48 @@ def start_run(arg0, arg1, arg2, arg3):
         ACT_FUNC = tf.nn.relu
         BATCH_SIZE = 32
         LEARN_RATE = 0.0001
-        LOSS_FUNC = tf.losses.MeanSquaredError()
-        CLIP_GRADIENTS = True
+        LOSS_FUNC = tf.losses.Huber()
+        CLIP_GRADIENTS = False
         GAMMA = 0.95
         TARGET_UPDATE_RATE = 1e4
         STANDARDISE_RETURNS = False
     elif arg1 == "Clip gradients":
-        N_UNITS = (32, 16, 8)
+        N_UNITS = (32, 32)
         ACT_FUNC = tf.nn.relu
         BATCH_SIZE = 32
         LEARN_RATE = 0.0001
-        LOSS_FUNC = tf.losses.MeanSquaredError()
+        LOSS_FUNC = tf.losses.Huber()
         CLIP_GRADIENTS = arg3
         GAMMA = 0.95
         TARGET_UPDATE_RATE = 1e4
         STANDARDISE_RETURNS = False
     elif arg1 == "Discount factor":
-        N_UNITS = (32, 16, 8)
+        N_UNITS = (32, 32)
         ACT_FUNC = tf.nn.relu
         BATCH_SIZE = 32
         LEARN_RATE = 0.0001
-        LOSS_FUNC = tf.losses.MeanSquaredError()
-        CLIP_GRADIENTS = True
+        LOSS_FUNC = tf.losses.Huber()
+        CLIP_GRADIENTS = False
         GAMMA = arg3
         TARGET_UPDATE_RATE = 1e4
         STANDARDISE_RETURNS = False
     elif arg1 == "Target update rate":
-        N_UNITS = (32, 16, 8)
+        N_UNITS = (32, 32)
         ACT_FUNC = tf.nn.relu
         BATCH_SIZE = 32
         LEARN_RATE = 0.0001
-        LOSS_FUNC = tf.losses.MeanSquaredError()
-        CLIP_GRADIENTS = True
+        LOSS_FUNC = tf.losses.Huber()
+        CLIP_GRADIENTS = False
         GAMMA = 0.95
         TARGET_UPDATE_RATE = arg3
         STANDARDISE_RETURNS = False
     elif arg1 == "Standardise returns":
-        N_UNITS = (32, 16, 8)
+        N_UNITS = (32, 32)
         ACT_FUNC = tf.nn.relu
         BATCH_SIZE = 32
         LEARN_RATE = 0.0001
-        LOSS_FUNC = tf.losses.MeanSquaredError()
-        CLIP_GRADIENTS = True
+        LOSS_FUNC = tf.losses.Huber()
+        CLIP_GRADIENTS = False
         GAMMA = 0.95
         TARGET_UPDATE_RATE = 1e4
         STANDARDISE_RETURNS = arg3
@@ -491,9 +500,9 @@ def start_run(arg0, arg1, arg2, arg3):
         SIM_EPISODES = 1
     BUFFER_SIZE = 300000
     # BATCH_SIZE = 32  # range: 32 - 150
-    EPSILON_MIN = 1.0  # Exploration
+    EPSILON_MIN = 1  # Exploration
     EPSILON_MAX = 0.1  # Exploitation
-    DECAY_RATE = 0.999982  # 0.999992
+    DECAY_RATE = 0.99999  # 0.999986
     MODEL_UPDATE_RATE = 1
     # TARGET_UPDATE_RATE = 1e4
     # LEARN_RATE = 0.0001  # range: 1e-3 - 1e-4
@@ -508,8 +517,9 @@ def start_run(arg0, arg1, arg2, arg3):
     USE_PER = False
     ALPHA = 0.75  # Priority scale: a=0:random, a=1:completely based on priority
     BETA = 0.2  # Prioritisation factor
-    BETA_INCREMENT = 0.00004 * MODEL_UPDATE_RATE  # Rate of Beta annealing to 1
+    BETA_INCREMENT = 0.00004  # Rate of Beta annealing to 1
     # Model types:
+    USE_TARGET_NETWORK = True
     USE_DUELLING = False
     USE_DEEPSET = False
     USE_CNN = False  # TODO Fix so that CNN type 3 and LSTM work with PER!
@@ -596,7 +606,17 @@ def start_run(arg0, arg1, arg2, arg3):
         exit()
 
     # Initialise agent and policy:
-    dqn_agent = DqnAgent(network=DQ_net, target_network=DQ_target_net, training_param=training_param, tb_logger=tb_logger)
+    if USE_TARGET_NETWORK == True:
+        dqn_agent = DqnAgent(network=DQ_net,
+                             target_network=DQ_target_net,
+                             training_param=training_param,
+                             tb_logger=tb_logger)
+    else:
+        dqn_agent = DqnAgent(network=DQ_net,
+                             target_network=DQ_net,
+                             training_param=training_param,
+                             tb_logger=tb_logger)
+
     dqn_policy = DiscreteSingleActionPolicy(agent=dqn_agent)
 
     # RewardFunction().plot_reward_functions()
@@ -637,6 +657,8 @@ def start_run(arg0, arg1, arg2, arg3):
     print(f"Arg0:{arg0}; Arg1:{arg1}; Arg2: {arg2}; Arg3: {arg3}")
 
 if __name__=="__main__":
+    run_timer = Timer("Run timer")
+    run_timer.startTime()
 
     PROCS = 32  # Number of cores to use
     mp.set_start_method("spawn")  # Make sure different workers have different seeds if applicable
@@ -655,12 +677,13 @@ if __name__=="__main__":
         arg0 = {"slow": 10, "medium": 20, "fast": 5}
         for arg1 in ("Batch size", "Learning rate", "Loss function", "Target update rate", "Standardise returns",
                      "Activation function", "Model size", "Clip gradients", "Discount factor"):
-            for arg2 in (100, 200, 300, 400, 500):
+            for arg2 in (100, 300, 500):
                 if arg1 == "Batch size":
+                    # for arg3 in (32, 64, 128):
                     for arg3 in (32, 64, 128):
                         yield arg0, arg1, arg2, arg3
                 elif arg1 == "Learning rate":
-                    for arg3 in (0.001, 0.0001, 0.0005):
+                    for arg3 in (0.001,  0.0005, 0.0001):
                         yield arg0, arg1, arg2, arg3
                 elif arg1 == "Loss function":
                     for arg3 in (tf.losses.MeanSquaredError(), tf.losses.Huber()):
@@ -678,7 +701,7 @@ if __name__=="__main__":
                     for arg3 in (0.9, 0.95, 0.99):
                         yield arg0, arg1, arg2, arg3
                 elif arg1 == "Target update rate":
-                    for arg3 in (1e4, 1e5, 1e6):
+                    for arg3 in (1e4, 1e5, 5e5, 1e6):
                         yield arg0, arg1, arg2, arg3
                 elif arg1 == "Standardise returns":
                     for arg3 in (True, False):
@@ -736,4 +759,5 @@ if __name__=="__main__":
         for args in param_gen():
             start_run(*args)
 
+    print(f"Total run time = {run_timer.endTime()/60} minutes.")
     print("EOF")

@@ -4,6 +4,7 @@ import seaborn as sns
 import tensorboard as tb
 import numpy as np
 import multiprocessing as mp
+import PIL.Image as img
 
 """
 For uploading experiment to Tensorboard:
@@ -19,6 +20,45 @@ For deleting experiment from Tensorboard:
     tensorboard dev delete --experiment_id YOUR_EXPERIMENT_ID_HERE
 """
 
+# tensorboard dev delete --experiment_id "nQWFNCwYSPWCJzy04EabMA"
+# tensorboard dev upload --logdir "./logfiles/DDQN_ER_tuning/train" --name "DDQN ER Tuning run 2" --description "DDQN ER Tuning parameter sweep 2. Default var: Policy action rate=8; Units=(32,32); Activation=relu; Batch size=32; Learning rate=0.0001; Loss func=Huber; Clip grads=False; Gamma=0.95; Target update rate=1e4; Standardise returns=False"
+
+def start_run(parameter, tag_value, df, fig_path):
+
+    sns.set_style("darkgrid")
+
+    print(f"Plotting parameter={parameter}, tag value={tag_value}...")
+    # Start your training loop using the given arguments
+    plot_df = df.loc[(df['parameter_tested'] == parameter) & (df['tag'] == tag_value)]
+    # plot_df = plot_df.iloc[::10,:] #Clearer by not plotting every step
+    ax = sns.lineplot(x="step", y="smoothed",
+                 hue="description",
+                 data=plot_df,
+                 alpha=0.6,
+                 linewidth=1.5)
+    ax.legend(loc='lower right', title='Parameter:')
+    ax.set(xlabel = "Episode")
+    ax.set(ylabel = tag_value)
+    plt_name = fig_path + "/" + parameter + '-' + tag_value + '.png'
+    plt.savefig(plt_name, dpi=300, bbox_inches='tight')
+    print(f"Arg1: {parameter} ; Arg2: {tag_value}")
+    plt.show()
+
+
+
+def download_and_save(experiment_name, csv_path):
+    # Retrieve the training data from Tensorboard Dev
+    experiment_id = experiment_ids[experiment_name]
+    experiment = tb.data.experimental.ExperimentFromDev(experiment_id)
+    results = experiment.get_scalars()
+    print("Download complete ... ")
+
+    # Save downloaded data to a csv file
+    results.to_csv(csv_path, index=False)
+    results_df = pd.read_csv(csv_path)
+    pd.testing.assert_frame_equal(results_df, results)
+    print("Keys for dataframe: " + results_df.keys())
+    print("Csv saved ... ")
 
 # Function for extracting the regex patterns
 def extract_columns(df, column1='seed', column2='description'):
@@ -33,61 +73,19 @@ def extract_columns(df, column1='seed', column2='description'):
     df[column2] = df[column2].str[8:]
     return df
 
-def start_run(parameter, tag_value, df):
-    sns.set_style("darkgrid")
-    # Start your training loop using the given arguments
-    plot_df = df.loc[(df['parameter_tested'] == parameter) & (df['tag'] == tag_value)]
-    # plot_df = plot_df.iloc[::10,:] #Clearer by not plotting every step
-    ax = sns.lineplot(x="step", y="smoothed",
-                      hue="description",
-                      data=plot_df,
-                      alpha=0.6,
-                      linewidth=1.5)
-    ax.set_title(str(tag_value))
-    print(f"Arg1: {parameter} ; Arg2: {tag_value}")
-    plt.show()
 
-
-def download_and_convert(experiment_name, csv_path):
-    # Retrieve the training data from Tensorboard Dev
-    experiment_id = experiment_ids[experiment_name]
-    experiment = tb.data.experimental.ExperimentFromDev(experiment_id)
-    results = experiment.get_scalars()
-    print("Download complete ... ")
-
-    # Save downloaded data to a csv file
-    results.to_csv(csv_path, index=False)
-    results_df = pd.read_csv(csv_path)
-    pd.testing.assert_frame_equal(results_df, results)
-    print("Keys for dataframe: " + results_df.keys())
-    print("Csv saved ... ")
-
-if __name__ == "__main__":
-    experiment_ids = {
-        "DDQN_ER_initialisers": "8viGslanQLWtMaORGizRaQ",
-        "DDQN_ER_tuning": "PWLK2gQmS0Wfm2c56YMjtA"
-    }
-
-    experiment_paths = {
-        "DDQN_ER_initialisers": "./logfiles/DDQN_ER_initialisers",
-        "DDQN_ER_tuning": "./logfiles/DDQN_ER_tuning/train"
-    }
-
-    experiment_names = list(experiment_ids.keys())
-    print(experiment_names)
-
-    experiment_name = "DDQN_ER_tuning"
-    csv_path = experiment_paths[experiment_name] + "/" + experiment_names[1] + '.csv'
-    # download_and_convert(experiment_name, csv_path)
-
+def preprocess_data(csv_path):
     # (Re) Load the dataset
     df = pd.read_csv(csv_path)
     assert df.shape is not None
 
     # Remove variables that are not Episode reward or Vehicle velocity
     df = extract_columns(df)
-    df = df.loc[df['tag'].isin(['Episode reward', 'Episode vehicle speed'])]
-    df['parameter_tested'] = df['description'].str.extract(r'(.*?)-')
+    # df = df.loc[df['tag'].isin(['Mean episode reward', 'Mean vehicle speed for episode'])]
+    # df['parameter_tested'] = df['description'].str.extract(r'(.*?)-')
+    df = df.loc[df['tag'].isin(['Reward', 'Vehicle speed'])]
+    df['parameter_tested'] = df['description'].str.extract(r'(.*?)=')
+
 
     print(df.head())
     print(df["parameter_tested"].unique())
@@ -108,8 +106,33 @@ if __name__ == "__main__":
                 # Add np_array to df
                 df.loc[(df['description'] == i) & (df['seed'] == j) & (df['tag'] == k), 'smoothed'] = smooth_np.tolist()
 
+    print(f"Values smoothed by factor {weight}...")
     print(df.keys())
     print(df["smoothed"])
+
+    return df
+
+
+if __name__ == "__main__":
+    experiment_ids = {
+        "DDQN_ER_initialisers": "8viGslanQLWtMaORGizRaQ",
+        "DDQN_ER_tuning": "ndalAuYXRxGuML7vkgPA4Q"
+    }
+
+    experiment_paths = {
+        "DDQN_ER_initialisers": "./logfiles/DDQN_ER_initialisers",
+        "DDQN_ER_tuning": "./logfiles/DDQN_ER_tuning/train"
+    }
+
+    experiment_names = list(experiment_ids.keys())
+    print(experiment_names)
+
+    experiment_name = "DDQN_ER_tuning"
+    csv_path = experiment_paths[experiment_name] + "/" + experiment_names[1] + '.csv'
+    download_and_save(experiment_name, csv_path)  # Comment out if you don't want to re-download the data
+
+    # Pre-process (smooth data from csv)
+    df = preprocess_data(csv_path)
 
     # Plot the smoothed results using multi processing
     procs = 32  # Amount of processes/cores you want to use
@@ -119,9 +142,10 @@ if __name__ == "__main__":
 
     def param_gen():
         # This function should return (yield because it's a generator) all parameter combinations you want to try
-        for parameter in df['parameter_tested'].unique():
-            for tag_value in df['tag'].unique():
-                yield parameter, tag_value, df
+        # for parameter in df['parameter_tested'].unique():
+        parameter = "Buffer size"
+        for tag_value in df['tag'].unique():
+            yield parameter, tag_value, df, experiment_paths[experiment_name]
 
     if procs > 1:
         # Schedule all training runs in a parallel loop when using multiple cores:
@@ -136,3 +160,6 @@ if __name__ == "__main__":
         for args in param_gen():
             start_run(*args)
 
+
+
+    print("EOF")
