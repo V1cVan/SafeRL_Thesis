@@ -395,10 +395,11 @@ def start_run(arg0, arg1, arg2, arg3):
         TARGET_UPDATE_RATE = 1e4
         STANDARDISE_RETURNS = arg3
 
+
     """RUN PARAMETERS:"""
     SEED = arg2
     RUN_TYPE = "train"  # "train"
-    RUN_NAME = "DDQN_ER_tuning"
+    RUN_NAME = "DQN_DDQN_standardisation_target_update_long_run"
     if "MeanSquaredError" in str(arg3):
         RUN_INFO = arg1 + "=" + "MeanSquaredError"
     elif "Huber" in str(arg3):

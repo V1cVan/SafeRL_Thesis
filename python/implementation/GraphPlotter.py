@@ -47,7 +47,7 @@ def start_run(parameter, tag_value, df, fig_path):
     ax.set(ylabel = tag_value)
     plt_name = fig_path + "/" + parameter + '-' + tag_value + '.png'
     plt.savefig(plt_name, dpi=300, bbox_inches='tight')
-    print(f"Arg1: {parameter} ; Arg2: {tag_value}")
+    print(f" Done with: Param/Method={parameter} ; Tag value={tag_value}")
     plt.show()
 
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     experiment_names = list(experiment_ids.keys())
     print(experiment_names)
 
-    experiment_name = "DQN_DDQN_standardisation_long"
+    experiment_name = "DQN_DDQN_standardisation_short"
     csv_path = experiment_paths[experiment_name] + "/" + experiment_name + '.csv'
     download_and_save(experiment_name, csv_path)  # Comment out if you don't want to re-download the data
 
