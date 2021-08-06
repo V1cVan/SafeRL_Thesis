@@ -304,118 +304,44 @@ def start_run(arg0, arg1, arg2, arg3):
     config.scenarios_path = str(SC_PATH)
     # current_time = datetime.datetime.now().strftime("%Y-%m-%d-%Hh%Mm")
 
-    if arg1 == "Batch size":
-        N_UNITS = (32, 32)
-        ACT_FUNC = tf.nn.relu
-        BATCH_SIZE = arg3
-        LEARN_RATE = 0.0001
-        LOSS_FUNC = tf.losses.Huber()
-        CLIP_GRADIENTS = False
-        GAMMA = 0.95
-        TARGET_UPDATE_RATE = 1e4
-        STANDARDISE_RETURNS = False
-    elif arg1 == "Learning rate":
-        N_UNITS = (32, 32)
-        ACT_FUNC = tf.nn.relu
-        BATCH_SIZE = 32
-        LEARN_RATE = arg3
-        LOSS_FUNC = tf.losses.Huber()
-        CLIP_GRADIENTS = False
-        GAMMA = 0.95
-        TARGET_UPDATE_RATE = 1e4
-        STANDARDISE_RETURNS = False
-    elif arg1 == "Loss function":
-        N_UNITS = (32, 32)
-        ACT_FUNC = tf.nn.relu
-        BATCH_SIZE = 32
-        LEARN_RATE = 0.0001
-        LOSS_FUNC = arg3
-        CLIP_GRADIENTS = False
-        GAMMA = 0.95
-        TARGET_UPDATE_RATE = 1e4
-        STANDARDISE_RETURNS = False
-    elif arg1 == "Activation function":
-        N_UNITS = (32, 32)
-        ACT_FUNC = arg3
-        BATCH_SIZE = 32
-        LEARN_RATE = 0.0001
-        LOSS_FUNC = tf.losses.Huber()
-        CLIP_GRADIENTS = False
-        GAMMA = 0.95
-        TARGET_UPDATE_RATE = 1e4
-        STANDARDISE_RETURNS = False
-    elif arg1 == "Model size":
-        N_UNITS = arg3
-        ACT_FUNC = tf.nn.relu
-        BATCH_SIZE = 32
-        LEARN_RATE = 0.0001
-        LOSS_FUNC = tf.losses.Huber()
-        CLIP_GRADIENTS = False
-        GAMMA = 0.95
-        TARGET_UPDATE_RATE = 1e4
-        STANDARDISE_RETURNS = False
-    elif arg1 == "Clip gradients":
-        N_UNITS = (32, 32)
-        ACT_FUNC = tf.nn.relu
-        BATCH_SIZE = 32
-        LEARN_RATE = 0.0001
-        LOSS_FUNC = tf.losses.Huber()
-        CLIP_GRADIENTS = arg3
-        GAMMA = 0.95
-        TARGET_UPDATE_RATE = 1e4
-        STANDARDISE_RETURNS = False
-    elif arg1 == "Discount factor":
-        N_UNITS = (32, 32)
-        ACT_FUNC = tf.nn.relu
-        BATCH_SIZE = 32
-        LEARN_RATE = 0.0001
-        LOSS_FUNC = tf.losses.Huber()
-        CLIP_GRADIENTS = False
-        GAMMA = arg3
-        TARGET_UPDATE_RATE = 1e4
-        STANDARDISE_RETURNS = False
-    elif arg1 == "Target update rate":
-        N_UNITS = (32, 32)
-        ACT_FUNC = tf.nn.relu
-        BATCH_SIZE = 32
-        LEARN_RATE = 0.0001
-        LOSS_FUNC = tf.losses.Huber()
-        CLIP_GRADIENTS = False
-        GAMMA = 0.95
-        TARGET_UPDATE_RATE = arg3
-        STANDARDISE_RETURNS = False
-    elif arg1 == "Standardise returns":
-        N_UNITS = (32, 32)
-        ACT_FUNC = tf.nn.relu
-        BATCH_SIZE = 32
-        LEARN_RATE = 0.0001
-        LOSS_FUNC = tf.losses.Huber()
-        CLIP_GRADIENTS = False
-        GAMMA = 0.95
-        TARGET_UPDATE_RATE = 1e4
-        STANDARDISE_RETURNS = arg3
-
+    if arg1 == "ER":
+        if arg3 == 'DQN':
+            STANDARDISE_RETURNS = True
+            TARGET_UPDATE_RATE = 1
+            USE_PER = False
+            USE_DUELLING = False
+        elif arg3 == 'DDQN':
+            STANDARDISE_RETURNS = False
+            TARGET_UPDATE_RATE = 1e4
+            USE_PER = False
+            USE_DUELLING = False
+        elif arg3 == "D3QN":
+            STANDARDISE_RETURNS = False
+            TARGET_UPDATE_RATE = 1e4
+            USE_PER = False
+            USE_DUELLING = True
+    elif arg1 == "PER":
+        if arg3 == "DQN":
+            STANDARDISE_RETURNS = True
+            TARGET_UPDATE_RATE = 1
+            USE_PER = True
+            USE_DUELLING = False
+        elif arg3 == "DDQN":
+            STANDARDISE_RETURNS = False
+            TARGET_UPDATE_RATE = 1e4
+            USE_PER = True
+            USE_DUELLING = False
+        elif arg3 == 'D3QN':
+            STANDARDISE_RETURNS = False
+            TARGET_UPDATE_RATE = 1e4
+            USE_PER = True
+            USE_DUELLING = True
 
     """RUN PARAMETERS:"""
     SEED = arg2
     RUN_TYPE = "train"  # "train"
-    RUN_NAME = "DQN_DDQN_standardisation_target_update_long_run"
-    if "MeanSquaredError" in str(arg3):
-        RUN_INFO = arg1 + "=" + "MeanSquaredError"
-    elif "Huber" in str(arg3):
-        RUN_INFO = arg1 + "=" + "Huber"
-    elif "elu" in str(arg3):
-        if "relu" in str(arg3):
-            if "relu6" in str(arg3):
-                RUN_INFO = arg1 + "=" + "Relu6"
-            else:
-                RUN_INFO = arg1 + "=" + "Relu"
-        else:
-            RUN_INFO = arg1 + "=" + "Elu"
-    elif "tanh" in str(arg3):
-        RUN_INFO = arg1 + "=" + "Tanh"
-    else:
-        RUN_INFO = arg1 + "=" + str(arg3)
+    RUN_NAME = "Baselines"
+    RUN_INFO = arg1 + "=" + str(arg3)
 
     n_vehicles = arg0["slow"]+arg0["medium"]+arg0["fast"]
 
@@ -438,10 +364,10 @@ def start_run(arg0, arg1, arg2, arg3):
     np.random.seed(SEED)
 
     """MODEL PARAMETERS:"""
-    # N_UNITS = (32, 16, 8)
+    N_UNITS = (32, 32)
     N_INPUTS = 55
     N_ACTIONS = 5
-    # ACT_FUNC = tf.nn.relu
+    ACT_FUNC = tf.nn.relu
     N_STACKED_TIMESTEPS = 2  # TODO Check stacked timesteps (shouldnt it be 4? )
     BATCH_NORM = False
     MODEL_FILE_PATH = "logfiles/"+RUN_NAME+"/"+"train"+"/Seed"+str(SEED)+"-Details="+str(RUN_INFO) + "/"
@@ -490,7 +416,7 @@ def start_run(arg0, arg1, arg2, arg3):
     """TRAINING PARAMETERS:"""
     POLICY_ACTION_RATE = 8  # Number of simulator steps before new control action is taken
     MAX_TIMESTEPS = 5e3  # range: 5e3 - 10e3
-    MAX_EPISODES = 1500 # 800
+    MAX_EPISODES = 800
     FINAL_RETURN = 1
     SHOW_TRAIN_PLOTS = False
     SAVE_TRAINING = True
@@ -502,28 +428,28 @@ def start_run(arg0, arg1, arg2, arg3):
     else:
         SIM_EPISODES = 1
     BUFFER_SIZE = 300000
-    # BATCH_SIZE = 32  # range: 32 - 150
+    BATCH_SIZE = 32  # range: 32 - 150
     EPSILON_MIN = 1  # Exploration
     EPSILON_MAX = 0.1  # Exploitation
-    DECAY_RATE = 0.99999  # 0.99997
+    DECAY_RATE = 0.99997
     MODEL_UPDATE_RATE = 1
     # TARGET_UPDATE_RATE = 1e4
-    # LEARN_RATE = 0.0001  # range: 1e-3 - 1e-4
+    LEARN_RATE = 0.0001  # range: 1e-3 - 1e-4
     OPTIMISER = tf.optimizers.Adam(learning_rate=LEARN_RATE)
-    # LOSS_FUNC = tf.losses.MeanSquaredError()  # tf.losses.Huber()  # PER loss function is MSE
-    # GAMMA = 0.95  # range: 0.9 - 0.99
-    # CLIP_GRADIENTS = True
+    LOSS_FUNC = tf.losses.Huber()  # tf.losses.Huber()  # PER loss function is MSE
+    GAMMA = 0.95  # range: 0.9 - 0.99
+    CLIP_GRADIENTS = False
     CLIP_NORM = 2
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
     REWARD_WEIGHTS = np.array([1.0, 0.15, 0.8, 0.4, -5])
     # STANDARDISE_RETURNS = False
-    USE_PER = False
+    # USE_PER = False
     ALPHA = 0.75  # Priority scale: a=0:random, a=1:completely based on priority
-    BETA = 0.3  # Prioritisation factor
-    BETA_INCREMENT = 0.00004  # Rate of Beta annealing to 1
+    BETA = 0.25  # Prioritisation factor
+    BETA_INCREMENT = 2e-6  # Rate of Beta annealing to 1
     # Model types:
-    # USE_TARGET_NETWORK = True
-    USE_DUELLING = True
+    USE_TARGET_NETWORK = True
+    # USE_DUELLING = True
     USE_DEEPSET = False
     USE_CNN = False  # TODO Fix so that CNN type 3 and LSTM work with PER!
     USE_LSTM = False
@@ -584,8 +510,6 @@ def start_run(arg0, arg1, arg2, arg3):
     training_param_save.pop("optimiser")
     pic.dump(training_param_save, open(run_settings["save_directory"] + "/training_parameters", "wb"))
 
-    # TODO Compare DQN DDQN PER and DUELLING ON SAME RANDOM SEED!
-
     # Initialise model type:
     if USE_DEEPSET and not USE_CNN:
         DQ_net = DeepSetQNetwork(model_param=model_param)
@@ -629,7 +553,6 @@ def start_run(arg0, arg1, arg2, arg3):
     # TODO check CNN dimensions to and from buffers and to and from models
     # TODO tune deepset, CNN, lstm
     # TODO add CNN mean/max pooling layers
-    # TODO check batch normalisation for all the models
     # TODO check to make sure that deepset doesnt need tanh + batch norm ... tanh on other models too
     # Set up main class for running simulations:
     main = Main(n_vehicles=run_settings["n_vehicles"],
@@ -678,41 +601,13 @@ if __name__=="__main__":
             arg3 = parameter value
         """
         arg0 = {"slow": 10, "medium": 20, "fast": 5}
-        for arg1 in ("Batch size", "Learning rate", "Loss function", "Target update rate", "Standardise returns",
-                     "Activation function", "Model size", "Clip gradients", "Discount factor"):
-            for arg2 in (100, 300, 500):
-                if arg1 == "Batch size":
-                    for arg3 in (32, 64, 128):
+        for arg1 in ('ER', 'PER'):
+            for arg2 in (100, 200, 300, 400, 500):
+                if arg1 == "ER":
+                    for arg3 in ('DQN', 'DDQN', 'D3QN'):
                         yield arg0, arg1, arg2, arg3
-                elif arg1 == "Learning rate":
-                    for arg3 in (0.001,  0.0005, 0.0001):
-                        yield arg0, arg1, arg2, arg3
-                elif arg1 == "Loss function":
-                    for arg3 in (tf.losses.MeanSquaredError(), tf.losses.Huber()):
-                        yield arg0, arg1, arg2, arg3
-                elif arg1 == "Activation function":
-                    for arg3 in (tf.nn.relu, tf.nn.relu6, tf.nn.tanh, tf.nn.elu):
-                        yield arg0, arg1, arg2, arg3
-                elif arg1 == "Model size":
-                    for arg3 in ((32,32), (64,64), (128,128), (256,256), (32,16,8), (64,32,16), (128,64,32)):
-                        yield arg0, arg1, arg2, arg3
-                elif arg1 == "Clip gradients":
-                    for arg3 in (True, False):
-                        yield arg0, arg1, arg2, arg3
-                elif arg1 == "Discount factor":
-                    for arg3 in (0.9, 0.95, 0.99):
-                        yield arg0, arg1, arg2, arg3
-                elif arg1 == "Target update rate":
-                    for arg3 in (1e4, 1e5, 5e5, 1e6):
-                        yield arg0, arg1, arg2, arg3
-                elif arg1 == "Standardise returns":
-                    for arg3 in (True, False):
-                        yield arg0, arg1, arg2, arg3
-                elif arg1 == "Beta increment":
-                    for arg3 in (3.2e-6, 2.13e-6, 1.6e-6, 1.1e-6):
-                        yield arg0, arg1, arg2, arg3
-                elif arg1 == "Epsilon decay rate":
-                    for arg3 in (0.99997, 0.99998, 0.999985, 0.99999):
+                elif arg1 == "PER":
+                    for arg3 in ('DQN', 'DDQN', 'D3QN'):
                         yield arg0, arg1, arg2, arg3
                 else:
                     sys.exit()

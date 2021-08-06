@@ -241,9 +241,10 @@ class PerTrainingBuffer(object):  # stored as ( s, a, r, s_ ) in SumTree
 
             s = random.uniform(a, b)
             (idx, p, data) = self.tree.get(s)
-            priorities.append(p)
-            mini_batch.append(data)
-            idxs.append(idx)
+            if p > 0.0001:
+                priorities.append(p)
+                mini_batch.append(data)
+                idxs.append(idx)
 
         # TODO fix the division by self.tree.total() and rather just divide by the value of the root node
         sampling_probabilities = np.array(priorities) / self.tree.total()
