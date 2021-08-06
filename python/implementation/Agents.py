@@ -201,7 +201,7 @@ class DqnAgent(keras.models.Model):
 
         if self.training_param["standardise_returns"]:
             eps = np.finfo(np.float32).eps.item()
-            Q_target = Q_target - tf.math.reduce_mean(Q_target) / (tf.math.reduce_std(Q_target) + eps)
+            Q_target = (Q_target - tf.math.reduce_mean(Q_target)) / (tf.math.reduce_std(Q_target) + eps)
 
         with tf.GradientTape() as tape:
             Q_output = self.Q_actual_net(states)

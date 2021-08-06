@@ -134,7 +134,7 @@ class Main(object):
                     if t % self.training_param["policy_rate"] == 0:
                         train_counter += 1
                         self.policy.agent.epsilon_decay_count = train_counter
-                        self.policy.agent.timestep = np.int(t / self.training_param["policy_rate"])
+                        self.policy.agent.timestep = int(t / self.training_param["policy_rate"])
                         if self.policy.agent.buffer.is_buffer_min_size():
                             model_update_counter += 1
                             if model_update_counter % self.training_param["model_update_rate"] == 0:
@@ -157,13 +157,12 @@ class Main(object):
 
             time_taken_episode = self.episodeTimer.endTime()
 
-            if trained:
-                if 0.05 * reward + (1 - 0.05) * running_reward > running_reward and episode_count % 50 == 0:
-                    self.policy.agent.Q_actual_net.save_weights(self.model_param["weights_file_path"])
-                    print("Saved network weights.")
+            # if trained and episode_count % 50 == 0:
+            #     self.policy.agent.Q_actual_net.save_weights(self.model_param["weights_file_path"])
+            #     print("Saved network weights.")
 
-                # Running reward smoothing effect
-                running_reward = 0.05 * reward + (1 - 0.05) * running_reward
+            # Running reward smoothing effect
+            running_reward = 0.05 * reward + (1 - 0.05) * running_reward
 
 
             if episode_count % 50 == 0 and trained:
@@ -198,7 +197,10 @@ class Main(object):
             self.tb_logger.save_variable("Vehicle speed", x=episode_count, y=np.mean(vehicle_speeds))
             if (episode_count % 25 == 0 or episode_count == 1):
                 if self.training_param["use_per"]:
-                    self.tb_logger.save_variable("Beta increment", x=episode_count, y=beta)
+                    try:
+                        self.tb_logger.save_variable("Beta increment", x=episode_count, y=beta)
+                    except:
+                        self.tb_logger.save_variable("Beta increment", x=episode_count, y=self.policy.agent.buffer.beta)
                 else:
                     try:
                         self.tb_logger.save_variable(name='Epsilon', x=episode_count, y=epsilon)
@@ -441,7 +443,7 @@ def start_run(arg0, arg1, arg2, arg3):
     # ACT_FUNC = tf.nn.relu
     N_STACKED_TIMESTEPS = 2  # TODO Check stacked timesteps (shouldnt it be 4? )
     BATCH_NORM = False
-    MODEL_FILE_PATH = "logfiles/"+RUN_NAME+"/"+"train"+"/Seed"+str(SEED)+"-Details="+str(RUN_INFO)+"/model_weights"
+    MODEL_FILE_PATH = "logfiles/"+RUN_NAME+"/"+"train"+"/Seed"+str(SEED)+"-Details="+str(RUN_INFO) + "/"
     if RUN_TYPE == "train":
         TRAINABLE = True
     elif RUN_TYPE == "test":
@@ -487,7 +489,7 @@ def start_run(arg0, arg1, arg2, arg3):
     """TRAINING PARAMETERS:"""
     POLICY_ACTION_RATE = 8  # Number of simulator steps before new control action is taken
     MAX_TIMESTEPS = 5e3  # range: 5e3 - 10e3
-    MAX_EPISODES = 1500
+    MAX_EPISODES = 1500 # 800
     FINAL_RETURN = 1
     SHOW_TRAIN_PLOTS = False
     SAVE_TRAINING = True
@@ -502,7 +504,7 @@ def start_run(arg0, arg1, arg2, arg3):
     # BATCH_SIZE = 32  # range: 32 - 150
     EPSILON_MIN = 1  # Exploration
     EPSILON_MAX = 0.1  # Exploitation
-    DECAY_RATE = 0.99999  # 0.999986
+    DECAY_RATE = 0.99999  # 0.99997
     MODEL_UPDATE_RATE = 1
     # TARGET_UPDATE_RATE = 1e4
     # LEARN_RATE = 0.0001  # range: 1e-3 - 1e-4
@@ -516,11 +518,11 @@ def start_run(arg0, arg1, arg2, arg3):
     # STANDARDISE_RETURNS = False
     USE_PER = False
     ALPHA = 0.75  # Priority scale: a=0:random, a=1:completely based on priority
-    BETA = 0.2  # Prioritisation factor
+    BETA = 0.3  # Prioritisation factor
     BETA_INCREMENT = 0.00004  # Rate of Beta annealing to 1
     # Model types:
-    USE_TARGET_NETWORK = True
-    USE_DUELLING = False
+    # USE_TARGET_NETWORK = True
+    USE_DUELLING = True
     USE_DEEPSET = False
     USE_CNN = False  # TODO Fix so that CNN type 3 and LSTM work with PER!
     USE_LSTM = False
@@ -679,7 +681,6 @@ if __name__=="__main__":
                      "Activation function", "Model size", "Clip gradients", "Discount factor"):
             for arg2 in (100, 300, 500):
                 if arg1 == "Batch size":
-                    # for arg3 in (32, 64, 128):
                     for arg3 in (32, 64, 128):
                         yield arg0, arg1, arg2, arg3
                 elif arg1 == "Learning rate":
@@ -705,6 +706,12 @@ if __name__=="__main__":
                         yield arg0, arg1, arg2, arg3
                 elif arg1 == "Standardise returns":
                     for arg3 in (True, False):
+                        yield arg0, arg1, arg2, arg3
+                elif arg1 == "Beta increment":
+                    for arg3 in (3.2e-6, 2.13e-6, 1.6e-6, 1.1e-6):
+                        yield arg0, arg1, arg2, arg3
+                elif arg1 == "Epsilon decay rate":
+                    for arg3 in (0.99997, 0.99998, 0.999985, 0.99999):
                         yield arg0, arg1, arg2, arg3
                 else:
                     sys.exit()
