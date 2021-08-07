@@ -176,7 +176,8 @@ class DeepSetQNetwork(keras.Model):
         tf.random.set_seed(model_param["seed"])
         np.random.seed(model_param["seed"])
         act_func = model_param["activation_function"]
-        # TODO mean pooling layer option on top of sum pooling layer
+        act_func_phi = model_param['deepset_param']['act_func_phi']
+        act_func_rho = model_param['deepset_param']['act_func_rho']
         n_units = model_param["n_units"]
         n_units_phi = model_param["deepset_param"]["n_units_phi"]
         n_units_rho = model_param["deepset_param"]["n_units_rho"]
@@ -189,11 +190,11 @@ class DeepSetQNetwork(keras.Model):
         self.dynamic_input_layer = layers.Input(shape=tf.TensorShape([n_vehicles, n_inputs_dynamic]), name="DynamicStateInput")
 
         if len(n_units_phi) == 3:
-            self.phi_layer_1 = layers.Dense(n_units_phi[0], activation=act_func, name="PhiLayer1")(
+            self.phi_layer_1 = layers.Dense(n_units_phi[0], activation=act_func_phi, name="PhiLayer1")(
                 self.dynamic_input_layer)
-            self.phi_layer_2 = layers.Dense(n_units_phi[1], activation=act_func, name="PhiLayer2")(
+            self.phi_layer_2 = layers.Dense(n_units_phi[1], activation=act_func_phi, name="PhiLayer2")(
                 self.phi_layer_1)
-            self.phi_layer_3 = layers.Dense(n_units_phi[2], activation=act_func, name="PhiLayer3")(
+            self.phi_layer_3 = layers.Dense(n_units_phi[2], activation=act_func_phi, name="PhiLayer3")(
                 self.phi_layer_2)
             self.sum_layer = layers.Add(name="Summation_layer")([self.phi_layer_3[:, 0, :],
                                                                  self.phi_layer_3[:, 1, :],
@@ -208,9 +209,9 @@ class DeepSetQNetwork(keras.Model):
                                                                  self.phi_layer_3[:, 10, :],
                                                                  self.phi_layer_3[:, 11, :]])
         else:
-            self.phi_layer_1 = layers.Dense(n_units_phi[0], activation=act_func, name="PhiLayer1")(
+            self.phi_layer_1 = layers.Dense(n_units_phi[0], activation=act_func_phi, name="PhiLayer1")(
                 self.dynamic_input_layer)
-            self.phi_layer_2 = layers.Dense(n_units_phi[1], activation=act_func, name="PhiLayer2")(
+            self.phi_layer_2 = layers.Dense(n_units_phi[1], activation=act_func_phi, name="PhiLayer2")(
                 self.phi_layer_1)
             self.sum_layer = layers.Add(name="Summation_layer")([self.phi_layer_2[:,0,:],
                                                                  self.phi_layer_2[:,1,:],
@@ -226,9 +227,9 @@ class DeepSetQNetwork(keras.Model):
                                                                  self.phi_layer_2[:,11,:]])
 
         if len(n_units_rho) == 3:
-            self.rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func, name="rhoLayer1")(self.sum_layer)
-            self.rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func, name="rhoLayer2")(self.rho_layer_1)
-            self.rho_layer_3 = layers.Dense(n_units_rho[2], activation=act_func, name="rhoLayer3")(self.rho_layer_2)
+            self.rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func_rho, name="rhoLayer1")(self.sum_layer)
+            self.rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func_rho, name="rhoLayer2")(self.rho_layer_1)
+            self.rho_layer_3 = layers.Dense(n_units_rho[2], activation=act_func_rho, name="rhoLayer3")(self.rho_layer_2)
             if model_param["batch_normalisation"] == True:
                 self.batch_norm_layer = layers.BatchNormalization(name="batch_norm")(self.rho_layer_3)
                 self.concat_layer = layers.Concatenate(name="ConcatenationLayer")(
@@ -237,8 +238,8 @@ class DeepSetQNetwork(keras.Model):
                 self.concat_layer = layers.Concatenate(name="ConcatenationLayer")(
                     [self.rho_layer_3, self.static_input_layer])
         else:
-            self.rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func, name="rhoLayer1")(self.sum_layer)
-            self.rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func, name="rhoLayer2")(self.rho_layer_1)
+            self.rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func_rho, name="rhoLayer1")(self.sum_layer)
+            self.rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func_rho, name="rhoLayer2")(self.rho_layer_1)
             if model_param["batch_normalisation"]==True:
                 self.batch_norm_layer = layers.BatchNormalization(name="batch_norm")(self.rho_layer_2)
                 self.concat_layer = layers.Concatenate(name="ConcatenationLayer")(

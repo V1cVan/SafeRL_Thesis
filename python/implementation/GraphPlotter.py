@@ -26,7 +26,7 @@ For deleting experiment from Tensorboard:
 # tensorboard dev upload --logdir "./logfiles/DQN_DDQN_standardisation_target_update/train" --name "DQN with target standardisation vs DDQN" --description "Comparison with shorter learning times and less exploration. Default var: Policy action rate=8; Units=(32,32); Activation=relu; Batch size=32; Learning rate=0.0001; Loss func=Huber; Clip grads=False; Gamma=0.95; Target update rate=1e4; Standardise returns=False; Buffer size=300000"
 # tensorboard dev upload --logdir "./logfiles/DQN_DDQN_standardisation_target_update_long_run/train" --name "DQN with target standardisation vs DDQN - long run" --description "Comparison with longer learning times and more exploration."
 # tensorboard dev upload --logdir "./logfiles/Baselines/train" --name "Baselines" --description "Training of DQN_ER, DQN_PER, DDQN_ER, DDQN_PER, D3QN_ER, D3QN_PER with optimal parameters of the DDQN sweep."
-
+# tensorboard dev upload --logdir "./logfiles/Deepset_tuning/train" --name "Deepset tuning" --description "Tuning of the deepset network. Defaults: DDQN ER defaults; Phi size=(32,32), Rho size=(32,32), Phi activation=relu, Rho activation=relu, Batch norm=False."
 
 def start_run(parameter, tag_value, df, fig_path):
 
@@ -44,7 +44,7 @@ def start_run(parameter, tag_value, df, fig_path):
     if tag_value == "Epsilon":
         ax.get_legend().remove()
     else:
-        ax.legend(loc='lower right', title='Algorithm:')
+        ax.legend(loc='lower right', title='Parameter:')
     ax.set(xlabel = "Episode")
     ax.set(ylabel = tag_value)
     plt_name = fig_path + "/" + parameter + '-' + tag_value + '.png'
@@ -77,12 +77,12 @@ def extract_columns(df, column1='seed', column2='description'):
     # Can access the different categories using shortened_df['seed'].dtypes.categories[index]
 
     # Extract the run description to a column
-    # For parameter comparison
-    # df[column2] = df['run'].str.extract(r'(Details=.*)')
-    # df[column2] = df[column2].str[8:]
+    # For parameter sweep comparison
+    df[column2] = df['run'].str.extract(r'(Details=.*)')
+    df[column2] = df[column2].str[8:]
 
     # For method comparison:
-    df[column2] =df['run'].str.extract(r'( =.*)')
+    # df[column2] =df['run'].str.extract(r'( =.*)')
     return df
 
 
@@ -95,11 +95,11 @@ def preprocess_data(csv_path):
     df = extract_columns(df)
     # df = df.loc[df['tag'].isin(['Mean episode reward', 'Mean vehicle speed for episode'])]
     # For parameter comparison:
-    # df['parameter_tested'] = df['description'].str.extract(r'(.*?)=')
+    df['parameter_tested'] = df['description'].str.extract(r'(.*?)=')
     df = df.loc[df['tag'].isin(['Reward', 'Vehicle speed'])]
     # For method comparison:
-    df['parameter_tested'] = df['description'].str.extract(r'(.*)=')
-    df['description'] = df['description'].str.extract(r'=(.*)')
+    # df['parameter_tested'] = df['description'].str.extract(r'(.*)=')
+    # df['description'] = df['description'].str.extract(r'=(.*)')
 
 
     print(df.head())
@@ -139,6 +139,8 @@ if __name__ == "__main__":
         "DQN_DDQN_standardisation_short": "0o0v4ZgrTWWUnOUlBrWmow",
         "DQN_DDQN_standardisation_long": "rhGbDukaTL28a8hjZO6QiQ",
         'Baselines': 'Voo84Ca6Tj6LzphvgGmnlQ',
+        'Deepset_tuning': 'foWXaOj4Rvy1i78j3HnepA',
+
     }
 
     experiment_paths = {
@@ -148,12 +150,13 @@ if __name__ == "__main__":
         "DQN_DDQN_standardisation_short": "./logfiles/DQN_DDQN_standardisation_target_update/train",
         "DQN_DDQN_standardisation_long": "./logfiles/DQN_DDQN_standardisation_target_update_long_run/train",
         'Baselines': './logfiles/Baselines/train',
+        'Deepset_tuning': './logfiles/Baselines/train',
     }
 
     experiment_names = list(experiment_ids.keys())
     print(experiment_names)
 
-    experiment_name = "Baselines"
+    experiment_name = "Deepset_tuning"
     csv_path = experiment_paths[experiment_name] + "/" + experiment_name + '.csv'
     download_and_save(experiment_name, csv_path)  # Comment out if you don't want to re-download the data
 
