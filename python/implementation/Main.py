@@ -345,6 +345,8 @@ def start_run(arg0, arg1, arg2, arg3):
         if "relu" in str(arg3):
             if "relu6" in str(arg3):
                 RUN_INFO = arg1 + "=" + "Relu6"
+            elif "leaky_relu" in str(arg3):
+                RUN_INFO = arg1 + '=' + "Leaky Relu"
             else:
                 RUN_INFO = arg1 + "=" + "Relu"
         else:
