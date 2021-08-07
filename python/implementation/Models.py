@@ -166,6 +166,7 @@ class CNN(keras.Model):
                                show_layer_names=True,
                                to_file='./models/Convolutional_DQN.png')
 
+
 class DeepSetQNetwork(keras.Model):
     """
     Builds a deep Q-network using DeepSetQ approach incorporating permutation invariance.
@@ -196,35 +197,38 @@ class DeepSetQNetwork(keras.Model):
                 self.phi_layer_1)
             self.phi_layer_3 = layers.Dense(n_units_phi[2], activation=act_func_phi, name="PhiLayer3")(
                 self.phi_layer_2)
-            self.sum_layer = layers.Add(name="Summation_layer")([self.phi_layer_3[:, 0, :],
-                                                                 self.phi_layer_3[:, 1, :],
-                                                                 self.phi_layer_3[:, 2, :],
-                                                                 self.phi_layer_3[:, 3, :],
-                                                                 self.phi_layer_3[:, 4, :],
-                                                                 self.phi_layer_3[:, 5, :],
-                                                                 self.phi_layer_3[:, 6, :],
-                                                                 self.phi_layer_3[:, 7, :],
-                                                                 self.phi_layer_3[:, 8, :],
-                                                                 self.phi_layer_3[:, 9, :],
-                                                                 self.phi_layer_3[:, 10, :],
-                                                                 self.phi_layer_3[:, 11, :]])
+            self.layer_list =[self.phi_layer_3[:, 0, :],
+                              self.phi_layer_3[:, 1, :],
+                              self.phi_layer_3[:, 2, :],
+                              self.phi_layer_3[:, 3, :],
+                              self.phi_layer_3[:, 4, :],
+                              self.phi_layer_3[:, 5, :],
+                              self.phi_layer_3[:, 6, :],
+                              self.phi_layer_3[:, 7, :],
+                              self.phi_layer_3[:, 8, :],
+                              self.phi_layer_3[:, 9, :],
+                              self.phi_layer_3[:, 10, :],
+                              self.phi_layer_3[:, 11, :]]
+
+            self.sum_layer = layers.Add(name="Summation_layer")(self.layer_list)
         else:
             self.phi_layer_1 = layers.Dense(n_units_phi[0], activation=act_func_phi, name="PhiLayer1")(
                 self.dynamic_input_layer)
             self.phi_layer_2 = layers.Dense(n_units_phi[1], activation=act_func_phi, name="PhiLayer2")(
                 self.phi_layer_1)
-            self.sum_layer = layers.Add(name="Summation_layer")([self.phi_layer_2[:,0,:],
-                                                                 self.phi_layer_2[:,1,:],
-                                                                 self.phi_layer_2[:,2,:],
-                                                                 self.phi_layer_2[:,3,:],
-                                                                 self.phi_layer_2[:,4,:],
-                                                                 self.phi_layer_2[:,5,:],
-                                                                 self.phi_layer_2[:,6,:],
-                                                                 self.phi_layer_2[:,7,:],
-                                                                 self.phi_layer_2[:,8,:],
-                                                                 self.phi_layer_2[:,9,:],
-                                                                 self.phi_layer_2[:,10,:],
-                                                                 self.phi_layer_2[:,11,:]])
+            self.layer_list = [self.phi_layer_2[:, 0, :],
+                          self.phi_layer_2[:, 1, :],
+                          self.phi_layer_2[:, 2, :],
+                          self.phi_layer_2[:, 3, :],
+                          self.phi_layer_2[:, 4, :],
+                          self.phi_layer_2[:, 5, :],
+                          self.phi_layer_2[:, 6, :],
+                          self.phi_layer_2[:, 7, :],
+                          self.phi_layer_2[:, 8, :],
+                          self.phi_layer_2[:, 9, :],
+                          self.phi_layer_2[:, 10, :],
+                          self.phi_layer_2[:, 11, :]]
+            self.sum_layer = layers.Add(name="Summation_layer")(self.layer_list)
 
         if len(n_units_rho) == 3:
             self.rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func_rho, name="rhoLayer1")(self.sum_layer)

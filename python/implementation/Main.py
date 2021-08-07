@@ -308,31 +308,31 @@ def start_run(arg0, arg1, arg2, arg3):
     if arg1 == "Phi network size":
         PHI_SIZE = arg3
         ACT_FUNC_PHI = tf.nn.relu
-        RHO_SIZE = (32,32)
-        ACT_FUNC_RHO = tf.nn.relu
+        RHO_SIZE = (32,32,32)
+        ACT_FUNC_RHO = tf.nn.elu
         BATCH_NORM = False
     elif arg1 == "Rho network size":
-        PHI_SIZE = (32,32)
+        PHI_SIZE = (64,64)
         ACT_FUNC_PHI = tf.nn.relu
         RHO_SIZE = arg3
-        ACT_FUNC_RHO = tf.nn.relu
+        ACT_FUNC_RHO = tf.nn.elu
         BATCH_NORM = False
     elif arg1 == "Phi activation function":
-        PHI_SIZE = (32,32)
+        PHI_SIZE = (64,64)
         ACT_FUNC_PHI = arg3
-        RHO_SIZE = (32,32)
-        ACT_FUNC_RHO = tf.nn.relu
+        RHO_SIZE = (32,32,32)
+        ACT_FUNC_RHO = tf.nn.elu
         BATCH_NORM = False
     elif arg1 == "Rho activation function":
-        PHI_SIZE = (32,32)
+        PHI_SIZE = (64,64)
         ACT_FUNC_PHI = tf.nn.relu
-        RHO_SIZE = (32,32)
+        RHO_SIZE = (32,32,32)
         ACT_FUNC_RHO = arg3
         BATCH_NORM = False
     elif arg1 == "Batch normalisation":
-        PHI_SIZE = (32,32)
+        PHI_SIZE = (64,64)
         ACT_FUNC_PHI = tf.nn.relu
-        RHO_SIZE = (32,32)
+        RHO_SIZE = (32,32,32)
         ACT_FUNC_RHO = tf.nn.relu
         BATCH_NORM = arg3
 
@@ -622,7 +622,7 @@ if __name__=="__main__":
             arg3 = parameter value
         """
         arg0 = {"slow": 10, "medium": 20, "fast": 5}
-        for arg1 in ('Phi network size', 'Rho network size', 'Rho activation function', 'Phi activation function', 'Batch normalisation'):
+        for arg1 in ('Phi network size', 'Rho network size', 'Rho activation function', 'Phi activation function'):#, 'Batch normalisation'):
             # for arg2 in (100, 200, 300, 400, 500):
             for arg2 in (100, 300, 500):
                 if arg1 == "Phi network size":
@@ -632,10 +632,10 @@ if __name__=="__main__":
                     for arg3 in ((32,16), (32, 32), (64,32), (64, 64), (64,32,16), (32,32,32), (64,48,32), (64,64,64)):
                         yield arg0, arg1, arg2, arg3
                 elif arg1 == "Rho activation function":
-                    for arg3 in (tf.nn.relu, tf.nn.elu, tf.nn.tanh):
+                    for arg3 in (tf.nn.relu, tf.nn.elu, tf.nn.tanh, tf.nn.leaky_relu):
                         yield arg0, arg1, arg2, arg3
                 elif arg1 == "Phi activation function":
-                    for arg3 in (tf.nn.relu, tf.nn.elu, tf.nn.tanh):
+                    for arg3 in (tf.nn.relu, tf.nn.elu, tf.nn.tanh, tf.nn.leaky_relu):
                         yield arg0, arg1, arg2, arg3
                 elif arg1 == "Batch normalisation":
                     for arg3 in (True, False):

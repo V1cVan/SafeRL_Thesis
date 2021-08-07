@@ -27,7 +27,7 @@ For deleting experiment from Tensorboard:
 # tensorboard dev upload --logdir "./logfiles/DQN_DDQN_standardisation_target_update_long_run/train" --name "DQN with target standardisation vs DDQN - long run" --description "Comparison with longer learning times and more exploration."
 # tensorboard dev upload --logdir "./logfiles/Baselines/train" --name "Baselines" --description "Training of DQN_ER, DQN_PER, DDQN_ER, DDQN_PER, D3QN_ER, D3QN_PER with optimal parameters of the DDQN sweep."
 # tensorboard dev upload --logdir "./logfiles/Deepset_tuning/train" --name "Deepset tuning" --description "Tuning of the deepset network. Defaults: DDQN ER defaults; Phi size=(32,32), Rho size=(32,32), Phi activation=relu, Rho activation=relu, Batch norm=False."
-
+# tensorboard dev upload --logdir "./logfiles/Deepset_tuning/train" --name "Deepset tuning sweep 2" --description "Tuning of the deepset network sweep number 2. Defaults: DDQN ER defaults; Phi size=(64,64), Rho size=(32,32,32), Phi activation=Relu, Rho activation=Elu, Batch norm=False."
 def start_run(parameter, tag_value, df, fig_path):
 
     sns.set_style("darkgrid")
@@ -51,8 +51,6 @@ def start_run(parameter, tag_value, df, fig_path):
     plt.savefig(plt_name, dpi=300, bbox_inches='tight')
     print(f" Done with: Param/Method={parameter} ; Tag value={tag_value}")
     plt.show()
-
-
 
 def download_and_save(experiment_name, csv_path):
     # Retrieve the training data from Tensorboard Dev
@@ -86,7 +84,6 @@ def extract_columns(run_type, df, column1='seed', column2='description'):
         df[column2] =df['run'].str.extract(r'( =.*)')
 
     return df
-
 
 def preprocess_data(csv_path, run_type):
     # (Re) Load the dataset
@@ -157,7 +154,6 @@ def preprocess_data(csv_path, run_type):
 
     return df
 
-
 def display_results_summary(csv_path):
     metrics_df = pd.read_excel(csv_path[:-4] + "_metrics.xlsx")
 
@@ -195,7 +191,6 @@ def display_results_summary(csv_path):
     print("Saving best parameters to xlsx...")
 
 
-
 if __name__ == "__main__":
     experiment_ids = {
         "DDQN_ER_initialisers": "8viGslanQLWtMaORGizRaQ",
@@ -204,7 +199,8 @@ if __name__ == "__main__":
         "DQN_DDQN_standardisation_short": "0o0v4ZgrTWWUnOUlBrWmow",
         "DQN_DDQN_standardisation_long": "rhGbDukaTL28a8hjZO6QiQ",
         'Baselines': 'xCB7wzRWTRKhrrv10HkKcw',
-        'Deepset_tuning': 'foWXaOj4Rvy1i78j3HnepA',
+        'Deepset_tuning_run1': 'foWXaOj4Rvy1i78j3HnepA',
+        'Deepset_tuning_run2': 'daXDaA0rRYWXofnUEM5R3Q',
 
     }
 
@@ -215,13 +211,14 @@ if __name__ == "__main__":
         "DQN_DDQN_standardisation_short": "./logfiles/DQN_DDQN_standardisation_target_update/train",
         "DQN_DDQN_standardisation_long": "./logfiles/DQN_DDQN_standardisation_target_update_long_run/train",
         'Baselines': './logfiles/Baselines/train',
-        'Deepset_tuning': './logfiles/Deepset_tuning/train',
+        'Deepset_tuning_run1': './logfiles/Deepset_tuning_run1/train',
+        'Deepset_tuning_run2': './logfiles/Deepset_tuning_run2/train',
     }
 
     experiment_names = list(experiment_ids.keys())
     print(experiment_names)
 
-    experiment_name = "Deepset_tuning"
+    experiment_name = "Deepset_tuning_run2"
     run_type = 'parameter_sweep'  # 'method comparison' OR 'parameter_sweep'
     csv_path = experiment_paths[experiment_name] + "/" + experiment_name + '.csv'
     download_and_save(experiment_name, csv_path)  # Comment out if you don't want to re-download the data
