@@ -69,7 +69,7 @@ def download_and_save(experiment_name, csv_path):
     print("Csv saved ... ")
 
 # Function for extracting the regex patterns
-def extract_columns(df, column1='seed', column2='description'):
+def extract_columns(run_type, df, column1='seed', column2='description'):
     # Extract the seed to a column
     df[column1] = df['run'].str.extract(r'(Seed\d\d\d)')  # Seed must be three digits
     df[column1] = df[column1].str[4:]
@@ -77,29 +77,34 @@ def extract_columns(df, column1='seed', column2='description'):
     # Can access the different categories using shortened_df['seed'].dtypes.categories[index]
 
     # Extract the run description to a column
-    # For parameter sweep comparison
-    df[column2] = df['run'].str.extract(r'(Details=.*)')
-    df[column2] = df[column2].str[8:]
+    if run_type == "parameter_sweep":
+        # For parameter sweep comparison
+        df[column2] = df['run'].str.extract(r'(Details=.*)')
+        df[column2] = df[column2].str[8:]
+    else:
+        # For method comparison:
+        df[column2] =df['run'].str.extract(r'( =.*)')
 
-    # For method comparison:
-    # df[column2] =df['run'].str.extract(r'( =.*)')
     return df
 
 
-def preprocess_data(csv_path):
+def preprocess_data(csv_path, run_type):
     # (Re) Load the dataset
     df = pd.read_csv(csv_path)
     assert df.shape is not None
 
     # Remove variables that are not Episode reward or Vehicle velocity
-    df = extract_columns(df)
+    df = extract_columns(run_type, df)
     # df = df.loc[df['tag'].isin(['Mean episode reward', 'Mean vehicle speed for episode'])]
-    # For parameter comparison:
-    df['parameter_tested'] = df['description'].str.extract(r'(.*?)=')
-    df = df.loc[df['tag'].isin(['Reward', 'Vehicle speed'])]
-    # For method comparison:
-    # df['parameter_tested'] = df['description'].str.extract(r'(.*)=')
-    # df['description'] = df['description'].str.extract(r'=(.*)')
+    if run_type == 'parameter_sweep':
+        # For parameter comparison:
+        df['parameter_tested'] = df['description'].str.extract(r'(.*?)=')
+        df = df.loc[df['tag'].isin(['Reward', 'Vehicle speed', 'Epsilon'])]
+    else:
+        # For method comparison:
+        df['parameter_tested'] = df['description'].str.extract(r'(.*)=')
+        df['description'] = df['description'].str.extract(r'=(.*)')
+        df = df.loc[df['tag'].isin(['Reward', 'Vehicle speed'])]
 
 
     print(df.head())
@@ -125,10 +130,70 @@ def preprocess_data(csv_path):
                 df.loc[(df['description'] == i) & (df['seed'] == j) & (df['tag'] == k), 'smoothed'] = smooth_np.tolist()
 
     print(f"Values smoothed by factor {weight}...")
+
+    # Extract the peak mean, overall mean, and overall std. over the seeds for each parameter and metric tested:
+    metrics_columns = ['metric', 'parameter', 'description', 'average_mean', 'peak_mean', 'final_mean', 'average_std']
+    metrics_data = []
+    for i in df['description'].unique():  # Loop through parameters
+            for j in df['tag'].unique():  # Loop through Mean episode reward or mean vehicle speed
+                if j != 'Epsilon':
+                    df_selection = df.loc[(df['description'] == i) & (df['tag'] == j)]
+
+                    mean_line = df_selection.groupby('step')['smoothed'].mean()
+                    average_mean = mean_line.mean()
+                    final_mean = mean_line[mean_line.index[-1]]
+                    peak_mean = mean_line.max()
+                    std_line = df_selection.groupby('step')['smoothed'].std()
+                    average_std = std_line.mean()
+
+                    parameter = df_selection['parameter_tested'].unique()[0]
+                    metrics_data.append([j, parameter, i, average_mean, peak_mean, final_mean, average_std])
+    metrics_df = pd.DataFrame(metrics_data, columns=metrics_columns)
+    excel_path = csv_path[:-4] + "_metrics.xlsx"
+    metrics_df.to_excel(excel_path)
+
     print(df.keys())
     print(df["smoothed"])
 
     return df
+
+
+def display_results_summary(csv_path):
+    metrics_df = pd.read_excel(csv_path[:-4] + "_metrics.xlsx")
+
+    reward_df = metrics_df.loc[metrics_df['metric'] == 'Reward']
+    velocity_df = metrics_df.loc[metrics_df['metric'] == 'Vehicle speed']
+
+    vel_data = {'average_mean':[], 'peak_mean':[], 'final_mean':[], 'average_std':[]}
+    rew_data = {'average_mean':[], 'peak_mean':[], 'final_mean':[], 'average_std':[]}
+    for parameter in metrics_df['parameter'].unique():
+        for item in list(vel_data.keys()):
+            rew_selection = reward_df.loc[(reward_df['parameter'] == parameter)]
+            vel_selection = velocity_df.loc[(velocity_df['parameter'] == parameter)]
+            if item != 'average_std':
+                rew_result = rew_selection.loc[(rew_selection[item] == rew_selection[item].max())]
+                vel_result = vel_selection.loc[(vel_selection[item] == vel_selection[item].max())]
+            else:
+                rew_result = rew_selection.loc[(rew_selection[item] == rew_selection[item].min())]
+                vel_result = vel_selection.loc[(vel_selection[item] == vel_selection[item].min())]
+
+            rew_data[item].append(str(rew_result["description"].values[0]) +' | '+ str(rew_result[item].values[0]))
+            vel_data[item].append(str(vel_result["description"].values[0]) +' | '+ str(vel_result[item].values[0]))
+
+    best_reward_df = pd.DataFrame(rew_data)
+    rew_path = csv_path[:-4] + "_best_reward_params.xlsx"
+    best_reward_df.to_excel(rew_path)
+    best_velocity_df = pd.DataFrame(vel_data)
+    vel_path = csv_path[:-4] + "_best_velocity_params.xlsx"
+    best_velocity_df.to_excel(vel_path)
+
+    print("Best parameters i.t.o. reward: \n")
+    print(rew_data)
+    print("Best parameters i.t.o. velocity: \n")
+    print(vel_data)
+
+    print("Saving best parameters to xlsx...")
+
 
 
 if __name__ == "__main__":
@@ -138,7 +203,7 @@ if __name__ == "__main__":
         "Epsilon_sweep": "t1GY8hx8QFWiNjyofqJUNw",
         "DQN_DDQN_standardisation_short": "0o0v4ZgrTWWUnOUlBrWmow",
         "DQN_DDQN_standardisation_long": "rhGbDukaTL28a8hjZO6QiQ",
-        'Baselines': 'Voo84Ca6Tj6LzphvgGmnlQ',
+        'Baselines': 'xCB7wzRWTRKhrrv10HkKcw',
         'Deepset_tuning': 'foWXaOj4Rvy1i78j3HnepA',
 
     }
@@ -150,18 +215,22 @@ if __name__ == "__main__":
         "DQN_DDQN_standardisation_short": "./logfiles/DQN_DDQN_standardisation_target_update/train",
         "DQN_DDQN_standardisation_long": "./logfiles/DQN_DDQN_standardisation_target_update_long_run/train",
         'Baselines': './logfiles/Baselines/train',
-        'Deepset_tuning': './logfiles/Baselines/train',
+        'Deepset_tuning': './logfiles/Deepset_tuning/train',
     }
 
     experiment_names = list(experiment_ids.keys())
     print(experiment_names)
 
     experiment_name = "Deepset_tuning"
+    run_type = 'parameter_sweep'  # 'method comparison' OR 'parameter_sweep'
     csv_path = experiment_paths[experiment_name] + "/" + experiment_name + '.csv'
     download_and_save(experiment_name, csv_path)  # Comment out if you don't want to re-download the data
 
     # Pre-process (smooth data from csv)
-    df = preprocess_data(csv_path)
+    df = preprocess_data(csv_path, run_type)
+
+    # Display the best results of the different parameter:
+    display_results_summary(csv_path)
 
     # Plot the smoothed results using multi processing
     procs = 32  # Amount of processes/cores you want to use

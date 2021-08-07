@@ -304,7 +304,7 @@ def start_run(arg0, arg1, arg2, arg3):
     config.scenarios_path = str(SC_PATH)
     # current_time = datetime.datetime.now().strftime("%Y-%m-%d-%Hh%Mm")
 
-    # Deepset tuning: 
+    # Deepset tuning:
     if arg1 == "Phi network size":
         PHI_SIZE = arg3
         ACT_FUNC_PHI = tf.nn.relu
