@@ -274,6 +274,31 @@ class CNN(keras.Model):
                                show_layer_names=True,
                                to_file=model_path)
 
+class PhiNetwork(layers.Layer):
+    """
+    Creates a phi network as a layer for the deepset network
+    """
+    def __init__(self, n_units_phi, activation, name):
+        super(PhiNetwork, self).__init__()
+        self.number_layers = len(n_units_phi)
+        if self.number_layers == 3:
+            self.phi_layer_1 = layers.Dense(n_units_phi[0], activation=activation, name=name[0])
+            self.phi_layer_2 = layers.Dense(n_units_phi[1], activation=activation, name=name[1])
+            self.phi_layer_3 = layers.Dense(n_units_phi[2], activation=activation, name=name[2])
+        else:
+            self.phi_layer_1 = layers.Dense(n_units_phi[0], activation=activation, name=name[0])
+            self.phi_layer_2 = layers.Dense(n_units_phi[1], activation=activation, name=name[1])
+
+    def call(self, inputs):
+        if self.number_layers == 3:
+            phi1 = self.phi_layer_1(inputs)
+            phi2 = self.phi_layer_2(phi1)
+            phi3 = self.phi_layer_3(phi2)
+            return phi3
+        else:
+            phi1 = self.phi_layer_1(inputs)
+            phi2 = self.phi_layer_2(phi1)
+            return phi2
 
 class DeepSetQNetwork(keras.Model):
     """
@@ -281,6 +306,108 @@ class DeepSetQNetwork(keras.Model):
     """
     def __init__(self, model_param):
         super(DeepSetQNetwork, self).__init__()
+        self.model_param = model_param
+        tf.random.set_seed(model_param["seed"])
+        np.random.seed(model_param["seed"])
+        act_func = model_param["activation_function"]
+        act_func_phi = model_param['deepset_param']['act_func_phi']
+        act_func_rho = model_param['deepset_param']['act_func_rho']
+        n_units = model_param["n_units"]
+        n_units_phi = model_param["deepset_param"]["n_units_phi"]
+        n_units_rho = model_param["deepset_param"]["n_units_rho"]
+        n_inputs_static = 7
+        n_inputs_dynamic = 4
+        n_vehicles = 12  # Defined by default D_max size
+        n_actions = model_param["n_actions"]
+
+        self.static_input_layer = layers.Input(shape=(n_inputs_static), name="StaticStateInput")
+        self.dynamic_input_layer = layers.Input(shape=tf.TensorShape([n_vehicles, n_inputs_dynamic]), name="DynamicStateInput")
+
+        vehicle_1 = self.dynamic_input_layer[:, 0, :]
+        vehicle_2 = self.dynamic_input_layer[:, 1, :]
+        vehicle_3 = self.dynamic_input_layer[:, 2, :]
+        vehicle_4 = self.dynamic_input_layer[:, 3, :]
+        vehicle_5 = self.dynamic_input_layer[:, 4, :]
+        vehicle_6 = self.dynamic_input_layer[:, 5, :]
+        vehicle_7 = self.dynamic_input_layer[:, 6, :]
+        vehicle_8 = self.dynamic_input_layer[:, 7, :]
+        vehicle_9 = self.dynamic_input_layer[:, 8, :]
+        vehicle_10 = self.dynamic_input_layer[:, 9, :]
+        vehicle_11 = self.dynamic_input_layer[:, 10, :]
+        vehicle_12 = self.dynamic_input_layer[:, 11, :]
+
+        phi_network = PhiNetwork(n_units_phi, act_func_phi, ("PhiLayer1", "PhiLayer2", "PhiLayer3"))
+
+        phi_out_1 = phi_network(vehicle_1)
+        phi_out_2 = phi_network(vehicle_2)
+        phi_out_3 = phi_network(vehicle_3)
+        phi_out_4 = phi_network(vehicle_4)
+        phi_out_5 = phi_network(vehicle_5)
+        phi_out_6 = phi_network(vehicle_6)
+        phi_out_7 = phi_network(vehicle_7)
+        phi_out_8 = phi_network(vehicle_8)
+        phi_out_9 = phi_network(vehicle_9)
+        phi_out_10 = phi_network(vehicle_10)
+        phi_out_11 = phi_network(vehicle_11)
+        phi_out_12 = phi_network(vehicle_12)
+
+        sum_layer = layers.Add(name="Summation_layer")([phi_out_1, phi_out_2, phi_out_3, phi_out_4,
+                                                             phi_out_5, phi_out_6, phi_out_7, phi_out_8,
+                                                             phi_out_9, phi_out_10, phi_out_11, phi_out_12])
+
+        if len(n_units_rho) == 3:
+            rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func_rho, name="rhoLayer1")(sum_layer)
+            rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func_rho, name="rhoLayer2")(rho_layer_1)
+            rho_layer_3 = layers.Dense(n_units_rho[2], activation=act_func_rho, name="rhoLayer3")(rho_layer_2)
+            if model_param["batch_normalisation"] == True:
+                batch_norm_layer = layers.BatchNormalization(name="batch_norm")(rho_layer_3)
+                concat_layer = layers.Concatenate(name="ConcatenationLayer")(
+                    [batch_norm_layer, self.static_input_layer])
+            else:
+                concat_layer = layers.Concatenate(name="ConcatenationLayer")(
+                    [rho_layer_3, self.static_input_layer])
+        else:
+            rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func_rho, name="rhoLayer1")(sum_layer)
+            rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func_rho, name="rhoLayer2")(rho_layer_1)
+            if model_param["batch_normalisation"]==True:
+                batch_norm_layer = layers.BatchNormalization(name="batch_norm")(rho_layer_2)
+                concat_layer = layers.Concatenate(name="ConcatenationLayer")(
+                    [batch_norm_layer, self.static_input_layer])
+            else:
+                concat_layer = layers.Concatenate(name="ConcatenationLayer")([rho_layer_2, self.static_input_layer])
+
+        Q_layer_1 = layers.Dense(n_units[0], activation=act_func, name="QLayer1")(concat_layer)
+        Q_layer_2 = layers.Dense(n_units[1], activation=act_func, name="QLayer2")(Q_layer_1)
+
+        output_layer = layers.Dense(n_actions)(Q_layer_2)
+
+        self.model = keras.Model(inputs=[self.dynamic_input_layer, self.static_input_layer],
+                                 trainable=self.model_param["trainable"],
+                                 outputs=output_layer,
+                                 name="Deepset_DDQN")
+
+        self.display_overview()
+
+    @tf.function
+    def call(self, inputs: tf.Tensor):
+        """ Returns the output of the model given an input. """
+        return self.model(inputs)
+
+    def display_overview(self):
+        """ Displays an overview of the model. """
+        self.model.summary()
+        keras.utils.plot_model(self.model,
+                               show_shapes=True,
+                               show_layer_names=True,
+                               to_file='./models/Deepset_Q_network.png')
+
+
+class OldDeepSetQNetwork(keras.Model):
+    """
+    Builds a deep Q-network using DeepSetQ approach incorporating permutation invariance.
+    """
+    def __init__(self, model_param):
+        super(OldDeepSetQNetwork, self).__init__()
         self.model_param = model_param
         tf.random.set_seed(model_param["seed"])
         np.random.seed(model_param["seed"])
@@ -367,7 +494,7 @@ class DeepSetQNetwork(keras.Model):
         self.model = keras.Model(inputs=[self.dynamic_input_layer, self.static_input_layer],
                                  trainable=self.model_param["trainable"],
                                  outputs=self.output_layer,
-                                 name="Deepset_DDQN")
+                                 name="Old_Deepset_DDQN")
 
         self.display_overview()
 
@@ -382,7 +509,7 @@ class DeepSetQNetwork(keras.Model):
         keras.utils.plot_model(self.model,
                                show_shapes=True,
                                show_layer_names=True,
-                               to_file='./models/Deepset_Q_network.png')
+                               to_file='./models/Old_Deepset_Q_network.png')
 
 
 

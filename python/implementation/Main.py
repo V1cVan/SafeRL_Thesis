@@ -311,49 +311,43 @@ def start_run(vehicles, method, parameter, seed, value):
     # 0=1D conv. on vehicle dim.,
     # 1=1D conv. on measurements dim.,
     # 2=2D conv. on vehicle and measurements dimensions,
-    # CNN tuning:
-    if method == "1D_CNN_veh_dim_tuning":
-        NORMAL_CNN_TYPE = 0
-        if parameter == 'Number of filters - 1 convolution':
-            FILTERS = value  # Dimensionality of output space
-            KERNEL = (2,)  # Convolution width
-            STRIDES = (1,)  # Stride size
-
-        elif parameter == 'Kernel size - 1 convolution':
-            FILTERS = (16,)  # Dimensionality of output space
-            KERNEL = value  # Convolution width
-            STRIDES = (1,)  # Stride size
-            # TODO Finish tomorrow morning... Add options for max and average pooling!
-        elif parameter == 'Number of filters - 2 convolutions':
-
-        elif parameter == 'Kernel size - 2 convolutions':
-
-    elif method == "1D_CNN_meas_dim_tuning":
-        NORMAL_CNN_TYPE = 1
-        if parameter == 'Number of filters - 1 convolution':
-
-            FILTERS = value  # Dimensionality of output space
-            KERNEL = 2  # Convolution width
-            STRIDES = 1  # Stride size
-
-        elif parameter == 'Kernel size - 1 convolution':
-
-        elif parameter == 'Number of filters - 2 convolutions':
-
-        elif parameter == 'Kernel size - 2 convolutions':
-    elif method == "2D_CNN_normal_tuning":
-        NORMAL_CNN_TYPE = 2
-        if parameter == 'Number of filters - 1 convolution':
-
-            FILTERS = value  # Dimensionality of output space
-            KERNEL = 2  # Convolution width
-            STRIDES = 1  # Stride size
-
-        elif parameter == 'Kernel size - 1 convolution':
-
-        elif parameter == 'Number of filters - 2 convolutions':
-
-        elif parameter == 'Kernel size - 2 convolutions':
+    # Deepset tuning:
+    if parameter == "Phi network size":
+        PHI_SIZE = value
+        ACT_FUNC_PHI = tf.nn.relu
+        RHO_SIZE = (32, 32)
+        ACT_FUNC_RHO = tf.nn.relu
+        BATCH_NORM = False
+    elif parameter == "Rho network size":
+        PHI_SIZE = (32, 32)
+        ACT_FUNC_PHI = tf.nn.relu
+        RHO_SIZE = value
+        ACT_FUNC_RHO = tf.nn.relu
+        BATCH_NORM = False
+    elif parameter == "Phi activation function":
+        PHI_SIZE = (32, 32)
+        ACT_FUNC_PHI = value
+        RHO_SIZE = (32, 32)
+        ACT_FUNC_RHO = tf.nn.relu
+        BATCH_NORM = False
+    elif parameter == "Rho activation function":
+        PHI_SIZE = (32, 32)
+        ACT_FUNC_PHI = tf.nn.relu
+        RHO_SIZE = (32, 32)
+        ACT_FUNC_RHO = value
+        BATCH_NORM = False
+    elif parameter == "Batch normalisation":
+        PHI_SIZE = (32, 32)
+        ACT_FUNC_PHI = tf.nn.relu
+        RHO_SIZE = (32, 32)
+        ACT_FUNC_RHO = tf.nn.relu
+        BATCH_NORM = value
+    elif parameter == "Old deepset":
+        PHI_SIZE = (32, 32)
+        ACT_FUNC_PHI = tf.nn.relu
+        RHO_SIZE = (32, 32)
+        ACT_FUNC_RHO = tf.nn.relu
+        BATCH_NORM = False
 
 
     """RUN PARAMETERS:"""
@@ -408,16 +402,16 @@ def start_run(vehicles, method, parameter, seed, value):
     BATCH_NORM = False
     """ NON-TEMPORAL MODEL PARAMETERS: """
     # For deepset:
-    PHI_SIZE = (64, 64)
-    RHO_SIZE = (64, 64)
-    ACT_FUNC_PHI = tf.nn.relu
-    ACT_FUNC_RHO = tf.nn.elu
+    # PHI_SIZE = (64, 64)
+    # RHO_SIZE = (64, 64)
+    # ACT_FUNC_PHI = tf.nn.relu
+    # ACT_FUNC_RHO = tf.nn.elu
     # For CNN's:
-    # FILTERS = (15, 15)  # Dimensionality of output space
-    # KERNEL = (2,)  # Convolution width
-    # STRIDES = (1,1)  # Stride size
+    FILTERS = (15, 15)  # Dimensionality of output space
+    KERNEL = (2,)  # Convolution width
+    STRIDES = (1,1)  # Stride size
     TEMPORAL_CNN_TYPE = '2D'  # 3D or 2D
-    # NORMAL_CNN_TYPE = 0
+    NORMAL_CNN_TYPE = 0
     # 0=1D conv. on vehicle dim.,
     # 1=1D conv. on measurements dim.,
     # 2=2D conv. on vehicle and measurements dimensions,
@@ -468,7 +462,7 @@ def start_run(vehicles, method, parameter, seed, value):
     """TRAINING PARAMETERS:"""
     POLICY_ACTION_RATE = 8  # Number of simulator steps before new control action is taken
     MAX_TIMESTEPS = 5e3  # range: 5e3 - 10e3
-    MAX_EPISODES = 800
+    MAX_EPISODES = 900
     FINAL_RETURN = 1
     SHOW_TRAIN_PLOTS = False
     SAVE_TRAINING = True
@@ -502,8 +496,8 @@ def start_run(vehicles, method, parameter, seed, value):
     # Model types:
     USE_TARGET_NETWORK = True
     USE_DUELLING = False
-    USE_DEEPSET = False
-    USE_CNN = True
+    USE_DEEPSET = True
+    USE_CNN = False
     USE_TEMPORAL_CNN = False
     USE_LSTM = False
     ADD_NOISE = False
@@ -564,8 +558,15 @@ def start_run(vehicles, method, parameter, seed, value):
 
     # Initialise model type:
     if USE_DEEPSET:
-        DQ_net = DeepSetQNetwork(model_param=model_param)
-        DQ_target_net = DeepSetQNetwork(model_param=model_param)
+        if method == "Deepset_tuning_fixed":
+            DQ_net = DeepSetQNetwork(model_param=model_param)
+            DQ_target_net = DeepSetQNetwork(model_param=model_param)
+        elif method == "Deepset_tuning_original":
+            DQ_net = OldDeepSetQNetwork(model_param=model_param)
+            DQ_target_net = OldDeepSetQNetwork(model_param=model_param)
+        else:
+            print("Method naming error")
+            sys.exit()
     elif USE_CNN and not USE_TEMPORAL_CNN:
         DQ_net = CNN(model_param=model_param)
         DQ_target_net = CNN(model_param=model_param)
@@ -650,53 +651,48 @@ if __name__=="__main__":
         """
         This function yields all the parameter combinations to try...
         arguments:
-            arg0 = n_vehicles
-            arg1 = method
-            arg2 = parameter
-            arg3 = seed
-            arg4 = parameter value
+            vehicles = defintion of the vehicles in the simulation
+            method = method name
+            parameter = parameter name
+            seed = seed for run
+            value = parameter value
         """
         vehicles = {"slow": 10, "medium": 20, "fast": 5}
-        for method in ("1D_CNN_veh_dim_tuning", "1D_CNN_meas_dim_tuning",
-                       "2D_CNN_normal_tuning"):
-            if method == "2D_CNN_normal_tuning": # 2D CNN parameters
-                for parameter in ('Number of filters - 1 convolution', 'Kernel size - 1 convolution',
-                                  'Number of filters - 2 convolutions', 'Kernel size - 2 convolutions'):
-                    # for arg2 in (100, 200, 300, 400, 500):
+        for method in ("Deepset_tuning_fixed", "Deepset_tuning_original"):
+            if method == "Deepset_tuning_fixed":
+                for parameter in (
+                'Phi network size', 'Rho network size', 'Rho activation function', 'Phi activation function',
+                'Batch normalisation'):
                     for seed in (100, 300, 500):
-                        if parameter == "Number of filters - single layer":
-                            for value in (8, 16, 32, 64):
+                        if parameter == "Phi network size":
+                            for value in (
+                            (16, 32), (32, 32), (32, 64), (64, 64), (16, 32, 64), (32, 32, 32), (32, 48, 64),
+                            (64, 64, 64)):
                                 yield vehicles, method, parameter, seed, value
-                        elif parameter == "Kernel size - single layer":
-                            for value in (2, 4, 6, 8, 12):
+                        elif parameter == "Rho network size":
+                            for value in (
+                            (32, 16), (32, 32), (64, 32), (64, 64), (64, 32, 16), (32, 32, 32), (64, 48, 32),
+                            (64, 64, 64)):
                                 yield vehicles, method, parameter, seed, value
-                        elif parameter == "Number of filters - double layer":
-                            for value in ():
+                        elif parameter == "Rho activation function":
+                            for value in (tf.nn.relu, tf.nn.elu, tf.nn.tanh):
                                 yield vehicles, method, parameter, seed, value
-                        elif parameter == "Kernel size - double layer":
-                            for value in ():
+                        elif parameter == "Phi activation function":
+                            for value in (tf.nn.relu, tf.nn.elu, tf.nn.tanh):
+                                yield vehicles, method, parameter, seed, value
+                        elif parameter == "Batch normalisation":
+                            for value in (True, False):
                                 yield vehicles, method, parameter, seed, value
                         else:
                             sys.exit()
-            else:  # 1D CNN parameters
-                for parameter in ('Number of filters - 1 convolution', 'Kernel size - 1 convolution',
-                                  'Number of filters - 2 convolutions', 'Kernel size - 2 convolutions'):
-                    # for arg2 in (100, 200, 300, 400, 500):
-                    for seed in (100, 300, 500):
-                        if parameter == "Number of filters - single layer":
-                            for value in (8, 16, 32):
-                                yield vehicles, method, parameter, seed, value
-                        elif parameter == "Kernel size - single layer":
-                            for value in ((2,), (4,)):
-                                yield vehicles, method, parameter, seed, value
-                        elif parameter == "Number of filters - double layer":
-                            for value in ():
-                                yield vehicles, method, parameter, seed, value
-                        elif parameter == "Kernel size - double layer":
-                            for value in ():
-                                yield vehicles, method, parameter, seed, value
-                        else:
-                            sys.exit()
+            elif method == "Deepset_tuning_original":
+                parameter = "Old deepset"
+                for seed in (100, 300, 500):
+                    value = "Defaults"
+                    yield vehicles, method, parameter, seed, value
+            else:
+                print("Method name error")
+                sys.exit()
 
     if procs > 1:
         # Schedule all training runs in a parallel loop over multiple cores:

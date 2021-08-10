@@ -30,6 +30,11 @@ For deleting experiment from Tensorboard:
 # tensorboard dev upload --logdir "./logfiles/Deepset_tuning/train" --name "Deepset tuning sweep 2" --description "Tuning of the deepset network sweep number 2. Defaults: DDQN ER defaults; Phi size=(64,64), Rho size=(32,32,32), Phi activation=Relu, Rho activation=Elu, Batch norm=False."
 # tensorboard dev upload --logdir "./logfiles/DDQN_ER_reward_tuning/train" --name "DDQN reward shaping" --description "Tuning of the reward function to see if the following distance penalty is causing problems. Short run to 800 episodes. Default param"
 
+# tensorboard dev upload --logdir "./logfiles/Deepset_tuning_fixed/train" --name "Fixed Deepset parameter sweep" --description "Tuning of deepset after model was fixed. Defaults: Phi/Rho size = (32,32), ActFunc = Relu, Batchnorm=False"
+# tensorboard dev upload --logdir "./logfiles/Deepset_tuning_original/train" --name "Old Deepset model (broken)" --description "Old default deepset model but re-run with after the reward function was tuned. For comparison to new deepset model."
+
+
+
 def start_run(parameter, tag_value, df, fig_path, run_type):
 
     sns.set_style("darkgrid")
@@ -132,7 +137,7 @@ def preprocess_data(csv_path, run_type):
                 # Initialise values
                 smooth_np[0] = raw_np[0]  # First value in smoothed array is same as first value in raw
                 if k != "Epsilon":
-                    weight = 0.95
+                    weight = 0.9
                 else:
                     weight = 0.0
                 for step in range(1, len(raw_np)):
