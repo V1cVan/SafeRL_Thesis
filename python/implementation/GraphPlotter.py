@@ -28,10 +28,12 @@ For deleting experiment from Tensorboard:
 # tensorboard dev upload --logdir "./logfiles/Baselines/train" --name "Baselines" --description "Training of DQN_ER, DQN_PER, DDQN_ER, DDQN_PER, D3QN_ER, D3QN_PER with optimal parameters of the DDQN sweep."
 # tensorboard dev upload --logdir "./logfiles/Deepset_tuning/train" --name "Deepset tuning" --description "Tuning of the deepset network. Defaults: DDQN ER defaults; Phi size=(32,32), Rho size=(32,32), Phi activation=relu, Rho activation=relu, Batch norm=False."
 # tensorboard dev upload --logdir "./logfiles/Deepset_tuning/train" --name "Deepset tuning sweep 2" --description "Tuning of the deepset network sweep number 2. Defaults: DDQN ER defaults; Phi size=(64,64), Rho size=(32,32,32), Phi activation=Relu, Rho activation=Elu, Batch norm=False."
-def start_run(parameter, tag_value, df, fig_path):
+# tensorboard dev upload --logdir "./logfiles/DDQN_ER_reward_tuning/train" --name "DDQN reward shaping" --description "Tuning of the reward function to see if the following distance penalty is causing problems. Short run to 800 episodes. Default param"
+
+def start_run(parameter, tag_value, df, fig_path, run_type):
 
     sns.set_style("darkgrid")
-
+    # TODO FIGURE SIZE SCALING! plt.figure(figsize=(9, 5))
     print(f"Plotting parameter={parameter}, tag value={tag_value}...")
     # Start your training loop using the given arguments
     plot_df = df.loc[(df['parameter_tested'] == parameter) & (df['tag'] == tag_value)]
@@ -44,9 +46,21 @@ def start_run(parameter, tag_value, df, fig_path):
     if tag_value == "Epsilon":
         ax.get_legend().remove()
     else:
-        ax.legend(loc='lower right', title='Parameter:')
+        if run_type == "parameter_sweep":
+            ax.legend(loc='lower right', title='Parameter:')
+        else:
+            ax.legend(loc='lower right', title=None)
+
+    if tag_value == "Vehicle speed":
+        ax.set(ylim=(78, 108))
+        ax.set(ylabel=tag_value + ' (km/h)')
+    elif tag_value == "Reward":
+        ax.set(ylim=(0.75, 0.93))
+        ax.set(ylabel=tag_value)
+    elif tag_value == "Epsilon":
+        ax.set(ylabel=tag_value)
     ax.set(xlabel = "Episode")
-    ax.set(ylabel = tag_value)
+
     plt_name = fig_path + "/" + parameter + '-' + tag_value + '.png'
     plt.savefig(plt_name, dpi=300, bbox_inches='tight')
     print(f" Done with: Param/Method={parameter} ; Tag value={tag_value}")
@@ -201,6 +215,8 @@ if __name__ == "__main__":
         'Baselines': 'xCB7wzRWTRKhrrv10HkKcw',
         'Deepset_tuning_run1': 'foWXaOj4Rvy1i78j3HnepA',
         'Deepset_tuning_run2': 'daXDaA0rRYWXofnUEM5R3Q',
+        'DDQN_reward_shaping': 'S0cm843GQC66rgyfPKfnQA',
+        'CNN_normal_tuning': 'x',
 
     }
 
@@ -213,13 +229,15 @@ if __name__ == "__main__":
         'Baselines': './logfiles/Baselines/train',
         'Deepset_tuning_run1': './logfiles/Deepset_tuning_run1/train',
         'Deepset_tuning_run2': './logfiles/Deepset_tuning_run2/train',
+        'DDQN_reward_shaping': './logfiles/DDQN_ER_reward_tuning/train',
+        'CNN_normal_tuning': './logfiles/CNN_normal_tuning/train',
     }
 
     experiment_names = list(experiment_ids.keys())
     print(experiment_names)
 
-    experiment_name = "Deepset_tuning_run2"
-    run_type = 'parameter_sweep'  # 'method comparison' OR 'parameter_sweep'
+    experiment_name = "DDQN_reward_shaping"
+    run_type = 'method_comparison'  # 'method comparison' OR 'parameter_sweep'
     csv_path = experiment_paths[experiment_name] + "/" + experiment_name + '.csv'
     download_and_save(experiment_name, csv_path)  # Comment out if you don't want to re-download the data
 
@@ -239,7 +257,7 @@ if __name__ == "__main__":
         # This function should return (yield because it's a generator) all parameter combinations you want to try
         for parameter in df['parameter_tested'].unique():
             for tag_value in df['tag'].unique():
-                yield parameter, tag_value, df, experiment_paths[experiment_name]
+                yield parameter, tag_value, df, experiment_paths[experiment_name], run_type
 
     if procs > 1:
         # Schedule all training runs in a parallel loop when using multiple cores:

@@ -77,7 +77,6 @@ def add_state_noise(state, is_normal=False, is_uniform=False, magnitude=0.0, mu=
 
     return noisy_state
 
-
 def convert_state(veh, remove_velocity=False):
     """
     Assembles state vector in TF form to pass to neural network.
@@ -203,7 +202,6 @@ def convert_state(veh, remove_velocity=False):
         state = tf.convert_to_tensor(state, dtype=tf.float32, name="state_input")
         state = tf.expand_dims(state, 0)
         return state
-
 
 def decompose_state(veh, remove_velocity=False):
     """
@@ -368,7 +366,6 @@ def decompose_state(veh, remove_velocity=False):
         return [dynamic_state, static_state]
 
 
-
 class RewardFunction(object):
 
     def _get_velocity_reward(self, current_velocity):
@@ -484,12 +481,8 @@ class DiscreteSingleActionPolicy(CustomPolicy):
         self.agent = agent  # agent = f(NN_model)
         self.STEP_TIME = self.agent.training_param["policy_rate"]
         self.rewards = RewardFunction()
-        cnn_config = self.agent.Q_actual_net.model_param['cnn_param']['config']
-        self.stack_cnn_frames = (self.agent.training_param["use_CNN"] and cnn_config == 3)
-        self.stack_LSTM_frames = self.agent.training_param["use_LSTM"]
-        if self.stack_cnn_frames or self.stack_LSTM_frames:
+        if self.agent.training_param['use_temporal_CNN'] or self.agent.training_param["use_LSTM"]:
             self.stack_frames = True
-            self.frame_stack_type = self.agent.training_param["frame_stack_type"]  # 0=stack agent frames , 1=stack simulator frames
             self.frame_stack_buffer = deque(maxlen=4)
         else:
             self.stack_frames = False

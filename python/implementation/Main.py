@@ -297,69 +297,89 @@ def sim_type(policy, n_vehicles):
     }
     return sim_config
 
-def start_run(arg0, arg1, arg2, arg3):
+def start_run(vehicles, method, parameter, seed, value):
     # Start training loop using given arguments here..
     ROOT = pathlib.Path(__file__).resolve().parents[2]
     SC_PATH = ROOT.joinpath("scenarios/scenarios.h5")
     config.scenarios_path = str(SC_PATH)
     # current_time = datetime.datetime.now().strftime("%Y-%m-%d-%Hh%Mm")
 
-    # Deepset tuning:
-    if arg1 == "Phi network size":
-        PHI_SIZE = arg3
-        ACT_FUNC_PHI = tf.nn.relu
-        RHO_SIZE = (32,32,32)
-        ACT_FUNC_RHO = tf.nn.elu
-        BATCH_NORM = False
-    elif arg1 == "Rho network size":
-        PHI_SIZE = (64,64)
-        ACT_FUNC_PHI = tf.nn.relu
-        RHO_SIZE = arg3
-        ACT_FUNC_RHO = tf.nn.elu
-        BATCH_NORM = False
-    elif arg1 == "Phi activation function":
-        PHI_SIZE = (64,64)
-        ACT_FUNC_PHI = arg3
-        RHO_SIZE = (32,32,32)
-        ACT_FUNC_RHO = tf.nn.elu
-        BATCH_NORM = False
-    elif arg1 == "Rho activation function":
-        PHI_SIZE = (64,64)
-        ACT_FUNC_PHI = tf.nn.relu
-        RHO_SIZE = (32,32,32)
-        ACT_FUNC_RHO = arg3
-        BATCH_NORM = False
-    elif arg1 == "Batch normalisation":
-        PHI_SIZE = (64,64)
-        ACT_FUNC_PHI = tf.nn.relu
-        RHO_SIZE = (32,32,32)
-        ACT_FUNC_RHO = tf.nn.relu
-        BATCH_NORM = arg3
+    # parameter in
+    # ('Number of filters - 1 convolution', 'Kernel size - 1 convolution',
+    # 'Number of filters - 2 convolutions', 'Kernel size - 2 convolutions'):
+
+    # 0=1D conv. on vehicle dim.,
+    # 1=1D conv. on measurements dim.,
+    # 2=2D conv. on vehicle and measurements dimensions,
+    # CNN tuning:
+    if method == "1D_CNN_veh_dim_tuning":
+        NORMAL_CNN_TYPE = 0
+        if parameter == 'Number of filters - 1 convolution':
+            FILTERS = value  # Dimensionality of output space
+            KERNEL = (2,)  # Convolution width
+            STRIDES = (1,)  # Stride size
+
+        elif parameter == 'Kernel size - 1 convolution':
+            FILTERS = (16,)  # Dimensionality of output space
+            KERNEL = value  # Convolution width
+            STRIDES = (1,)  # Stride size
+            # TODO Finish tomorrow morning... Add options for max and average pooling!
+        elif parameter == 'Number of filters - 2 convolutions':
+
+        elif parameter == 'Kernel size - 2 convolutions':
+
+    elif method == "1D_CNN_meas_dim_tuning":
+        NORMAL_CNN_TYPE = 1
+        if parameter == 'Number of filters - 1 convolution':
+
+            FILTERS = value  # Dimensionality of output space
+            KERNEL = 2  # Convolution width
+            STRIDES = 1  # Stride size
+
+        elif parameter == 'Kernel size - 1 convolution':
+
+        elif parameter == 'Number of filters - 2 convolutions':
+
+        elif parameter == 'Kernel size - 2 convolutions':
+    elif method == "2D_CNN_normal_tuning":
+        NORMAL_CNN_TYPE = 2
+        if parameter == 'Number of filters - 1 convolution':
+
+            FILTERS = value  # Dimensionality of output space
+            KERNEL = 2  # Convolution width
+            STRIDES = 1  # Stride size
+
+        elif parameter == 'Kernel size - 1 convolution':
+
+        elif parameter == 'Number of filters - 2 convolutions':
+
+        elif parameter == 'Kernel size - 2 convolutions':
+
 
     """RUN PARAMETERS:"""
-    SEED = arg2
+    SEED = seed
     RUN_TYPE = "train"  # "train"
-    RUN_NAME = "Deepset_tuning"
+    RUN_NAME = method
     # For sweeps
-    if "elu" in str(arg3):
-        if "relu" in str(arg3):
-            if "relu6" in str(arg3):
-                RUN_INFO = arg1 + "=" + "Relu6"
-            elif "leaky_relu" in str(arg3):
-                RUN_INFO = arg1 + '=' + "Leaky Relu"
+    if "elu" in str(value):
+        if "relu" in str(value):
+            if "relu6" in str(value):
+                RUN_INFO = parameter + "=" + "Relu6"
+            elif "leaky_relu" in str(value):
+                RUN_INFO = parameter + '=' + "Leaky Relu"
             else:
-                RUN_INFO = arg1 + "=" + "Relu"
+                RUN_INFO = parameter + "=" + "Relu"
         else:
-            RUN_INFO = arg1 + "=" + "Elu"
-    elif "tanh" in str(arg3):
-        RUN_INFO = arg1 + "=" + "Tanh"
+            RUN_INFO = parameter + "=" + "Elu"
+    elif "tanh" in str(value):
+        RUN_INFO = parameter + "=" + "Tanh"
     else:
-        RUN_INFO = arg1 + "=" + str(arg3)
+        RUN_INFO = parameter + "=" + str(value)
 
     # For method comparison
     # RUN_INFO = arg1 + "=" + str(arg3)
 
-    n_vehicles = arg0["slow"]+arg0["medium"]+arg0["fast"]
+    n_vehicles = vehicles["slow"]+vehicles["medium"]+vehicles["fast"]
 
     if RUN_TYPE == "train":
         SAVE_DIRECTORY = "logfiles/" + RUN_NAME + "/" + RUN_TYPE + "/Seed" + str(SEED) + "-Details=" + str(RUN_INFO)
@@ -372,25 +392,39 @@ def start_run(arg0, arg1, arg2, arg3):
         "run_name": RUN_NAME,
         "run_info": RUN_INFO,
         "save_directory": SAVE_DIRECTORY,
-        "n_vehicles": arg0
+        "n_vehicles": vehicles
     }
 
     config.seed = SEED
     tf.random.set_seed(SEED)
     np.random.seed(SEED)
 
-    """MODEL PARAMETERS:"""
-    N_UNITS = (32, 32)
+    """ BASE MODEL PARAMETERS:"""
+    # Base parameters (DDQN):
+    N_UNITS = (32, 32)  # TODO Tuning for temporal networks
     N_INPUTS = 55
     N_ACTIONS = 5
     ACT_FUNC = tf.nn.relu
-    # BATCH_NORM = False
+    BATCH_NORM = False
+    """ NON-TEMPORAL MODEL PARAMETERS: """
     # For deepset:
-    # PHI_SIZE = (32, 32)
-    # RHO_SIZE = (32, 32)
-    # ACT_FUNC_PHI = tf.nn.relu
-    # ACT_FUNC_RHO = tf.nn.relu
-    N_STACKED_TIMESTEPS = 2  # TODO Check stacked timesteps (shouldnt it be 4? )
+    PHI_SIZE = (64, 64)
+    RHO_SIZE = (64, 64)
+    ACT_FUNC_PHI = tf.nn.relu
+    ACT_FUNC_RHO = tf.nn.elu
+    # For CNN's:
+    # FILTERS = (15, 15)  # Dimensionality of output space
+    # KERNEL = (2,)  # Convolution width
+    # STRIDES = (1,1)  # Stride size
+    TEMPORAL_CNN_TYPE = '2D'  # 3D or 2D
+    # NORMAL_CNN_TYPE = 0
+    # 0=1D conv. on vehicle dim.,
+    # 1=1D conv. on measurements dim.,
+    # 2=2D conv. on vehicle and measurements dimensions,
+    # For LSTM:
+    LSTM_UNITS = 32
+    LSTM_ACT_FUNC = tf.nn.relu
+
     MODEL_FILE_PATH = "logfiles/"+RUN_NAME+"/"+"train"+"/Seed"+str(SEED)+"-Details="+str(RUN_INFO) + "/"
     if RUN_TYPE == "train":
         TRAINABLE = True
@@ -408,7 +442,7 @@ def start_run(arg0, arg1, arg2, arg3):
         "weights_file_path": MODEL_FILE_PATH,
         "seed": SEED,
         "trainable": TRAINABLE,  # For batch normalisation to freeze layers
-        "batch_normalisation": BATCH_NORM,  # TODO maybe add to cnn and lstm maybe + test on deepset + baseline
+        "batch_normalisation": BATCH_NORM,
         "deepset_param":{
             "n_units_phi": PHI_SIZE,
             "act_func_phi": ACT_FUNC_PHI,
@@ -416,23 +450,18 @@ def start_run(arg0, arg1, arg2, arg3):
             "act_func_rho": ACT_FUNC_RHO
         },
         "cnn_param": {
-            "config": 3,  # 0=1D conv. on vehicle dim.,
+            'kernel': KERNEL,
+            'filters': FILTERS,
+            'strides': STRIDES,
+            # 0=1D conv. on vehicle dim.,
             # 1=1D conv. on measurements dim.,
             # 2=2D conv. on vehicle and measurements dimensions,
-            # 3=3D conv. on vehicle and measurement dimensions through time
-            # Config 0:
-            "n_filters_0": 6,  # Dimensionality of output space
-            "kernel_size_0": (2,),  # Convolution width
-            # Config 1:
-            "n_filters_1": 6,  # Dimensionality of output space
-            "kernel_size_1": (2,),  # Convolution width
-            # Config 2:
-            "n_filters_2": 6,  # Dimensionality of output space
-            "kernel_size_2": (4, 2),  # Convolution width
-            # Config 3:
-            "n_filters_3": 6,  # Dimensionality of output space
-            "n_timesteps": N_STACKED_TIMESTEPS,
-            "kernel_size_3": (N_STACKED_TIMESTEPS, 4, 2)  # Convolution width
+            'normal_CNN_type': NORMAL_CNN_TYPE,
+            'temporal_CNN_type': TEMPORAL_CNN_TYPE, # 2D or 3D
+        },
+        "LSTM_param": {
+            'n_units': LSTM_UNITS,
+            'act_func': LSTM_ACT_FUNC
         }
     }
 
@@ -464,7 +493,7 @@ def start_run(arg0, arg1, arg2, arg3):
     CLIP_GRADIENTS = False
     CLIP_NORM = 2
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
-    REWARD_WEIGHTS = np.array([1.0, 0.15, 0.8, 0.4, -5])
+    REWARD_WEIGHTS = np.array([1.25, 0.15, 0.8, 0.35, 0.0])
     STANDARDISE_RETURNS = False
     USE_PER = False
     ALPHA = 0.75  # Priority scale: a=0:random, a=1:completely based on priority
@@ -473,10 +502,10 @@ def start_run(arg0, arg1, arg2, arg3):
     # Model types:
     USE_TARGET_NETWORK = True
     USE_DUELLING = False
-    USE_DEEPSET = True
-    USE_CNN = False
+    USE_DEEPSET = False
+    USE_CNN = True
+    USE_TEMPORAL_CNN = False
     USE_LSTM = False
-    FRAME_STACK_TYPE = 0  # 0-Stack last agent action frames, 1=stack simulator frames
     ADD_NOISE = False
     REMOVE_STATE_VELOCITY = False
 
@@ -513,8 +542,8 @@ def start_run(arg0, arg1, arg2, arg3):
         "use_duelling": USE_DUELLING,
         "use_deepset": USE_DEEPSET,
         "use_CNN": USE_CNN,
+        "use_temporal_CNN": USE_TEMPORAL_CNN,
         "use_LSTM": USE_LSTM,
-        "frame_stack_type": FRAME_STACK_TYPE,
         "noise_param": {"use_noise": ADD_NOISE, "magnitude": 0.1, "normal": True, "mu": 0.0, "sigma": 0.1,
                         "uniform": True},
         "remove_state_vel": REMOVE_STATE_VELOCITY
@@ -534,26 +563,30 @@ def start_run(arg0, arg1, arg2, arg3):
     pic.dump(training_param_save, open(run_settings["save_directory"] + "/training_parameters", "wb"))
 
     # Initialise model type:
-    if USE_DEEPSET and not USE_CNN:
+    if USE_DEEPSET:
         DQ_net = DeepSetQNetwork(model_param=model_param)
         DQ_target_net = DeepSetQNetwork(model_param=model_param)
-    elif not USE_DEEPSET and USE_CNN:
+    elif USE_CNN and not USE_TEMPORAL_CNN:
         DQ_net = CNN(model_param=model_param)
         DQ_target_net = CNN(model_param=model_param)
-    elif not USE_DEEPSET and not USE_CNN:
-        if USE_LSTM:
-            DQ_net = LSTM_DRQN(model_param=model_param)
-            DQ_target_net = LSTM_DRQN(model_param=model_param)
-        else:
-            if USE_DUELLING:
-                DQ_net = DuellingDqnNetwork(model_param=model_param)
-                DQ_target_net = DuellingDqnNetwork(model_param=model_param)
-            else:
-                DQ_net = DeepQNetwork(model_param=model_param)
-                DQ_target_net = DeepQNetwork(model_param=model_param)
+    elif USE_CNN and USE_TEMPORAL_CNN:
+        DQ_net = TemporalCNN(model_param=model_param)
+        DQ_target_net = TemporalCNN(model_param=model_param)
+    elif USE_DUELLING:
+        DQ_net = DuellingDqnNetwork(model_param=model_param)
+        DQ_target_net = DuellingDqnNetwork(model_param=model_param)
+    elif USE_LSTM:
+        DQ_net = LSTM_DRQN(model_param=model_param)
+        DQ_target_net = LSTM_DRQN(model_param=model_param)
     else:
-        print("Error: Cannot use Deepset and CNN methods together!")
-        exit()
+        # Final checks: To avoid mistakes in parallel runs
+        assert not (USE_TEMPORAL_CNN and USE_LSTM)
+        assert not (USE_DEEPSET and USE_CNN)
+        assert not (USE_DEEPSET and USE_TEMPORAL_CNN)
+        assert not (USE_DUELLING)
+
+        DQ_net = DeepQNetwork(model_param=model_param)
+        DQ_target_net = DeepQNetwork(model_param=model_param)
 
     # Initialise agent and policy:
     if USE_TARGET_NETWORK == True:
@@ -572,11 +605,10 @@ def start_run(arg0, arg1, arg2, arg3):
     # RewardFunction().plot_reward_functions()
 
     # TODO check LSTM inputs dimensions to and from buffers and to and from models
-    # TODO check deepset dimensions to and from buffers and to and from models
     # TODO check CNN dimensions to and from buffers and to and from models
-    # TODO tune deepset, CNN, lstm
-    # TODO add CNN mean/max pooling layers
-    # TODO check to make sure that deepset doesnt need tanh + batch norm ... tanh on other models too
+    # TODO tune CNN, lstm
+    # TODO test noise and generalisation-(diff # vehicles and diff types vehicles)
+
     # Set up main class for running simulations:
     main = Main(n_vehicles=run_settings["n_vehicles"],
                 policy=dqn_policy,
@@ -603,7 +635,7 @@ def start_run(arg0, arg1, arg2, arg3):
     else:
         main.train_policy()
 
-    print(f"Arg0:{arg0}; Arg1:{arg1}; Arg2: {arg2}; Arg3: {arg3}")
+    print(f"Number Veh={vehicles}; Method={method}; Parameter={parameter}; Value={value}")
 
 if __name__=="__main__":
     run_timer = Timer("Run timer")
@@ -619,31 +651,52 @@ if __name__=="__main__":
         This function yields all the parameter combinations to try...
         arguments:
             arg0 = n_vehicles
-            arg1 = parameter
-            arg2 = seed
-            arg3 = parameter value
+            arg1 = method
+            arg2 = parameter
+            arg3 = seed
+            arg4 = parameter value
         """
-        arg0 = {"slow": 10, "medium": 20, "fast": 5}
-        for arg1 in ('Phi network size', 'Rho network size', 'Rho activation function', 'Phi activation function'):#, 'Batch normalisation'):
-            # for arg2 in (100, 200, 300, 400, 500):
-            for arg2 in (100, 300, 500):
-                if arg1 == "Phi network size":
-                    for arg3 in ((16, 32), (32, 32), (32, 64), (64, 64), (16,32,64), (32,32,32), (32,48,64), (64,64,64)):
-                        yield arg0, arg1, arg2, arg3
-                elif arg1 == "Rho network size":
-                    for arg3 in ((32,16), (32, 32), (64,32), (64, 64), (64,32,16), (32,32,32), (64,48,32), (64,64,64)):
-                        yield arg0, arg1, arg2, arg3
-                elif arg1 == "Rho activation function":
-                    for arg3 in (tf.nn.relu, tf.nn.elu, tf.nn.tanh, tf.nn.leaky_relu):
-                        yield arg0, arg1, arg2, arg3
-                elif arg1 == "Phi activation function":
-                    for arg3 in (tf.nn.relu, tf.nn.elu, tf.nn.tanh, tf.nn.leaky_relu):
-                        yield arg0, arg1, arg2, arg3
-                elif arg1 == "Batch normalisation":
-                    for arg3 in (True, False):
-                        yield arg0, arg1, arg2, arg3
-                else:
-                    sys.exit()
+        vehicles = {"slow": 10, "medium": 20, "fast": 5}
+        for method in ("1D_CNN_veh_dim_tuning", "1D_CNN_meas_dim_tuning",
+                       "2D_CNN_normal_tuning"):
+            if method == "2D_CNN_normal_tuning": # 2D CNN parameters
+                for parameter in ('Number of filters - 1 convolution', 'Kernel size - 1 convolution',
+                                  'Number of filters - 2 convolutions', 'Kernel size - 2 convolutions'):
+                    # for arg2 in (100, 200, 300, 400, 500):
+                    for seed in (100, 300, 500):
+                        if parameter == "Number of filters - single layer":
+                            for value in (8, 16, 32, 64):
+                                yield vehicles, method, parameter, seed, value
+                        elif parameter == "Kernel size - single layer":
+                            for value in (2, 4, 6, 8, 12):
+                                yield vehicles, method, parameter, seed, value
+                        elif parameter == "Number of filters - double layer":
+                            for value in ():
+                                yield vehicles, method, parameter, seed, value
+                        elif parameter == "Kernel size - double layer":
+                            for value in ():
+                                yield vehicles, method, parameter, seed, value
+                        else:
+                            sys.exit()
+            else:  # 1D CNN parameters
+                for parameter in ('Number of filters - 1 convolution', 'Kernel size - 1 convolution',
+                                  'Number of filters - 2 convolutions', 'Kernel size - 2 convolutions'):
+                    # for arg2 in (100, 200, 300, 400, 500):
+                    for seed in (100, 300, 500):
+                        if parameter == "Number of filters - single layer":
+                            for value in (8, 16, 32):
+                                yield vehicles, method, parameter, seed, value
+                        elif parameter == "Kernel size - single layer":
+                            for value in ((2,), (4,)):
+                                yield vehicles, method, parameter, seed, value
+                        elif parameter == "Number of filters - double layer":
+                            for value in ():
+                                yield vehicles, method, parameter, seed, value
+                        elif parameter == "Kernel size - double layer":
+                            for value in ():
+                                yield vehicles, method, parameter, seed, value
+                        else:
+                            sys.exit()
 
     if procs > 1:
         # Schedule all training runs in a parallel loop over multiple cores:

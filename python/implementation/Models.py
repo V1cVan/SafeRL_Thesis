@@ -49,6 +49,100 @@ class LSTM_DRQN(keras.Model):
                                to_file='./models/LSTM_DRQN.png')
 
 
+class TemporalCNN(keras.Model):
+    """
+    Builds a temporal CNN of a 2D or 3D shape.
+    """
+    def __init__(self, model_param):
+        super(TemporalCNN, self).__init__()
+        tf.random.set_seed(model_param['seed'])
+        np.random.seed(model_param['seed'])
+
+        # CNN parameters:
+        cnn_type = model_param['cnn_param']['temporal_CNN_type']  # 2D or 3D
+        kernel = model_param['cnn_param']['kernel']
+        filters = model_param['cnn_param']['kernel']
+        strides = model_param['cnn_param']['kernel']
+        n_layers = len(filters)
+
+        # Q-network parameters:
+        act_func = model_param['activation_function']
+        n_units = model_param['n_units']
+        n_actions = model_param['n_actions']
+        n_vehicles = 12
+        n_dynamic = 4  # Number of dynamic measurement elements
+        n_static = 7  # Number of static measurement elements
+        n_measurements = 4
+
+        # Dynamic vector input shape = (n_measurements x n_vehicles x n_dynamic)
+        # Static vector input shape = (n_measurements x n_static)
+        self.dynamic_input = layers.Input(shape=(n_measurements, n_vehicles, n_dynamic), name="dynamic_input_layer")
+        self.static_input = layers.Input(shape=(n_static), name="static_input_layer")
+
+        if cnn_type == '2D':
+            self.conv_layer_1 = layers.Conv2D(filters=filters[0],
+                                              kernel_size=kernel[0],
+                                              activation=act_func,
+                                              strides=strides[0],
+                                              data_format="channels_first",
+                                              name="conv_layer_1")(self.dynamic_input)
+            if n_layers == 1:
+                self.flatten_layer = layers.Flatten(name="flatten_layer")(self.conv_layer_1)
+            else:
+                self.conv_layer_2 = layers.Conv2D(filters=filters[1],
+                                                  kernel_size=kernel[1],
+                                                  activation=act_func,
+                                                  strides=strides[1],
+                                                  data_format="channels_first",
+                                                  name="conv_layer_2")(self.conv_layer_1)
+                self.flatten_layer = layers.Flatten(name="flatten_layer")(self.conv_layer_2)
+        else:  # cnn_type == '3D'
+            self.conv_layer_1 = layers.Conv3D(filters=filters[0],
+                                              kernel_size=kernel[0],
+                                              activation=act_func,
+                                              strides=strides[0],
+                                              data_format="channels_first",
+                                              name="conv_layer_1")(self.dynamic_input)
+            if n_layers == 1:
+                self.flatten_layer = layers.Flatten(name="flatten_layer")(self.conv_layer_1)
+            else:
+                self.conv_layer_2 = layers.Conv3D(filters=filters[1],
+                                                  kernel_size=kernel[1],
+                                                  activation=act_func,
+                                                  strides=strides[1],
+                                                  data_format="channels_first",
+                                                  name="conv_layer_2")(self.conv_layer_1)
+                self.flatten_layer = layers.Flatten(name="flatten_layer")(self.conv_layer_2)
+
+        self.concat_layer = layers.Concatenate(name="ConcatenationLayer")(
+            [self.flatten_layer, self.static_input])
+
+        self.Q_layer_1 = layers.Dense(n_units[0], activation=act_func, name="Q_layer_1")(self.concat_layer)
+        self.Q_layer_2 = layers.Dense(n_units[1], activation=act_func, name="Q_layer_2")(self.Q_layer_1)
+
+        self.output_layer = layers.Dense(n_actions)(self.Q_layer_2)
+
+        model_name = "Temporal_CNN"+'_'+cnn_type
+        self.model = keras.Model(inputs=[self.dynamic_input, self.static_input],
+                                 outputs=self.output_layer,
+                                 trainable=self.model_param["trainable"],
+                                 name=model_name)
+        self.display_overview(model_name)
+
+    @tf.function
+    def call(self, inputs: tf.Tensor):
+        """ Returns the output of the model given an input. """
+        return self.model(inputs)
+
+    def display_overview(self, model_name):
+        """ Displays an overview of the model. """
+        path = './models/' + model_name + '.png'
+        keras.utils.plot_model(self.model,
+                               show_shapes=True,
+                               show_layer_names=True,
+                               to_file=path)
+
+
 class CNN(keras.Model):
     """
     Builds a convolutional neural network to handle the dynamic part of the state vector.
@@ -56,99 +150,112 @@ class CNN(keras.Model):
     def __init__(self, model_param):
         super(CNN, self).__init__()
         self.model_param = model_param
-        tf.random.set_seed(model_param["seed"])
-        np.random.seed(model_param["seed"])
-        act_func = model_param["activation_function"]
-        n_units = model_param["n_units"]
-        n_inputs = model_param["n_inputs"]
-        n_actions = model_param["n_actions"]
+        tf.random.set_seed(model_param['seed'])
+        np.random.seed(model_param['seed'])
 
-        # TODO mean pooling layers + parameters for tuning easily
-        # TODO add number of conv layers to model_params for easier tuning
-        # TODO add n_filters, conv_width(kernel_size) to model_params
+        # CNN parameters:
+        self.cnn_type = model_param['cnn_param']['normal_CNN_type']
+        # 0=1D conv. on vehicle dim.,
+        # 1=1D conv. on measurements dim.,
+        # 2=2D conv. on vehicle and measurements dimensions.
+        kernel = model_param['cnn_param']['kernel']
+        filters = model_param['cnn_param']['kernel']
+        strides = model_param['cnn_param']['kernel']
+        n_layers = len(filters)
 
-        self.cnn_config = model_param["cnn_param"]["config"]
-        n_inputs_static = 7
-        n_vehicles = 12  # Defined by DMax default
-        n_inputs_dynamic = 4  # lat. and long. vel. and pos. rel to ego vehicle
+        # Q-network parameters:
+        act_func = model_param['activation_function']
+        n_units = model_param['n_units']
+        n_actions = model_param['n_actions']
+        n_vehicles = 12
+        n_dynamic = 4  # Number of dynamic measurement elements
+        n_static = 7  # Number of static measurement elements
+        n_measurements = 1
 
-        self.static_input_layer = layers.Input(shape=(n_inputs_static), name="StaticStateInput")
-        # TODO Check 2DConvolutions For comparisons!
-        # TODO investigate multiple CNN layers and parameters
-        if self.cnn_config == 0:     # 0=1D conv. on vehicle dim.,
-            n_filters = model_param["cnn_param"]["n_filters_0"]  # Dimensionality of output space
-            kernel_size = model_param["cnn_param"]["kernel_size_0"]  # Convolution width
-            input_matrix = tf.TensorShape([n_inputs_dynamic, n_vehicles])
 
-            # input shape = (batch_size, 4 [rel pos and vel], 12 [n_vehicles])
-            self.dynamic_input_layer = layers.Input(shape=input_matrix, name="DynamicStateInput")
-            self.conv_layer_1 = layers.Conv1D(filters=n_filters,
-                                              kernel_size=kernel_size,
+        # Static vector input shape = (n_measurements x n_static)
+        self.static_input = layers.Input(shape=(n_static), name="static_input_layer")
+        # input_matrix = tf.TensorShape([n_inputs_dynamic, n_vehicles])
+
+        if self.cnn_type == 0:     # 0=1D conv. on vehicle dim.,
+            # Dynamic vector input shape (type0) = (n_dynamic x n_vehicles)
+            self.dynamic_input = layers.Input(shape=(n_dynamic, n_vehicles), name="dynamic_input_layer")
+            self.conv_layer_1 = layers.Conv1D(filters=filters[0],
+                                              kernel_size=kernel[0],
                                               activation=act_func,
-                                              padding='same',
-                                              name="ConvolutionalLayer1")(self.dynamic_input_layer)
-            # Output_shape = (batch_size, 4 [rel pos and vel], 6 n_filters)
+                                              strides=strides[0],
+                                              # TODO ??? Padding needed?
+                                              # TODO ??? Channels for 1D?
+                                              name="conv_layer_1")(self.dynamic_input)
+            # Output_shape = (batch_size, 4 [rel pos and vel], n_filters) (with padding = 'same')
 
-        elif self.cnn_config == 1:       # 1=1D conv. on measurements dim.,
-            n_filters = model_param["cnn_param"]["n_filters_1"]  # Dimensionality of output space
-            kernel_size = model_param["cnn_param"]["kernel_size_1"]  # Convolution width
-            input_matrix = tf.TensorShape([n_vehicles, n_inputs_dynamic])
+        elif self.cnn_type == 1:       # 1=1D conv. on measurements dim.,
+            # Dynamic vector input shape (type1) = ( n_vehicles x n_dynamic )
+            self.dynamic_input = layers.Input(shape=(n_vehicles, n_dynamic), name="dynamic_input_layer")
             # input shape = (batch_size, 12 [n_vehicles], 4 [rel pos and vel])
-            self.dynamic_input_layer = layers.Input(shape=input_matrix, name="DynamicStateInput")
-            self.conv_layer_1 = layers.Conv1D(filters=n_filters,
-                                              kernel_size=kernel_size,
-                                              activation=act_func,
-                                              padding='same',
-                                              name="ConvolutionalLayer1")(self.dynamic_input_layer)
-            # Output_shape = (batch_size, 12 n_vehicles, n_filters)
 
-        elif self.cnn_config == 2:       # 2=2D conv. on vehicle and measurements dimensions,
-            n_filters = model_param["cnn_param"]["n_filters_2"]  # Dimensionality of output space
-            kernel_size = model_param["cnn_param"]["kernel_size_2"]  # Convolution width
-            n_timesteps = 1  # Number of stacked measurements considered
-            input_matrix = tf.TensorShape([n_vehicles, n_inputs_dynamic, n_timesteps])
+            self.conv_layer_1 = layers.Conv1D(filters=filters[0],
+                                              kernel_size=kernel[0],
+                                              activation=act_func,
+                                              strides=strides[0],
+                                              # TODO ??? Padding needed?
+                                              # TODO ??? Channels for 1D?
+                                              name="conv_layer_1")(self.dynamic_input)
+            # Output_shape = (batch_size, 12 n_vehicles, n_filters) (with padding = 'same')
+
+        elif self.cnn_type == 2:       # 2=2D conv. on vehicle and measurements dimensions,
+            # Dynamic vector input shape (type2) = (n_measurements(1) x n_vehicles x n_dynamic)
+            self.dynamic_input = layers.Input(shape=(n_measurements, n_vehicles, n_dynamic), name="dynamic_input_layer")
             # input shape = (batch_size, 12 [n_vehicles], 4 [rel pos and vel])
-            self.dynamic_input_layer = layers.Input(shape=input_matrix, name="DynamicStateInput")
-            self.conv_layer_1 = layers.Conv2D(filters=n_filters,
-                                              kernel_size=kernel_size,
+
+            self.conv_layer_1 = layers.Conv2D(filters=filters[0],
+                                              kernel_size=kernel[0],
                                               activation=act_func,
-                                              padding='same',
-                                              name="ConvolutionalLayer1")(self.dynamic_input_layer)
-            # Output shape = (batch_size, n_vehicles, n_measurements, n_filters)
-            # TODO consider pooling functionality
+                                              strides=strides[0],
+                                              data_format="channels_first",
+                                              name="conv_layer_1")(self.dynamic_input)
+            # Output shape =  TODO ( No clue ? )
 
-        elif self.cnn_config == 3:       # 3=3D conv. on vehicle and measurement dimensions through time
-            n_filters = model_param["cnn_param"]["n_filters_3"]  # Dimensionality of output space
-            kernel_size = model_param["cnn_param"]["kernel_size_3"]  # Convolution width
-            n_timesteps = 4  # Number of stacked measurements considered
-            input_matrix = tf.TensorShape([n_timesteps,n_vehicles, n_inputs_dynamic, 1])
-            # input shape = (batch_size, 12 [n_vehicles], 4 [rel pos and vel], 4 [t_0, t_1, ..])
-            self.dynamic_input_layer = layers.Input(shape=input_matrix, name="DynamicStateInput")
-            self.conv_layer_1 = layers.Conv3D(filters=n_filters,
-                                              kernel_size=kernel_size,
+
+        if n_layers == 1:
+            self.flatten_layer = layers.Flatten(name="FlattenLayer")(self.conv_layer_1)
+        else:
+            if self.cnn_type == 0 or self.cnn_type == 1:  # 1D convolutions
+                self.conv_layer_2 = layers.Conv1D(filters=filters[1],
+                                              kernel_size=kernel[1],
                                               activation=act_func,
-                                              padding='same',
-                                              name="ConvolutionalLayer1")(self.dynamic_input_layer)
+                                              strides=strides[1],
+                                              # TODO ??? Padding needed?
+                                              # TODO ??? Channels for 1D?
+                                              name="conv_layer_2")(self.conv_layer_1)
+            else:  # 2D convolutions
+                self.conv_layer_2 = layers.Conv2D(filters=filters[1],
+                                                  kernel_size=kernel[1],
+                                                  activation=act_func,
+                                                  strides=strides[1],
+                                                  # TODO ??? Padding needed?
+                                                  # TODO ??? Channels for 1D?
+                                                  name="conv_layer_2")(self.conv_layer_1)
+            self.flatten_layer = layers.Flatten(name="FlattenLayer")(self.conv_layer_2)
 
-        self.flatten_layer = layers.Flatten(name="FlattenLayer")(self.conv_layer_1)
-
-        self.concat_layer = layers.Concatenate(name="ConcatenationLayer")([self.flatten_layer, self.static_input_layer])
+        self.concat_layer = layers.Concatenate(name="ConcatenationLayer")([self.flatten_layer, self.static_input])
 
         self.Q_layer_1 = layers.Dense(n_units[1], activation=act_func, name="QLayer1")(self.concat_layer)
         self.Q_layer_2 = layers.Dense(n_units[2], activation=act_func, name="QLayer2")(self.Q_layer_1)
 
         self.output_layer = layers.Dense(n_actions)(self.Q_layer_2)
 
-        self.model = keras.Model(inputs=[self.dynamic_input_layer, self.static_input_layer],
+        model_name = "Normal_CNN" + '_' + self.cnn_type
+        self.model = keras.Model(inputs=[self.dynamic_input, self.static_input],
                                  outputs=self.output_layer,
                                  trainable=self.model_param["trainable"],
-                                 name="CNN_DQN")
+                                 name=model_name)
 
-        self.display_overview()
+        self.display_overview(model_name)
 
     @tf.function
     def call(self, inputs: tf.Tensor):
-        if self.cnn_config == 0:
+        if self.cnn_type == 0:
             dynamic_input = inputs[0]
             static_input = inputs[1]
             batch_size, x1, x2 = dynamic_input.shape
@@ -158,13 +265,14 @@ class CNN(keras.Model):
         """ Returns the output of the model given an input. """
         return self.model(inputs)
 
-    def display_overview(self):
+    def display_overview(self, model_name):
         """ Displays an overview of the model. """
-        self.model.summary()
+        # self.model.summary()
+        model_path = './models/'+model_name+'.png'
         keras.utils.plot_model(self.model,
                                show_shapes=True,
                                show_layer_names=True,
-                               to_file='./models/Convolutional_DQN.png')
+                               to_file=model_path)
 
 
 class DeepSetQNetwork(keras.Model):
