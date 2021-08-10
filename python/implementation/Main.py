@@ -342,12 +342,6 @@ def start_run(vehicles, method, parameter, seed, value):
         RHO_SIZE = (32, 32)
         ACT_FUNC_RHO = tf.nn.relu
         BATCH_NORM = value
-    elif parameter == "Old deepset":
-        PHI_SIZE = (32, 32)
-        ACT_FUNC_PHI = tf.nn.relu
-        RHO_SIZE = (32, 32)
-        ACT_FUNC_RHO = tf.nn.relu
-        BATCH_NORM = False
 
 
     """RUN PARAMETERS:"""
@@ -399,7 +393,7 @@ def start_run(vehicles, method, parameter, seed, value):
     N_INPUTS = 55
     N_ACTIONS = 5
     ACT_FUNC = tf.nn.relu
-    BATCH_NORM = False
+    # BATCH_NORM = False
     """ NON-TEMPORAL MODEL PARAMETERS: """
     # For deepset:
     # PHI_SIZE = (64, 64)
@@ -558,15 +552,8 @@ def start_run(vehicles, method, parameter, seed, value):
 
     # Initialise model type:
     if USE_DEEPSET:
-        if method == "Deepset_tuning_fixed":
-            DQ_net = DeepSetQNetwork(model_param=model_param)
-            DQ_target_net = DeepSetQNetwork(model_param=model_param)
-        elif method == "Deepset_tuning_original":
-            DQ_net = OldDeepSetQNetwork(model_param=model_param)
-            DQ_target_net = OldDeepSetQNetwork(model_param=model_param)
-        else:
-            print("Method naming error")
-            sys.exit()
+        DQ_net = DeepSetQNetwork(model_param=model_param)
+        DQ_target_net = DeepSetQNetwork(model_param=model_param)
     elif USE_CNN and not USE_TEMPORAL_CNN:
         DQ_net = CNN(model_param=model_param)
         DQ_target_net = CNN(model_param=model_param)
@@ -642,7 +629,7 @@ if __name__=="__main__":
     run_timer = Timer("Run timer")
     run_timer.startTime()
 
-    PROCS = 32  # Number of cores to use
+    PROCS = 1  # Number of cores to use
     mp.set_start_method("spawn")  # Make sure different workers have different seeds if applicable
     P = mp.cpu_count()  # Number of available cores
     procs = max(min(PROCS, P), 1)  # Clip number of procs to [1;P]
@@ -658,41 +645,32 @@ if __name__=="__main__":
             value = parameter value
         """
         vehicles = {"slow": 10, "medium": 20, "fast": 5}
-        for method in ("Deepset_tuning_fixed", "Deepset_tuning_original"):
-            if method == "Deepset_tuning_fixed":
-                for parameter in (
-                'Phi network size', 'Rho network size', 'Rho activation function', 'Phi activation function',
-                'Batch normalisation'):
-                    for seed in (100, 300, 500):
-                        if parameter == "Phi network size":
-                            for value in (
-                            (16, 32), (32, 32), (32, 64), (64, 64), (16, 32, 64), (32, 32, 32), (32, 48, 64),
-                            (64, 64, 64)):
-                                yield vehicles, method, parameter, seed, value
-                        elif parameter == "Rho network size":
-                            for value in (
-                            (32, 16), (32, 32), (64, 32), (64, 64), (64, 32, 16), (32, 32, 32), (64, 48, 32),
-                            (64, 64, 64)):
-                                yield vehicles, method, parameter, seed, value
-                        elif parameter == "Rho activation function":
-                            for value in (tf.nn.relu, tf.nn.elu, tf.nn.tanh):
-                                yield vehicles, method, parameter, seed, value
-                        elif parameter == "Phi activation function":
-                            for value in (tf.nn.relu, tf.nn.elu, tf.nn.tanh):
-                                yield vehicles, method, parameter, seed, value
-                        elif parameter == "Batch normalisation":
-                            for value in (True, False):
-                                yield vehicles, method, parameter, seed, value
-                        else:
-                            sys.exit()
-            elif method == "Deepset_tuning_original":
-                parameter = "Old deepset"
+        method = "Deepset_tuning_fixed"
+        if method == "Deepset_tuning_fixed":
+            for parameter in (
+            'Phi network size', 'Rho network size', 'Rho activation function', 'Phi activation function',
+            'Batch normalisation'):
                 for seed in (100, 300, 500):
-                    value = "Defaults"
-                    yield vehicles, method, parameter, seed, value
-            else:
-                print("Method name error")
-                sys.exit()
+                    if parameter == "Phi network size":
+                        for value in (
+                        (32, 32), (64, 64), (32, 32, 32),(64, 64, 64)):
+                            yield vehicles, method, parameter, seed, value
+                    elif parameter == "Rho network size":
+                        for value in (
+                        (32, 32), (64, 64), (32, 32, 32), (64, 64, 64)):
+                            yield vehicles, method, parameter, seed, value
+                    elif parameter == "Rho activation function":
+                        for value in (tf.nn.relu, tf.nn.elu, tf.nn.tanh):
+                            yield vehicles, method, parameter, seed, value
+                    elif parameter == "Phi activation function":
+                        for value in (tf.nn.relu, tf.nn.elu, tf.nn.tanh):
+                            yield vehicles, method, parameter, seed, value
+                    elif parameter == "Batch normalisation":
+                        for value in (True, False):
+                            yield vehicles, method, parameter, seed, value
+                    else:
+                        sys.exit()
+
 
     if procs > 1:
         # Schedule all training runs in a parallel loop over multiple cores:

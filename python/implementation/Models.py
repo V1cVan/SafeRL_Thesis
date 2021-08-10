@@ -315,83 +315,90 @@ class DeepSetQNetwork(keras.Model):
         n_units = model_param["n_units"]
         n_units_phi = model_param["deepset_param"]["n_units_phi"]
         n_units_rho = model_param["deepset_param"]["n_units_rho"]
+        self.n_layers_rho = len(n_units_rho)
+        self.n_layers_phi = len(n_units_phi)
+        self.is_batch_norm = model_param["batch_normalisation"]
         n_inputs_static = 7
         n_inputs_dynamic = 4
         n_vehicles = 12  # Defined by default D_max size
         n_actions = model_param["n_actions"]
 
-        self.static_input_layer = layers.Input(shape=(n_inputs_static), name="StaticStateInput")
-        self.dynamic_input_layer = layers.Input(shape=tf.TensorShape([n_vehicles, n_inputs_dynamic]), name="DynamicStateInput")
+        self.phi_network = PhiNetwork(n_units_phi, act_func_phi, ("PhiLayer1", "PhiLayer2", "PhiLayer3"))
 
-        vehicle_1 = self.dynamic_input_layer[:, 0, :]
-        vehicle_2 = self.dynamic_input_layer[:, 1, :]
-        vehicle_3 = self.dynamic_input_layer[:, 2, :]
-        vehicle_4 = self.dynamic_input_layer[:, 3, :]
-        vehicle_5 = self.dynamic_input_layer[:, 4, :]
-        vehicle_6 = self.dynamic_input_layer[:, 5, :]
-        vehicle_7 = self.dynamic_input_layer[:, 6, :]
-        vehicle_8 = self.dynamic_input_layer[:, 7, :]
-        vehicle_9 = self.dynamic_input_layer[:, 8, :]
-        vehicle_10 = self.dynamic_input_layer[:, 9, :]
-        vehicle_11 = self.dynamic_input_layer[:, 10, :]
-        vehicle_12 = self.dynamic_input_layer[:, 11, :]
+        self.sum_layer = layers.Add(name="Summation_layer")
 
-        phi_network = PhiNetwork(n_units_phi, act_func_phi, ("PhiLayer1", "PhiLayer2", "PhiLayer3"))
-
-        phi_out_1 = phi_network(vehicle_1)
-        phi_out_2 = phi_network(vehicle_2)
-        phi_out_3 = phi_network(vehicle_3)
-        phi_out_4 = phi_network(vehicle_4)
-        phi_out_5 = phi_network(vehicle_5)
-        phi_out_6 = phi_network(vehicle_6)
-        phi_out_7 = phi_network(vehicle_7)
-        phi_out_8 = phi_network(vehicle_8)
-        phi_out_9 = phi_network(vehicle_9)
-        phi_out_10 = phi_network(vehicle_10)
-        phi_out_11 = phi_network(vehicle_11)
-        phi_out_12 = phi_network(vehicle_12)
-
-        sum_layer = layers.Add(name="Summation_layer")([phi_out_1, phi_out_2, phi_out_3, phi_out_4,
-                                                             phi_out_5, phi_out_6, phi_out_7, phi_out_8,
-                                                             phi_out_9, phi_out_10, phi_out_11, phi_out_12])
-
-        if len(n_units_rho) == 3:
-            rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func_rho, name="rhoLayer1")(sum_layer)
-            rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func_rho, name="rhoLayer2")(rho_layer_1)
-            rho_layer_3 = layers.Dense(n_units_rho[2], activation=act_func_rho, name="rhoLayer3")(rho_layer_2)
-            if model_param["batch_normalisation"] == True:
-                batch_norm_layer = layers.BatchNormalization(name="batch_norm")(rho_layer_3)
-                concat_layer = layers.Concatenate(name="ConcatenationLayer")(
-                    [batch_norm_layer, self.static_input_layer])
+        if self.n_layers_rho == 3:
+            self.rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func_rho, name="rhoLayer1")
+            self.rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func_rho, name="rhoLayer2")
+            self.rho_layer_3 = layers.Dense(n_units_rho[2], activation=act_func_rho, name="rhoLayer3")
+            if self.is_batch_norm:
+                self.batch_norm_layer = layers.BatchNormalization(name="batch_norm")
+                self.concat_layer = layers.Concatenate(name="ConcatenationLayer")
             else:
-                concat_layer = layers.Concatenate(name="ConcatenationLayer")(
-                    [rho_layer_3, self.static_input_layer])
-        else:
-            rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func_rho, name="rhoLayer1")(sum_layer)
-            rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func_rho, name="rhoLayer2")(rho_layer_1)
-            if model_param["batch_normalisation"]==True:
-                batch_norm_layer = layers.BatchNormalization(name="batch_norm")(rho_layer_2)
-                concat_layer = layers.Concatenate(name="ConcatenationLayer")(
-                    [batch_norm_layer, self.static_input_layer])
+                self.concat_layer = layers.Concatenate(name="ConcatenationLayer")
+        else:  # 2 rho layers
+            self.rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func_rho, name="rhoLayer1")
+            self.rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func_rho, name="rhoLayer2")
+            if self.is_batch_norm:
+                self.batch_norm_layer = layers.BatchNormalization(name="batch_norm")
+                self.concat_layer = layers.Concatenate(name="ConcatenationLayer")
             else:
-                concat_layer = layers.Concatenate(name="ConcatenationLayer")([rho_layer_2, self.static_input_layer])
+                self.concat_layer = layers.Concatenate(name="ConcatenationLayer")
 
-        Q_layer_1 = layers.Dense(n_units[0], activation=act_func, name="QLayer1")(concat_layer)
-        Q_layer_2 = layers.Dense(n_units[1], activation=act_func, name="QLayer2")(Q_layer_1)
+        self.Q_layer_1 = layers.Dense(n_units[0], activation=act_func, name="QLayer1")
+        self.Q_layer_2 = layers.Dense(n_units[1], activation=act_func, name="QLayer2")
 
-        output_layer = layers.Dense(n_actions)(Q_layer_2)
-
-        self.model = keras.Model(inputs=[self.dynamic_input_layer, self.static_input_layer],
-                                 trainable=self.model_param["trainable"],
-                                 outputs=output_layer,
-                                 name="Deepset_DDQN")
-
-        self.display_overview()
+        self.output_layer = layers.Dense(n_actions)
 
     @tf.function
     def call(self, inputs: tf.Tensor):
         """ Returns the output of the model given an input. """
-        return self.model(inputs)
+        dynamic_input = inputs[0]
+        static_input = inputs[1]
+        batch_size = tf.shape(dynamic_input)[0]
+        if self.n_layers_phi == 3:
+            phi_feature_size = self.model_param["deepset_param"]["n_units_phi"][-1]
+        else:
+            phi_feature_size = self.model_param["deepset_param"]["n_units_phi"][1]
+
+        non_zero_vehicles = tf.gather(inputs[0], tf.where(tf.reduce_sum(dynamic_input, axis=2) != 0)[:, 1], axis=1)
+        if tf.size(non_zero_vehicles) == 0:
+            summation = tf.zeros((batch_size, phi_feature_size))
+        else:
+            number_non_zero_veh = tf.shape(non_zero_vehicles)[1]
+            phi_out = []
+            for veh_ind in tf.range(number_non_zero_veh):
+                phi_out.append(self.phi_network(non_zero_vehicles[:,veh_ind,:]))
+            summation = self.sum_layer(phi_out)
+
+        if self.n_layers_rho == 3:
+            rho_1_out = self.rho_layer_1(summation)
+            rho_2_out = self.rho_layer_2(rho_1_out)
+            rho_3_out = self.rho_layer_3(rho_2_out)
+            if self.is_batch_norm:
+                batch_norm_out = self.batch_norm_layer(rho_3_out)
+                concat = [batch_norm_out, static_input]
+                concat_out = self.concat_layer(concat)
+            else:
+                concat = [rho_3_out, static_input]
+                concat_out = self.concat_layer(concat)
+        else:
+            rho_1_out = self.rho_layer_1(summation)
+            rho_2_out = self.rho_layer_2(rho_1_out)
+            if self.is_batch_norm:
+                batch_norm_out = self.batch_norm_layer(rho_2_out)
+                concat = [batch_norm_out, static_input]
+                concat_out = self.concat_layer(concat)
+            else:
+                concat = [rho_2_out, static_input]
+                concat_out = self.concat_layer(concat)
+
+        q_1_out = self.Q_layer_1(concat_out)
+        q_2_out = self.Q_layer_2(q_1_out)
+        output = self.output_layer(q_2_out)
+
+        return output
+
 
     def display_overview(self):
         """ Displays an overview of the model. """

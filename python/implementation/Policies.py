@@ -526,6 +526,7 @@ class DiscreteSingleActionPolicy(CustomPolicy):
                 veh.s1_mod = convert_state(veh, remove_velocity=self.remove_velocity)
 
             if self.agent.training_param["noise_param"]["use_noise"]:
+                # TODO !!!!!!!!!!! ONLY ADD STATE NOISE ON NON-ZERO MEASUREMENTS !!!!!!!!!!!!!!
                 veh.s1_mod = add_state_noise(veh.s1_mod,
                                              is_normal=self.agent.training_param["noise_param"]["normal"],
                                              is_uniform=self.agent.training_param["noise_param"]["uniform"],
