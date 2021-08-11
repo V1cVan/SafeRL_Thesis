@@ -23,9 +23,12 @@ import datetime
 import multiprocessing as mp
 import sys
 
-tf.config.experimental.set_visible_devices([], "GPU")
-# physical_devices = tf.config.list_physical_devices('GPU')
+# tf.config.experimental.set_visible_devices([], "GPU")
+physical_devices = tf.config.list_physical_devices('GPU')
+print(physical_devices)
 # tf.config.experimental.set_memory_growth(physical_devices[0], True)
+# tf.config.experimental.set_memory_growth(physical_devices[1], True)
+#
 
 class Main(object):
 
@@ -90,6 +93,7 @@ class Main(object):
         model_update_counter = 1
         # Run until all episodes are completed (reward reached).
         while episode_count <= max_episodes:
+
             self.policy.agent.episode = episode_count
             episode_reward_list = []
             episode_mean_batch_rewards = []
@@ -156,7 +160,7 @@ class Main(object):
             reward = np.sum(episode_reward_list)/len(episode_reward_list)
 
             time_taken_episode = self.episodeTimer.endTime()
-
+            # print(f"Time taken for episode{episode_count}={time_taken_episode}")
             # if trained and episode_count % 50 == 0:
             #     self.policy.agent.Q_actual_net.save_weights(self.model_param["weights_file_path"])
             #     print("Saved network weights.")

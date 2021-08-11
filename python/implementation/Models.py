@@ -3,7 +3,7 @@ from tensorflow import keras
 from tensorflow.keras import layers, Sequential
 import numpy as np
 from HelperClasses import EpisodeBuffer, DataLogger
-
+import sys
 
 class LSTM_DRQN(keras.Model):
     """
@@ -289,9 +289,10 @@ class PhiNetwork(layers.Layer):
             self.phi_layer_1 = layers.Dense(n_units_phi[0], activation=activation, name=name[0])
             self.phi_layer_2 = layers.Dense(n_units_phi[1], activation=activation, name=name[1])
 
+    #@tf.function
     def call(self, inputs):
         if self.number_layers == 3:
-            phi1 = self.phi_layer_1(inputs)
+            phi1 = self.phi_layer_1(inputs, input_shape=((1,None,4)), batch_size=1)
             phi2 = self.phi_layer_2(phi1)
             phi3 = self.phi_layer_3(phi2)
             return phi3
@@ -317,6 +318,11 @@ class DeepSetQNetwork(keras.Model):
         n_units_rho = model_param["deepset_param"]["n_units_rho"]
         self.n_layers_rho = len(n_units_rho)
         self.n_layers_phi = len(n_units_phi)
+        if self.n_layers_phi == 3:
+            self.phi_feature_size = self.model_param["deepset_param"]["n_units_phi"][-1]
+        else:
+            self.phi_feature_size = self.model_param["deepset_param"]["n_units_phi"][1]
+
         self.is_batch_norm = model_param["batch_normalisation"]
         n_inputs_static = 7
         n_inputs_dynamic = 4
@@ -326,6 +332,7 @@ class DeepSetQNetwork(keras.Model):
         self.phi_network = PhiNetwork(n_units_phi, act_func_phi, ("PhiLayer1", "PhiLayer2", "PhiLayer3"))
 
         self.sum_layer = layers.Add(name="Summation_layer")
+        self.sum_layer = layers.Lambda(lambda phi_out: tf.expand_dims(tf.reduce_sum(phi_out, axis=0), axis=0))
 
         if self.n_layers_rho == 3:
             self.rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func_rho, name="rhoLayer1")
@@ -350,28 +357,80 @@ class DeepSetQNetwork(keras.Model):
 
         self.output_layer = layers.Dense(n_actions)
 
-    @tf.function
+
+    #@tf.function
     def call(self, inputs: tf.Tensor):
         """ Returns the output of the model given an input. """
         dynamic_input = inputs[0]
         static_input = inputs[1]
         batch_size = tf.shape(dynamic_input)[0]
-        if self.n_layers_phi == 3:
-            phi_feature_size = self.model_param["deepset_param"]["n_units_phi"][-1]
-        else:
-            phi_feature_size = self.model_param["deepset_param"]["n_units_phi"][1]
 
-        non_zero_vehicles = tf.gather(inputs[0], tf.where(tf.reduce_sum(dynamic_input, axis=2) != 0)[:, 1], axis=1)
-        if tf.size(non_zero_vehicles) == 0:
-            summation = tf.zeros((batch_size, phi_feature_size))
-        else:
-            number_non_zero_veh = tf.shape(non_zero_vehicles)[1]
-            phi_out = []
-            for veh_ind in tf.range(number_non_zero_veh):
-                phi_out.append(self.phi_network(non_zero_vehicles[:,veh_ind,:]))
-            summation = self.sum_layer(phi_out)
+        # For debugging:
+        # x = np.array([
+        #     [0, 0, 0, 0],[0, 0, 0, 0],[0, 0, 0, 0],
+        #     [0, 0, 0, 0],[0, 0, 0, 0], [0, 0, 0, 0],
+        #     [0, 0, 0, 0],[1, 1, 1, 1], [1, 1, 1, 1],
+        #     [1, 1, 1, 1],[1, 1, 1, 1], [1, 1, 1, 1]
+        # ])
+        # dynamic_input = tf.squeeze(tf.convert_to_tensor(np.array([[inputs[0], tf.ones(tf.shape(inputs[0])), tf.zeros(tf.shape(inputs[0])), inputs[0]*x]])))
 
-        if self.n_layers_rho == 3:
+
+        non_zero_indices = tf.where(tf.not_equal(tf.reduce_sum(tf.abs(dynamic_input), axis=2), 0))
+        # (batchnumber, vehiclenumber)
+        zero_indices = tf.where(tf.equal(tf.reduce_sum(tf.abs(dynamic_input), axis=2), 0))
+        non_zero_batch_size = tf.size(tf.unique(non_zero_indices[:,0])[0])
+
+        # Wasused:
+        # non_zero_vehicles = tf.gather_nd(dynamic_input, non_zero_indices, batch_dims=0)
+        # number_non_zero_vehicles = tf.cast(tf.shape(non_zero_indices)[0]/non_zero_batch_size, dtype=tf.int32)
+        #Notused:
+        # non_zero_vehicles = tf.reshape(non_zero_vehicles, shape=[non_zero_batch_size, number_non_zero_vehicles, 4])
+        # non_zero_vehicles=tf.gather(dynamic_input, tf.where(tf.not_equal(tf.reduce_sum(tf.abs(dynamic_input), axis=2), 0))[:, 1], axis=1)
+
+
+
+        y_nz, idx_nz, count_nz = tf.unique_with_counts(non_zero_indices[:, 0])
+        y_z, idx_z, count_z = tf.unique_with_counts(zero_indices[:, 0])
+        # all_zero_index = tf.cast(count_z == 12, tf.int32)
+        all_zero_batch_index = tf.cast(tf.boolean_mask(y_z, tf.cast(count_z == 12,tf.int32)),tf.int32)
+        non_zero_batch_index = tf.cast(tf.boolean_mask(y_nz,tf.cast(count_nz >= 1, tf.int32)),tf.int32)
+        batch_phi_out = []
+
+        for b in range(batch_size):
+            if tf.reduce_any(b == non_zero_batch_index):
+                phi_out = []
+                temp = tf.where(tf.not_equal(tf.reduce_sum(tf.abs(dynamic_input[b, :, :]), axis=1), 0))[:, 0]
+                non_zero_vehicles_in_batch = tf.gather(dynamic_input[b, :, :], temp, axis=0)
+                # non_zero_vehicles_in_batch = tf.squeeze(non_zero_vehicles_in_batch)
+                # Wasused
+                # n_veh = tf.shape(non_zero_vehicles_in_batch)[0]
+                # for v in tf.range(n_veh):
+                #     phi_out.append(self.phi_network(tf.expand_dims(non_zero_vehicles_in_batch[v, :], axis=0)))
+                # phi_sum = self.sum_layer(phi_out)
+                phi_out = self.phi_network(non_zero_vehicles_in_batch)
+                phi_sum = self.sum_layer(phi_out)
+                batch_phi_out.append(phi_sum)
+            elif tf.reduce_any(b == all_zero_batch_index):
+                phi_sum = tf.zeros((1, self.phi_feature_size))
+                batch_phi_out.append(phi_sum)
+            else:
+                print("error")
+                sys.exit()
+
+            if batch_size == 1:
+                summation = tf.expand_dims(tf.squeeze(batch_phi_out), axis=0)
+            else:
+                summation = tf.squeeze(batch_phi_out)
+                # if tf.size(non_zero_vehicles) == 0:
+                #     summation = tf.zeros((batch_size, self.phi_feature_size))
+                # else:
+                #     number_non_zero_veh = tf.shape(non_zero_vehicles)[1]
+                #     phi_out = []
+                #     for veh_ind in tf.range(number_non_zero_veh):
+                #         phi_out.append(self.phi_network(non_zero_vehicles[:, veh_ind, :]))
+                #     summation = self.sum_layer(phi_out)
+
+        if tf.equal(self.n_layers_rho, tf.constant([3])):
             rho_1_out = self.rho_layer_1(summation)
             rho_2_out = self.rho_layer_2(rho_1_out)
             rho_3_out = self.rho_layer_3(rho_2_out)
@@ -396,7 +455,6 @@ class DeepSetQNetwork(keras.Model):
         q_1_out = self.Q_layer_1(concat_out)
         q_2_out = self.Q_layer_2(q_1_out)
         output = self.output_layer(q_2_out)
-
         return output
 
 

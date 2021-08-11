@@ -163,6 +163,7 @@ class DqnAgent(keras.models.Model):
                     done=done,
                     is_weight=is_weight)
             else:
+
                 states, actions, rewards, next_states, done = self.buffer.get_training_samples()
                 one_hot_actions = tf.keras.utils.to_categorical(actions, num_classes=n_actions)
                 mean_batch_reward, loss, td_error, grads, clipped_grads = self.run_tape(
@@ -185,7 +186,7 @@ class DqnAgent(keras.models.Model):
 
             return mean_batch_reward, loss, td_error, grads, clipped_grads
 
-    @tf.function
+    #@tf.function
     def run_tape(self,
                  states: tf.Tensor,
                  actions: tf.Tensor,

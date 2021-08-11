@@ -203,7 +203,7 @@ def convert_state(veh, remove_velocity=False):
         state = tf.expand_dims(state, 0)
         return state
 
-def decompose_state(veh, remove_velocity=False):
+def decompose_state(veh, remove_velocity=False, use_deepset=False):
     """
     Decomposes the state into static and dynamic components.
         Static components -> Ego vehicle speed, distance to road edge, etc.
@@ -521,7 +521,9 @@ class DiscreteSingleActionPolicy(CustomPolicy):
             # Set current vehicle state and action pair
             veh.s1 = veh.s_raw
             if self.agent.training_param["use_deepset"] or self.agent.training_param["use_CNN"]:
-                veh.s1_mod = decompose_state(veh, remove_velocity=self.remove_velocity)
+                veh.s1_mod = decompose_state(veh,
+                                             remove_velocity=self.remove_velocity,
+                                             use_deepset=self.agent.training_param["use_deepset"])
             else:
                 veh.s1_mod = convert_state(veh, remove_velocity=self.remove_velocity)
 
