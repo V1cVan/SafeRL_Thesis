@@ -316,24 +316,30 @@ def start_run(vehicles, method, parameter, seed, value):
     # 1=1D conv. on measurements dim.,
     # 2=2D conv. on vehicle and measurements dimensions,
     # CNN Tuning:
-    if method == "CNN1D_tuning_with_pooling":
-        USE_POOLING = True
-        if parameter == "Single layer number of filters":
-            FILTERS = value
-        elif parameter == "Double layer number of filters":
-            FILTERS = value
-        else:
-            print("CNN parameter naming error")
-            sys.exit()
-    elif method == "CNN1D_tuning_without_pooling":
+    if value == "DDQN":
+        USE_DEEPSET = False
+        USE_CNN = False
         USE_POOLING = False
-        if parameter == "Single layer number of filters":
-            FILTERS = value
-        elif parameter == "Double layer number of filters":
-            FILTERS = value
-        else:
-            print("CNN parameter naming error")
-            sys.exit()
+        FILTERS = (0)
+    elif value == "CNN with Pooling":
+        USE_DEEPSET = False
+        USE_CNN = True
+        USE_POOLING = True
+        FILTERS = (16, 32)
+    elif value == "CNN without Pooling":
+        USE_DEEPSET = False
+        USE_CNN = True
+        USE_POOLING = False
+        FILTERS = (8, 16)
+    elif value == "Deepset":
+        USE_DEEPSET = True
+        USE_CNN = False
+        USE_POOLING = False
+        FILTERS = (0)
+    else:
+        print("Not value value set")
+        sys.exit()
+
 
 
 
@@ -387,17 +393,14 @@ def start_run(vehicles, method, parameter, seed, value):
     N_ACTIONS = 5
     ACT_FUNC = tf.nn.relu
 
-    USE_DEEPSET = False
-    if USE_DEEPSET:
-        BATCH_NORM = True
-    else:
-        BATCH_NORM = False
+
+    BATCH_NORM = False
     """ NON-TEMPORAL MODEL PARAMETERS: """
     # For deepset:
     PHI_SIZE = (32, 64)
     RHO_SIZE = (64, 32)
     ACT_FUNC_PHI = tf.nn.relu
-    ACT_FUNC_RHO = tf.nn.tanh
+    ACT_FUNC_RHO = tf.nn.relu
     # For CNN's:
     # FILTERS = (15, 15)  # Dimensionality of output space
     KERNEL = 4  # Convolution width
@@ -456,7 +459,7 @@ def start_run(vehicles, method, parameter, seed, value):
     """TRAINING PARAMETERS:"""
     POLICY_ACTION_RATE = 8  # Number of simulator steps before new control action is taken
     MAX_TIMESTEPS = 5e3  # range: 5e3 - 10e3
-    MAX_EPISODES = 900
+    MAX_EPISODES = 1000
     FINAL_RETURN = 1
     SHOW_TRAIN_PLOTS = False
     SAVE_TRAINING = True
@@ -490,8 +493,8 @@ def start_run(vehicles, method, parameter, seed, value):
     # Model types:
     USE_TARGET_NETWORK = True
     USE_DUELLING = False
-    # NOTE! USE DEEPSET HAS BEEN MOVED UP !
-    USE_CNN = True
+    # USE_DEEPSET = False
+    # USE_CNN = False
     USE_TEMPORAL_CNN = False
     USE_LSTM = False
     ADD_NOISE = False
@@ -646,31 +649,11 @@ if __name__=="__main__":
             value = parameter value
         """
         vehicles = {"slow": 10, "medium": 20, "fast": 5}
-        for method in ("CNN1D_tuning_with_pooling", "CNN1D_tuning_without_pooling"):
-            if method == "CNN1D_tuning_with_pooling":
-                for parameter in ("Single layer number of filters", "Double layer number of filters"):
-                    for seed in (100, 300, 500):
-                        if parameter == "Single layer number of filters":
-                            for value in ((8,), (16,), (32,), (64,), (128,)):
-                                yield vehicles, method, parameter, seed, value
-                        elif parameter == "Double layer number of filters":
-                            for value in ((8,16,), (16,32,), (32, 32,), (32,64,), (32,64,128)):
-                                yield vehicles, method, parameter, seed, value
-                        else:
-                            print("not in else")
-                            sys.exit()
-            elif method == "CNN1D_tuning_without_pooling":
-                for parameter in ("Single layer number of filters", "Double layer number of filters"):
-                    for seed in (100, 300, 500):
-                        if parameter == "Single layer number of filters":
-                            for value in ((8,), (16,), (32,), (64,), (128,)):
-                                yield vehicles, method, parameter, seed, value
-                        elif parameter == "Double layer number of filters":
-                            for value in ((8, 16,), (16, 32,), (32, 32,), (32, 64,), (32,64,128)):
-                                yield vehicles, method, parameter, seed, value
-                        else:
-                            print("not in else")
-                            sys.exit()
+        method = "Generalisability_baselines"
+        parameter = " "
+        for seed in (100, 200, 300, 400, 500):
+            for value in ("DDQN", "CNN with Pooling", "CNN without Pooling", "Deepset"):
+                yield vehicles, method, parameter, seed, value
 
 
     if procs > 1:

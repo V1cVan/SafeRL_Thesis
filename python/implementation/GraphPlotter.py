@@ -35,11 +35,16 @@ For deleting experiment from Tensorboard:
 # tensorboard dev upload --logdir "./logfiles/Deepset_tuning_original/train" --name "Old Deepset model (broken)" --description "Old default deepset model but re-run with after the reward function was tuned. For comparison to new deepset model."
 # tensorboard dev upload --logdir "./logfiles/Deepset_baseline/train" --name "Final Deepset Baseline" --description "Final Fixed Deepset for baseline over 5 seeds. Default param: Phi_size=(32,64), Phi_act=Relu, Rho_size=(64,32), Rho_act=Tanh, BatchNorm=True."
 
+# CNNs
+# tensorboard dev upload --logdir "./logfiles/CNN1D_tuning_with_pooling/train" --name "1D CNN with pooling tuning sweep" --description "1D CNN sweep with pooling. Defaults: Pooling=True(sumpool). Only number of filters was tested."
+# tensorboard dev upload --logdir "./logfiles/CNN1D_tuning_without_pooling/train" --name "1D CNN with OUT pooling tuning sweep" --description "1D CNN sweep with OUT pooling. Defaults: Pooling=True(sumpool). Only number of filters was tested."
 
+# Generalisability baselines
+# tensorboard dev upload --logdir "./logfiles/Generalisability_baselines/train" --name "Generalisability baselines - DDQN|Deepset|CNNs" --description "DDQN vs Deepset vs CNN w pooling vs CNN wo pooling. "
 def start_run(parameter, tag_value, df, fig_path, run_type):
 
     sns.set_style("darkgrid")
-    if tag_value != "Epsilon" or "Beta increment":
+    if run_type != "parameter_sweep":
         sns.set(rc={'figure.figsize': (12, 5)})
     print(f"Plotting parameter={parameter}, tag value={tag_value}...")
     # Start your training loop using the given arguments
@@ -48,7 +53,7 @@ def start_run(parameter, tag_value, df, fig_path, run_type):
     ax = sns.lineplot(x="step", y="smoothed",
                   hue="description",
                   data=plot_df,
-                  alpha=0.6,
+                  alpha=0.65,
                   linewidth=1.8)
     if tag_value == "Epsilon":
         ax.get_legend().remove()
@@ -61,18 +66,19 @@ def start_run(parameter, tag_value, df, fig_path, run_type):
             ax.legend(loc='lower right', title=None)
 
     if tag_value == "Vehicle speed":
-        ax.set(ylim=(78, 108))
+        ax.set(ylim=(95, 108))
         ax.set(ylabel=tag_value + ' (km/h)')
     elif tag_value == "Reward":
-        ax.set(ylim=(0.75, 0.93))
+        ax.set(ylim=(0.875, 0.93))
         ax.set(ylabel=tag_value)
     else :
         ax.set(ylabel=tag_value)
 
     ax.set(xlabel = "Episode")
 
-    plt_name = fig_path + "/" + parameter + '-' + tag_value + '.pdf'
-    plt.savefig(plt_name, format='pdf', dpi=300, bbox_inches='tight')
+    plt_name = fig_path + "/" + parameter + '-' + tag_value
+    plt.savefig(plt_name+'.pdf', format='pdf', dpi=300, bbox_inches='tight')
+    plt.savefig(plt_name+'.png', dpi=300, bbox_inches='tight')
     print(f" Done with: Param/Method={parameter} ; Tag value={tag_value}")
     plt.show()
 
@@ -142,7 +148,7 @@ def preprocess_data(csv_path, run_type):
                 # Initialise values
                 smooth_np[0] = raw_np[0]  # First value in smoothed array is same as first value in raw
                 if k != "Epsilon":
-                    weight = 0.93
+                    weight = 0.95
                 else:
                     weight = 0.0
                 for step in range(1, len(raw_np)):
@@ -231,6 +237,9 @@ if __name__ == "__main__":
         'Deepset_tuning_fixed_run1': '6HopvVnTR2GEzYUkBdTdDQ',
         'Deepset_tuning_fixed_victor': 'yRJrRW96SVCE8OwN0zV1qw',
         'Deepset_baseline': '2Y7mEYXnQOGtqEPKDLd7aA',
+        'CNN_tuning_without_pooling': 'denVBYeVSzmfNduXpOnC3A',
+        'CNN_tuning_with_pooling': 'EiG3S0LRRNaUkotA8tmkxQ',
+        'Generalisability_baselines': 'k11SRrn3TMmXg7Zrn1Axpw',
     }
 
     experiment_paths = {
@@ -248,14 +257,16 @@ if __name__ == "__main__":
         'Deepset_tuning_fixed_run1': './logfiles/Deepset_tuning_fixed_run1/train',
         'Deepset_tuning_fixed_victor': './logfiles/Deepset_tuning/train',
         'Deepset_baseline': './logfiles/Deepset_baseline/train',
-
+        'CNN_tuning_without_pooling': './logfiles/CNN1D_tuning_without_pooling/train',
+        'CNN_tuning_with_pooling': './logfiles/CNN1D_tuning_with_pooling/train',
+        'Generalisability_baselines': './logfiles/Generalisability_baselines/train',
     }
 
     experiment_names = list(experiment_ids.keys())
     print(experiment_names)
 
-    experiment_name = "Deepset_baseline"
-    run_type = 'parameter_sweep'  # 'method comparison' OR 'parameter_sweep'
+    experiment_name = "Generalisability_baselines"
+    run_type = 'method_comparison'  # 'method_comparison' OR 'parameter_sweep'
     csv_path = experiment_paths[experiment_name] + "/" + experiment_name + '.csv'
     download_and_save(experiment_name, csv_path)  # Comment out if you don't want to re-download the data
 
@@ -266,7 +277,7 @@ if __name__ == "__main__":
     display_results_summary(csv_path)
 
     # Plot the smoothed results using multi processing
-    procs = 1   # Amount of processes/cores you want to use
+    procs = 32   # Amount of processes/cores you want to use
     mp.set_start_method('spawn')  # This will make sure the different workers have different random seeds
     P = mp.cpu_count()  # Amount of available procs
     procs = max(min(procs, P), 1)  # Clip amount of procs to [1;P]
