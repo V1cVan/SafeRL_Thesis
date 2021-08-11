@@ -316,6 +316,7 @@ def start_run(vehicles, method, parameter, seed, value):
     # 1=1D conv. on measurements dim.,
     # 2=2D conv. on vehicle and measurements dimensions,
     # Deepset tuning:
+
     if parameter == "Phi network size":
         PHI_SIZE = value
         ACT_FUNC_PHI = tf.nn.relu
@@ -352,6 +353,12 @@ def start_run(vehicles, method, parameter, seed, value):
         RHO_SIZE = (32, 32)
         ACT_FUNC_RHO = tf.nn.tanh
         BATCH_NORM = value
+    elif parameter == " ":
+        PHI_SIZE = (32,64)
+        ACT_FUNC_PHI = tf.nn.relu
+        RHO_SIZE = (64,32)
+        ACT_FUNC_RHO = tf.nn.tanh
+        BATCH_NORM = True
 
     """RUN PARAMETERS:"""
     SEED = seed
@@ -638,7 +645,7 @@ if __name__=="__main__":
     run_timer = Timer("Run timer")
     run_timer.startTime()
 
-    PROCS = 32  # Number of cores to use
+    PROCS = 5  # Number of cores to use
     mp.set_start_method("spawn")  # Make sure different workers have different seeds if applicable
     P = mp.cpu_count()  # Number of available cores
     procs = max(min(PROCS, P), 1)  # Clip number of procs to [1;P]
@@ -654,34 +661,39 @@ if __name__=="__main__":
             value = parameter value
         """
         vehicles = {"slow": 10, "medium": 20, "fast": 5}
-        method = "Deepset_tuning"
-        if method == "Deepset_tuning":
-            for parameter in (
-            'Phi network size', 'Rho network size', 'Rho activation function', 'Phi activation function',
-            'Batch normalisation (Rho activation=Relu)', "Batch normalisation (Rho activation=Tanh)"):
-                for seed in (100, 300, 500):
-                    if parameter == "Phi network size":
-                        for value in (
-                        (32, 32), (64, 64), (32, 64), (32, 32, 32),(64, 64, 64)):
-                            yield vehicles, method, parameter, seed, value
-                    elif parameter == "Rho network size":
-                        for value in (
-                        (32, 32), (64,32), (64, 64), (32, 32, 32), (64, 64, 64)):
-                            yield vehicles, method, parameter, seed, value
-                    elif parameter == "Rho activation function":
-                        for value in (tf.nn.relu, tf.nn.elu, tf.nn.tanh):
-                            yield vehicles, method, parameter, seed, value
-                    elif parameter == "Phi activation function":
-                        for value in (tf.nn.relu, tf.nn.elu, tf.nn.tanh):
-                            yield vehicles, method, parameter, seed, value
-                    elif parameter == "Batch normalisation (Rho activation=Relu)":
-                        for value in (True, False):
-                            yield vehicles, method, parameter, seed, value
-                    elif parameter == "Batch normalisation (Rho activation=Tanh)":
-                        for value in (True, False):
-                            yield vehicles, method, parameter, seed, value
-                    else:
-                        sys.exit()
+        method = "Deepset_baseline"
+        if method == "Deepset_baseline":
+            # for parameter in (
+            # 'Phi network size', 'Rho network size', 'Rho activation function', 'Phi activation function',
+            # 'Batch normalisation (Rho activation=Relu)', "Batch normalisation (Rho activation=Tanh)"):
+            parameter = " "
+            for seed in (100, 200, 300, 400, 500):
+                if parameter == " ":
+                    value = "Deep set"
+                    yield vehicles, method, parameter, seed, value
+                elif parameter == "Phi network size":
+                    for value in (
+                    (32, 32), (64, 64), (32, 64), (32, 32, 32),(64, 64, 64)):
+                        yield vehicles, method, parameter, seed, value
+                elif parameter == "Rho network size":
+                    for value in (
+                    (32, 32), (64,32), (64, 64), (32, 32, 32), (64, 64, 64)):
+                        yield vehicles, method, parameter, seed, value
+                elif parameter == "Rho activation function":
+                    for value in (tf.nn.relu, tf.nn.elu, tf.nn.tanh):
+                        yield vehicles, method, parameter, seed, value
+                elif parameter == "Phi activation function":
+                    for value in (tf.nn.relu, tf.nn.elu, tf.nn.tanh):
+                        yield vehicles, method, parameter, seed, value
+                elif parameter == "Batch normalisation (Rho activation=Relu)":
+                    for value in (True, False):
+                        yield vehicles, method, parameter, seed, value
+                elif parameter == "Batch normalisation (Rho activation=Tanh)":
+                    for value in (True, False):
+                        yield vehicles, method, parameter, seed, value
+                else:
+                    print("not in else")
+                    sys.exit()
 
 
     if procs > 1:

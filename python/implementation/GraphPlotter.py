@@ -33,7 +33,7 @@ For deleting experiment from Tensorboard:
 # tensorboard dev upload --logdir "./logfiles/Deepset_tuning_fixed/train" --name "Fixed Deepset parameter sweep" --description "Tuning of deepset after model was fixed. Defaults: Phi/Rho size = (32,32), ActFunc = Relu, Batchnorm=False"
 # tensorboard dev upload --logdir "./logfiles/Deepset_tuning_fixed/train" --name "Fixed Deepset parameter sweep number 2!" --description "Tuning of deepset run 2 after model was fixed. Defaults: Phi size=(32,32,32), Phi_act=relu, Rho_size = (32,32), Rho_act=tanh, Batchnorm=False"
 # tensorboard dev upload --logdir "./logfiles/Deepset_tuning_original/train" --name "Old Deepset model (broken)" --description "Old default deepset model but re-run with after the reward function was tuned. For comparison to new deepset model."
-
+# tensorboard dev upload --logdir "./logfiles/Deepset_baseline/train" --name "Final Deepset Baseline" --description "Final Fixed Deepset for baseline over 5 seeds. Default param: Phi_size=(32,64), Phi_act=Relu, Rho_size=(64,32), Rho_act=Tanh, BatchNorm=True."
 
 
 def start_run(parameter, tag_value, df, fig_path, run_type):
@@ -223,9 +223,10 @@ if __name__ == "__main__":
         'Deepset_tuning_run2': 'daXDaA0rRYWXofnUEM5R3Q',
         'DDQN_reward_shaping': 'S0cm843GQC66rgyfPKfnQA',
         'CNN_normal_tuning': 'x',
-        'Deepset_tuning_fixed_run1': '6HopvVnTR2GEzYUkBdTdDQ',
-        'Deepset_tuning_fixed_run2': '',
         'Deepset_old': 'oc7AyPI8Q9eKRrUvNYsBtA',
+        'Deepset_tuning_fixed_run1': '6HopvVnTR2GEzYUkBdTdDQ',
+        'Deepset_tuning_fixed_victor': 'yRJrRW96SVCE8OwN0zV1qw',
+        'Deepset_baseline': '2Y7mEYXnQOGtqEPKDLd7aA',
     }
 
     experiment_paths = {
@@ -239,16 +240,18 @@ if __name__ == "__main__":
         'Deepset_tuning_run2': './logfiles/Deepset_tuning_run2/train',
         'DDQN_reward_shaping': './logfiles/DDQN_ER_reward_tuning/train',
         'CNN_normal_tuning': './logfiles/CNN_normal_tuning/train',
+        'Deepset_old': './logfiles/Deepset_tuning_original/train',
         'Deepset_tuning_fixed_run1': './logfiles/Deepset_tuning_fixed_run1/train',
-        'Deepset_tuning_fixed_run2': './logfiles/Deepset_tuning_fixed_run2/train',
-        'Deepset_old': './logfiles/Deepset_tuning_original/train'
+        'Deepset_tuning_fixed_victor': './logfiles/Deepset_tuning/train',
+        'Deepset_baseline': './logfiles/Deepset_baseline/train',
+
     }
 
     experiment_names = list(experiment_ids.keys())
     print(experiment_names)
 
-    experiment_name = "Baselines"
-    run_type = 'method_comparison'  # 'method comparison' OR 'parameter_sweep'
+    experiment_name = "Deepset_baseline"
+    run_type = 'parameter_sweep'  # 'method comparison' OR 'parameter_sweep'
     csv_path = experiment_paths[experiment_name] + "/" + experiment_name + '.csv'
     download_and_save(experiment_name, csv_path)  # Comment out if you don't want to re-download the data
 

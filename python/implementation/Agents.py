@@ -186,7 +186,7 @@ class DqnAgent(keras.models.Model):
 
             return mean_batch_reward, loss, td_error, grads, clipped_grads
 
-    #@tf.function
+    @tf.function
     def run_tape(self,
                  states: tf.Tensor,
                  actions: tf.Tensor,
