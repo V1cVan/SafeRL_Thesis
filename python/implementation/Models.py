@@ -159,9 +159,10 @@ class CNN(keras.Model):
         # 1=1D conv. on measurements dim.,
         # 2=2D conv. on vehicle and measurements dimensions.
         kernel = model_param['cnn_param']['kernel']
-        filters = model_param['cnn_param']['kernel']
-        strides = model_param['cnn_param']['kernel']
-        n_layers = len(filters)
+        filters = model_param['cnn_param']['filters']
+        strides = model_param['cnn_param']['strides']
+        use_pooling = model_param['cnn_param']['use_pooling']
+        self.n_layers = len(filters)
 
         # Q-network parameters:
         act_func = model_param['activation_function']
@@ -178,6 +179,7 @@ class CNN(keras.Model):
         # input_matrix = tf.TensorShape([n_inputs_dynamic, n_vehicles])
 
         if self.cnn_type == 0:     # 0=1D conv. on vehicle dim.,
+            # TODO Not used...
             # Dynamic vector input shape (type0) = (n_dynamic x n_vehicles)
             self.dynamic_input = layers.Input(shape=(n_dynamic, n_vehicles), name="dynamic_input_layer")
             self.conv_layer_1 = layers.Conv1D(filters=filters[0],
@@ -193,59 +195,80 @@ class CNN(keras.Model):
             # Dynamic vector input shape (type1) = ( n_vehicles x n_dynamic )
             self.dynamic_input = layers.Input(shape=(n_vehicles, n_dynamic), name="dynamic_input_layer")
             # input shape = (batch_size, 12 [n_vehicles], 4 [rel pos and vel])
-
             self.conv_layer_1 = layers.Conv1D(filters=filters[0],
-                                              kernel_size=kernel[0],
+                                              kernel_size=(kernel,),
                                               activation=act_func,
-                                              strides=strides[0],
-                                              # TODO ??? Padding needed?
-                                              # TODO ??? Channels for 1D?
+                                              strides=(1,),
+                                              padding='same',
                                               name="conv_layer_1")(self.dynamic_input)
-            # Output_shape = (batch_size, 12 n_vehicles, n_filters) (with padding = 'same')
-
-        elif self.cnn_type == 2:       # 2=2D conv. on vehicle and measurements dimensions,
-            # Dynamic vector input shape (type2) = (n_measurements(1) x n_vehicles x n_dynamic)
-            self.dynamic_input = layers.Input(shape=(n_measurements, n_vehicles, n_dynamic), name="dynamic_input_layer")
-            # input shape = (batch_size, 12 [n_vehicles], 4 [rel pos and vel])
-
-            self.conv_layer_1 = layers.Conv2D(filters=filters[0],
-                                              kernel_size=kernel[0],
-                                              activation=act_func,
-                                              strides=strides[0],
-                                              data_format="channels_first",
-                                              name="conv_layer_1")(self.dynamic_input)
-            # Output shape =  TODO ( No clue ? )
-
-
-        if n_layers == 1:
-            self.flatten_layer = layers.Flatten(name="FlattenLayer")(self.conv_layer_1)
-        else:
-            if self.cnn_type == 0 or self.cnn_type == 1:  # 1D convolutions
+                # Output_shape = (batch_size, 12 n_vehicles, n_filters) (with padding = 'same')
+            if self.n_layers == 1:
+                if use_pooling:
+                    self.pooling_layer = layers.Lambda(lambda input: tf.reduce_sum(input, axis=1), name="SumPoolLayer")(self.conv_layer_1)
+                    self.flatten_layer = layers.Flatten(name="FlattenLayer")(self.pooling_layer)
+                else:
+                    self.flatten_layer = layers.Flatten(name="FlattenLayer")(self.conv_layer_1)
+            elif self.n_layers == 2:
                 self.conv_layer_2 = layers.Conv1D(filters=filters[1],
-                                              kernel_size=kernel[1],
-                                              activation=act_func,
-                                              strides=strides[1],
-                                              # TODO ??? Padding needed?
-                                              # TODO ??? Channels for 1D?
-                                              name="conv_layer_2")(self.conv_layer_1)
-            else:  # 2D convolutions
-                self.conv_layer_2 = layers.Conv2D(filters=filters[1],
-                                                  kernel_size=kernel[1],
-                                                  activation=act_func,
-                                                  strides=strides[1],
-                                                  # TODO ??? Padding needed?
-                                                  # TODO ??? Channels for 1D?
-                                                  name="conv_layer_2")(self.conv_layer_1)
-            self.flatten_layer = layers.Flatten(name="FlattenLayer")(self.conv_layer_2)
+                                                    kernel_size=(kernel,),
+                                                    activation=act_func,
+                                                    strides=(1,),
+                                                    padding='same',
+                                                    name="conv_layer_2")(self.conv_layer_1)
+                if use_pooling:
+                    self.pooling_layer = layers.Lambda(lambda input: tf.reduce_sum(input, axis=1), name="SumPoolLayer")(
+                        self.conv_layer_2)
+                    self.flatten_layer = layers.Flatten(name="FlattenLayer")(self.pooling_layer)
+                else:
+                    self.flatten_layer = layers.Flatten(name="FlattenLayer")(self.conv_layer_2)
+            else:
+                print("Number of layers in CNN cannot be anything other than 1 or 2")
+                sys.exit()
+
+        # elif self.cnn_type == 2:       # 2=2D conv. on vehicle and measurements dimensions,
+        #     # TODO Not used...
+        #     # Dynamic vector input shape (type2) = (n_measurements(1) x n_vehicles x n_dynamic)
+        #     self.dynamic_input = layers.Input(shape=(n_measurements, n_vehicles, n_dynamic), name="dynamic_input_layer")
+        #     # input shape = (batch_size, 12 [n_vehicles], 4 [rel pos and vel])
+        #
+        #     self.conv_layer_1 = layers.Conv2D(filters=filters[0],
+        #                                       kernel_size=kernel[0],
+        #                                       activation=act_func,
+        #                                       strides=strides[0],
+        #                                       data_format="channels_first",
+        #                                       name="conv_layer_1")(self.dynamic_input)
+        #     # Output shape =  TODO ( No clue ? )
+
+
+        # if self.n_layers == 1:
+        #     self.flatten_layer = layers.Flatten(name="FlattenLayer")(self.conv_layer_1)
+        # else:
+        #     if self.cnn_type == 0 or self.cnn_type == 1:  # 1D convolutions
+        #         self.conv_layer_2 = layers.Conv1D(filters=filters[1],
+        #                                       kernel_size=kernel[1],
+        #                                       activation=act_func,
+        #                                       strides=strides[1],
+        #                                       # TODO ??? Padding needed?
+        #                                       # TODO ??? Channels for 1D?
+        #                                       name="conv_layer_2")(self.conv_layer_1)
+        #     else:  # 2D convolutions
+        #         self.conv_layer_2 = layers.Conv2D(filters=filters[1],
+        #                                           kernel_size=kernel[1],
+        #                                           activation=act_func,
+        #                                           strides=strides[1],
+        #                                           # TODO ??? Padding needed?
+        #                                           # TODO ??? Channels for 1D?
+        #                                           name="conv_layer_2")(self.conv_layer_1)
+        #     self.flatten_layer = layers.Flatten(name="FlattenLayer")(self.conv_layer_2)
 
         self.concat_layer = layers.Concatenate(name="ConcatenationLayer")([self.flatten_layer, self.static_input])
 
-        self.Q_layer_1 = layers.Dense(n_units[1], activation=act_func, name="QLayer1")(self.concat_layer)
-        self.Q_layer_2 = layers.Dense(n_units[2], activation=act_func, name="QLayer2")(self.Q_layer_1)
+        self.Q_layer_1 = layers.Dense(n_units[0], activation=act_func, name="QLayer1")(self.concat_layer)
+        self.Q_layer_2 = layers.Dense(n_units[1], activation=act_func, name="QLayer2")(self.Q_layer_1)
 
         self.output_layer = layers.Dense(n_actions)(self.Q_layer_2)
 
-        model_name = "Normal_CNN" + '_' + self.cnn_type
+        model_name = "Normal_CNN" + '_' + str(self.cnn_type)
         self.model = keras.Model(inputs=[self.dynamic_input, self.static_input],
                                  outputs=self.output_layer,
                                  trainable=self.model_param["trainable"],
@@ -255,19 +278,19 @@ class CNN(keras.Model):
 
     @tf.function
     def call(self, inputs: tf.Tensor):
-        if self.cnn_type == 0:
-            dynamic_input = inputs[0]
-            static_input = inputs[1]
-            batch_size, x1, x2 = dynamic_input.shape
-            # TODO check this reshape, maybe transpose would do !
-            dynamic_input = tf.reshape(dynamic_input, [batch_size, x2, x1])
-            inputs = (dynamic_input, static_input)
+        # if self.cnn_type == 0:
+        #     dynamic_input = inputs[0]
+        #     static_input = inputs[1]
+        #     batch_size, x1, x2 = dynamic_input.shape
+        #     # TODO check this reshape, maybe transpose would do !
+        #     dynamic_input = tf.reshape(dynamic_input, [batch_size, x2, x1])
+        #     inputs = (dynamic_input, static_input)
         """ Returns the output of the model given an input. """
         return self.model(inputs)
 
     def display_overview(self, model_name):
         """ Displays an overview of the model. """
-        # self.model.summary()
+        self.model.summary()
         model_path = './models/'+model_name+'.png'
         keras.utils.plot_model(self.model,
                                show_shapes=True,

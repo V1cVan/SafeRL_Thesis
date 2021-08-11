@@ -39,7 +39,8 @@ For deleting experiment from Tensorboard:
 def start_run(parameter, tag_value, df, fig_path, run_type):
 
     sns.set_style("darkgrid")
-    # TODO FIGURE SIZE SCALING! plt.figure(figsize=(9, 5))
+    if tag_value != "Epsilon" or "Beta increment":
+        sns.set(rc={'figure.figsize': (12, 5)})
     print(f"Plotting parameter={parameter}, tag value={tag_value}...")
     # Start your training loop using the given arguments
     plot_df = df.loc[(df['parameter_tested'] == parameter) & (df['tag'] == tag_value)]
@@ -50,6 +51,8 @@ def start_run(parameter, tag_value, df, fig_path, run_type):
                   alpha=0.6,
                   linewidth=1.8)
     if tag_value == "Epsilon":
+        ax.get_legend().remove()
+    elif tag_value == "Beta increment":
         ax.get_legend().remove()
     else:
         if run_type == "parameter_sweep":
@@ -63,12 +66,13 @@ def start_run(parameter, tag_value, df, fig_path, run_type):
     elif tag_value == "Reward":
         ax.set(ylim=(0.75, 0.93))
         ax.set(ylabel=tag_value)
-    elif tag_value == "Epsilon":
+    else :
         ax.set(ylabel=tag_value)
+
     ax.set(xlabel = "Episode")
 
-    plt_name = fig_path + "/" + parameter + '-' + tag_value + '.png'
-    plt.savefig(plt_name, dpi=300, bbox_inches='tight')
+    plt_name = fig_path + "/" + parameter + '-' + tag_value + '.pdf'
+    plt.savefig(plt_name, format='pdf', dpi=300, bbox_inches='tight')
     print(f" Done with: Param/Method={parameter} ; Tag value={tag_value}")
     plt.show()
 
@@ -262,7 +266,7 @@ if __name__ == "__main__":
     display_results_summary(csv_path)
 
     # Plot the smoothed results using multi processing
-    procs = 32  # Amount of processes/cores you want to use
+    procs = 1   # Amount of processes/cores you want to use
     mp.set_start_method('spawn')  # This will make sure the different workers have different random seeds
     P = mp.cpu_count()  # Amount of available procs
     procs = max(min(procs, P), 1)  # Clip amount of procs to [1;P]

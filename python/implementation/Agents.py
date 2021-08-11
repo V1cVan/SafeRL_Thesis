@@ -43,7 +43,7 @@ class DqnAgent(keras.models.Model):
 
         # Set parameter which changes sampling behaviour of training buffer if a certain CNN or LSTM are used
         if training_param["use_LSTM"] or \
-                (training_param["use_CNN"] == True and self.Q_actual_net.model_param["cnn_param"]["config"]==3):
+                (training_param["use_temporal_CNN"]):
             use_frame_stacking = True
         else:
             use_frame_stacking = False
