@@ -36,7 +36,7 @@ class DqnAgent(keras.models.Model):
         self.episode = 1
 
         # Set parameter which changes behaviour of the training buffer if CNN or deepset models are used
-        if training_param["use_deepset"] or training_param["use_CNN"]:
+        if training_param["use_deepset"] or (training_param["use_CNN"] or training_param["use_temporal_CNN"]):
             self.use_deepset_or_cnn = True
         else:
             self.use_deepset_or_cnn = False
@@ -147,6 +147,7 @@ class DqnAgent(keras.models.Model):
 
     def train_step(self):
         """ Performs a training step. """
+
         if self.training:
             n_actions = self.Q_actual_net.model_param["n_actions"]
             # Gather and convert data from the buffer (data from simulation):
@@ -155,6 +156,7 @@ class DqnAgent(keras.models.Model):
                 # TODO add deepset implementation
                 states, actions, rewards, next_states, done, idxs, is_weight = self.buffer.get_training_samples()
                 one_hot_actions = tf.keras.utils.to_categorical(actions, num_classes=n_actions)
+                # with tf.device('/GPU:0'):
                 mean_batch_reward, loss, td_error, grads, clipped_grads = self.run_tape(
                     states=states,
                     actions=one_hot_actions,
@@ -166,6 +168,7 @@ class DqnAgent(keras.models.Model):
 
                 states, actions, rewards, next_states, done = self.buffer.get_training_samples()
                 one_hot_actions = tf.keras.utils.to_categorical(actions, num_classes=n_actions)
+                # with tf.device('/GPU:0'):
                 mean_batch_reward, loss, td_error, grads, clipped_grads = self.run_tape(
                     states=states,
                     actions=one_hot_actions,

@@ -43,6 +43,9 @@ For deleting experiment from Tensorboard:
 # tensorboard dev upload --logdir "./logfiles/Generalisability_baselines/train" --name "Generalisability baselines - DDQN|Deepset|CNNs" --description "DDQN vs Deepset vs CNN w pooling vs CNN wo pooling. "
 # tensorboard dev upload --logdir "./logfiles/Generalisability_baselines/test" --name "Generalisability baselines TEST - DDQN|Deepset|CNNs" --description "TEST - DDQN vs Deepset vs CNN w pooling vs CNN wo pooling. "
 
+# Temporal models tuning
+# tensorboard dev upload --logdir "./logfiles/Temporal_tuning/train" --name "Temporal Tuning LSTM & 2D CNN" --description "LSTM & 2D CNN tuning sweeps. "
+
 def start_run(parameter, tag_value, df, fig_path, run_type):
 
     sns.set_style("darkgrid")
@@ -278,6 +281,7 @@ if __name__ == "__main__":
         'CNN_tuning_with_pooling': 'EiG3S0LRRNaUkotA8tmkxQ',
         'Generalisability_baselines': 'k11SRrn3TMmXg7Zrn1Axpw',
         'Generalisability_test': 'rjY2gnrMTGmyMG0r9YCRiw',
+        'Temporal_tuning': 'BaCW51LPQ9WTNgabD1Jblw',
     }
 
     experiment_paths = {
@@ -299,13 +303,14 @@ if __name__ == "__main__":
         'CNN_tuning_with_pooling': './logfiles/CNN1D_tuning_with_pooling/train',
         'Generalisability_baselines': './logfiles/Generalisability_baselines/train',
         'Generalisability_test': './logfiles/Generalisability_baselines/test',
+        'Temporal_tuning': './logfiles/Temporal_tuning/train',
     }
 
     experiment_names = list(experiment_ids.keys())
     print(experiment_names)
 
-    experiment_name = "Generalisability_test"
-    run_type = 'generalisability'  # 'method_comparison' OR 'parameter_sweep' or 'generalisability'
+    experiment_name = "Temporal_tuning"
+    run_type = 'parameter_sweep'  # 'method_comparison' OR 'parameter_sweep' or 'generalisability'
     csv_path = experiment_paths[experiment_name] + "/" + experiment_name + '.csv'
     download_and_save(experiment_name, csv_path)  # Comment out if you don't want to re-download the data
 
@@ -317,7 +322,7 @@ if __name__ == "__main__":
         display_results_summary(csv_path)
 
     # Plot the smoothed results using multi processing
-    procs = 1   # Amount of processes/cores you want to use
+    procs = 32  # Amount of processes/cores you want to use
     mp.set_start_method('spawn')  # This will make sure the different workers have different random seeds
     P = mp.cpu_count()  # Amount of available procs
     procs = max(min(procs, P), 1)  # Clip amount of procs to [1;P]

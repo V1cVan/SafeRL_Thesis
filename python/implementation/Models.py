@@ -22,22 +22,26 @@ class LSTM(keras.Model):
         n_inputs = model_param["n_inputs"]  # Number of items in state matrix
         n_actions = model_param["n_actions"]
         n_timesteps = 4  # Number of stacked measurements considered
-        # https://levelup.gitconnected.com/building-seq2seq-lstm-with-luong-attention-in-keras-for-time-series-forecasting-1ee00958decb
+
         input_layer = layers.Input(shape=(n_timesteps,n_inputs), name="inputState")
         # Many-to-one LSTM layer
-        LSTM_layer = layers.LSTM(units=n_units_lstm,
 
+        LSTM_layer = layers.LSTM(units=n_units_lstm,
                                  name="LSTM")(input_layer)
+
         dense_layer1 = layers.Dense(units=n_units_q[0], activation=act_func_q, name="dense1")(LSTM_layer)
         dense_layer2 = layers.Dense(units=n_units_q[1], activation=act_func_q, name="dense2")(dense_layer1)
+
         output_layer = layers.Dense(n_actions, name="Output")(dense_layer2)
+
+        model_name = "LSTM"
         self.model = keras.Model(inputs=input_layer,
                                  outputs=output_layer,
                                  trainable=self.model_param["trainable"],
-                                 name="LSTM_DRQN")
+                                 name=model_name)
         self.display_overview()
 
-    #@tf.function
+    @tf.function
     def call(self, inputs: tf.Tensor):
         """ Returns the output of the model given an input. """
         return self.model(inputs)
@@ -57,6 +61,7 @@ class TemporalCNN(keras.Model):
     """
     def __init__(self, model_param):
         super(TemporalCNN, self).__init__()
+        self.model_param = model_param
         tf.random.set_seed(model_param['seed'])
         np.random.seed(model_param['seed'])
         remove_state_velocity = model_param["remove_velocity"]
@@ -67,8 +72,8 @@ class TemporalCNN(keras.Model):
         # CNN parameters:
         cnn_type = model_param['cnn_param']['temporal_CNN_type']  # 2D or 3D
         kernel = model_param['cnn_param']['kernel']
-        filters = model_param['cnn_param']['kernel']
-        strides = model_param['cnn_param']['kernel']
+        filters = model_param['cnn_param']['filters']
+        strides = model_param['cnn_param']['strides']
         n_layers = len(filters)
 
         # Q-network parameters:
@@ -82,32 +87,30 @@ class TemporalCNN(keras.Model):
 
         # Dynamic vector input shape = (n_measurements x n_vehicles x n_dynamic)
         # Static vector input shape = (n_measurements x n_static)
-        self.dynamic_input = layers.Input(shape=(n_measurements, n_vehicles, n_dynamic), name="dynamic_input_layer")
+        self.dynamic_input = layers.Input(shape=(n_vehicles, n_dynamic, n_measurements), name="dynamic_input_layer")
         self.static_input = layers.Input(shape=(n_static), name="static_input_layer")
 
         if cnn_type == '2D':
             self.conv_layer_1 = layers.Conv2D(filters=filters[0],
-                                              kernel_size=kernel[0],
+                                              kernel_size=(1,kernel),
                                               activation=act_func,
-                                              strides=strides[0],
-                                              data_format="channels_first",
+                                              data_format="channels_last",
+                                              padding='same',
                                               name="conv_layer_1")(self.dynamic_input)
             if n_layers == 1:
                 self.flatten_layer = layers.Flatten(name="flatten_layer")(self.conv_layer_1)
             else:
                 self.conv_layer_2 = layers.Conv2D(filters=filters[1],
-                                                  kernel_size=kernel[1],
+                                                  kernel_size=(1,int(kernel/2)),
                                                   activation=act_func,
-                                                  strides=strides[1],
-                                                  data_format="channels_first",
+                                                  data_format="channels_last",
                                                   name="conv_layer_2")(self.conv_layer_1)
                 self.flatten_layer = layers.Flatten(name="flatten_layer")(self.conv_layer_2)
         else:  # cnn_type == '3D'
             self.conv_layer_1 = layers.Conv3D(filters=filters[0],
                                               kernel_size=kernel[0],
                                               activation=act_func,
-                                              strides=strides[0],
-                                              data_format="channels_first",
+                                              data_format="channels_last",
                                               name="conv_layer_1")(self.dynamic_input)
             if n_layers == 1:
                 self.flatten_layer = layers.Flatten(name="flatten_layer")(self.conv_layer_1)
@@ -116,14 +119,14 @@ class TemporalCNN(keras.Model):
                                                   kernel_size=kernel[1],
                                                   activation=act_func,
                                                   strides=strides[1],
-                                                  data_format="channels_first",
+                                                  data_format="channels_last",
                                                   name="conv_layer_2")(self.conv_layer_1)
                 self.flatten_layer = layers.Flatten(name="flatten_layer")(self.conv_layer_2)
 
         self.concat_layer = layers.Concatenate(name="ConcatenationLayer")(
             [self.flatten_layer, self.static_input])
 
-        self.Q_layer_1 = layers.Dense(n_units[0], activation=act_func, name="Q_layer_1")(self.concat_layer)
+        self.Q_layer_1 = layers.Dense(64, activation=act_func, name="Q_layer_1")(self.concat_layer)
         self.Q_layer_2 = layers.Dense(n_units[1], activation=act_func, name="Q_layer_2")(self.Q_layer_1)
 
         self.output_layer = layers.Dense(n_actions)(self.Q_layer_2)
@@ -138,11 +141,14 @@ class TemporalCNN(keras.Model):
     @tf.function
     def call(self, inputs: tf.Tensor):
         """ Returns the output of the model given an input. """
-        return self.model(inputs)
+        dynamic_input = tf.transpose(inputs[0], perm=[0,2,3,1])
+        static_input = inputs[1]
+        return self.model([dynamic_input, static_input])
 
     def display_overview(self, model_name):
         """ Displays an overview of the model. """
         path = './models/' + model_name + '.png'
+        self.model.summary()
         keras.utils.plot_model(self.model,
                                show_shapes=True,
                                show_layer_names=True,
@@ -216,7 +222,7 @@ class CNN(keras.Model):
                     self.flatten_layer = layers.Flatten(name="FlattenLayer")(self.conv_layer_1)
             elif self.n_layers == 2:
                 self.conv_layer_2 = layers.Conv1D(filters=filters[1],
-                                                    kernel_size=(kernel,),
+                                                    kernel_size=(int(kernel/2),),
                                                     activation=act_func,
                                                     strides=(1,),
                                                     padding='same',

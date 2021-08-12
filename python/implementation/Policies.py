@@ -239,7 +239,6 @@ def convert_state(veh, remove_velocity=False):
 
         return state
 
-
 def decompose_state(veh, remove_velocity=False, use_deepset=False):
     """
     Decomposes the state into static and dynamic components.
@@ -515,6 +514,12 @@ class DiscreteSingleActionPolicy(CustomPolicy):
         self.rewards = RewardFunction()
         if self.agent.training_param['use_temporal_CNN'] or self.agent.training_param["use_LSTM"]:
             self.stack_frames = True
+            if self.agent.training_param['use_temporal_CNN']:
+                self.stack_cnn_frames = True
+                self.stack_LSTM_frames = False
+            elif self.agent.training_param["use_LSTM"]:
+                self.stack_cnn_frames = False
+                self.stack_LSTM_frames = True
             self.frame_stack_buffer = deque(maxlen=4)
         else:
             self.stack_frames = False
@@ -552,7 +557,7 @@ class DiscreteSingleActionPolicy(CustomPolicy):
             veh.counter = self.STEP_TIME
             # Set current vehicle state and action pair
             veh.s1 = veh.s_raw
-            if self.agent.training_param["use_deepset"] or self.agent.training_param["use_CNN"]:
+            if self.agent.training_param["use_deepset"] or self.agent.training_param["use_CNN"] or self.agent.training_param['use_temporal_CNN']:
                 veh.s1_mod = decompose_state(veh,
                                              remove_velocity=self.remove_velocity,
                                              use_deepset=self.agent.training_param["use_deepset"])
@@ -575,10 +580,9 @@ class DiscreteSingleActionPolicy(CustomPolicy):
                         for item in range(3-current_buffer_size):
                             self.frame_stack_buffer.append(veh.s1_mod)
                     self.frame_stack_buffer.append(veh.s1_mod)
-                    stacked_state = tf.convert_to_tensor(list(self.frame_stack_buffer))
-                    # Transpose into shape suitable for LSTM
-                    stacked_state = tf.transpose(stacked_state, perm=[1,0,2])
+                    stacked_state = tf.expand_dims(tf.convert_to_tensor(list(self.frame_stack_buffer)), 0)
                     Q = self.get_action(stacked_state)
+                    veh.s1_mod = stacked_state
                 if self.stack_cnn_frames:
                     current_buffer_size = len(self.frame_stack_buffer)
                     if current_buffer_size < 3:
@@ -587,12 +591,15 @@ class DiscreteSingleActionPolicy(CustomPolicy):
                     self.frame_stack_buffer.append(veh.s1_mod[0])
                     dynamic_stacked_state = tf.convert_to_tensor(list(self.frame_stack_buffer))
                     # Transpose into shape suitable for the CNN
-                    dynamic_stacked_state = tf.expand_dims(tf.transpose(dynamic_stacked_state, perm=[0,2,3,1]),axis=0)
+                    dynamic_stacked_state = tf.transpose(dynamic_stacked_state, perm=[1,0,2,3])
                     full_stacked_state = [dynamic_stacked_state,
                                              veh.s1_mod[1]]
                     Q = self.get_action(full_stacked_state)
+                    veh.s1_mod = full_stacked_state
             else:  # No frame stacking
                 Q = self.get_action(veh.s1_mod)
+
+
 
             veh.a1_mod = Q
             action_choice = self.agent.get_action_choice(Q)
@@ -639,6 +646,7 @@ class DiscreteSingleActionPolicy(CustomPolicy):
     def get_action(self, state):
         """ Get the modified action vector from the modified state vector. I.e. the mapping s_mod->a_mod """
         # Receive action and critic values from NN:
+        # with tf.device('/GPU:1'):
         Q = self.agent.Q_actual_net(state)
         return Q
 

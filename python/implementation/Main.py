@@ -25,7 +25,7 @@ import multiprocessing as mp
 import sys
 
 # tf.config.experimental.set_visible_devices([], "GPU")
-physical_devices = tf.config.list_physical_devices('GPU')
+physical_devices = tf.config.list_physical_devices("GPU")
 print(physical_devices)
 
 
@@ -109,16 +109,12 @@ class Main(object):
                 self.simulate(self.training_param["sim_timesteps"])
                 self.policy.agent.epsilon = self.policy.agent.prev_epsilon
 
-            # print("Episode number: %0.2f" % episode_count)
-            # logging.critical("Episode number: %0.2f" % episode_count)
-
             self.episodeTimer.startTime()
             # Set simulation environment
             with self.sim:
                 # Loop through each timestep in episode.
                 # Run the model for one episode to collect training data
                 for t in np.arange(1, max_timesteps + 1):
-                    # logging.critical("Timestep of episode: %0.2f" % self.sim.k)
 
                     # Perform one simulations step:
                     if not self.sim.stopped:
@@ -126,11 +122,6 @@ class Main(object):
                         self.sim.step()  # Calls AcPolicy.customAction method.
                         custom_action_time = self.custom_action_timer.endTime()
 
-                        # TODO Reformat so that check is done after sim.step()
-                        # TODO maybe add penalties for collisions
-                        # self.policy.agent.stop_flags = self.sim.stopped or self.sim._collision
-                        # if self.policy.agent.stop_flags == True:
-                        #     self.policy.agent.buffer.alter_buffer_stop_flag(flag=self.policy.agent.stop_flags)
                         done = self.sim.stopped  # or self.sim._collision
                         if self.policy.agent.is_action_taken:
                             self.policy.agent.add_experience(done)
@@ -145,7 +136,6 @@ class Main(object):
                         if self.policy.agent.buffer.is_buffer_min_size():
                             model_update_counter += 1
                             if model_update_counter % self.training_param["model_update_rate"] == 0:
-                                # TODO add data to episode buffer to get episode rewards while training.
                                 self.training_timer.startTime()
                                 mean_batch_reward, loss, td_error, grads, clipped_grads = self.policy.agent.train_step()
                                 epsilon = self.policy.agent.epsilon
@@ -163,11 +153,7 @@ class Main(object):
             reward = np.sum(episode_reward_list) / len(episode_reward_list)
 
             time_taken_episode = self.episodeTimer.endTime()
-            # print(f"Time taken for episode{episode_count}={time_taken_episode}")
-            # if trained and episode_count % 50 == 0:
-            #     self.policy.agent.Q_actual_net.save_weights(self.model_param["weights_file_path"])
-            #     print("Saved network weights.")
-
+            # print(f"Time for episode = {time_taken_episode}")
             # Running reward smoothing effect
             running_reward = 0.05 * reward + (1 - 0.05) * running_reward
 
@@ -218,7 +204,6 @@ class Main(object):
             # TODO time taken for inferenece and time taken for training step
 
             # Save model weights and biases and gradients of backprop.
-            # TODO fix deepset model so that we can save layer names
             # self.tb_logger.save_weights_gradients(episode=episode_count,
             #                                  model=self.policy.agent.Q_actual_net,
             #                                  grads=grads,
@@ -293,6 +278,13 @@ def sim_type(policy, n_vehicles):
     n_slow_veh = n_vehicles["slow"]
     n_normal_veh = n_vehicles["medium"]
     n_fast_veh = n_vehicles["fast"]
+    # n_step = n_vehicles["step"]
+    # n_sway = n_vehicles["sway"]
+    # n_im = n_vehicles["im"]
+    safetyCfg = {
+        "Mvel": 1.0,
+        "Gth": 2.0
+    }
     sim_config = {
         "name": "Dense_Highway_Circuit",
         "scenario": "CIRCUIT",
@@ -301,10 +293,9 @@ def sim_type(policy, n_vehicles):
         "replay": False,
         "vehicles": [
             {"amount": 1, "model": KBModel(), "policy": policy, "D_MAX": 160},
-            # {"amount": 2, "model": KBModel(), "policy": StepPolicy(10, [0.1, 0.5])},
-            # {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
-            # {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
-            # {"model": KBModel(), "policy": FixedLanePolicy(18), "R": 0, "l": 3.6, "s": random.random()*200, "v": 18},
+            # {"amount": n_step, "model": KBModel(), "policy": StepPolicy(25, [0.2, 0.8])},
+            # {"amount": n_sway, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
+            # {"amount": n_im, "model": KBModel(), "policy": IMPolicy()},
             {"amount": n_slow_veh, "model": KBModel(), "policy": BasicPolicy("slow")},
             {"amount": n_normal_veh, "model": KBModel(), "policy": BasicPolicy("normal")},
             {"amount": n_fast_veh, "model": KBModel(), "policy": BasicPolicy("fast")}
@@ -329,28 +320,46 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     # 2=2D conv. on vehicle and measurements dimensions,
     # Temporal Tuning:
 
-    if ((parameter == "LSTM units (w. state velocity)") or (parameter=="LSTM units (w.o. state velocity)")):
-        if parameter == "LSTM units (w. state velocity)":
-            REMOVE_STATE_VELOCITY = False
-        else:
-            REMOVE_STATE_VELOCITY = True
-
+    if parameter=="LSTM units (w.o. state velocity)":
+        REMOVE_STATE_VELOCITY = True
+        N_UNITS = (32, 32)
         USE_TEMPORAL_CNN = False
         USE_LSTM = True
         LSTM_UNITS = value
         FILTERS = None
         KERNEL = None  # Convolution width
         STRIDES = None  # Stride size
-    elif ((parameter == "CNN filters (w. state velocity)") or (parameter=="CNN filters (w.o. state velocity)")):
-        if parameter == "CNN filters (w. state velocity)":
-            REMOVE_STATE_VELOCITY = False
-        else:
-            REMOVE_STATE_VELOCITY = True
-
+    elif parameter=="CNN filters (w.o. state velocity & 32 dense units)":
+        REMOVE_STATE_VELOCITY = True
+        N_UNITS = (32,32)
         USE_TEMPORAL_CNN = True
         USE_LSTM = False
         LSTM_UNITS = None
-        FILTERS = (15, 15)
+        FILTERS = value
+        if REMOVE_STATE_VELOCITY:
+            KERNEL = 2  # Convolution width
+        else:
+            KERNEL = 4
+        STRIDES = (1, 1)  # Stride size
+    elif parameter=="CNN filters (w.o. state velocity & 64 dense units)":
+        REMOVE_STATE_VELOCITY = True
+        N_UNITS = (64,32)
+        USE_TEMPORAL_CNN = True
+        USE_LSTM = False
+        LSTM_UNITS = None
+        FILTERS = value
+        if REMOVE_STATE_VELOCITY:
+            KERNEL = 2  # Convolution width
+        else:
+            KERNEL = 4
+        STRIDES = (1, 1)  # Stride size
+    elif parameter=="CNN filters (w.o. state velocity & 128 dense units)":
+        REMOVE_STATE_VELOCITY = True
+        N_UNITS = (128,64)
+        USE_TEMPORAL_CNN = True
+        USE_LSTM = False
+        LSTM_UNITS = None
+        FILTERS = value
         if REMOVE_STATE_VELOCITY:
             KERNEL = 2  # Convolution width
         else:
@@ -406,7 +415,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
 
     """ BASE MODEL PARAMETERS:"""
     # Base parameters (DDQN):
-    N_UNITS = (32, 32)  # TODO Tuning for temporal networks
+    # N_UNITS = (32, 32)  # TODO Tuning for temporal networks
     # REMOVE_STATE_VELOCITY = False
     if REMOVE_STATE_VELOCITY == True:
         N_INPUTS = 31
@@ -434,6 +443,8 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     # 2=2D conv. on vehicle and measurements dimensions,
     # For LSTM:
     # LSTM_UNITS = 32
+
+
 
     if RUN_TYPE == "test":
         MODEL_FILE_PATH = "logfiles/" + RUN_NAME + "/" + "train" + "/Seed" + str(500) + "-Details=" + str(
@@ -478,7 +489,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
             'temporal_CNN_type': TEMPORAL_CNN_TYPE,  # 2D or 3D
         },
         "LSTM_param": {
-            'n_units': LSTM_UNITS
+            'n_units': LSTM_UNITS,
         }
     }
 
@@ -584,10 +595,10 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     if USE_DEEPSET:
         DQ_net = DeepSetQNetwork(model_param=model_param)
         DQ_target_net = DeepSetQNetwork(model_param=model_param)
-    elif USE_CNN and not USE_TEMPORAL_CNN:
+    elif USE_CNN :
         DQ_net = CNN(model_param=model_param)
         DQ_target_net = CNN(model_param=model_param)
-    elif USE_CNN and USE_TEMPORAL_CNN:
+    elif USE_TEMPORAL_CNN:
         DQ_net = TemporalCNN(model_param=model_param)
         DQ_target_net = TemporalCNN(model_param=model_param)
     elif USE_DUELLING:
@@ -623,11 +634,6 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
 
     # RewardFunction().plot_reward_functions()
 
-    # TODO check LSTM inputs dimensions to and from buffers and to and from models
-    # TODO check CNN dimensions to and from buffers and to and from models
-    # TODO tune CNN, lstm
-    # TODO test noise and generalisation-(diff # vehicles and diff types vehicles)
-
     # Set up main class for running simulations:
     main = Main(n_vehicles=run_settings["n_vehicles"],
                 policy=dqn_policy,
@@ -662,12 +668,12 @@ if __name__ == "__main__":
     run_timer = Timer("Run timer")
     run_timer.startTime()
 
-    PROCS = 1  # Number of cores to use
+    PROCS = 32  # Number of cores to use
     mp.set_start_method("spawn")  # Make sure different workers have different seeds if applicable
     P = mp.cpu_count()  # Number of available cores
     procs = max(min(PROCS, P), 1)  # Clip number of procs to [1;P]
 
-
+    # with tf.device('/CPU:0'):
     def param_gen():
         """
         This function yields all the parameter combinations to try...
@@ -692,22 +698,33 @@ if __name__ == "__main__":
         veh_9 = {"slow": 25, "medium": 55, "fast": 15}  # total = 95
         veh_10 = {"slow": 35, "medium": 70, "fast": 25}  # total = 130
 
+        veh_extended = {"slow": 10, "medium":20, "fast":5, "im": 3, "step":5, "sway":1}  # total = 44
         method = "Temporal_tuning"
         run_type = "train"
         vehicles = veh_5
-        # for parameter in ("LSTM units (w. state velocity)", "LSTM units (w.o. state velocity)",
-        #                   "CNN filters (w. state velocity)", "CNN filters (w.o. state velocity)"):
-        parameter = "LSTM units (w.o. state velocity)"
-        for seed in (100, 500):
-            if ((parameter == "LSTM units (w. state velocity)") or (parameter == "LSTM units (w.o. state velocity)")):
-                for value in (8, 16, 32, 64):
-                    yield run_type, vehicles, method, parameter, seed, value
-            elif ((parameter == "CNN filters (w. state velocity)") or (parameter == "CNN filters (w.o. state velocity)")):
-                for value in ((8, 16), (16, 32), (32, 64), (64, 128)):
-                    yield run_type, vehicles, method, parameter, seed, value
-            else:
-                print("Parameter naming error")
-                sys.exit()
+        for parameter in ("LSTM units (w.o. state velocity)",
+                          "CNN filters (w.o. state velocity & 32 dense units)",
+                          "CNN filters (w.o. state velocity & 64 dense units)",
+                          "CNN filters (w.o. state velocity & 128 dense units)"):
+            for seed in (100, 500):
+                if parameter == "LSTM units (w.o. state velocity)":
+                    for value in (4, 8, 16):
+                        yield run_type, vehicles, method, parameter, seed, value
+                elif parameter == "LSTM sequences (w.o. state velocity)":
+                    for value in (True, False):
+                        yield run_type, vehicles, method, parameter, seed, value
+                elif parameter == "CNN filters (w.o. state velocity & 32 dense units)":
+                    for value in ((8, 16), (16, 32)):
+                        yield run_type, vehicles, method, parameter, seed, value
+                elif parameter == "CNN filters (w.o. state velocity & 64 dense units)":
+                    for value in ((8, 16), (16, 32)):
+                        yield run_type, vehicles, method, parameter, seed, value
+                elif parameter == "CNN filters (w.o. state velocity & 128 dense units)":
+                    for value in ((8, 16), (16, 32)):
+                        yield run_type, vehicles, method, parameter, seed, value
+                else:
+                    print("Parameter naming error")
+                    sys.exit()
 
 
 
