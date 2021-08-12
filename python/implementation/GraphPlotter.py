@@ -53,7 +53,6 @@ def start_run(parameter, tag_value, df, fig_path, run_type):
     plot_df = df.loc[(df['parameter_tested'] == parameter) & (df['tag'] == tag_value)]
     # plot_df = plot_df.iloc[::10,:] #Clearer by not plotting every step
     if run_type == 'generalisability':
-
         ax = sns.lineplot(x="step", y="smoothed",
                       hue="description",
                       data=plot_df,

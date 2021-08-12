@@ -5,31 +5,31 @@ import numpy as np
 from HelperClasses import EpisodeBuffer, DataLogger
 import sys
 
-class LSTM_DRQN(keras.Model):
+class LSTM(keras.Model):
     """
     Builds a LSTM, recurrent model to learn temporal relationships between states.
     """
     # TODO batch norm layer?
     # TODO parameters for tuning the lstm network easily
     def __init__(self, model_param):
-        super(LSTM_DRQN, self).__init__()
+        super(LSTM, self).__init__()
         self.model_param = model_param
         tf.random.set_seed(model_param["seed"])
         np.random.seed(model_param["seed"])
-        act_func = model_param["activation_function"]
-        n_units = model_param["n_units"]
+        act_func_q = model_param["activation_function"]
+        n_units_q = model_param["n_units"]
+        n_units_lstm = model_param["LSTM_param"]["n_units"]
         n_inputs = model_param["n_inputs"]  # Number of items in state matrix
         n_actions = model_param["n_actions"]
         n_timesteps = 4  # Number of stacked measurements considered
-        # TODO LSTM with attention mechanism vs lstm without attention mechanism !!!
-        # TODO LSTM without the need for frame stacking? I dont think so?
         # https://levelup.gitconnected.com/building-seq2seq-lstm-with-luong-attention-in-keras-for-time-series-forecasting-1ee00958decb
-        input_layer = layers.Input(shape=(n_timesteps, n_inputs,), name="inputState")
-        LSTM_layer = layers.LSTM(units=n_units[0],
-                                 return_sequences=True,
+        input_layer = layers.Input(shape=(n_timesteps,n_inputs), name="inputState")
+        # Many-to-one LSTM layer
+        LSTM_layer = layers.LSTM(units=n_units_lstm,
+
                                  name="LSTM")(input_layer)
-        dense_layer1 = layers.Dense(units=n_units[1], activation=act_func, name="dense1")(LSTM_layer)
-        dense_layer2 = layers.Dense(units=n_units[2], activation=act_func, name="dense3")(dense_layer1)
+        dense_layer1 = layers.Dense(units=n_units_q[0], activation=act_func_q, name="dense1")(LSTM_layer)
+        dense_layer2 = layers.Dense(units=n_units_q[1], activation=act_func_q, name="dense2")(dense_layer1)
         output_layer = layers.Dense(n_actions, name="Output")(dense_layer2)
         self.model = keras.Model(inputs=input_layer,
                                  outputs=output_layer,
@@ -37,14 +37,14 @@ class LSTM_DRQN(keras.Model):
                                  name="LSTM_DRQN")
         self.display_overview()
 
-    @tf.function
+    #@tf.function
     def call(self, inputs: tf.Tensor):
         """ Returns the output of the model given an input. """
         return self.model(inputs)
 
     def display_overview(self):
         """ Displays an overview of the model. """
-        # self.model.summary()
+        self.model.summary()
         keras.utils.plot_model(self.model,
                                show_shapes=True,
                                show_layer_names=True,
@@ -59,7 +59,11 @@ class TemporalCNN(keras.Model):
         super(TemporalCNN, self).__init__()
         tf.random.set_seed(model_param['seed'])
         np.random.seed(model_param['seed'])
-
+        remove_state_velocity = model_param["remove_velocity"]
+        if remove_state_velocity:
+            n_dynamic = 2  # Number of dynamic measurement elements
+        else:
+            n_dynamic = 4  # Number of dynamic measurement elements
         # CNN parameters:
         cnn_type = model_param['cnn_param']['temporal_CNN_type']  # 2D or 3D
         kernel = model_param['cnn_param']['kernel']
@@ -72,7 +76,7 @@ class TemporalCNN(keras.Model):
         n_units = model_param['n_units']
         n_actions = model_param['n_actions']
         n_vehicles = 12
-        n_dynamic = 4  # Number of dynamic measurement elements
+
         n_static = 7  # Number of static measurement elements
         n_measurements = 4
 

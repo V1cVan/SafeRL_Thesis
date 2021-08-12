@@ -327,29 +327,37 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     # 0=1D conv. on vehicle dim.,
     # 1=1D conv. on measurements dim.,
     # 2=2D conv. on vehicle and measurements dimensions,
-    # CNN Tuning:
-    if value == "DDQN":
-        USE_DEEPSET = False
-        USE_CNN = False
-        USE_POOLING = False
-        FILTERS = (0)
-    elif value == "CNN with Pooling":
-        USE_DEEPSET = False
-        USE_CNN = True
-        USE_POOLING = True
-        FILTERS = (16, 32)
-    elif value == "CNN without Pooling":
-        USE_DEEPSET = False
-        USE_CNN = True
-        USE_POOLING = False
-        FILTERS = (8, 16)
-    elif value == "Deepset":
-        USE_DEEPSET = True
-        USE_CNN = False
-        USE_POOLING = False
-        FILTERS = (0)
+    # Temporal Tuning:
+
+    if ((parameter == "LSTM units (w. state velocity)") or (parameter=="LSTM units (w.o. state velocity)")):
+        if parameter == "LSTM units (w. state velocity)":
+            REMOVE_STATE_VELOCITY = False
+        else:
+            REMOVE_STATE_VELOCITY = True
+
+        USE_TEMPORAL_CNN = False
+        USE_LSTM = True
+        LSTM_UNITS = value
+        FILTERS = None
+        KERNEL = None  # Convolution width
+        STRIDES = None  # Stride size
+    elif ((parameter == "CNN filters (w. state velocity)") or (parameter=="CNN filters (w.o. state velocity)")):
+        if parameter == "CNN filters (w. state velocity)":
+            REMOVE_STATE_VELOCITY = False
+        else:
+            REMOVE_STATE_VELOCITY = True
+
+        USE_TEMPORAL_CNN = True
+        USE_LSTM = False
+        LSTM_UNITS = None
+        FILTERS = (15, 15)
+        if REMOVE_STATE_VELOCITY:
+            KERNEL = 2  # Convolution width
+        else:
+            KERNEL = 4
+        STRIDES = (1, 1)  # Stride size
     else:
-        print("Not value value set")
+        print("parameter value not set properly")
         sys.exit()
 
     """RUN PARAMETERS:"""
@@ -399,7 +407,11 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     """ BASE MODEL PARAMETERS:"""
     # Base parameters (DDQN):
     N_UNITS = (32, 32)  # TODO Tuning for temporal networks
-    N_INPUTS = 55
+    # REMOVE_STATE_VELOCITY = False
+    if REMOVE_STATE_VELOCITY == True:
+        N_INPUTS = 31
+    else:
+        N_INPUTS = 55
     N_ACTIONS = 5
     ACT_FUNC = tf.nn.relu
 
@@ -412,17 +424,16 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     ACT_FUNC_RHO = tf.nn.relu
     # For CNN's:
     # FILTERS = (15, 15)  # Dimensionality of output space
-    KERNEL = 4  # Convolution width
-    STRIDES = (1, 1)  # Stride size
-    # USE_POOLING = True
+    # KERNEL = 4  # Convolution width
+    # STRIDES = (1, 1)  # Stride size
+    USE_POOLING = False
     TEMPORAL_CNN_TYPE = '2D'  # 3D or 2D
     NORMAL_CNN_TYPE = 1
     # 0=1D conv. on vehicle dim.,
     # 1=1D conv. on measurements dim-With pooling over vehicle dimension then renders it permutation invariant
     # 2=2D conv. on vehicle and measurements dimensions,
     # For LSTM:
-    LSTM_UNITS = 32
-    LSTM_ACT_FUNC = tf.nn.relu
+    # LSTM_UNITS = 32
 
     if RUN_TYPE == "test":
         MODEL_FILE_PATH = "logfiles/" + RUN_NAME + "/" + "train" + "/Seed" + str(500) + "-Details=" + str(
@@ -447,7 +458,9 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
         "seed": SEED,
         "trainable": TRAINABLE,  # For batch normalisation to freeze layers
         "batch_normalisation": BATCH_NORM,
+        'remove_velocity': REMOVE_STATE_VELOCITY,
         "deepset_param": {
+
             "n_units_phi": PHI_SIZE,
             "act_func_phi": ACT_FUNC_PHI,
             "n_units_rho": RHO_SIZE,
@@ -465,15 +478,14 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
             'temporal_CNN_type': TEMPORAL_CNN_TYPE,  # 2D or 3D
         },
         "LSTM_param": {
-            'n_units': LSTM_UNITS,
-            'act_func': LSTM_ACT_FUNC
+            'n_units': LSTM_UNITS
         }
     }
 
     """TRAINING PARAMETERS:"""
     POLICY_ACTION_RATE = 8  # Number of simulator steps before new control action is taken
     MAX_TIMESTEPS = 5e3  # range: 5e3 - 10e3
-    MAX_EPISODES = 1000
+    MAX_EPISODES = 800
     FINAL_RETURN = 1
     SHOW_TRAIN_PLOTS = False
     SAVE_TRAINING = True
@@ -507,12 +519,13 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     # Model types:
     USE_TARGET_NETWORK = True
     USE_DUELLING = False
-    # USE_DEEPSET = False
-    # USE_CNN = False
-    USE_TEMPORAL_CNN = False
-    USE_LSTM = False
+    USE_DEEPSET = False
+    USE_CNN = False
+    # USE_TEMPORAL_CNN = False
+    # USE_LSTM = False
+    # REMOVE_STATE_VELOCITY  -- MOVED UP
     ADD_NOISE = False
-    REMOVE_STATE_VELOCITY = False
+
 
     training_param = {
         "max_timesteps": MAX_TIMESTEPS,
@@ -581,8 +594,8 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
         DQ_net = DuellingDqnNetwork(model_param=model_param)
         DQ_target_net = DuellingDqnNetwork(model_param=model_param)
     elif USE_LSTM:
-        DQ_net = LSTM_DRQN(model_param=model_param)
-        DQ_target_net = LSTM_DRQN(model_param=model_param)
+        DQ_net = LSTM(model_param=model_param)
+        DQ_target_net = LSTM(model_param=model_param)
     else:
         # Final checks: To avoid mistakes in parallel runs
         assert not (USE_TEMPORAL_CNN and USE_LSTM)
@@ -649,7 +662,7 @@ if __name__ == "__main__":
     run_timer = Timer("Run timer")
     run_timer.startTime()
 
-    PROCS = 32  # Number of cores to use
+    PROCS = 1  # Number of cores to use
     mp.set_start_method("spawn")  # Make sure different workers have different seeds if applicable
     P = mp.cpu_count()  # Number of available cores
     procs = max(min(PROCS, P), 1)  # Clip number of procs to [1;P]
@@ -679,29 +692,23 @@ if __name__ == "__main__":
         veh_9 = {"slow": 25, "medium": 55, "fast": 15}  # total = 95
         veh_10 = {"slow": 35, "medium": 70, "fast": 25}  # total = 130
 
-        method = "Generalisability_baselines"
-        parameter = " "
-        run_type = "test"
-        for _ in range(10):
-            seed = random.randint(101, 499)
-            for vehicles in (veh_0, veh_1, veh_2, veh_3, veh_4, veh_5, veh_6, veh_7, veh_8, veh_9, veh_10):
-                for value in ("DDQN", "CNN with Pooling", "CNN without Pooling", "Deepset"):
+        method = "Temporal_tuning"
+        run_type = "train"
+        vehicles = veh_5
+        # for parameter in ("LSTM units (w. state velocity)", "LSTM units (w.o. state velocity)",
+        #                   "CNN filters (w. state velocity)", "CNN filters (w.o. state velocity)"):
+        parameter = "LSTM units (w.o. state velocity)"
+        for seed in (100, 500):
+            if ((parameter == "LSTM units (w. state velocity)") or (parameter == "LSTM units (w.o. state velocity)")):
+                for value in (8, 16, 32, 64):
                     yield run_type, vehicles, method, parameter, seed, value
+            elif ((parameter == "CNN filters (w. state velocity)") or (parameter == "CNN filters (w.o. state velocity)")):
+                for value in ((8, 16), (16, 32), (32, 64), (64, 128)):
+                    yield run_type, vehicles, method, parameter, seed, value
+            else:
+                print("Parameter naming error")
+                sys.exit()
 
-        # for run_type in ("train", "test"):
-        #     if run_type == "train":
-        #         for vehicles in (veh_2, veh_8):
-        #             for seed in (100, 500):
-        #                 for value in ("DDQN", "CNN with Pooling", "CNN without Pooling", "Deepset"):
-        #                     yield run_type, vehicles, method, parameter, seed, value
-        #     elif run_type == "test":
-        #         for _ in range(10):
-        #             seed = random.randint(101, 499)
-        #             for vehicles in (veh_0, veh_1, veh_2, veh_3, veh_4, veh_5, veh_6, veh_7, veh_8, veh_9, veh_10):
-        #                 for value in ("DDQN", "CNN with Pooling", "CNN without Pooling", "Deepset"):
-        #                     yield run_type, vehicles, method, parameter, seed, value
-        #     else:
-        #         sys.exit()
 
 
     if procs > 1:
