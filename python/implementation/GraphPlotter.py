@@ -52,11 +52,22 @@ def start_run(parameter, tag_value, df, fig_path, run_type):
     # Start your training loop using the given arguments
     plot_df = df.loc[(df['parameter_tested'] == parameter) & (df['tag'] == tag_value)]
     # plot_df = plot_df.iloc[::10,:] #Clearer by not plotting every step
-    ax = sns.lineplot(x="step", y="smoothed",
-                  hue="description",
-                  data=plot_df,
-                  alpha=0.6,
-                  linewidth=1.8)
+    if run_type == 'generalisability':
+
+        ax = sns.lineplot(x="step", y="smoothed",
+                      hue="description",
+                      data=plot_df,
+                      alpha=0.6,
+                      style="description",
+                      markers=True,
+                      dashes=False,
+                      linewidth=1.8)
+    else:
+        ax = sns.lineplot(x="step", y="smoothed",
+                          hue="description",
+                          data=plot_df,
+                          alpha=0.6,
+                          linewidth=1.8)
     if tag_value == "Epsilon":
         ax.get_legend().remove()
     elif tag_value == "Beta increment":
@@ -72,16 +83,24 @@ def start_run(parameter, tag_value, df, fig_path, run_type):
     if tag_value == "Vehicle speed":
         ax.set(ylim=(78, 108))
         ax.set(ylabel=tag_value + ' (km/h)')
+        ax.set(xlabel="Episode")
     elif tag_value == "Reward":
         ax.set(ylim=(0.75, 0.93))
         ax.set(ylabel=tag_value)
+        ax.set(xlabel="Episode")
     elif tag_value == "Average episode speed":
-        ax.set(xlim=(16, 95))
+        # ax.set(xlim=(0, 95))
         ax.set(ylabel="Average speed")
+        ax.set(xlabel="Number of vehicles")
+    elif tag_value == "Average episode reward":
+        # ax.set(xlim=(0, 95))
+        ax.set(ylabel="Average reward")
+        ax.set(xlabel="Number of vehicles")
     else :
         ax.set(ylabel=tag_value)
+        ax.set(xlabel="Episode")
 
-    ax.set(xlabel = "Episode")
+
 
     plt_name = fig_path + "/" + parameter + '-' + tag_value
     plt.savefig(plt_name+'.pdf', format='pdf', dpi=300, bbox_inches='tight')
@@ -135,7 +154,7 @@ def preprocess_data(csv_path, run_type):
     df = extract_columns(run_type, df)
     # df = df.loc[df['tag'].isin(['Mean episode reward', 'Mean vehicle speed for episode'])]
     if run_type == 'parameter_sweep':
-        # For parameter comparison: 
+        # For parameter comparison:
         df['parameter_tested'] = df['description'].str.extract(r'(.*?)=')
         df = df.loc[df['tag'].isin(['Reward', 'Vehicle speed', 'Epsilon'])]
     elif run_type == 'generalisability':
@@ -163,7 +182,10 @@ def preprocess_data(csv_path, run_type):
                 # Initialise values
                 smooth_np[0] = raw_np[0]  # First value in smoothed array is same as first value in raw
                 if k != "Epsilon":
-                    weight = 0.95
+                    if ((k == 'Average episode speed') or k == ('Average episode reward')):
+                        weight = 0
+                    else:
+                        weight = 0.95
                 else:
                     weight = 0.0
                 for step in range(1, len(raw_np)):
@@ -256,7 +278,7 @@ if __name__ == "__main__":
         'CNN_tuning_without_pooling': 'denVBYeVSzmfNduXpOnC3A',
         'CNN_tuning_with_pooling': 'EiG3S0LRRNaUkotA8tmkxQ',
         'Generalisability_baselines': 'k11SRrn3TMmXg7Zrn1Axpw',
-        'Generalisability_test': 'JQkd7IrPSgOVawuWMTgqdw',
+        'Generalisability_test': 'rjY2gnrMTGmyMG0r9YCRiw',
     }
 
     experiment_paths = {
@@ -286,7 +308,7 @@ if __name__ == "__main__":
     experiment_name = "Generalisability_test"
     run_type = 'generalisability'  # 'method_comparison' OR 'parameter_sweep' or 'generalisability'
     csv_path = experiment_paths[experiment_name] + "/" + experiment_name + '.csv'
-    # download_and_save(experiment_name, csv_path)  # Comment out if you don't want to re-download the data
+    download_and_save(experiment_name, csv_path)  # Comment out if you don't want to re-download the data
 
     # Pre-process (smooth data from csv)
     df = preprocess_data(csv_path, run_type)
