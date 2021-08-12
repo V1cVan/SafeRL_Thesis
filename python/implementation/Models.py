@@ -25,7 +25,9 @@ class LSTM_DRQN(keras.Model):
         # TODO LSTM without the need for frame stacking? I dont think so?
         # https://levelup.gitconnected.com/building-seq2seq-lstm-with-luong-attention-in-keras-for-time-series-forecasting-1ee00958decb
         input_layer = layers.Input(shape=(n_timesteps, n_inputs,), name="inputState")
-        LSTM_layer = layers.LSTM(units=n_units[0], name="LSTM")(input_layer)
+        LSTM_layer = layers.LSTM(units=n_units[0],
+                                 return_sequences=True,
+                                 name="LSTM")(input_layer)
         dense_layer1 = layers.Dense(units=n_units[1], activation=act_func, name="dense1")(LSTM_layer)
         dense_layer2 = layers.Dense(units=n_units[2], activation=act_func, name="dense3")(dense_layer1)
         output_layer = layers.Dense(n_actions, name="Output")(dense_layer2)
@@ -42,7 +44,7 @@ class LSTM_DRQN(keras.Model):
 
     def display_overview(self):
         """ Displays an overview of the model. """
-        self.model.summary()
+        # self.model.summary()
         keras.utils.plot_model(self.model,
                                show_shapes=True,
                                show_layer_names=True,
@@ -290,7 +292,7 @@ class CNN(keras.Model):
 
     def display_overview(self, model_name):
         """ Displays an overview of the model. """
-        self.model.summary()
+        # self.model.summary()
         model_path = './models/'+model_name+'.png'
         keras.utils.plot_model(self.model,
                                show_shapes=True,
@@ -519,7 +521,7 @@ class DeepSetQNetwork(keras.Model):
 
     def display_overview(self):
         """ Displays an overview of the model. """
-        self.model.summary()
+        # self.model.summary()
         keras.utils.plot_model(self.model,
                                show_shapes=True,
                                show_layer_names=True,
@@ -629,7 +631,7 @@ class OldDeepSetQNetwork(keras.Model):
 
     def display_overview(self):
         """ Displays an overview of the model. """
-        self.model.summary()
+        # self.model.summary()
         keras.utils.plot_model(self.model,
                                show_shapes=True,
                                show_layer_names=True,
@@ -698,7 +700,7 @@ class DeepQNetwork(keras.Model):
 
     def display_overview(self):
         """ Displays an overview of the model. """
-        self.model.summary()
+        # self.model.summary()
         keras.utils.plot_model(self.model,
                                show_shapes=True,
                                show_layer_names=True,
@@ -749,7 +751,7 @@ class DuellingDqnNetwork(keras.Model):
 
     def display_overview(self):
         """ Displays an overview of the model. """
-        self.model.summary()
+        # self.model.summary()
         keras.utils.plot_model(self.model,
                                show_shapes=True,
                                show_layer_names=True,

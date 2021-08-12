@@ -41,6 +41,8 @@ For deleting experiment from Tensorboard:
 
 # Generalisability baselines
 # tensorboard dev upload --logdir "./logfiles/Generalisability_baselines/train" --name "Generalisability baselines - DDQN|Deepset|CNNs" --description "DDQN vs Deepset vs CNN w pooling vs CNN wo pooling. "
+# tensorboard dev upload --logdir "./logfiles/Generalisability_baselines/test" --name "Generalisability baselines TEST - DDQN|Deepset|CNNs" --description "TEST - DDQN vs Deepset vs CNN w pooling vs CNN wo pooling. "
+
 def start_run(parameter, tag_value, df, fig_path, run_type):
 
     sns.set_style("darkgrid")
@@ -53,7 +55,7 @@ def start_run(parameter, tag_value, df, fig_path, run_type):
     ax = sns.lineplot(x="step", y="smoothed",
                   hue="description",
                   data=plot_df,
-                  alpha=0.65,
+                  alpha=0.6,
                   linewidth=1.8)
     if tag_value == "Epsilon":
         ax.get_legend().remove()
@@ -62,15 +64,20 @@ def start_run(parameter, tag_value, df, fig_path, run_type):
     else:
         if run_type == "parameter_sweep":
             ax.legend(loc='lower right', title='Parameter:')
+        elif run_type == 'generalisability':
+            ax.legend(loc='upper right', title='Method:')
         else:
             ax.legend(loc='lower right', title=None)
 
     if tag_value == "Vehicle speed":
-        ax.set(ylim=(95, 108))
+        ax.set(ylim=(78, 108))
         ax.set(ylabel=tag_value + ' (km/h)')
     elif tag_value == "Reward":
-        ax.set(ylim=(0.875, 0.93))
+        ax.set(ylim=(0.75, 0.93))
         ax.set(ylabel=tag_value)
+    elif tag_value == "Average episode speed":
+        ax.set(xlim=(16, 95))
+        ax.set(ylabel="Average speed")
     else :
         ax.set(ylabel=tag_value)
 
@@ -109,6 +116,10 @@ def extract_columns(run_type, df, column1='seed', column2='description'):
         # For parameter sweep comparison
         df[column2] = df['run'].str.extract(r'(Details=.*)')
         df[column2] = df[column2].str[8:]
+    elif run_type == 'generalisability':
+        # df[column2] = df['run'].str.extract(r'(Details=.*)')
+        # df[column2] = df[column2].str[10:]
+        df[column2] = df['run'].str.extract(r'( =.*)')
     else:
         # For method comparison:
         df[column2] =df['run'].str.extract(r'( =.*)')
@@ -124,9 +135,13 @@ def preprocess_data(csv_path, run_type):
     df = extract_columns(run_type, df)
     # df = df.loc[df['tag'].isin(['Mean episode reward', 'Mean vehicle speed for episode'])]
     if run_type == 'parameter_sweep':
-        # For parameter comparison:
+        # For parameter comparison: 
         df['parameter_tested'] = df['description'].str.extract(r'(.*?)=')
         df = df.loc[df['tag'].isin(['Reward', 'Vehicle speed', 'Epsilon'])]
+    elif run_type == 'generalisability':
+        df['parameter_tested'] = df['description'].str.extract(r'(.*?)=')
+        df['description'] = df['description'].str.extract(r'=(.*)')
+        df = df.loc[df['tag'].isin(['Average episode speed', 'Average episode reward'])]
     else:
         # For method comparison:
         df['parameter_tested'] = df['description'].str.extract(r'(.*)=')
@@ -158,26 +173,27 @@ def preprocess_data(csv_path, run_type):
 
     print(f"Values smoothed by factor {weight}...")
 
-    # Extract the peak mean, overall mean, and overall std. over the seeds for each parameter and metric tested:
-    metrics_columns = ['metric', 'parameter', 'description', 'average_mean', 'peak_mean', 'final_mean', 'average_std']
-    metrics_data = []
-    for i in df['description'].unique():  # Loop through parameters
-            for j in df['tag'].unique():  # Loop through Mean episode reward or mean vehicle speed
-                if j != 'Epsilon':
-                    df_selection = df.loc[(df['description'] == i) & (df['tag'] == j)]
+    if run_type != 'generalisability':
+        # Extract the peak mean, overall mean, and overall std. over the seeds for each parameter and metric tested:
+        metrics_columns = ['metric', 'parameter', 'description', 'average_mean', 'peak_mean', 'final_mean', 'average_std']
+        metrics_data = []
+        for i in df['description'].unique():  # Loop through parameters
+                for j in df['tag'].unique():  # Loop through Mean episode reward or mean vehicle speed
+                    if j != 'Epsilon':
+                        df_selection = df.loc[(df['description'] == i) & (df['tag'] == j)]
 
-                    mean_line = df_selection.groupby('step')['smoothed'].mean()
-                    average_mean = mean_line.mean()
-                    final_mean = mean_line[mean_line.index[-1]]
-                    peak_mean = mean_line.max()
-                    std_line = df_selection.groupby('step')['smoothed'].std()
-                    average_std = std_line.mean()
+                        mean_line = df_selection.groupby('step')['smoothed'].mean()
+                        average_mean = mean_line.mean()
+                        final_mean = mean_line[mean_line.index[-1]]
+                        peak_mean = mean_line.max()
+                        std_line = df_selection.groupby('step')['smoothed'].std()
+                        average_std = std_line.mean()
 
-                    parameter = df_selection['parameter_tested'].unique()[0]
-                    metrics_data.append([j, parameter, i, average_mean, peak_mean, final_mean, average_std])
-    metrics_df = pd.DataFrame(metrics_data, columns=metrics_columns)
-    excel_path = csv_path[:-4] + "_metrics.xlsx"
-    metrics_df.to_excel(excel_path)
+                        parameter = df_selection['parameter_tested'].unique()[0]
+                        metrics_data.append([j, parameter, i, average_mean, peak_mean, final_mean, average_std])
+        metrics_df = pd.DataFrame(metrics_data, columns=metrics_columns)
+        excel_path = csv_path[:-4] + "_metrics.xlsx"
+        metrics_df.to_excel(excel_path)
 
     print(df.keys())
     print(df["smoothed"])
@@ -240,6 +256,7 @@ if __name__ == "__main__":
         'CNN_tuning_without_pooling': 'denVBYeVSzmfNduXpOnC3A',
         'CNN_tuning_with_pooling': 'EiG3S0LRRNaUkotA8tmkxQ',
         'Generalisability_baselines': 'k11SRrn3TMmXg7Zrn1Axpw',
+        'Generalisability_test': 'JQkd7IrPSgOVawuWMTgqdw',
     }
 
     experiment_paths = {
@@ -260,24 +277,26 @@ if __name__ == "__main__":
         'CNN_tuning_without_pooling': './logfiles/CNN1D_tuning_without_pooling/train',
         'CNN_tuning_with_pooling': './logfiles/CNN1D_tuning_with_pooling/train',
         'Generalisability_baselines': './logfiles/Generalisability_baselines/train',
+        'Generalisability_test': './logfiles/Generalisability_baselines/test',
     }
 
     experiment_names = list(experiment_ids.keys())
     print(experiment_names)
 
-    experiment_name = "Generalisability_baselines"
-    run_type = 'method_comparison'  # 'method_comparison' OR 'parameter_sweep'
+    experiment_name = "Generalisability_test"
+    run_type = 'generalisability'  # 'method_comparison' OR 'parameter_sweep' or 'generalisability'
     csv_path = experiment_paths[experiment_name] + "/" + experiment_name + '.csv'
-    download_and_save(experiment_name, csv_path)  # Comment out if you don't want to re-download the data
+    # download_and_save(experiment_name, csv_path)  # Comment out if you don't want to re-download the data
 
     # Pre-process (smooth data from csv)
     df = preprocess_data(csv_path, run_type)
 
     # Display the best results of the different parameter:
-    display_results_summary(csv_path)
+    if run_type != 'generalisability':
+        display_results_summary(csv_path)
 
     # Plot the smoothed results using multi processing
-    procs = 32   # Amount of processes/cores you want to use
+    procs = 1   # Amount of processes/cores you want to use
     mp.set_start_method('spawn')  # This will make sure the different workers have different random seeds
     P = mp.cpu_count()  # Amount of available procs
     procs = max(min(procs, P), 1)  # Clip amount of procs to [1;P]

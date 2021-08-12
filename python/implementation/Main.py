@@ -237,7 +237,7 @@ class Main(object):
 
             episode_count += 1
 
-    def simulate(self, simulation_timesteps, simulation_episodes):
+    def simulate(self, simulation_timesteps, simulation_episodes, total_vehicles):
         self.policy.agent.training = False
         self.policy.agent.evaluation = True
 
@@ -247,6 +247,8 @@ class Main(object):
             print_counter = 0
             episode_reward_list = []
             vehicle_speeds = []
+            mean_episode_reward = []
+            mean_episode_speed = []
             with self.sim:
                 # self.create_plot()
                 while not self.sim.stopped and steps<simulation_timesteps: #and not self.p.closed:
@@ -271,9 +273,16 @@ class Main(object):
                     # self.p.plot()
                 # self.p.close()
             episode += 1
-            self.tb_logger.save_variable("Episode reward", x=episode,
-                                         y=np.sum(episode_reward_list) / len(episode_reward_list))
-            self.tb_logger.save_variable("Episode vehicle speed", x=episode, y=np.mean(vehicle_speeds))
+            mean_episode_reward.append(np.mean(episode_reward_list))
+            mean_episode_speed.append(np.mean(vehicle_speeds))
+            # self.tb_logger.save_variable("Episode reward", x=episode,
+            #                              y=mean_episode_reward[-1])
+            # self.tb_logger.save_variable("Episode vehicle speed", x=episode, y=mean_episode_speed[-1])
+
+        mean_run_reward = np.mean(mean_episode_reward)
+        mean_run_speed = np.mean(mean_episode_speed)
+        self.tb_logger.save_variable("Average episode reward", x=total_vehicles, y=mean_run_reward)
+        self.tb_logger.save_variable("Average episode speed", x=total_vehicles, y=mean_run_speed)
         self.policy.agent.evaluation = False
         self.policy.agent.training = True
 
@@ -301,7 +310,7 @@ def sim_type(policy, n_vehicles):
     }
     return sim_config
 
-def start_run(vehicles, method, parameter, seed, value):
+def start_run(run_type, vehicles, method, parameter, seed, value):
     # Start training loop using given arguments here..
     ROOT = pathlib.Path(__file__).resolve().parents[2]
     SC_PATH = ROOT.joinpath("scenarios/scenarios.h5")
@@ -345,7 +354,7 @@ def start_run(vehicles, method, parameter, seed, value):
 
     """RUN PARAMETERS:"""
     SEED = seed
-    RUN_TYPE = "train"  # "train"
+    RUN_TYPE = run_type  # "train"/test
     RUN_NAME = method
     # For sweeps
     if "elu" in str(value):
@@ -366,13 +375,13 @@ def start_run(vehicles, method, parameter, seed, value):
     # For method comparison
     # RUN_INFO = arg1 + "=" + str(arg3)
 
-    n_vehicles = vehicles["slow"]+vehicles["medium"]+vehicles["fast"]
+    total_vehicles = vehicles["slow"]+vehicles["medium"]+vehicles["fast"]
 
     if RUN_TYPE == "train":
-        SAVE_DIRECTORY = "logfiles/" + RUN_NAME + "/" + RUN_TYPE + "/Seed" + str(SEED) + "-Details=" + str(RUN_INFO)
+        SAVE_DIRECTORY = "logfiles/"+RUN_NAME+"/"+RUN_TYPE+total_vehicles+"/Seed"+str(SEED)+"-Details=" + str(RUN_INFO)
     else:
-        SAVE_DIRECTORY = "logfiles/" + RUN_NAME + "/" + RUN_TYPE + "/Seed" + str(SEED) + "N_veh=" + str(
-            n_vehicles) + "-Details=" + str(RUN_INFO)
+        SAVE_DIRECTORY = "logfiles/" + RUN_NAME + "/" + RUN_TYPE + "/Seed" + str(SEED) + "-n_veh=" + str(
+            total_vehicles) + "-Details=" + str(RUN_INFO)
 
     run_settings = {
         "run_type": RUN_TYPE,
@@ -415,7 +424,11 @@ def start_run(vehicles, method, parameter, seed, value):
     LSTM_UNITS = 32
     LSTM_ACT_FUNC = tf.nn.relu
 
-    MODEL_FILE_PATH = "logfiles/"+RUN_NAME+"/"+"train"+"/Seed"+str(SEED)+"-Details="+str(RUN_INFO) + "/"
+    if RUN_TYPE == "test":
+        MODEL_FILE_PATH = "logfiles/"+RUN_NAME+"/"+"train"+"/Seed"+str(500)+"-Details="+str(RUN_INFO)+"/"
+    elif RUN_TYPE =="train":
+        MODEL_FILE_PATH = "logfiles/" + RUN_NAME + "/" + "train" + "/Seed" + str(SEED) + "-Details=" + str(
+            RUN_INFO)+"/"
     if RUN_TYPE == "train":
         TRAINABLE = True
     elif RUN_TYPE == "test":
@@ -467,7 +480,7 @@ def start_run(vehicles, method, parameter, seed, value):
     PLOT_FREQ = 50
     SIM_TIMESTEPS = 5e3
     if RUN_TYPE == 'test':
-        SIM_EPISODES = 100
+        SIM_EPISODES = 50
     else:
         SIM_EPISODES = 1
     BUFFER_SIZE = 300000
@@ -618,12 +631,12 @@ def start_run(vehicles, method, parameter, seed, value):
 
     # Train model:
     if main.policy.agent.evaluation == True:
-        main.policy.agent.Q_actual_net.load_weights(MODEL_FILE_PATH)
+        # main.policy.agent.Q_actual_net.load_weights(MODEL_FILE_PATH)
         # TODO Tidy up simulation part:
         # Simulate model:
         main.policy.agent.Q_actual_net.load_weights(MODEL_FILE_PATH)
         main.policy.agent.evaluation = True
-        main.simulate(simulation_timesteps=SIM_TIMESTEPS, simulation_episodes=SIM_EPISODES)
+        main.simulate(simulation_timesteps=SIM_TIMESTEPS, simulation_episodes=SIM_EPISODES, total_vehicles=total_vehicles)
     else:
         main.train_policy()
 
@@ -648,12 +661,45 @@ if __name__=="__main__":
             seed = seed for run
             value = parameter value
         """
-        vehicles = {"slow": 10, "medium": 20, "fast": 5}
+        # vehicles = {"slow": 10, "medium": 20, "fast": 5}  # total = 35 // default
+
+        veh_0 = {"slow": 2, "medium": 5, "fast": 1}  # total = 8
+        veh_1 = {"slow": 3, "medium": 8, "fast": 2}  # total = 13
+        veh_2 = {"slow": 4, "medium": 10, "fast": 2} # total = 16
+        veh_3 = {"slow": 6, "medium": 13, "fast": 3} # total = 22
+        veh_4 = {"slow": 8, "medium": 16, "fast": 4} # total = 28
+        veh_5 = {"slow": 10, "medium": 20, "fast": 5} # total = 35
+        veh_6 = {"slow": 12, "medium": 24, "fast": 6} # total = 42
+        veh_7 = {"slow": 15, "medium": 28, "fast": 7} # total = 50
+        veh_8 = {"slow": 20, "medium": 35, "fast": 10} # total = 65
+        veh_9 = {"slow": 25, "medium": 55, "fast": 15}  # total = 95
+        veh_10 = {"slow": 35, "medium": 70, "fast": 25}  # total = 130
+
         method = "Generalisability_baselines"
         parameter = " "
-        for seed in (100, 200, 300, 400, 500):
-            for value in ("DDQN", "CNN with Pooling", "CNN without Pooling", "Deepset"):
-                yield vehicles, method, parameter, seed, value
+        run_type = "test"
+        for _ in range(10):
+            seed = random.randint(101, 499)
+            for vehicles in (veh_0, veh_1, veh_2, veh_3, veh_4, veh_5, veh_6, veh_7, veh_8, veh_9, veh_10):
+                for value in ("DDQN", "CNN with Pooling", "CNN without Pooling", "Deepset"):
+                    yield run_type, vehicles, method, parameter, seed, value
+
+
+
+        # for run_type in ("train", "test"):
+        #     if run_type == "train":
+        #         for vehicles in (veh_2, veh_8):
+        #             for seed in (100, 500):
+        #                 for value in ("DDQN", "CNN with Pooling", "CNN without Pooling", "Deepset"):
+        #                     yield run_type, vehicles, method, parameter, seed, value
+        #     elif run_type == "test":
+        #         for _ in range(10):
+        #             seed = random.randint(101, 499)
+        #             for vehicles in (veh_0, veh_1, veh_2, veh_3, veh_4, veh_5, veh_6, veh_7, veh_8, veh_9, veh_10):
+        #                 for value in ("DDQN", "CNN with Pooling", "CNN without Pooling", "Deepset"):
+        #                     yield run_type, vehicles, method, parameter, seed, value
+        #     else:
+        #         sys.exit()
 
 
     if procs > 1:
