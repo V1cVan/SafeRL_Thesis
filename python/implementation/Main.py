@@ -123,7 +123,10 @@ class Main(object):
             self.episodeTimer.startTime()
             # Set simulation environment
 
-            scenario = sim_type(policy=self.policy, n_vehicles=self.n_vehicles)
+            if self.n_vehicles == "random":
+                scenario = rand_sim_type(policy=self.policy, n_vehicles=self.n_vehicles)
+            else:
+                scenario = sim_type(policy=self.policy, n_vehicles=self.n_vehicles)
             self.sim = Simulation(scenario)
 
             with self.sim:
@@ -288,6 +291,38 @@ class Main(object):
         self.policy.agent.training = True
 
 
+def rand_sim_type(policy, n_vehicles):
+    # Randomised highway
+    # n_slow_veh = n_vehicles["slow"]
+    # n_normal_veh = n_vehicles["medium"]
+    # n_fast_veh = n_vehicles["fast"]
+    # n_step = n_vehicles["step"]
+    # n_sway = n_vehicles["sway"]
+    # n_im = n_vehicles["im"]
+    safetyCfg = {
+        "Mvel": 1.0,
+        "Gth": 2.0
+    }
+    sim_config = {
+        "name": "Dense_Highway_Circuit",
+        "scenario": "CIRCUIT",
+        # "kM": 0,  # Max timesteps per episode enforced by simulator
+        "k0": 0,
+        "replay": False,
+        "vehicles": [
+            {"amount": 1, "model": KBModel(), "policy": policy, "D_MAX": 160},
+            {"amount": np.random.randint(1,9), "model": KBModel(), "policy": StepPolicy(np.random.randint(15,150),
+                                                                        [np.random.randint(1,4)/10.0,
+                                                                         np.random.randint(5,9)/10.0])},
+            {"amount": np.random.randint(1,2), "model":  KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
+            # {"amount": n_im, "model": KBModel(), "policy": IMPolicy()},
+            {"amount": np.random.randint(2,10), "model": KBModel(), "policy": BasicPolicy("slow")},
+            {"amount": np.random.randint(10,18), "model": KBModel(), "policy": BasicPolicy("normal")},
+            {"amount": np.random.randint(5,20), "model": KBModel(), "policy": BasicPolicy("fast")}
+        ]
+    }
+    return sim_config
+
 def sim_type(policy, n_vehicles):
     # Randomised highway
     n_slow_veh = n_vehicles["slow"]
@@ -410,8 +445,8 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     # For method comparison
     # RUN_INFO = arg1 + "=" + str(arg3)
 
-    total_vehicles = vehicles["slow"] + vehicles["medium"] + vehicles["fast"]
-
+    # total_vehicles = vehicles["slow"] + vehicles["medium"] + vehicles["fast"]
+    total_vehicles = 0
     if RUN_TYPE == "train":
         SAVE_DIRECTORY = "logfiles/" + RUN_NAME + "/" + RUN_TYPE + "/Seed" + str(
             SEED) + "-Details=" + str(RUN_INFO)
@@ -555,7 +590,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     # REMOVE_STATE_VELOCITY  -- MOVED UP
     ADD_NOISE = False
 
-
+    # RewardFunction().plot_reward_functions()
     training_param = {
         "max_timesteps": MAX_TIMESTEPS,
         "max_episodes": MAX_EPISODES,
@@ -650,7 +685,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
 
     dqn_policy = DiscreteSingleActionPolicy(agent=dqn_agent)
 
-    # RewardFunction().plot_reward_functions()
+
 
     # Set up main class for running simulations:
     main = Main(n_vehicles=run_settings["n_vehicles"],
@@ -687,7 +722,7 @@ if __name__ == "__main__":
     run_timer = Timer("Run timer")
     run_timer.startTime()
 
-    PROCS = 32  # Number of cores to use
+    PROCS = 1  # Number of cores to use
     mp.set_start_method("spawn")  # Make sure different workers have different seeds if applicable
     P = mp.cpu_count()  # Number of available cores
     procs = max(min(PROCS, P), 1)  # Clip number of procs to [1;P]
@@ -721,66 +756,20 @@ if __name__ == "__main__":
         veh_many_fast = {"slow": 10, "medium": 10, "fast": 20, "im": 0, "step": 0, "sway": 0}  # total = 40
         veh_extended = {"slow": 8, "medium": 18, "fast": 8, "im": 2, "step": 3, "sway": 1}  # total = 40
         veh_stress = {"slow": 10, "medium": 15, "fast": 17, "im": 4, "step": 6, "sway": 2}  # total = 54
-        # for method in ("Velocity_removal_baseline_default",
-        #                "Velocity_removal_baseline_many_fast",
-        #                "Velocity_removal_baseline_extended",
-        #                "Velocity_removal_baseline_stress"):
-        for method in ("Velocity_removal_baseline_many_fast","Velocity_removal_baseline_default"):
-            if method == "Velocity_removal_baseline_default":
-                vehicles = veh_5
-                for parameter in ("Without state velocity", "With state velocity"):
-                    for seed in (100, 200, 400, 500):
-                        if parameter == "With state velocity":
-                            for value in ("DDQN", "Temporal CNN", "LSTM"):
-                                yield run_type, vehicles, method, parameter, seed, value
-                        elif parameter == "Without state velocity":
-                            for value in ("DDQN", "Temporal CNN", "LSTM"):
-                                yield run_type, vehicles, method, parameter, seed, value
-                        else:
-                            print("Parameter naming error")
-                            sys.exit()
-            elif method == "Velocity_removal_baseline_many_fast":
-                vehicles = veh_many_fast
-                for parameter in ("Without state velocity", "With state velocity"):
-                    for seed in (100, 200, 400, 500):
-                        if parameter == "With state velocity":
-                            for value in ("DDQN", "Temporal CNN", "LSTM"):
-                                yield run_type, vehicles, method, parameter, seed, value
-                        elif parameter == "Without state velocity":
-                            for value in ("DDQN", "Temporal CNN", "LSTM"):
-                                yield run_type, vehicles, method, parameter, seed, value
-                        else:
-                            print("Parameter naming error")
-                            sys.exit()
-            elif method == "Velocity_removal_baseline_extended":
-                vehicles = veh_extended
-                for parameter in ("Without state velocity", "With state velocity"):
-                    for seed in (100, 200, 400, 500):
-                        if parameter == "With state velocity":
-                            for value in ("DDQN", "Temporal CNN", "LSTM"):
-                                yield run_type, vehicles, method, parameter, seed, value
-                        elif parameter == "Without state velocity":
-                            for value in ("DDQN", "Temporal CNN", "LSTM"):
-                                yield run_type, vehicles, method, parameter, seed, value
-                        else:
-                            print("Parameter naming error")
-                            sys.exit()
-            elif method == "Velocity_removal_baseline_stress":
-                vehicles = veh_stress
-                for parameter in ("Without state velocity", "With state velocity"):
-                    for seed in (100, 200, 400, 500):
-                        if parameter == "With state velocity":
-                            for value in ("DDQN", "Temporal CNN", "LSTM"):
-                                yield run_type, vehicles, method, parameter, seed, value
-                        elif parameter == "Without state velocity":
-                            for value in ("DDQN", "Temporal CNN", "LSTM"):
-                                yield run_type, vehicles, method, parameter, seed, value
-                        else:
-                            print("Parameter naming error")
-                            sys.exit()
-            else:
-                print("method name error")
-                sys.exit()
+        method = "Varied_random_training_scenario"
+        vehicles = "random"
+        for parameter in ("Without state velocity", "With state velocity"):
+            for seed in (100, 200, 400, 500):
+                if parameter == "With state velocity":
+                    for value in ("DDQN", "Temporal CNN", "LSTM"):
+                        yield run_type, vehicles, method, parameter, seed, value
+                elif parameter == "Without state velocity":
+                    for value in ("DDQN", "Temporal CNN", "LSTM"):
+                        yield run_type, vehicles, method, parameter, seed, value
+                else:
+                    print("Parameter naming error")
+                    sys.exit()
+
 
 
 

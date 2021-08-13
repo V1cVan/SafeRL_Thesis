@@ -464,37 +464,41 @@ class RewardFunction(object):
         return reward
 
     def plot_reward_functions(self):
+
+        import seaborn as sns
+        sns.set_theme()
+        sns.set(rc={'figure.figsize': (9, 4)})
         plt.ion()
 
         fig, axs = plt.subplots(2, 2)
         vel = np.linspace(0, 130 / 3.6, 100)
         rew = self._get_velocity_reward(vel)
         axs[0, 0].plot(vel, rew)
-        axs[0, 0].set_title('Velocity')
+        # axs[0, 0].set_title('Velocity')
         axs[0, 0].grid(True)
-        axs[0, 0].set(xlabel='Velocity', ylabel='Reward')
+        axs[0, 0].set(xlabel='Velocity [m/s]', ylabel='Reward')
 
         y = np.linspace(-3.6, 3.6, 100)
-        rew = self._get_lane_centre_reward(y)
+        rew = self._get_lane_centre_reward(y)-1
         axs[0, 1].plot(y, rew, 'tab:orange')
-        axs[0, 1].set_title('Lane Centre')
+        # axs[0, 1].set_title('Lane Centre')
         axs[0, 1].grid(True)
-        axs[0, 1].set(xlabel='Lane position', ylabel='Reward')
+        axs[0, 1].set(xlabel='Lane position [m]')
 
         x = np.linspace(0, 50, 100)
         rew = self._get_follow_dist_reward(x)
         axs[1, 0].plot(x, rew, 'tab:green')
-        axs[1, 0].set_title('Following Distance')
+        # axs[1, 0].set_title('Following Distance')
         axs[1, 0].grid(True)
-        axs[1, 0].set(xlabel='Following distance', ylabel='Reward')
+        axs[1, 0].set(xlabel='Following distance [m]', ylabel='Reward')
 
         road_width = 12
         y = np.linspace(0, road_width, 100)
-        rew = self._get_right_lane_reward(road_width, y)
+        rew = -self._get_right_lane_reward(road_width, y)
         axs[1, 1].plot(y, rew, 'tab:red')
-        axs[1, 1].set_title('Lane Position')
+        # axs[1, 1].set_title('Lane Position')
         axs[1, 1].grid(True)
-        axs[1, 1].set(xlabel='Distance from right road edge', ylabel='Reward')
+        axs[1, 1].set(xlabel='Distance from right road edge [m]')
 
         fig.tight_layout()
         plt.show()
