@@ -87,7 +87,7 @@ def start_run(parameter, tag_value, df, fig_path, run_type):
         ax.set(ylabel=tag_value + ' (km/h)')
         ax.set(xlabel="Episode")
     elif tag_value == "Reward":
-        ax.set(ylim=(0.75, 0.93))
+        ax.set(ylim=(0.69, 0.93))
         ax.set(ylabel=tag_value)
         ax.set(xlabel="Episode")
     elif tag_value == "Average episode speed":
@@ -101,8 +101,6 @@ def start_run(parameter, tag_value, df, fig_path, run_type):
     else :
         ax.set(ylabel=tag_value)
         ax.set(xlabel="Episode")
-
-
 
     plt_name = fig_path + "/" + parameter + '-' + tag_value
     plt.savefig(plt_name+'.pdf', format='pdf', dpi=300, bbox_inches='tight')
@@ -183,11 +181,11 @@ def preprocess_data(csv_path, run_type):
                 smooth_np = np.empty_like(raw_np)  # Initialize smooth_data_array
                 # Initialise values
                 smooth_np[0] = raw_np[0]  # First value in smoothed array is same as first value in raw
-                if k != "Epsilon":
+                if (k != "Epsilon"):
                     if ((k == 'Average episode speed') or k == ('Average episode reward')):
                         weight = 0
                     else:
-                        weight = 0.95
+                        weight = 0.93
                 else:
                     weight = 0.0
                 for step in range(1, len(raw_np)):
@@ -309,8 +307,8 @@ if __name__ == "__main__":
     experiment_names = list(experiment_ids.keys())
     print(experiment_names)
 
-    experiment_name = "Temporal_tuning"
-    run_type = 'parameter_sweep'  # 'method_comparison' OR 'parameter_sweep' or 'generalisability'
+    experiment_name = "Baselines"
+    run_type = 'method_comparison'  # 'method_comparison' OR 'parameter_sweep' or 'generalisability'
     csv_path = experiment_paths[experiment_name] + "/" + experiment_name + '.csv'
     download_and_save(experiment_name, csv_path)  # Comment out if you don't want to re-download the data
 

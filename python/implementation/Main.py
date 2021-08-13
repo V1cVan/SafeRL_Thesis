@@ -360,9 +360,15 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     config.scenarios_path = str(SC_PATH)
     # current_time = datetime.datetime.now().strftime("%Y-%m-%d-%Hh%Mm")
 
-    # Temporal Tuning:
-    if parameter == "Without state velocity":
-        REMOVE_STATE_VELOCITY = True
+    ADD_NOISE = True
+    if parameter == "Normal (mag.=low)":
+        REMOVE_STATE_VELOCITY = False
+        NOISE_PARAM = {"use_noise": ADD_NOISE,
+                       "magnitude": 0.05,
+                       "normal": True,
+                       "mu": 0.0,
+                       "sigma": 0.707,
+                       "uniform": False}
         if value == "DDQN":
             N_UNITS = (32, 32)
             FILTERS = None  # Dimensionality of output space
@@ -371,7 +377,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
             LSTM_UNITS = None
             USE_TEMPORAL_CNN = False
             USE_LSTM = False
-        elif value == "Temporal CNN":
+        elif value == "CNN":
             N_UNITS = (128, 64)
             FILTERS = (16, 32)  # Dimensionality of output space
             KERNEL = 2  # Convolution width
@@ -390,7 +396,13 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
         else:
             print("value not set properly")
             sys.exit()
-    elif parameter == "With state velocity":
+    elif parameter == "Normal & Uniform (mag.=low)":
+        NOISE_PARAM = {"use_noise": ADD_NOISE,
+                       "magnitude": 0.05,
+                       "normal": True,
+                       "mu": 0.0,
+                       "sigma": 0.707,
+                       "uniform": True}
         REMOVE_STATE_VELOCITY = False
         if value == "DDQN":
             N_UNITS = (32, 32)
@@ -400,7 +412,182 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
             LSTM_UNITS = None
             USE_TEMPORAL_CNN = False
             USE_LSTM = False
-        elif value == "Temporal CNN":
+        elif value == "CNN":
+            N_UNITS = (128, 64)
+            FILTERS = (16, 32)  # Dimensionality of output space
+            KERNEL = 4  # Convolution width
+            STRIDES = (1, 1)  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = True
+            USE_LSTM = False
+        elif value == "LSTM":
+            N_UNITS = (64, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = 16
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = True
+        else:
+            print("value not set properly")
+            sys.exit()
+    elif parameter == "Uniform (mag.=low)":
+        NOISE_PARAM = {"use_noise": ADD_NOISE,
+                       "magnitude": 0.05,
+                       "normal": False,
+                       "mu": 0.0,
+                       "sigma": 0.707,
+                       "uniform": True}
+        REMOVE_STATE_VELOCITY = False
+        if value == "DDQN":
+            N_UNITS = (32, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = False
+        elif value == "CNN":
+            N_UNITS = (128, 64)
+            FILTERS = (16, 32)  # Dimensionality of output space
+            KERNEL = 4  # Convolution width
+            STRIDES = (1, 1)  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = True
+            USE_LSTM = False
+        elif value == "LSTM":
+            N_UNITS = (64, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = 16
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = True
+        else:
+            print("value not set properly")
+            sys.exit()
+    elif parameter == "Normal (mag.=medium)":
+        NOISE_PARAM = {"use_noise": ADD_NOISE,
+                       "magnitude": 0.1,
+                       "normal": True,
+                       "mu": 0.0,
+                       "sigma": 0.707,
+                       "uniform": False}
+        REMOVE_STATE_VELOCITY = False
+        if value == "DDQN":
+            N_UNITS = (32, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = False
+        elif value == "CNN":
+            N_UNITS = (128, 64)
+            FILTERS = (16, 32)  # Dimensionality of output space
+            KERNEL = 4  # Convolution width
+            STRIDES = (1, 1)  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = True
+            USE_LSTM = False
+        elif value == "LSTM":
+            N_UNITS = (64, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = 16
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = True
+        else:
+            print("value not set properly")
+            sys.exit()
+    elif parameter == "Normal & Uniform (mag.=medium)":
+        NOISE_PARAM = {"use_noise": ADD_NOISE,
+                       "magnitude": 0.1,
+                       "normal": True,
+                       "mu": 0.0,
+                       "sigma": 0.707,
+                       "uniform": True}
+        REMOVE_STATE_VELOCITY = False
+        if value == "DDQN":
+            N_UNITS = (32, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = False
+        elif value == "CNN":
+            N_UNITS = (128, 64)
+            FILTERS = (16, 32)  # Dimensionality of output space
+            KERNEL = 4  # Convolution width
+            STRIDES = (1, 1)  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = True
+            USE_LSTM = False
+        elif value == "LSTM":
+            N_UNITS = (64, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = 16
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = True
+        else:
+            print("value not set properly")
+            sys.exit()
+    elif parameter == "Uniform (mag.=medium)":
+        NOISE_PARAM = {"use_noise": ADD_NOISE,
+                       "magnitude": 0.1,
+                       "normal": False,
+                       "mu": 0.0,
+                       "sigma": 0.707,
+                       "uniform": True}
+        REMOVE_STATE_VELOCITY = False
+        if value == "DDQN":
+            N_UNITS = (32, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = False
+        elif value == "CNN":
+            N_UNITS = (128, 64)
+            FILTERS = (16, 32)  # Dimensionality of output space
+            KERNEL = 4  # Convolution width
+            STRIDES = (1, 1)  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = True
+            USE_LSTM = False
+        elif value == "LSTM":
+            N_UNITS = (64, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = 16
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = True
+        else:
+            print("value not set properly")
+            sys.exit()
+    elif parameter == "Normal & Uniform (mag.=high)":
+        NOISE_PARAM = {"use_noise": ADD_NOISE,
+                       "magnitude": 0.2,
+                       "normal": True,
+                       "mu": 0.0,
+                       "sigma": 1.0,
+                       "uniform": True}
+        REMOVE_STATE_VELOCITY = False
+        if value == "DDQN":
+            N_UNITS = (32, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = False
+        elif value == "CNN":
             N_UNITS = (128, 64)
             FILTERS = (16, 32)  # Dimensionality of output space
             KERNEL = 4  # Convolution width
@@ -422,6 +609,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     else:
         print("parameter value not set properly")
         sys.exit()
+
     """RUN PARAMETERS:"""
     SEED = seed
     RUN_TYPE = run_type  # "train"/test
@@ -588,7 +776,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     # USE_TEMPORAL_CNN = False
     # USE_LSTM = False
     # REMOVE_STATE_VELOCITY  -- MOVED UP
-    ADD_NOISE = False
+    ADD_NOISE = True
 
     # RewardFunction().plot_reward_functions()
     training_param = {
@@ -626,8 +814,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
         "use_CNN": USE_CNN,
         "use_temporal_CNN": USE_TEMPORAL_CNN,
         "use_LSTM": USE_LSTM,
-        "noise_param": {"use_noise": ADD_NOISE, "magnitude": 0.1, "normal": True, "mu": 0.0, "sigma": 0.1,
-                        "uniform": True},
+        "noise_param": NOISE_PARAM,
         "remove_state_vel": REMOVE_STATE_VELOCITY
     }
 
@@ -722,7 +909,7 @@ if __name__ == "__main__":
     run_timer = Timer("Run timer")
     run_timer.startTime()
 
-    PROCS = 1  # Number of cores to use
+    PROCS = 32  # Number of cores to use
     mp.set_start_method("spawn")  # Make sure different workers have different seeds if applicable
     P = mp.cpu_count()  # Number of available cores
     procs = max(min(PROCS, P), 1)  # Clip number of procs to [1;P]
@@ -745,7 +932,7 @@ if __name__ == "__main__":
         veh_2 = {"slow": 4, "medium": 10, "fast": 2}  # total = 16
         veh_3 = {"slow": 6, "medium": 13, "fast": 3}  # total = 22
         veh_4 = {"slow": 8, "medium": 16, "fast": 4}  # total = 28
-        veh_5 = {"slow": 10, "medium": 20, "fast": 5, "im": 0, "step": 0, "sway": 0}  # total = 35
+        veh_5 = {"slow": 10, "medium": 20, "fast":10, "im": 0, "step": 0, "sway": 0}  # total = 35
         veh_6 = {"slow": 12, "medium": 24, "fast": 6}  # total = 42
         veh_7 = {"slow": 15, "medium": 28, "fast": 7}  # total = 50
         veh_8 = {"slow": 20, "medium": 35, "fast": 10}  # total = 65
@@ -756,23 +943,18 @@ if __name__ == "__main__":
         veh_many_fast = {"slow": 10, "medium": 10, "fast": 20, "im": 0, "step": 0, "sway": 0}  # total = 40
         veh_extended = {"slow": 8, "medium": 18, "fast": 8, "im": 2, "step": 3, "sway": 1}  # total = 40
         veh_stress = {"slow": 10, "medium": 15, "fast": 17, "im": 4, "step": 6, "sway": 2}  # total = 54
-        method = "Varied_random_training_scenario"
-        vehicles = "random"
-        for parameter in ("Without state velocity", "With state velocity"):
-            for seed in (100, 200, 400, 500):
-                if parameter == "With state velocity":
-                    for value in ("DDQN", "Temporal CNN", "LSTM"):
-                        yield run_type, vehicles, method, parameter, seed, value
-                elif parameter == "Without state velocity":
-                    for value in ("DDQN", "Temporal CNN", "LSTM"):
-                        yield run_type, vehicles, method, parameter, seed, value
-                else:
-                    print("Parameter naming error")
-                    sys.exit()
-
-
-
-
+        method = "Noise_tuning"
+        vehicles = veh_5
+        for seed in (100,300,500):
+            for parameter in ("Normal (mag.=low)",
+                              "Normal & Uniform (mag.=low)",
+                              "Uniform (mag.=low)",
+                              "Normal (mag.=medium)",
+                              "Normal & Uniform (mag.=medium)",
+                              "Uniform (mag.=medium)",
+                              "Normal & Uniform (mag.=high)"):
+                for value in ("DDQN", "LSTM", "CNN"):
+                    yield run_type, vehicles, method, parameter, seed, value
 
     if procs > 1:
         # Schedule all training runs in a parallel loop over multiple cores:

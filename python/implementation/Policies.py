@@ -31,7 +31,10 @@ def add_state_noise(state, is_normal=False, is_uniform=False, magnitude=0.0, mu=
         plt.show()
 
     noisy_state = state
-    size_state = len(state)
+    if type(state) == list:
+        size_state = 2
+    else:
+        size_state = 1
 
     if size_state == 1:  # Singular state matrix
         shape = tf.shape(state)
