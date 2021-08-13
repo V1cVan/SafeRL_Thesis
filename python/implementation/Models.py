@@ -126,7 +126,7 @@ class TemporalCNN(keras.Model):
         self.concat_layer = layers.Concatenate(name="ConcatenationLayer")(
             [self.flatten_layer, self.static_input])
 
-        self.Q_layer_1 = layers.Dense(64, activation=act_func, name="Q_layer_1")(self.concat_layer)
+        self.Q_layer_1 = layers.Dense(n_units[0], activation=act_func, name="Q_layer_1")(self.concat_layer)
         self.Q_layer_2 = layers.Dense(n_units[1], activation=act_func, name="Q_layer_2")(self.Q_layer_1)
 
         self.output_layer = layers.Dense(n_actions)(self.Q_layer_2)

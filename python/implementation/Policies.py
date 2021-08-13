@@ -77,7 +77,7 @@ def add_state_noise(state, is_normal=False, is_uniform=False, magnitude=0.0, mu=
 
     return noisy_state
 
-def convert_state(veh, remove_velocity=False):
+def convert_state(veh, remove_velocity):
     """
     Assembles state vector in TF form to pass to neural network.
     Normalises certain state variables and excludes constants.
@@ -239,7 +239,7 @@ def convert_state(veh, remove_velocity=False):
 
         return state
 
-def decompose_state(veh, remove_velocity=False, use_deepset=False):
+def decompose_state(veh, remove_velocity, use_deepset=False):
     """
     Decomposes the state into static and dynamic components.
         Static components -> Ego vehicle speed, distance to road edge, etc.
@@ -564,6 +564,7 @@ class DiscreteSingleActionPolicy(CustomPolicy):
             else:
                 veh.s1_mod = convert_state(veh, remove_velocity=self.remove_velocity)
 
+
             if self.agent.training_param["noise_param"]["use_noise"]:
                 # TODO !!!!!!!!!!! ONLY ADD STATE NOISE ON NON-ZERO MEASUREMENTS !!!!!!!!!!!!!!
                 veh.s1_mod = add_state_noise(veh.s1_mod,
@@ -597,7 +598,11 @@ class DiscreteSingleActionPolicy(CustomPolicy):
                     Q = self.get_action(full_stacked_state)
                     veh.s1_mod = full_stacked_state
             else:  # No frame stacking
-                Q = self.get_action(veh.s1_mod)
+                if self.agent.training_param["use_deepset"] or self.agent.training_param["use_CNN"]:
+                    Q = self.get_action(veh.s1_mod)
+                else:
+                    veh.s1_mod = tf.expand_dims(veh.s1_mod, axis=0)
+                    Q = self.get_action(veh.s1_mod)
 
 
 
@@ -689,6 +694,27 @@ class DiscreteSingleActionPolicy(CustomPolicy):
         sim_action[1] = steer_controller
         return sim_action
 
+
+class pyStepPolicy(CustomPolicy):
+    MIN_REL_OFF = 0.0
+    MAX_REL_OFF = 1.0
+
+    def init_vehicle(self, veh):
+        veh.k = 0
+        veh.curActions = None
+        self.period = random.randint(25, 100)
+        self.vr = [random.uniform(0.1, 0.3), random.uniform(0.5, 0.7)]
+
+
+    def custom_action(self, veh):
+        if veh.k<=0:
+            veh.k = self.period
+            veh.curActions = (random.uniform(self.vr[0], self.vr[1]), random.uniform(self.MIN_REL_OFF, self.MAX_REL_OFF))
+        veh.k -= 1
+        a_bounds = veh.a_bounds
+        vel = veh.curActions[0]*(a_bounds["long"][1]-a_bounds["long"][0]) + a_bounds["long"][0]
+        off = veh.curActions[1]*(a_bounds["lat"][1]-a_bounds["lat"][0]) + a_bounds["lat"][0]
+        return np.array([vel,off])
 
 ########################################################################
 

@@ -7,6 +7,18 @@ import pickle
 from hwsim import Simulation, BasicPolicy, StepPolicy, SwayPolicy, IMPolicy, KBModel, TrackPolicy, CustomPolicy, config
 from hwsim.plotting import Plotter, SimulationPlot, DetailPlot, BirdsEyePlot, TimeChartPlot, ActionsPlot
 
+
+from contextlib import contextmanager
+@contextmanager
+def suppress_stdout():
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:
+            yield
+        finally:
+            sys.stdout = old_stdout
+
 import pathlib
 import random
 import numpy as np
@@ -37,8 +49,7 @@ class Main(object):
 
     def __init__(self, n_vehicles, policy, model_param, training_param, tb_logger):
         # ...
-        scenario = sim_type(policy=policy, n_vehicles=n_vehicles)
-        self.sim = Simulation(scenario)
+        self.n_vehicles = n_vehicles
         self.policy = policy
         # Create object for data logging and visualisation
         self.data_logger = DataLogger(model_param, training_param)
@@ -111,6 +122,10 @@ class Main(object):
 
             self.episodeTimer.startTime()
             # Set simulation environment
+
+            scenario = sim_type(policy=self.policy, n_vehicles=self.n_vehicles)
+            self.sim = Simulation(scenario)
+
             with self.sim:
                 # Loop through each timestep in episode.
                 # Run the model for one episode to collect training data
@@ -278,9 +293,9 @@ def sim_type(policy, n_vehicles):
     n_slow_veh = n_vehicles["slow"]
     n_normal_veh = n_vehicles["medium"]
     n_fast_veh = n_vehicles["fast"]
-    # n_step = n_vehicles["step"]
-    # n_sway = n_vehicles["sway"]
-    # n_im = n_vehicles["im"]
+    n_step = n_vehicles["step"]
+    n_sway = n_vehicles["sway"]
+    n_im = n_vehicles["im"]
     safetyCfg = {
         "Mvel": 1.0,
         "Gth": 2.0
@@ -293,8 +308,7 @@ def sim_type(policy, n_vehicles):
         "replay": False,
         "vehicles": [
             {"amount": 1, "model": KBModel(), "policy": policy, "D_MAX": 160},
-            # {"amount": n_step, "model": KBModel(), "policy": StepPolicy(25, [0.2, 0.8])},
-            # {"amount": n_sway, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
+            # {"amount": n_step, "mode  KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
             # {"amount": n_im, "model": KBModel(), "policy": IMPolicy()},
             {"amount": n_slow_veh, "model": KBModel(), "policy": BasicPolicy("slow")},
             {"amount": n_normal_veh, "model": KBModel(), "policy": BasicPolicy("normal")},
@@ -311,64 +325,68 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     config.scenarios_path = str(SC_PATH)
     # current_time = datetime.datetime.now().strftime("%Y-%m-%d-%Hh%Mm")
 
-    # parameter in
-    # ('Number of filters - 1 convolution', 'Kernel size - 1 convolution',
-    # 'Number of filters - 2 convolutions', 'Kernel size - 2 convolutions'):
-
-    # 0=1D conv. on vehicle dim.,
-    # 1=1D conv. on measurements dim.,
-    # 2=2D conv. on vehicle and measurements dimensions,
     # Temporal Tuning:
-
-    if parameter=="LSTM units (w.o. state velocity)":
+    if parameter == "Without state velocity":
         REMOVE_STATE_VELOCITY = True
-        N_UNITS = (32, 32)
-        USE_TEMPORAL_CNN = False
-        USE_LSTM = True
-        LSTM_UNITS = value
-        FILTERS = None
-        KERNEL = None  # Convolution width
-        STRIDES = None  # Stride size
-    elif parameter=="CNN filters (w.o. state velocity & 32 dense units)":
-        REMOVE_STATE_VELOCITY = True
-        N_UNITS = (32,32)
-        USE_TEMPORAL_CNN = True
-        USE_LSTM = False
-        LSTM_UNITS = None
-        FILTERS = value
-        if REMOVE_STATE_VELOCITY:
+        if value == "DDQN":
+            N_UNITS = (32, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = False
+        elif value == "Temporal CNN":
+            N_UNITS = (128, 64)
+            FILTERS = (16, 32)  # Dimensionality of output space
             KERNEL = 2  # Convolution width
+            STRIDES = (1, 1)  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = True
+            USE_LSTM = False
+        elif value == "LSTM":
+            N_UNITS = (64, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = 16
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = True
         else:
-            KERNEL = 4
-        STRIDES = (1, 1)  # Stride size
-    elif parameter=="CNN filters (w.o. state velocity & 64 dense units)":
-        REMOVE_STATE_VELOCITY = True
-        N_UNITS = (64,32)
-        USE_TEMPORAL_CNN = True
-        USE_LSTM = False
-        LSTM_UNITS = None
-        FILTERS = value
-        if REMOVE_STATE_VELOCITY:
-            KERNEL = 2  # Convolution width
+            print("value not set properly")
+            sys.exit()
+    elif parameter == "With state velocity":
+        REMOVE_STATE_VELOCITY = False
+        if value == "DDQN":
+            N_UNITS = (32, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = False
+        elif value == "Temporal CNN":
+            N_UNITS = (128, 64)
+            FILTERS = (16, 32)  # Dimensionality of output space
+            KERNEL = 4  # Convolution width
+            STRIDES = (1, 1)  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = True
+            USE_LSTM = False
+        elif value == "LSTM":
+            N_UNITS = (64, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = 16
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = True
         else:
-            KERNEL = 4
-        STRIDES = (1, 1)  # Stride size
-    elif parameter=="CNN filters (w.o. state velocity & 128 dense units)":
-        REMOVE_STATE_VELOCITY = True
-        N_UNITS = (128,64)
-        USE_TEMPORAL_CNN = True
-        USE_LSTM = False
-        LSTM_UNITS = None
-        FILTERS = value
-        if REMOVE_STATE_VELOCITY:
-            KERNEL = 2  # Convolution width
-        else:
-            KERNEL = 4
-        STRIDES = (1, 1)  # Stride size
+            print("value not set properly")
+            sys.exit()
     else:
         print("parameter value not set properly")
         sys.exit()
-
     """RUN PARAMETERS:"""
     SEED = seed
     RUN_TYPE = run_type  # "train"/test
@@ -415,8 +433,8 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
 
     """ BASE MODEL PARAMETERS:"""
     # Base parameters (DDQN):
-    # N_UNITS = (32, 32)  # TODO Tuning for temporal networks
-    # REMOVE_STATE_VELOCITY = False
+    # N_UNITS = (32, 32)
+    # REMOVE_STATE_VELOCITY = True
     if REMOVE_STATE_VELOCITY == True:
         N_INPUTS = 31
     else:
@@ -665,6 +683,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
 
 
 if __name__ == "__main__":
+
     run_timer = Timer("Run timer")
     run_timer.startTime()
 
@@ -691,40 +710,78 @@ if __name__ == "__main__":
         veh_2 = {"slow": 4, "medium": 10, "fast": 2}  # total = 16
         veh_3 = {"slow": 6, "medium": 13, "fast": 3}  # total = 22
         veh_4 = {"slow": 8, "medium": 16, "fast": 4}  # total = 28
-        veh_5 = {"slow": 10, "medium": 20, "fast": 5}  # total = 35
+        veh_5 = {"slow": 10, "medium": 20, "fast": 5, "im": 0, "step": 0, "sway": 0}  # total = 35
         veh_6 = {"slow": 12, "medium": 24, "fast": 6}  # total = 42
         veh_7 = {"slow": 15, "medium": 28, "fast": 7}  # total = 50
         veh_8 = {"slow": 20, "medium": 35, "fast": 10}  # total = 65
         veh_9 = {"slow": 25, "medium": 55, "fast": 15}  # total = 95
         veh_10 = {"slow": 35, "medium": 70, "fast": 25}  # total = 130
 
-        veh_extended = {"slow": 10, "medium":20, "fast":5, "im": 3, "step":5, "sway":1}  # total = 44
-        method = "Temporal_tuning"
         run_type = "train"
-        vehicles = veh_5
-        for parameter in ("LSTM units (w.o. state velocity)",
-                          "CNN filters (w.o. state velocity & 32 dense units)",
-                          "CNN filters (w.o. state velocity & 64 dense units)",
-                          "CNN filters (w.o. state velocity & 128 dense units)"):
-            for seed in (100, 500):
-                if parameter == "LSTM units (w.o. state velocity)":
-                    for value in (4, 8, 16):
-                        yield run_type, vehicles, method, parameter, seed, value
-                elif parameter == "LSTM sequences (w.o. state velocity)":
-                    for value in (True, False):
-                        yield run_type, vehicles, method, parameter, seed, value
-                elif parameter == "CNN filters (w.o. state velocity & 32 dense units)":
-                    for value in ((8, 16), (16, 32)):
-                        yield run_type, vehicles, method, parameter, seed, value
-                elif parameter == "CNN filters (w.o. state velocity & 64 dense units)":
-                    for value in ((8, 16), (16, 32)):
-                        yield run_type, vehicles, method, parameter, seed, value
-                elif parameter == "CNN filters (w.o. state velocity & 128 dense units)":
-                    for value in ((8, 16), (16, 32)):
-                        yield run_type, vehicles, method, parameter, seed, value
-                else:
-                    print("Parameter naming error")
-                    sys.exit()
+        veh_many_fast = {"slow": 10, "medium": 10, "fast": 20, "im": 0, "step": 0, "sway": 0}  # total = 40
+        veh_extended = {"slow": 8, "medium": 18, "fast": 8, "im": 2, "step": 3, "sway": 1}  # total = 40
+        veh_stress = {"slow": 10, "medium": 15, "fast": 17, "im": 4, "step": 6, "sway": 2}  # total = 54
+        # for method in ("Velocity_removal_baseline_default",
+        #                "Velocity_removal_baseline_many_fast",
+        #                "Velocity_removal_baseline_extended",
+        #                "Velocity_removal_baseline_stress"):
+        for method in ("Velocity_removal_baseline_many_fast","Velocity_removal_baseline_default"):
+            if method == "Velocity_removal_baseline_default":
+                vehicles = veh_5
+                for parameter in ("Without state velocity", "With state velocity"):
+                    for seed in (100, 200, 400, 500):
+                        if parameter == "With state velocity":
+                            for value in ("DDQN", "Temporal CNN", "LSTM"):
+                                yield run_type, vehicles, method, parameter, seed, value
+                        elif parameter == "Without state velocity":
+                            for value in ("DDQN", "Temporal CNN", "LSTM"):
+                                yield run_type, vehicles, method, parameter, seed, value
+                        else:
+                            print("Parameter naming error")
+                            sys.exit()
+            elif method == "Velocity_removal_baseline_many_fast":
+                vehicles = veh_many_fast
+                for parameter in ("Without state velocity", "With state velocity"):
+                    for seed in (100, 200, 400, 500):
+                        if parameter == "With state velocity":
+                            for value in ("DDQN", "Temporal CNN", "LSTM"):
+                                yield run_type, vehicles, method, parameter, seed, value
+                        elif parameter == "Without state velocity":
+                            for value in ("DDQN", "Temporal CNN", "LSTM"):
+                                yield run_type, vehicles, method, parameter, seed, value
+                        else:
+                            print("Parameter naming error")
+                            sys.exit()
+            elif method == "Velocity_removal_baseline_extended":
+                vehicles = veh_extended
+                for parameter in ("Without state velocity", "With state velocity"):
+                    for seed in (100, 200, 400, 500):
+                        if parameter == "With state velocity":
+                            for value in ("DDQN", "Temporal CNN", "LSTM"):
+                                yield run_type, vehicles, method, parameter, seed, value
+                        elif parameter == "Without state velocity":
+                            for value in ("DDQN", "Temporal CNN", "LSTM"):
+                                yield run_type, vehicles, method, parameter, seed, value
+                        else:
+                            print("Parameter naming error")
+                            sys.exit()
+            elif method == "Velocity_removal_baseline_stress":
+                vehicles = veh_stress
+                for parameter in ("Without state velocity", "With state velocity"):
+                    for seed in (100, 200, 400, 500):
+                        if parameter == "With state velocity":
+                            for value in ("DDQN", "Temporal CNN", "LSTM"):
+                                yield run_type, vehicles, method, parameter, seed, value
+                        elif parameter == "Without state velocity":
+                            for value in ("DDQN", "Temporal CNN", "LSTM"):
+                                yield run_type, vehicles, method, parameter, seed, value
+                        else:
+                            print("Parameter naming error")
+                            sys.exit()
+            else:
+                print("method name error")
+                sys.exit()
+
 
 
 
