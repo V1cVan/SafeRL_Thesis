@@ -42,6 +42,8 @@ For deleting experiment from Tensorboard:
 # Generalisability baselines
 # tensorboard dev upload --logdir "./logfiles/Generalisability_baselines/train" --name "Generalisability baselines - DDQN|Deepset|CNNs" --description "DDQN vs Deepset vs CNN w pooling vs CNN wo pooling. "
 # tensorboard dev upload --logdir "./logfiles/Generalisability_baselines/test" --name "Generalisability baselines TEST - DDQN|Deepset|CNNs" --description "TEST - DDQN vs Deepset vs CNN w pooling vs CNN wo pooling. "
+# tensorboard dev upload --logdir "./logfiles/Manually_create_generalisability_baselines/train" --name "Manually created generalisability baselines - not sure if it will work"
+# tensorboard dev upload --logdir "./logfiles/Generalisability_baselines_rerun_with_fix/train" --name "Retrain of all the generalisability baselines. CNN with pooling now same units as without. And DDQN cannot see infinitely far. Padding on networks is valid. "
 
 # Temporal models tuning
 # tensorboard dev upload --logdir "./logfiles/Temporal_tuning/train" --name "Temporal Tuning LSTM & 2D CNN" --description "LSTM & 2D CNN tuning sweeps. "
@@ -156,7 +158,7 @@ def preprocess_data(csv_path, run_type):
     if run_type == 'parameter_sweep':
         # For parameter comparison:
         df['parameter_tested'] = df['description'].str.extract(r'(.*?)=')
-        df = df.loc[df['tag'].isin(['Reward', 'Vehicle speed', 'Epsilon'])]
+        df = df.loc[df['tag'].isin(['Reward', 'Vehicle speed'])]
     elif run_type == 'generalisability':
         df['parameter_tested'] = df['description'].str.extract(r'(.*?)=')
         df['description'] = df['description'].str.extract(r'=(.*)')
@@ -279,12 +281,14 @@ if __name__ == "__main__":
         'CNN_tuning_with_pooling': 'EiG3S0LRRNaUkotA8tmkxQ',
         'Generalisability_baselines': 'k11SRrn3TMmXg7Zrn1Axpw',
         'Generalisability_test': 'rjY2gnrMTGmyMG0r9YCRiw',
+        "Generalisability_baselines_rerun": '5yWQnN5pSyuZIpVVgRpsxg',
         'Temporal_tuning': 'BaCW51LPQ9WTNgabD1Jblw',
+        'DDQN_IBM_RULE_BASED': "i9NxLq4nSzaNBSb7WHbYLw",
     }
 
     experiment_paths = {
         "DDQN_ER_initialisers": "./logfiles/DDQN_ER_initialisers",
-        "DDQN_ER_tuning": "./logfiles/DDQN_ER_tuning/train",
+        "DDQN_ER_tuning": "./logfiles/DDQN_ER_tuning_run2/train",
         "Epsilon_sweep": "./logfiles/DDQN_Epsilon_Beta_tuning/train",
         "DQN_DDQN_standardisation_short": "./logfiles/DQN_DDQN_standardisation_target_update/train",
         "DQN_DDQN_standardisation_long": "./logfiles/DQN_DDQN_standardisation_target_update_long_run/train",
@@ -301,13 +305,15 @@ if __name__ == "__main__":
         'CNN_tuning_with_pooling': './logfiles/CNN1D_tuning_with_pooling/train',
         'Generalisability_baselines': './logfiles/Generalisability_baselines/train',
         'Generalisability_test': './logfiles/Generalisability_baselines/test',
+        "Generalisability_baselines_rerun": './logfiles/Generalisability_baselines_rerun_with_fix/train',
         'Temporal_tuning': './logfiles/Temporal_tuning/train',
+        'DDQN_IBM_RULE_BASED': "./logfiles/Baselines_IBM_RULE_BASED",
     }
 
     experiment_names = list(experiment_ids.keys())
     print(experiment_names)
 
-    experiment_name = "Baselines"
+    experiment_name = "Generalisability_baselines_rerun"
     run_type = 'method_comparison'  # 'method_comparison' OR 'parameter_sweep' or 'generalisability'
     csv_path = experiment_paths[experiment_name] + "/" + experiment_name + '.csv'
     download_and_save(experiment_name, csv_path)  # Comment out if you don't want to re-download the data
@@ -320,7 +326,7 @@ if __name__ == "__main__":
         display_results_summary(csv_path)
 
     # Plot the smoothed results using multi processing
-    procs = 32  # Amount of processes/cores you want to use
+    procs = 32   # Amount of processes/cores you want to use
     mp.set_start_method('spawn')  # This will make sure the different workers have different random seeds
     P = mp.cpu_count()  # Amount of available procs
     procs = max(min(procs, P), 1)  # Clip amount of procs to [1;P]
