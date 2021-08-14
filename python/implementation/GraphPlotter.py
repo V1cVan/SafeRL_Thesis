@@ -44,6 +44,14 @@ For deleting experiment from Tensorboard:
 # tensorboard dev upload --logdir "./logfiles/Generalisability_baselines/test" --name "Generalisability baselines TEST - DDQN|Deepset|CNNs" --description "TEST - DDQN vs Deepset vs CNN w pooling vs CNN wo pooling. "
 # tensorboard dev upload --logdir "./logfiles/Manually_create_generalisability_baselines/train" --name "Manually created generalisability baselines - not sure if it will work"
 # tensorboard dev upload --logdir "./logfiles/Generalisability_baselines_rerun_with_fix/train" --name "Retrain of all the generalisability baselines. CNN with pooling now same units as without. And DDQN cannot see infinitely far. Padding on networks is valid. "
+# tensorboard dev upload --logdir "./logfiles/Generalisability_baselines_rerun_with_fix/test" --name "TEST of all the generalisability baselines. CNN with pooling now same units as without. And DDQN cannot see infinitely far. Padding on networks is valid. "
+
+# tensorboard dev upload --logdir "./logfiles/Generalisability_double_run_few_veh/train" --name "Generalisability train FEW vehicles" --description "Rerun of the generalisability tests but with a training scenario of 30 vehicles."
+# tensorboard dev upload --logdir "./logfiles/Generalisability_double_run_many_veh/train" --name "Generalisability train MANY vehicles" --description "Rerun of the generalisability tests but with a training scenario of 70 vehicles."
+
+
+# tensorboard dev upload --logdir "./logfiles/Generalisability_double_run_few_veh/test" --name "Generalisability TEST FEW vehicles" --description "Rerun of the generalisability tests but with a training scenario of 30 vehicles."
+# tensorboard dev upload --logdir "./logfiles/Generalisability_double_run_many_veh/test" --name "Generalisability TEST MANY vehicles" --description "Rerun of the generalisability tests but with a training scenario of 70 vehicles."
 
 # Temporal models tuning
 # tensorboard dev upload --logdir "./logfiles/Temporal_tuning/train" --name "Temporal Tuning LSTM & 2D CNN" --description "LSTM & 2D CNN tuning sweeps. "
@@ -61,11 +69,11 @@ def start_run(parameter, tag_value, df, fig_path, run_type):
         ax = sns.lineplot(x="step", y="smoothed",
                       hue="description",
                       data=plot_df,
-                      alpha=0.6,
+                      alpha=0.8,
                       style="description",
                       markers=True,
                       dashes=False,
-                      linewidth=1.8)
+                      linewidth=2.2)
     else:
         ax = sns.lineplot(x="step", y="smoothed",
                           hue="description",
@@ -80,7 +88,7 @@ def start_run(parameter, tag_value, df, fig_path, run_type):
         if run_type == "parameter_sweep":
             ax.legend(loc='lower right', title='Parameter:')
         elif run_type == 'generalisability':
-            ax.legend(loc='upper right', title='Method:')
+            ax.legend(loc='lower left', title=None)
         else:
             ax.legend(loc='lower right', title=None)
 
@@ -89,7 +97,7 @@ def start_run(parameter, tag_value, df, fig_path, run_type):
         ax.set(ylabel=tag_value + ' (km/h)')
         ax.set(xlabel="Episode")
     elif tag_value == "Reward":
-        ax.set(ylim=(0.69, 0.93))
+        ax.set(ylim=(0.69, 0.937))
         ax.set(ylabel=tag_value)
         ax.set(xlabel="Episode")
     elif tag_value == "Average episode speed":
@@ -188,6 +196,7 @@ def preprocess_data(csv_path, run_type):
                         weight = 0
                     else:
                         weight = 0.93
+
                 else:
                     weight = 0.0
                 for step in range(1, len(raw_np)):
@@ -281,9 +290,19 @@ if __name__ == "__main__":
         'CNN_tuning_with_pooling': 'EiG3S0LRRNaUkotA8tmkxQ',
         'Generalisability_baselines': 'k11SRrn3TMmXg7Zrn1Axpw',
         'Generalisability_test': 'rjY2gnrMTGmyMG0r9YCRiw',
-        "Generalisability_baselines_rerun": '5yWQnN5pSyuZIpVVgRpsxg',
+        'Generalisability_train_few_vehicles': 'fB2Wr2SLQ1ilN8DQWyuZ7g',
+        'Generalisability_train_many_vehicles': 'OmSOxVxZT4ipNOZK7yagHA',
+        'Generalisability_test_few_vehicles': 'RWAWXXCqTBSbmBwOWIWnAw',
+        'Generalisability_test_many_vehicles': 'V88XQ5ZvTdGjhv9MNz4aJA',
         'Temporal_tuning': 'BaCW51LPQ9WTNgabD1Jblw',
         'DDQN_IBM_RULE_BASED': "i9NxLq4nSzaNBSb7WHbYLw",
+
+        'Noise_tuning': "Lt8ug0w3TraMLGl9CQmhgA",
+        'Varied_random_training_scenario': "Wao8WzNlTzKJuWreqx2PPA",
+        'Velocity_removal_baseline_default': "FXaEoDl5TGmNMogAWG2gEw",
+        'Velocity_removal_baseline_extended': 'WhNIRNFPQ2mq1e2Lx1WiWw',
+        'Velocity_removal_baseline_many_fast': '3QTRa4mSQ5Gvzb8DUr27sQ',
+        'Velocity_removal_baseline_stress': 'jn1yZJFMQxC4MgNnSa4QQQ',
     }
 
     experiment_paths = {
@@ -305,15 +324,25 @@ if __name__ == "__main__":
         'CNN_tuning_with_pooling': './logfiles/CNN1D_tuning_with_pooling/train',
         'Generalisability_baselines': './logfiles/Generalisability_baselines/train',
         'Generalisability_test': './logfiles/Generalisability_baselines/test',
-        "Generalisability_baselines_rerun": './logfiles/Generalisability_baselines_rerun_with_fix/train',
+        'Generalisability_train_few_vehicles' : './logfiles/Generalisability_double_run_few_veh/train',
+        'Generalisability_train_many_vehicles': './logfiles/Generalisability_double_run_many_veh/train',
+        'Generalisability_test_few_vehicles': './logfiles/Generalisability_double_run_few_veh/test',
+        'Generalisability_test_many_vehicles': './logfiles/Generalisability_double_run_many_veh/test',
+
         'Temporal_tuning': './logfiles/Temporal_tuning/train',
         'DDQN_IBM_RULE_BASED': "./logfiles/Baselines_IBM_RULE_BASED",
+        'Noise_tuning': "./logfiles/Noise_tuning/train",
+        'Varied_random_training_scenario': "./logfiles/Varied_random_training_scenario/train",
+        'Velocity_removal_baseline_default': "./logfiles/Velocity_removal_baseline_default/train",
+        'Velocity_removal_baseline_extended': './logfiles/Velocity_removal_baseline_extended/train',
+        'Velocity_removal_baseline_many_fast': './logfiles/Velocity_removal_baseline_many_fast/train',
+        'Velocity_removal_baseline_stress': './logfiles/Velocity_removal_baseline_stress/train',
     }
 
     experiment_names = list(experiment_ids.keys())
     print(experiment_names)
 
-    experiment_name = "Generalisability_baselines_rerun"
+    experiment_name = "Generalisability_train_many_vehicles"
     run_type = 'method_comparison'  # 'method_comparison' OR 'parameter_sweep' or 'generalisability'
     csv_path = experiment_paths[experiment_name] + "/" + experiment_name + '.csv'
     download_and_save(experiment_name, csv_path)  # Comment out if you don't want to re-download the data

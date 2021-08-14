@@ -333,53 +333,52 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
         STRIDES = 0  # Stride size
         USE_POOLING = False
         NORMAL_CNN_TYPE = -1
-        LSTM_UNITS = 0
-        USE_LSTM = False
-        BATCH_NORM = False
-    elif value == "1D CNN with Pooling":
+        POOL_SIZE = 0
+    elif value == "1D CNN (over vehicles)":
         USE_DEEPSET = False
         USE_CNN = True
-        FILTERS = (8, 16)  # Dimensionality of output space
-        KERNEL = 4  # Convolution width
-        STRIDES = (1, 1)  # Stride size
-        USE_POOLING = True
-        NORMAL_CNN_TYPE = 1
-        LSTM_UNITS = 0
-        USE_LSTM = False
-        BATCH_NORM = False
-    elif value == "1D CNN without Pooling":
-        USE_DEEPSET = False
-        USE_CNN = True
-        FILTERS = (8,16)  # Dimensionality of output space
-        KERNEL = 4  # Convolution width
-        STRIDES = (1, 1)  # Stride size
-        USE_POOLING = False
-        NORMAL_CNN_TYPE = 1
-        LSTM_UNITS = 0
-        USE_LSTM = False
-        BATCH_NORM = False
-    elif value == "2D CNN without pooling":
-        USE_DEEPSET = False
-        USE_CNN = True
-        FILTERS = (8,16)  # Dimensionality of output space
-        KERNEL = ((4,4), (2,1))  # Convolution width
-        STRIDES = (1, 1)  # Stride size
-        USE_POOLING = False
-        NORMAL_CNN_TYPE = 2
-        LSTM_UNITS = 0
-        USE_LSTM = False
-        BATCH_NORM = False
-    elif value == "LSTM":
-        USE_DEEPSET = False
-        USE_CNN = False
-        FILTERS = (0)  # Dimensionality of output space
-        KERNEL = 0  # Convolution width
+        FILTERS = (32, 64)  # Dimensionality of output space
+        KERNEL = (12,12)  # Convolution width
         STRIDES = 0  # Stride size
         USE_POOLING = False
-        NORMAL_CNN_TYPE = -1
-        LSTM_UNITS = 32
-        USE_LSTM = True
-        BATCH_NORM = False
+        NORMAL_CNN_TYPE = 0
+        POOL_SIZE = 0
+    elif value == "1D CNN (over measurements)":
+        USE_DEEPSET = False
+        USE_CNN = True
+        FILTERS = (32, 64)  # Dimensionality of output space
+        KERNEL = (4,4)  # Convolution width
+        STRIDES = 0  # Stride size
+        USE_POOLING = False
+        NORMAL_CNN_TYPE = 1
+        POOL_SIZE = 0
+    elif value == "1D CNN (over measurements) & Pooling":
+        USE_DEEPSET = False
+        USE_CNN = True
+        FILTERS = (32, 64)  # Dimensionality of output space
+        KERNEL = (4,4)  # Convolution width
+        STRIDES = 0  # Stride size
+        USE_POOLING = True
+        NORMAL_CNN_TYPE = 1
+        POOL_SIZE = 0
+    elif value == "2D CNN (over groups)":
+        USE_DEEPSET = False
+        USE_CNN = True
+        FILTERS = (32, 64)  # Dimensionality of output space
+        KERNEL = ((2, 4), (1, 4))  # Convolution width
+        STRIDES = ((2, 1), (1, 1))  # Stride size
+        USE_POOLING = False
+        NORMAL_CNN_TYPE = 2
+        POOL_SIZE = (6, 1)
+    elif value == "2D CNN (over groups) & Pooling":
+        USE_DEEPSET = False
+        USE_CNN = True
+        FILTERS = (32, 64)  # Dimensionality of output space
+        KERNEL = ((2, 4), (1, 4))  # Convolution width
+        STRIDES = ((2, 1), (1, 1))  # Stride size
+        USE_POOLING = True
+        NORMAL_CNN_TYPE = 2
+        POOL_SIZE = (6, 1)
     elif value == "Deepset":
         USE_DEEPSET = True
         USE_CNN = False
@@ -388,15 +387,10 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
         STRIDES = 0  # Stride size
         USE_POOLING = False
         NORMAL_CNN_TYPE = -1
-        LSTM_UNITS = 0
-        USE_LSTM = False
-        BATCH_NORM = True
+        POOL_SIZE = 0
     else:
         print("Not value value set")
         sys.exit()
-
-
-
 
     """RUN PARAMETERS:"""
     SEED = seed
@@ -449,18 +443,19 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     ACT_FUNC = tf.nn.relu
 
 
-    # BATCH_NORM = False
+    BATCH_NORM = False
     """ NON-TEMPORAL MODEL PARAMETERS: """
     # For deepset:
     PHI_SIZE = (32, 64)
     RHO_SIZE = (64, 32)
     ACT_FUNC_PHI = tf.nn.relu
-    ACT_FUNC_RHO = tf.nn.tanh
+    ACT_FUNC_RHO = tf.nn.relu
     # For CNN's:
     # FILTERS = (15, 15)  # Dimensionality of output space
     # KERNEL = 4  # Convolution width
     # STRIDES = (1,1)  # Stride size
     # USE_POOLING = True
+    # POOL_SIZE = (6,2)
     TEMPORAL_CNN_TYPE = '2D'  # 3D or 2D
     # NORMAL_CNN_TYPE = 1
 
@@ -468,7 +463,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     # 1=1D conv. on measurements dim-With pooling over vehicle dimension then renders it permutation invariant
     # 2=2D conv. on vehicle and measurements dimensions,
     # For LSTM:
-    # LSTM_UNITS = 32
+    LSTM_UNITS = 32
 
 
     if RUN_TYPE == "test":
@@ -504,6 +499,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
             'filters': FILTERS,
             'strides': STRIDES,
             'use_pooling': USE_POOLING,
+            'pool_size': POOL_SIZE,
             # 0=1D conv. on vehicle dim.,
             # 1=1D conv. on measurements dim.,
             # 2=2D conv. on vehicle and measurements dimensions,
@@ -518,7 +514,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     """TRAINING PARAMETERS:"""
     POLICY_ACTION_RATE = 8  # Number of simulator steps before new control action is taken
     MAX_TIMESTEPS = 5e3  # range: 5e3 - 10e3
-    MAX_EPISODES = 1000
+    MAX_EPISODES = 800
     FINAL_RETURN = 1
     SHOW_TRAIN_PLOTS = False
     SAVE_TRAINING = True
@@ -555,7 +551,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     # USE_DEEPSET = False
     # USE_CNN = False
     USE_TEMPORAL_CNN = False
-    # USE_LSTM = False
+    USE_LSTM = False
     ADD_NOISE = False
     REMOVE_STATE_VELOCITY = False
 
@@ -709,30 +705,71 @@ if __name__=="__main__":
         """
         # vehicles = {"slow": 10, "medium": 20, "fast": 5}  # total = 35 // default
 
-        veh_0 = {"slow": 2, "medium": 5, "fast": 1}  # total = 8
-        veh_1 = {"slow": 3, "medium": 8, "fast": 2}  # total = 13
-        veh_2 = {"slow": 4, "medium": 10, "fast": 2} # total = 16
-        veh_3 = {"slow": 6, "medium": 13, "fast": 3} # total = 22
-        veh_4 = {"slow": 8, "medium": 16, "fast": 4} # total = 28
-        veh_5 = {"slow": 10, "medium": 20, "fast": 5} # total = 35
-        veh_6 = {"slow": 12, "medium": 24, "fast": 6} # total = 42
-        veh_7 = {"slow": 15, "medium": 28, "fast": 7} # total = 50
-        veh_8 = {"slow": 20, "medium": 35, "fast": 10} # total = 65
-        veh_9 = {"slow": 25, "medium": 55, "fast": 15}  # total = 95
-        veh_10 = {"slow": 35, "medium": 70, "fast": 25}  # total = 130
+        # veh_0 = {"slow": 2, "medium": 5, "fast": 1}  # total = 8
+        # veh_1 = {"slow": 3, "medium": 8, "fast": 2}  # total = 13
+        # veh_2 = {"slow": 4, "medium": 10, "fast": 2} # total = 16
+        # veh_3 = {"slow": 6, "medium": 13, "fast": 3} # total = 22
+        # veh_4 = {"slow": 8, "medium": 16, "fast": 4} # total = 28
+        # veh_5 = {"slow": 10, "medium": 20, "fast": 5} # total = 35
+        # veh_6 = {"slow": 12, "medium": 24, "fast": 6} # total = 42
+        # veh_7 = {"slow": 15, "medium": 28, "fast": 7} # total = 50
+        # veh_8 = {"slow": 20, "medium": 35, "fast": 10} # total = 65
+        # veh_9 = {"slow": 25, "medium": 55, "fast": 15}  # total = 95
+        # veh_10 = {"slow": 35, "medium": 70, "fast": 25}  # total = 130
 
-        method = "Generalisability_baselines_rerun_with_fix"
+        veh_0 = {"slow": 0, "medium": 0, "fast": 0}  # total = 0
+        veh_1 = {"slow": 2, "medium": 6, "fast": 2}  # total = 10
+        veh_2 = {"slow": 4, "medium": 13, "fast": 3}  # total = 20
+        veh_3 = {"slow": 5, "medium": 20, "fast": 5}  # total = 30
+        veh_4 = {"slow": 7, "medium": 26, "fast": 7}  # total = 40
+        veh_5 = {"slow": 9, "medium": 33, "fast": 8}  # total = 50
+        veh_6 = {"slow": 10, "medium": 40, "fast": 10}  # total = 60
+        veh_7 = {"slow": 12, "medium": 46, "fast": 12}  # total = 70
+        veh_8 = {"slow": 14, "medium": 53, "fast": 13}  # total = 80
+        veh_9 = {"slow": 15, "medium": 60, "fast": 15}  # total = 90
+        veh_10 = {"slow": 17, "medium": 66, "fast": 17}  # total = 100
+
+        run_type = "test"
         parameter = " "
-        run_type = "train"
-        vehicles = veh_5
-        for seed in (100,200,300,400,500):
-            for value in ("DDQN",
-                          "1D CNN with Pooling",
-                          "1D CNN without Pooling",
-                          "2D CNN without pooling",
-                          "Deepset",
-                          "LSTM"):
-                yield run_type, vehicles, method, parameter, seed, value
+        for method in ("Generalisability_double_run_many_veh",
+                       "Generalisability_double_run_few_veh"):
+            if method == "Generalisability_double_run_many_veh":
+                for _ in range(15):
+                    seed = random.randint(101, 499)
+                    for vehicles in (veh_0, veh_1, veh_2, veh_3, veh_4, veh_5, veh_6, veh_7, veh_8, veh_9, veh_10):
+                        for value in ("DDQN",
+                                      "1D CNN (over vehicles)",
+                                      "1D CNN (over measurements)",
+                                      "1D CNN (over measurements) & Pooling",
+                                      "2D CNN (over groups)",
+                                      "2D CNN (over groups) & Pooling",
+                                      "Deepset"):
+                            yield run_type, vehicles, method, parameter, seed, value
+            elif method == "Generalisability_double_run_few_veh":
+                for _ in range(15):
+                    seed = random.randint(101, 499)
+                    for vehicles in (veh_0, veh_1, veh_2, veh_3, veh_4, veh_5, veh_6, veh_7, veh_8, veh_9, veh_10):
+                        for value in ("DDQN",
+                                      "1D CNN (over vehicles)",
+                                      "1D CNN (over measurements)",
+                                      "1D CNN (over measurements) & Pooling",
+                                      "2D CNN (over groups)",
+                                      "2D CNN (over groups) & Pooling",
+                                      "Deepset"):
+                            yield run_type, vehicles, method, parameter, seed, value
+
+        # parameter = " "
+        # run_type = "train"
+        # for _ in range(20):
+        #     seed = random.randint(101, 499)
+        #     for vehicles in (veh_0, veh_1, veh_2, veh_3, veh_4, veh_5, veh_6, veh_7, veh_8, veh_9, veh_10):
+        #         for value in ("DDQN",
+        #                       "1D CNN with Pooling",
+        #                       "1D CNN without Pooling",
+        #                       "2D CNN with pooling"
+        #                       "2D CNN without pooling",
+        #                       "Deepset"):
+        #             yield run_type, vehicles, method, parameter, seed, value
 
     if procs > 1:
         # Schedule all training runs in a parallel loop over multiple cores:
