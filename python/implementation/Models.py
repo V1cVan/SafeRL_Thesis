@@ -23,9 +23,8 @@ class LSTM(keras.Model):
         n_actions = model_param["n_actions"]
         n_timesteps = 4  # Number of stacked measurements considered
 
-        # input_layer = layers.Input(shape=(n_timesteps,n_inputs), name="inputState")
+        input_layer = layers.Input(shape=(n_timesteps,n_inputs), name="inputState")
         # Many-to-one LSTM layer
-        input_layer = layers.Input(shape=(n_inputs,), name="InputState")
 
         LSTM_layer = layers.LSTM(units=n_units_lstm,
                                  name="LSTM")(input_layer)
