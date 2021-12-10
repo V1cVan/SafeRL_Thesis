@@ -4,6 +4,7 @@ import numpy as np
 import random
 from matplotlib import pyplot as plt
 from collections import deque
+import seaborn as sns
 
 
 def add_state_noise(state, is_normal=False, is_uniform=False, magnitude=0.0, mu=0.0, sigma=0.0):
@@ -14,20 +15,31 @@ def add_state_noise(state, is_normal=False, is_uniform=False, magnitude=0.0, mu=
         magnitude = magnitude of gaussian and uniform noise
     """
 
-    show_noise_plot = False
+    show_noise_plot = True
     if show_noise_plot:
         plt.figure()
+        sns.set_style("darkgrid")
+        normal_noise = np.random.normal(mu, sigma, size=10000)
+        low, high = -0.3, 0.3
+        uniform_noise = np.random.uniform(low, high, size=10000)
+        plt.hist(uniform_noise+normal_noise, bins=150, density=True)
+        plt.title("Superimposed normal and uniform noise distributions")
+        plt.grid(True)
+
+        plt.figure()
         plt.subplot(211)
-        normal_noise = np.random.normal(mu, sigma, size=1000)
-        plt.hist(normal_noise, bins=50, density=True)
-        plt.title("Normal Noise")
+        sns.set_style("darkgrid")
+        normal_noise = np.random.normal(mu, sigma, size=10000)
+        plt.hist(normal_noise, bins=150, density=True)
+
         plt.grid(True)
         plt.subplot(212)
-        low, high = -0.1, 0.1
-        uniform_noise = np.random.uniform(low, high, size=1000)
-        plt.hist(uniform_noise, bins=50, density=True)
-        plt.title("Uniform Noise")
+        low, high = -0.3, 0.3
+        uniform_noise = np.random.uniform(low, high, size=10000)
+        plt.hist(uniform_noise, bins=150, density=True)
+
         plt.grid(True)
+
         plt.show()
 
     noisy_state = state
@@ -58,8 +70,8 @@ def add_state_noise(state, is_normal=False, is_uniform=False, magnitude=0.0, mu=
         if size_state == 1:  # Singular state matrix
             noisy_state = state + normal_noise + uniform_noise
         else:  # State matrix has static and dynamic components
-            state_0 = state_0 + normal_noise_0 + uniform_noise_0
-            state_1 = state_1 + normal_noise_1 + uniform_noise_1
+            state_0 = state_0 + 1/2 * normal_noise_0 + 1/2 * uniform_noise_0
+            state_1 = state_1 + 1/2 * normal_noise_1 + 1/2 * uniform_noise_1
             noisy_state = [state_0, state_1]
     elif is_normal and not is_uniform:
         if size_state == 1:  # Singular state matrix
@@ -519,17 +531,27 @@ class DiscreteSingleActionPolicy(CustomPolicy):
         self.agent = agent  # agent = f(NN_model)
         self.STEP_TIME = self.agent.training_param["policy_rate"]
         self.rewards = RewardFunction()
-        if self.agent.training_param['use_temporal_CNN'] or self.agent.training_param["use_LSTM"]:
-            self.stack_frames = True
-            if self.agent.training_param['use_temporal_CNN']:
-                self.stack_cnn_frames = True
-                self.stack_LSTM_frames = False
-            elif self.agent.training_param["use_LSTM"]:
-                self.stack_cnn_frames = False
-                self.stack_LSTM_frames = True
-            self.frame_stack_buffer = deque(maxlen=4)
+        # if self.agent.training_param['use_temporal_CNN'] or self.agent.training_param["use_LSTM"]:
+        #     self.stack_frames = True
+        #     if self.agent.training_param['use_temporal_CNN']:
+        #         self.stack_cnn_frames = True
+        #         self.stack_LSTM_frames = False
+        #     elif self.agent.training_param["use_LSTM"]:
+        #         self.stack_cnn_frames = False
+        #         self.stack_LSTM_frames = True
+        #     self.frame_stack_buffer = deque(maxlen=4)
+        # else:
+        #     self.stack_frames = False
+
+        self.stack_frames = True
+        if self.agent.training_param['use_temporal_CNN']:
+            self.stack_cnn_frames = True
+            self.stack_LSTM_frames = False
         else:
-            self.stack_frames = False
+            self.stack_cnn_frames = False
+            self.stack_LSTM_frames = True
+        self.frame_stack_buffer = deque(maxlen=4)
+
         self.remove_velocity = self.agent.training_param["remove_state_vel"]
 
 

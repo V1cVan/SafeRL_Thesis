@@ -92,24 +92,29 @@ class TemporalCNN(keras.Model):
 
         if cnn_type == '2D':
             self.conv_layer_1 = layers.Conv2D(filters=filters[0],
-                                              kernel_size=(1,kernel),
+                                              kernel_size=kernel[0],
                                               activation=act_func,
                                               data_format="channels_last",
                                               padding='same',
+                                              strides=strides[0],
                                               name="conv_layer_1")(self.dynamic_input)
             if n_layers == 1:
                 self.flatten_layer = layers.Flatten(name="flatten_layer")(self.conv_layer_1)
             else:
                 self.conv_layer_2 = layers.Conv2D(filters=filters[1],
-                                                  kernel_size=(1,int(kernel/2)),
+                                                  kernel_size=kernel[1],
                                                   activation=act_func,
+                                                  strides=strides[1],
                                                   data_format="channels_last",
                                                   name="conv_layer_2")(self.conv_layer_1)
-                self.flatten_layer = layers.Flatten(name="flatten_layer")(self.conv_layer_2)
+                pooling = layers.MaxPooling2D(pool_size=(2, 1))(self.conv_layer_2)
+                self.flatten_layer = layers.Flatten(name="flatten_layer")(pooling)
+
         else:  # cnn_type == '3D'
             self.conv_layer_1 = layers.Conv3D(filters=filters[0],
                                               kernel_size=kernel[0],
                                               activation=act_func,
+                                              strides=strides[0],
                                               data_format="channels_last",
                                               name="conv_layer_1")(self.dynamic_input)
             if n_layers == 1:
@@ -121,7 +126,8 @@ class TemporalCNN(keras.Model):
                                                   strides=strides[1],
                                                   data_format="channels_last",
                                                   name="conv_layer_2")(self.conv_layer_1)
-                self.flatten_layer = layers.Flatten(name="flatten_layer")(self.conv_layer_2)
+                pooling = layers.MaxPooling2D(pool_size=(2, 1))(self.conv_layer_2)
+                self.flatten_layer = layers.Flatten(name="flatten_layer")(pooling)
 
         self.concat_layer = layers.Concatenate(name="ConcatenationLayer")(
             [self.flatten_layer, self.static_input])
@@ -662,8 +668,9 @@ class DeepQNetwork(keras.Model):
         n_inputs = model_param["n_inputs"]
         n_actions = model_param["n_actions"]
 
-        input_layer = layers.Input(shape=(n_inputs,),
+        input_layer0 = layers.Input(shape=(4, n_inputs),
                                    name="inputState")
+        input_layer = layers.Flatten()(input_layer0)
         if len(n_units) == 2:
             dense_layer1 = layers.Dense(units=n_units[0],
                                         activation=act_func,
@@ -696,7 +703,7 @@ class DeepQNetwork(keras.Model):
                 output_layer = layers.Dense(n_actions,
                                             name="Output")(dense_layer3)
 
-        self.model = keras.Model(inputs=input_layer,
+        self.model = keras.Model(inputs=input_layer0,
                                  outputs=output_layer,
                                  trainable=self.model_param["trainable"],
                                  name="DDQN")

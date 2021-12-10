@@ -1,10 +1,23 @@
 import os
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # specify which GPU(s) to be used (1)
 import pickle
 
 from hwsim import Simulation, BasicPolicy, StepPolicy, SwayPolicy, IMPolicy, KBModel, TrackPolicy, CustomPolicy, config
 from hwsim.plotting import Plotter, SimulationPlot, DetailPlot, BirdsEyePlot, TimeChartPlot, ActionsPlot
+
+
+from contextlib import contextmanager
+@contextmanager
+def suppress_stdout():
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:
+            yield
+        finally:
+            sys.stdout = old_stdout
 
 import pathlib
 import random
@@ -24,8 +37,10 @@ import multiprocessing as mp
 import sys
 
 # tf.config.experimental.set_visible_devices([], "GPU")
-physical_devices = tf.config.list_physical_devices('GPU')
+physical_devices = tf.config.list_physical_devices("GPU")
 print(physical_devices)
+
+
 # tf.config.experimental.set_memory_growth(physical_devices[0], True)
 # tf.config.experimental.set_memory_growth(physical_devices[1], True)
 #
@@ -34,8 +49,7 @@ class Main(object):
 
     def __init__(self, n_vehicles, policy, model_param, training_param, tb_logger):
         # ...
-        scenario = sim_type(policy=policy, n_vehicles=n_vehicles)
-        self.sim = Simulation(scenario)
+        self.n_vehicles = n_vehicles
         self.policy = policy
         # Create object for data logging and visualisation
         self.data_logger = DataLogger(model_param, training_param)
@@ -106,16 +120,19 @@ class Main(object):
                 self.simulate(self.training_param["sim_timesteps"])
                 self.policy.agent.epsilon = self.policy.agent.prev_epsilon
 
-            # print("Episode number: %0.2f" % episode_count)
-            # logging.critical("Episode number: %0.2f" % episode_count)
-
             self.episodeTimer.startTime()
             # Set simulation environment
+
+            if self.n_vehicles == "random":
+                scenario = rand_sim_type(policy=self.policy, n_vehicles=self.n_vehicles)
+            else:
+                scenario = sim_type(policy=self.policy, n_vehicles=self.n_vehicles)
+            self.sim = Simulation(scenario)
+
             with self.sim:
                 # Loop through each timestep in episode.
                 # Run the model for one episode to collect training data
-                for t in np.arange(1, max_timesteps+1):
-                    # logging.critical("Timestep of episode: %0.2f" % self.sim.k)
+                for t in np.arange(1, max_timesteps + 1):
 
                     # Perform one simulations step:
                     if not self.sim.stopped:
@@ -123,16 +140,11 @@ class Main(object):
                         self.sim.step()  # Calls AcPolicy.customAction method.
                         custom_action_time = self.custom_action_timer.endTime()
 
-                        # TODO Reformat so that check is done after sim.step()
-                        # TODO maybe add penalties for collisions
-                        # self.policy.agent.stop_flags = self.sim.stopped or self.sim._collision
-                        # if self.policy.agent.stop_flags == True:
-                        #     self.policy.agent.buffer.alter_buffer_stop_flag(flag=self.policy.agent.stop_flags)
                         done = self.sim.stopped  # or self.sim._collision
                         if self.policy.agent.is_action_taken:
                             self.policy.agent.add_experience(done)
                             episode_reward_list.append(self.policy.agent.latest_experience[2])
-                            curr_veh_speed = self.sim.vehicles[0].s["vel"][0]*3.6
+                            curr_veh_speed = self.sim.vehicles[0].s["vel"][0] * 3.6
                             vehicle_speeds.append(curr_veh_speed)
 
                     if t % self.training_param["policy_rate"] == 0:
@@ -142,7 +154,6 @@ class Main(object):
                         if self.policy.agent.buffer.is_buffer_min_size():
                             model_update_counter += 1
                             if model_update_counter % self.training_param["model_update_rate"] == 0:
-                                # TODO add data to episode buffer to get episode rewards while training.
                                 self.training_timer.startTime()
                                 mean_batch_reward, loss, td_error, grads, clipped_grads = self.policy.agent.train_step()
                                 epsilon = self.policy.agent.epsilon
@@ -157,17 +168,12 @@ class Main(object):
                                 self.policy.agent.update_target_net()
                                 # print("Updated target net.")
 
-            reward = np.sum(episode_reward_list)/len(episode_reward_list)
+            reward = np.sum(episode_reward_list) / len(episode_reward_list)
 
             time_taken_episode = self.episodeTimer.endTime()
-            # print(f"Time taken for episode{episode_count}={time_taken_episode}")
-            # if trained and episode_count % 50 == 0:
-            #     self.policy.agent.Q_actual_net.save_weights(self.model_param["weights_file_path"])
-            #     print("Saved network weights.")
-
+            # print(f"Time for episode = {time_taken_episode}")
             # Running reward smoothing effect
             running_reward = 0.05 * reward + (1 - 0.05) * running_reward
-
 
             if episode_count % 50 == 0 and trained:
                 if self.training_param["use_per"]:
@@ -176,7 +182,8 @@ class Main(object):
                                                          beta, time_taken_episode)
                 else:
                     print_template = "Running reward = {:.3f} ({:.3f}) at episode {}. Loss = {:.3f}. Epsilon = {:.3f}. Episode timer = {:.3f}"
-                    print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon, time_taken_episode)
+                    print_output = print_template.format(running_reward, reward, episode_count, loss, epsilon,
+                                                         time_taken_episode)
 
                 print(print_output)
                 # logging.critical(print_output)
@@ -194,7 +201,8 @@ class Main(object):
             # self.tb_logger.save_variable("Episode losses (sum)", x=episode_count, y=np.sum(episode_losses))
             # self.tb_logger.save_variable("Episode TD errors (sum)", x=episode_count, y=np.sum(episode_td_errors))
             # self.tb_logger.save_variable("Total episode reward (sum)", x=episode_count, y=np.sum(episode_reward_list))
-            self.tb_logger.save_variable("Reward", x=episode_count, y=np.sum(episode_reward_list)/len(episode_reward_list))
+            self.tb_logger.save_variable("Reward", x=episode_count,
+                                         y=np.sum(episode_reward_list) / len(episode_reward_list))
             # self.tb_logger.save_variable("Total time taken for episode", x=episode_count, y=time_taken_episode)
             # self.tb_logger.save_variable("Total time taken for custom action", x=episode_count, y=custom_action_time)
             # self.tb_logger.save_variable("Total time taken for training iteration", x=episode_count, y=train_time)
@@ -211,19 +219,15 @@ class Main(object):
                     except:
                         self.tb_logger.save_variable(name='Epsilon', x=episode_count, y=self.policy.agent.epsilon)
 
-
             # TODO time taken for inferenece and time taken for training step
 
             # Save model weights and biases and gradients of backprop.
-            # TODO fix deepset model so that we can save layer names
             # self.tb_logger.save_weights_gradients(episode=episode_count,
             #                                  model=self.policy.agent.Q_actual_net,
             #                                  grads=grads,
             #                                  clipped_grads=clipped_grads)
 
-
-
-                # self.data_logger.save_xls("./models/training_variables.xls")
+            # self.data_logger.save_xls("./models/training_variables.xls")
             if running_reward >= self.training_param["final_return"] \
                     or episode_count == self.training_param["max_episodes"]:
                 print_output = "Solved at episode {}!".format(episode_count)
@@ -251,7 +255,7 @@ class Main(object):
             mean_episode_speed = []
             with self.sim:
                 # self.create_plot()
-                while not self.sim.stopped and steps<simulation_timesteps: #and not self.p.closed:
+                while not self.sim.stopped and steps < simulation_timesteps:  # and not self.p.closed:
                     self.sim.step()
                     # if print_counter % 10 == 0:
                     #     print(self.policy.agent.epsilon)
@@ -286,11 +290,19 @@ class Main(object):
         self.policy.agent.evaluation = False
         self.policy.agent.training = True
 
-def sim_type(policy, n_vehicles):
+
+def rand_sim_type(policy, n_vehicles):
     # Randomised highway
-    n_slow_veh = n_vehicles["slow"]
-    n_normal_veh = n_vehicles["medium"]
-    n_fast_veh = n_vehicles["fast"]
+    # n_slow_veh = n_vehicles["slow"]
+    # n_normal_veh = n_vehicles["medium"]
+    # n_fast_veh = n_vehicles["fast"]
+    # n_step = n_vehicles["step"]
+    # n_sway = n_vehicles["sway"]
+    # n_im = n_vehicles["im"]
+    safetyCfg = {
+        "Mvel": 1.0,
+        "Gth": 2.0
+    }
     sim_config = {
         "name": "Dense_Highway_Circuit",
         "scenario": "CIRCUIT",
@@ -299,16 +311,47 @@ def sim_type(policy, n_vehicles):
         "replay": False,
         "vehicles": [
             {"amount": 1, "model": KBModel(), "policy": policy, "D_MAX": 160},
-            # {"amount": 2, "model": KBModel(), "policy": StepPolicy(10, [0.1, 0.5])},
-            # {"amount": 1, "model": KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
-            # {"amount": 8, "model": KBModel(), "policy": IMPolicy()},
-            # {"model": KBModel(), "policy": FixedLanePolicy(18), "R": 0, "l": 3.6, "s": random.random()*200, "v": 18},
+            {"amount": np.random.randint(1,9), "model": KBModel(), "policy": StepPolicy(np.random.randint(15,150),
+                                                                        [np.random.randint(1,4)/10.0,
+                                                                         np.random.randint(5,9)/10.0])},
+            {"amount": np.random.randint(1,2), "model":  KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
+            # {"amount": n_im, "model": KBModel(), "policy": IMPolicy()},
+            {"amount": np.random.randint(2,10), "model": KBModel(), "policy": BasicPolicy("slow")},
+            {"amount": np.random.randint(10,18), "model": KBModel(), "policy": BasicPolicy("normal")},
+            {"amount": np.random.randint(5,20), "model": KBModel(), "policy": BasicPolicy("fast")}
+        ]
+    }
+    return sim_config
+
+def sim_type(policy, n_vehicles):
+    # Randomised highway
+    n_slow_veh = n_vehicles["slow"]
+    n_normal_veh = n_vehicles["medium"]
+    n_fast_veh = n_vehicles["fast"]
+    n_step = n_vehicles["step"]
+    n_sway = n_vehicles["sway"]
+    n_im = n_vehicles["im"]
+    safetyCfg = {
+        "Mvel": 1.0,
+        "Gth": 2.0
+    }
+    sim_config = {
+        "name": "Dense_Highway_Circuit",
+        "scenario": "CIRCUIT",
+        # "kM": 0,  # Max timesteps per episode enforced by simulator
+        "k0": 0,
+        "replay": False,
+        "vehicles": [
+            {"amount": 1, "model": KBModel(), "policy": policy, "D_MAX": 160},
+            # {"amount": n_step, "mode  KBModel(), "policy": SwayPolicy(), "N_OV": 2, "safety": safetyCfg},
+            # {"amount": n_im, "model": KBModel(), "policy": IMPolicy()},
             {"amount": n_slow_veh, "model": KBModel(), "policy": BasicPolicy("slow")},
             {"amount": n_normal_veh, "model": KBModel(), "policy": BasicPolicy("normal")},
             {"amount": n_fast_veh, "model": KBModel(), "policy": BasicPolicy("fast")}
         ]
     }
     return sim_config
+
 
 def start_run(run_type, vehicles, method, parameter, seed, value):
     # Start training loop using given arguments here..
@@ -317,81 +360,68 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     config.scenarios_path = str(SC_PATH)
     # current_time = datetime.datetime.now().strftime("%Y-%m-%d-%Hh%Mm")
 
-    # parameter in
-    # ('Number of filters - 1 convolution', 'Kernel size - 1 convolution',
-    # 'Number of filters - 2 convolutions', 'Kernel size - 2 convolutions'):
-
-    # 0=1D conv. on vehicle dim.,
-    # 1=1D conv. on measurements dim.,
-    # 2=2D conv. on vehicle and measurements dimensions,
-    # CNN Tuning:
-    if value == "DDQN":
-        USE_DEEPSET = False
-        USE_CNN = False
-        FILTERS = (0)  # Dimensionality of output space
-        KERNEL = 0  # Convolution width
-        STRIDES = 0  # Stride size
-        USE_POOLING = False
-        NORMAL_CNN_TYPE = -1
-        POOL_SIZE = 0
-    elif value == "1D CNN (over vehicles)":
-        USE_DEEPSET = False
-        USE_CNN = True
-        FILTERS = (32, 64)  # Dimensionality of output space
-        KERNEL = (12,12)  # Convolution width
-        STRIDES = 0  # Stride size
-        USE_POOLING = False
-        NORMAL_CNN_TYPE = 0
-        POOL_SIZE = 0
-    elif value == "1D CNN (over measurements)":
-        USE_DEEPSET = False
-        USE_CNN = True
-        FILTERS = (32, 64)  # Dimensionality of output space
-        KERNEL = (4,4)  # Convolution width
-        STRIDES = 0  # Stride size
-        USE_POOLING = False
-        NORMAL_CNN_TYPE = 1
-        POOL_SIZE = 0
-    elif value == "1D CNN (over measurements) & Pooling":
-        USE_DEEPSET = False
-        USE_CNN = True
-        FILTERS = (32, 64)  # Dimensionality of output space
-        KERNEL = (4,4)  # Convolution width
-        STRIDES = 0  # Stride size
-        USE_POOLING = True
-        NORMAL_CNN_TYPE = 1
-        POOL_SIZE = 0
-    elif value == "2D CNN (over groups)":
-        USE_DEEPSET = False
-        USE_CNN = True
-        FILTERS = (32, 64)  # Dimensionality of output space
-        KERNEL = ((2, 4), (1, 4))  # Convolution width
-        STRIDES = ((2, 1), (1, 1))  # Stride size
-        USE_POOLING = False
-        NORMAL_CNN_TYPE = 2
-        POOL_SIZE = (6, 1)
-    elif value == "2D CNN (over groups) & Pooling":
-        USE_DEEPSET = False
-        USE_CNN = True
-        FILTERS = (32, 64)  # Dimensionality of output space
-        KERNEL = ((2, 4), (1, 4))  # Convolution width
-        STRIDES = ((2, 1), (1, 1))  # Stride size
-        USE_POOLING = True
-        NORMAL_CNN_TYPE = 2
-        POOL_SIZE = (6, 1)
-    elif value == "Deepset":
-        USE_DEEPSET = True
-        USE_CNN = False
-        FILTERS = 0  # Dimensionality of output space
-        KERNEL = 0  # Convolution width
-        STRIDES = 0  # Stride size
-        USE_POOLING = False
-        NORMAL_CNN_TYPE = -1
-        POOL_SIZE = 0
+    # Temporal Tuning:
+    if parameter == "Without state velocity":
+        REMOVE_STATE_VELOCITY = True
+        if value == "DDQN":
+            N_UNITS = (64, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = False
+        elif value == "Temporal CNN":
+            N_UNITS = (48, 32)
+            FILTERS = (48, 86)  # Dimensionality of output space
+            KERNEL = ((4, 4), (2, 2))  # Convolution width
+            STRIDES = ((2, 2), (1, 1))  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = True
+            USE_LSTM = False
+        elif value == "LSTM":
+            N_UNITS = (48, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = 64
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = True
+        else:
+            print("value not set properly")
+            sys.exit()
+    elif parameter == "With state velocity":
+        REMOVE_STATE_VELOCITY = False
+        if value == "DDQN":
+            N_UNITS = (64, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = False
+        elif value == "Temporal CNN":
+            N_UNITS = (48, 32)
+            FILTERS = (48, 86)  # Dimensionality of output space
+            KERNEL = ((4,4), (2,2))  # Convolution width
+            STRIDES = ((2,2), (1,1))  # Stride size
+            LSTM_UNITS = None
+            USE_TEMPORAL_CNN = True
+            USE_LSTM = False
+        elif value == "LSTM":
+            N_UNITS = (48, 32)
+            FILTERS = None  # Dimensionality of output space
+            KERNEL = None  # Convolution width
+            STRIDES = None  # Stride size
+            LSTM_UNITS = 64
+            USE_TEMPORAL_CNN = False
+            USE_LSTM = True
+        else:
+            print("value not set properly")
+            sys.exit()
     else:
-        print("Not value value set")
+        print("parameter value not set properly")
         sys.exit()
-
     """RUN PARAMETERS:"""
     SEED = seed
     RUN_TYPE = run_type  # "train"/test
@@ -415,10 +445,11 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     # For method comparison
     # RUN_INFO = arg1 + "=" + str(arg3)
 
-    total_vehicles = vehicles["slow"]+vehicles["medium"]+vehicles["fast"]
-
+    # total_vehicles = vehicles["slow"] + vehicles["medium"] + vehicles["fast"]
+    total_vehicles = 0
     if RUN_TYPE == "train":
-        SAVE_DIRECTORY = "logfiles/"+RUN_NAME+"/"+RUN_TYPE+"/Seed"+str(SEED)+"-Details=" + str(RUN_INFO)
+        SAVE_DIRECTORY = "logfiles/" + RUN_NAME + "/" + RUN_TYPE + "/Seed" + str(
+            SEED) + "-Details=" + str(RUN_INFO)
     else:
         SAVE_DIRECTORY = "logfiles/" + RUN_NAME + "/" + RUN_TYPE + "/Seed" + str(SEED) + "-n_veh=" + str(
             total_vehicles) + "-Details=" + str(RUN_INFO)
@@ -437,11 +468,14 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
 
     """ BASE MODEL PARAMETERS:"""
     # Base parameters (DDQN):
-    N_UNITS = (32, 32)  # TODO Tuning for temporal networks
-    N_INPUTS = 55
+    # N_UNITS = (32, 32)
+    # REMOVE_STATE_VELOCITY = True
+    if REMOVE_STATE_VELOCITY == True:
+        N_INPUTS = 31
+    else:
+        N_INPUTS = 55
     N_ACTIONS = 5
     ACT_FUNC = tf.nn.relu
-
 
     BATCH_NORM = False
     """ NON-TEMPORAL MODEL PARAMETERS: """
@@ -453,24 +487,24 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     # For CNN's:
     # FILTERS = (15, 15)  # Dimensionality of output space
     # KERNEL = 4  # Convolution width
-    # STRIDES = (1,1)  # Stride size
-    # USE_POOLING = True
-    # POOL_SIZE = (6,2)
+    # STRIDES = (1, 1)  # Stride size
+    USE_POOLING = False
     TEMPORAL_CNN_TYPE = '2D'  # 3D or 2D
-    # NORMAL_CNN_TYPE = 1
-
+    NORMAL_CNN_TYPE = 1
     # 0=1D conv. on vehicle dim.,
     # 1=1D conv. on measurements dim-With pooling over vehicle dimension then renders it permutation invariant
     # 2=2D conv. on vehicle and measurements dimensions,
     # For LSTM:
-    LSTM_UNITS = 32
+    # LSTM_UNITS = 32
+
 
 
     if RUN_TYPE == "test":
-        MODEL_FILE_PATH = "logfiles/"+RUN_NAME+"/"+"train"+"/Seed"+str(500)+"-Details="+str(RUN_INFO)+"/"
-    elif RUN_TYPE =="train":
+        MODEL_FILE_PATH = "logfiles/" + RUN_NAME + "/" + "train" + "/Seed" + str(500) + "-Details=" + str(
+            RUN_INFO) + "/"
+    elif RUN_TYPE == "train":
         MODEL_FILE_PATH = "logfiles/" + RUN_NAME + "/" + "train" + "/Seed" + str(SEED) + "-Details=" + str(
-            RUN_INFO)+"/"
+            RUN_INFO) + "/"
     if RUN_TYPE == "train":
         TRAINABLE = True
     elif RUN_TYPE == "test":
@@ -481,14 +515,16 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
 
     model_param = {
         "n_units": N_UNITS,
-        "n_inputs": N_INPUTS, # TODO change n_units when removing velocity from state measurement!
+        "n_inputs": N_INPUTS,  # TODO change n_units when removing velocity from state measurement!
         "n_actions": N_ACTIONS,
         "activation_function": ACT_FUNC,
         "weights_file_path": MODEL_FILE_PATH,
         "seed": SEED,
         "trainable": TRAINABLE,  # For batch normalisation to freeze layers
         "batch_normalisation": BATCH_NORM,
-        "deepset_param":{
+        'remove_velocity': REMOVE_STATE_VELOCITY,
+        "deepset_param": {
+
             "n_units_phi": PHI_SIZE,
             "act_func_phi": ACT_FUNC_PHI,
             "n_units_rho": RHO_SIZE,
@@ -499,15 +535,14 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
             'filters': FILTERS,
             'strides': STRIDES,
             'use_pooling': USE_POOLING,
-            'pool_size': POOL_SIZE,
             # 0=1D conv. on vehicle dim.,
             # 1=1D conv. on measurements dim.,
             # 2=2D conv. on vehicle and measurements dimensions,
             'normal_CNN_type': NORMAL_CNN_TYPE,
-            'temporal_CNN_type': TEMPORAL_CNN_TYPE, # 2D or 3D
+            'temporal_CNN_type': TEMPORAL_CNN_TYPE,  # 2D or 3D
         },
         "LSTM_param": {
-            'n_units': LSTM_UNITS
+            'n_units': LSTM_UNITS,
         }
     }
 
@@ -548,13 +583,14 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     # Model types:
     USE_TARGET_NETWORK = True
     USE_DUELLING = False
-    # USE_DEEPSET = False
-    # USE_CNN = False
-    USE_TEMPORAL_CNN = False
-    USE_LSTM = False
-    ADD_NOISE = False
-    REMOVE_STATE_VELOCITY = False
+    USE_DEEPSET = False
+    USE_CNN = False
+    # USE_TEMPORAL_CNN = False
+    # USE_LSTM = False
+    # REMOVE_STATE_VELOCITY  -- MOVED UP
+    ADD_NOISE = True
 
+    # RewardFunction().plot_reward_functions()
     training_param = {
         "max_timesteps": MAX_TIMESTEPS,
         "max_episodes": MAX_EPISODES,
@@ -590,7 +626,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
         "use_CNN": USE_CNN,
         "use_temporal_CNN": USE_TEMPORAL_CNN,
         "use_LSTM": USE_LSTM,
-        "noise_param": {"use_noise": ADD_NOISE, "magnitude": 0.1, "normal": True, "mu": 0.0, "sigma": 0.1,
+        "noise_param": {"use_noise": ADD_NOISE, "magnitude": 0.05, "normal": True, "mu": 0.0, "sigma": 0.707,
                         "uniform": True},
         "remove_state_vel": REMOVE_STATE_VELOCITY
     }
@@ -612,10 +648,10 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     if USE_DEEPSET:
         DQ_net = DeepSetQNetwork(model_param=model_param)
         DQ_target_net = DeepSetQNetwork(model_param=model_param)
-    elif USE_CNN and not USE_TEMPORAL_CNN:
+    elif USE_CNN :
         DQ_net = CNN(model_param=model_param)
         DQ_target_net = CNN(model_param=model_param)
-    elif USE_CNN and USE_TEMPORAL_CNN:
+    elif USE_TEMPORAL_CNN:
         DQ_net = TemporalCNN(model_param=model_param)
         DQ_target_net = TemporalCNN(model_param=model_param)
     elif USE_DUELLING:
@@ -649,12 +685,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
 
     dqn_policy = DiscreteSingleActionPolicy(agent=dqn_agent)
 
-    # RewardFunction().plot_reward_functions()
 
-    # TODO check LSTM inputs dimensions to and from buffers and to and from models
-    # TODO check CNN dimensions to and from buffers and to and from models
-    # TODO tune CNN, lstm
-    # TODO test noise and generalisation-(diff # vehicles and diff types vehicles)
 
     # Set up main class for running simulations:
     main = Main(n_vehicles=run_settings["n_vehicles"],
@@ -678,21 +709,25 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
         # Simulate model:
         main.policy.agent.Q_actual_net.load_weights(MODEL_FILE_PATH)
         main.policy.agent.evaluation = True
-        main.simulate(simulation_timesteps=SIM_TIMESTEPS, simulation_episodes=SIM_EPISODES, total_vehicles=total_vehicles)
+        main.simulate(simulation_timesteps=SIM_TIMESTEPS, simulation_episodes=SIM_EPISODES,
+                      total_vehicles=total_vehicles)
     else:
         main.train_policy()
 
     print(f"Number Veh={vehicles}; Method={method}; Parameter={parameter}; Value={value}")
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
+
     run_timer = Timer("Run timer")
     run_timer.startTime()
 
-    PROCS = 32  # Number of cores to use
+    PROCS = 1  # Number of cores to use
     mp.set_start_method("spawn")  # Make sure different workers have different seeds if applicable
     P = mp.cpu_count()  # Number of available cores
     procs = max(min(PROCS, P), 1)  # Clip number of procs to [1;P]
 
+    # with tf.device('/CPU:0'):
     def param_gen():
         """
         This function yields all the parameter combinations to try...
@@ -705,71 +740,37 @@ if __name__=="__main__":
         """
         # vehicles = {"slow": 10, "medium": 20, "fast": 5}  # total = 35 // default
 
-        # veh_0 = {"slow": 2, "medium": 5, "fast": 1}  # total = 8
-        # veh_1 = {"slow": 3, "medium": 8, "fast": 2}  # total = 13
-        # veh_2 = {"slow": 4, "medium": 10, "fast": 2} # total = 16
-        # veh_3 = {"slow": 6, "medium": 13, "fast": 3} # total = 22
-        # veh_4 = {"slow": 8, "medium": 16, "fast": 4} # total = 28
-        # veh_5 = {"slow": 10, "medium": 20, "fast": 5} # total = 35
-        # veh_6 = {"slow": 12, "medium": 24, "fast": 6} # total = 42
-        # veh_7 = {"slow": 15, "medium": 28, "fast": 7} # total = 50
-        # veh_8 = {"slow": 20, "medium": 35, "fast": 10} # total = 65
-        # veh_9 = {"slow": 25, "medium": 55, "fast": 15}  # total = 95
-        # veh_10 = {"slow": 35, "medium": 70, "fast": 25}  # total = 130
+        veh_0 = {"slow": 2, "medium": 5, "fast": 1}  # total = 8
+        veh_1 = {"slow": 3, "medium": 8, "fast": 2}  # total = 13
+        veh_2 = {"slow": 4, "medium": 10, "fast": 2}  # total = 16
+        veh_3 = {"slow": 6, "medium": 13, "fast": 3}  # total = 22
+        veh_4 = {"slow": 8, "medium": 16, "fast": 4}  # total = 28
+        veh_5 = {"slow": 10, "medium": 20, "fast": 5, "im": 0, "step": 0, "sway": 0}  # total = 35
+        veh_6 = {"slow": 12, "medium": 24, "fast": 6}  # total = 42
+        veh_7 = {"slow": 15, "medium": 28, "fast": 7}  # total = 50
+        veh_8 = {"slow": 20, "medium": 35, "fast": 10}  # total = 65
+        veh_9 = {"slow": 25, "medium": 55, "fast": 15}  # total = 95
+        veh_10 = {"slow": 35, "medium": 70, "fast": 25}  # total = 130
 
-        veh_0 = {"slow": 0, "medium": 0, "fast": 0}  # total = 0
-        veh_1 = {"slow": 2, "medium": 6, "fast": 2}  # total = 10
-        veh_2 = {"slow": 4, "medium": 13, "fast": 3}  # total = 20
-        veh_3 = {"slow": 5, "medium": 20, "fast": 5}  # total = 30
-        veh_4 = {"slow": 7, "medium": 26, "fast": 7}  # total = 40
-        veh_5 = {"slow": 9, "medium": 33, "fast": 8}  # total = 50
-        veh_6 = {"slow": 10, "medium": 40, "fast": 10}  # total = 60
-        veh_7 = {"slow": 12, "medium": 46, "fast": 12}  # total = 70
-        veh_8 = {"slow": 14, "medium": 53, "fast": 13}  # total = 80
-        veh_9 = {"slow": 15, "medium": 60, "fast": 15}  # total = 90
-        veh_10 = {"slow": 17, "medium": 66, "fast": 17}  # total = 100
+        run_type = "train"
+        veh_many_fast = {"slow": 10, "medium": 10, "fast": 20, "im": 0, "step": 0, "sway": 0}  # total = 40
+        veh_extended = {"slow": 8, "medium": 18, "fast": 8, "im": 2, "step": 3, "sway": 1}  # total = 40
+        veh_stress = {"slow": 10, "medium": 15, "fast": 17, "im": 4, "step": 6, "sway": 2}  # total = 54
+        method = "Report Test"
+        for vehicles in ("random", veh_5):
+            for parameter in ("With state velocity", "Without state velocity" ):
+                for seed in (100, 200, 300, 400, 500):
+                    if parameter == "With state velocity":
+                        for value in ("DDQN", "Temporal CNN", "LSTM"):
 
-        run_type = "test"
-        parameter = " "
-        for method in ("Generalisability_double_run_many_veh",
-                       "Generalisability_double_run_few_veh"):
-            if method == "Generalisability_double_run_many_veh":
-                for _ in range(15):
-                    seed = random.randint(101, 499)
-                    for vehicles in (veh_0, veh_1, veh_2, veh_3, veh_4, veh_5, veh_6, veh_7, veh_8, veh_9, veh_10):
-                        for value in ("DDQN",
-                                      "1D CNN (over vehicles)",
-                                      "1D CNN (over measurements)",
-                                      "1D CNN (over measurements) & Pooling",
-                                      "2D CNN (over groups)",
-                                      "2D CNN (over groups) & Pooling",
-                                      "Deepset"):
                             yield run_type, vehicles, method, parameter, seed, value
-            elif method == "Generalisability_double_run_few_veh":
-                for _ in range(15):
-                    seed = random.randint(101, 499)
-                    for vehicles in (veh_0, veh_1, veh_2, veh_3, veh_4, veh_5, veh_6, veh_7, veh_8, veh_9, veh_10):
-                        for value in ("DDQN",
-                                      "1D CNN (over vehicles)",
-                                      "1D CNN (over measurements)",
-                                      "1D CNN (over measurements) & Pooling",
-                                      "2D CNN (over groups)",
-                                      "2D CNN (over groups) & Pooling",
-                                      "Deepset"):
+                    elif parameter == "Without state velocity":
+                        for value in ("DDQN", "Temporal CNN", "LSTM"):
                             yield run_type, vehicles, method, parameter, seed, value
+                    else:
+                        print("Parameter naming error")
+                        sys.exit()
 
-        # parameter = " "
-        # run_type = "train"
-        # for _ in range(20):
-        #     seed = random.randint(101, 499)
-        #     for vehicles in (veh_0, veh_1, veh_2, veh_3, veh_4, veh_5, veh_6, veh_7, veh_8, veh_9, veh_10):
-        #         for value in ("DDQN",
-        #                       "1D CNN with Pooling",
-        #                       "1D CNN without Pooling",
-        #                       "2D CNN with pooling"
-        #                       "2D CNN without pooling",
-        #                       "Deepset"):
-        #             yield run_type, vehicles, method, parameter, seed, value
 
     if procs > 1:
         # Schedule all training runs in a parallel loop over multiple cores:
@@ -782,5 +783,5 @@ if __name__=="__main__":
         for args in param_gen():
             start_run(*args)
 
-    print(f"Total run time = {run_timer.endTime()/60} minutes.")
+    print(f"Total run time = {run_timer.endTime() / 60} minutes.")
     print("EOF")

@@ -42,11 +42,12 @@ class DqnAgent(keras.models.Model):
             self.use_deepset_or_cnn = False
 
         # Set parameter which changes sampling behaviour of training buffer if a certain CNN or LSTM are used
-        if training_param["use_LSTM"] or \
-                (training_param["use_temporal_CNN"]):
-            use_frame_stacking = True
-        else:
-            use_frame_stacking = False
+        # if training_param["use_LSTM"] or \
+        #         (training_param["use_temporal_CNN"]):
+        #     use_frame_stacking = True
+        # else:
+        #     use_frame_stacking = False
+        use_frame_stacking = True
 
         if training_param["use_per"]:
             self.buffer = PerTrainingBuffer(buffer_size=training_param["buffer_size"],
