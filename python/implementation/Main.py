@@ -20,19 +20,11 @@ def suppress_stdout():
             sys.stdout = old_stdout
 
 import pathlib
-import random
-import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 from Agents import *
 from Policies import *
 from HelperClasses import *
 from Models import *
-import logging
-from matplotlib import pyplot as plt
-import time
-import datetime
+
 import multiprocessing as mp
 import sys
 
@@ -218,8 +210,6 @@ class Main(object):
                         self.tb_logger.save_variable(name='Epsilon', x=episode_count, y=epsilon)
                     except:
                         self.tb_logger.save_variable(name='Epsilon', x=episode_count, y=self.policy.agent.epsilon)
-
-            # TODO time taken for inferenece and time taken for training step
 
             # Save model weights and biases and gradients of backprop.
             # self.tb_logger.save_weights_gradients(episode=episode_count,
