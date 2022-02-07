@@ -465,6 +465,7 @@ class Vehicle : public VehicleBase{
             // TODO: use max(EPS,safety.Moff) to ensure some slack between the no-overlap and overlap cases
             const bool overlapCrit = ov.gap[1] < safety.Moff;// Overlap criterion: True if vehicles overlap laterally, False otherwise
             const bool noOverlapCrit = ov.gap[1] > -safety.Moff;// No-overlap criterion (ensuring some extra slack between overlap and no-overlap)
+            static constexpr double MAX_VEL_RIGHT_OVERTAKE = 10;// Allow right overtakes when other vehicle's velocity is below this threshold.
             if(noOverlapCrit && !brakeCrit){
                 // There is no lateral overlap and the BRAKING_GAP threshold cannot be guaranteed => bound lateral movement
                 if(ov.off[1]>0){
@@ -490,6 +491,15 @@ class Vehicle : public VehicleBase{
                     innerBounds[1] = std::fmax(innerBounds[1], leftOff);
                     assert(innerBounds[0]<=innerBounds[1]);
                 }
+            }
+            if(noOverlapCrit && ov.off[1]<0 && ov.off[0]<0 && s.vel[0]-ov.vel[0]>MAX_VEL_RIGHT_OVERTAKE){
+                // There is no lateral overlap with a vehicle to the left and front of us that we cannot overtake
+                // (i.e. it is travelling faster than the maximum velocity threshold for right overtakes)
+                const double vM = (ov.gap[0]>safety.Gth) ? maxGapVel(vL, ov.gap[0]-safety.Gth) : vL;
+                // When the vehicles are near (within the safety gap), the maximum velocity is bounded by the
+                // leading vehicle (in the left lane) ; otherwise, the maximum velocity is bounded by the
+                // maxGapVel.
+                velBounds[1] = std::fmin(velBounds[1], vM);
             }
         }
 
@@ -541,6 +551,14 @@ class Vehicle : public VehicleBase{
             // velocity 'vL' of the leading vehicle.
             const double MAX_DEC = -model->inputBounds[0].longAcc;
             return std::sqrt(std::fmax(0.0,2*MAX_DEC*(gap-safety.Gth)+vL*vL));
+        }
+
+        inline double maxGapVel(const double vL, const double gap) const{
+            // Calculates the maximum longitudinal velocity for which we can still
+            // brake/accelerate in time to reach the leading velocity 'vL' when gap
+            // becomes zero.
+            const double ACC = (gap>0) ? -model->inputBounds[0].longAcc : model->inputBounds[1].longAcc;
+            return vL + Utils::sign(gap)*std::sqrt(2*ACC*std::abs(gap));
         }
 
         inline void updateSafetyBounds(){

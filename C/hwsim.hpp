@@ -64,6 +64,7 @@ extern "C"{
     struct vProps{
         // Vehicle properties
         double size[3];
+        double vel;
         double mass;
     };
 

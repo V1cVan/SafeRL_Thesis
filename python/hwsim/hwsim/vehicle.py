@@ -24,7 +24,7 @@ class Vehicle(object):
         self.model = model
         self.policy = policy
         self._metrics = metrics
-        self.metrics = dict((field, None) for metric in metrics for field in metric.fields)
+        self.metrics = dict((field, np.nan) for metric in metrics for field in metric.fields)
         # Save some constant vehicle properties:
         self.size = np.empty(3,np.float64)
         simLib.veh_size(self._h,self.size.ctypes.data_as(POINTER(c_double)))

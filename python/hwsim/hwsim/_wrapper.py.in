@@ -82,16 +82,19 @@ class VehConfig(Structure):
 
 class VehProps(Structure):
     _fields_ = [("size",c_double * 3),
+                ("vel",c_double),
                 ("mass",c_double)]
 
-    def __init__(self,size=None,mass=1000):
+    def __init__(self,size=None,vel=1,mass=1000):
         if size is None:
             size = [2,4,2]
         assert len(size)==3
         for dim in size:
             assert dim>0
+        assert 0 <= vel <= 1
         assert mass>0
         self.size = (c_double * 3)(*size)
+        self.vel = vel
         self.mass = mass
 
 class VehInitialState(BaseStructure):

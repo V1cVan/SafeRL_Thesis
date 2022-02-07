@@ -80,6 +80,8 @@ class Simulation(object):
             "safety": sConfig.get("safety", {}), # Uses defaults in _wrapper
             "minSize": [4,1.6,1.5],
             "maxSize": [5,2.1,2],
+            "minVel": 0.7,
+            "maxVel": 1,
             "minMass": 1500,
             "maxMass": 3000
         }
@@ -236,7 +238,7 @@ class Simulation(object):
         and are otherwise randomly initialized.
         * In case you do not care about initial positions of vehicles, a whole 'fleet' of vehicles
         can also be configured (vehicle types). In this case you can only specify minimum and maximum
-        bounds on the vehicles' sizes and masses.
+        bounds on the vehicles' sizes, initial relative velocities and masses.
         """
         self._simCfg["input_dir"] = ""
         if not isinstance(data, typing.List):
@@ -282,7 +284,7 @@ class Simulation(object):
             # Properties
             size = [random.uniform(sMin,sMax) for (sMin,sMax) in zip(self._vehCfgDefaults["minSize"],self._vehCfgDefaults["maxSize"])]
             mass = random.uniform(self._vehCfgDefaults["minMass"],self._vehCfgDefaults["maxMass"])
-            vehDef.props = VehProps(vEntry.get("size",size),vEntry.get("mass",mass))
+            vehDef.props = VehProps(vEntry.get("size",size),0,vEntry.get("mass",mass))
             # Initial state
             vehDef.init = VehInitialState(
                 vEntry["R"],vEntry["s"],vEntry["l"],
@@ -297,10 +299,12 @@ class Simulation(object):
             vehType.cfg = vehConfig
             minSize = vEntry.setdefault("minSize",self._vehCfgDefaults["minSize"])
             maxSize = vEntry.setdefault("maxSize",self._vehCfgDefaults["maxSize"])
+            minVel = vEntry.setdefault("minVel",self._vehCfgDefaults["minVel"])
+            maxVel = vEntry.setdefault("maxVel",self._vehCfgDefaults["maxVel"])
             minMass = vEntry.setdefault("minMass",self._vehCfgDefaults["minMass"])
             maxMass = vEntry.setdefault("maxMass",self._vehCfgDefaults["maxMass"])
-            vehType.pBounds[0] = VehProps(minSize,minMass)
-            vehType.pBounds[1] = VehProps(maxSize,maxMass)
+            vehType.pBounds[0] = VehProps(minSize,minVel,minMass)
+            vehType.pBounds[1] = VehProps(maxSize,maxVel,maxMass)
             return vehType
 
     def _adjust_entries(self,V,entries=None):
@@ -417,7 +421,7 @@ class Simulation(object):
         stop = stop or simLib.sim_stepC(self._h)
         stop = stop or (self._applyCustomControllers() if (self._mode==0 or not self._simCfg["fast_replay"]) else False)
         stop = stop or simLib.sim_stepD(self._h)
-        self._updateMetrics()
+        self._updateMetrics()  # Always call updateMetrics, even if stop is True
         return stop
 
     @timing("Step", False)
@@ -429,9 +433,11 @@ class Simulation(object):
             raise RuntimeError("Cannot continue simulation as the simulation was stopped previously.")
         # Perform one simulation step
         stop = simLib.sim_stepA(self._h)
-        stop = stop or (self._applyCustomModels() if (self._mode==0 or not self._simCfg["fast_replay"]) else False)
+        # |= is used such that custom models, custom policies and update metrics is always called (even in case of a crash,
+        # possibly with invalid states/actions). This ensures all RL bookkeeping can take place.
+        stop |= self._applyCustomModels() if (self._mode==0 or not self._simCfg["fast_replay"]) else False
         stop = stop or simLib.sim_stepB(self._h)
-        stop = stop or self._stepFromB()
+        stop |= self._stepFromB()
         self._collision = stop
         self._k += 1
         return self._collision

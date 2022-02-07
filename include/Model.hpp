@@ -98,12 +98,12 @@ namespace Model{
             const double beta = std::atan(t);
             const double v2 = x.vel[0]*x.vel[0]+x.vel[1]*x.vel[1];
             const double v = std::sqrt(v2);
-            const double a_lat = v2*std::tan(u.delta)*std::cos(beta)/vb.size[0];// v*v/R where R is calculated from eq. 2.7
+            // const double a_lat = v2*std::tan(u.delta)*std::cos(beta)/vb.size[0];// v*v/R where R is calculated from eq. 2.7
             // Calculate state derivatives:
             State dx;
             dx.pos = Eigen::Vector3d(v*std::cos(x.ang[0]+beta),v*std::sin(x.ang[0]+beta),std::nan(""));
             dx.ang = Eigen::Vector3d(v*std::sin(beta)/vb.cgLoc[0],std::nan(""),std::nan(""));
-            dx.vel = Eigen::Vector3d(u.longAcc,a_lat,std::nan(""));
+            dx.vel = Eigen::Vector3d(u.longAcc,u.longAcc*t,std::nan(""));// TODO: for now lateral acceleration changed back to this (instead of a_lat), as otherwise the vehicle's longitudinal velocity starts increasing on curved road segments even though the longitudinal acceleration is zero.
             dx.ang_vel = Eigen::Vector3d(std::nan(""),std::nan(""),std::nan(""));
             return dx;
         }

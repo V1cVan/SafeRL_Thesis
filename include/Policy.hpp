@@ -249,9 +249,18 @@ namespace Policy{
                     const double alpha = (vb.r.plGap-SAFETY_GAP)/(ADAPT_GAP-SAFETY_GAP);
                     a.x = std::clamp((1-alpha)*vb.r.plVel+alpha*desVel, 0.0, desVel);// And clip between [0;desVel]
                 }
+                // Do not overtake vehicles in the left lane (if they are travelling fast enough):
+                if(vb.r.llVel > 10){
+                    if(vb.r.llGap < SAFETY_GAP){
+                        a.x = std::fmin(a.x, vb.r.llVel-1);
+                    }else if(vb.r.llGap < ADAPT_GAP){
+                        const double alpha = (vb.r.llGap-SAFETY_GAP)/(ADAPT_GAP-SAFETY_GAP);
+                        a.x = std::fmin(a.x, (1-alpha)*vb.r.llVel+alpha*a.x);
+                    }
+                }
 
                 // Clamp between safety bounds:
-                const double maxVel = (vb.safetyBounds[1].x>=vb.s.maxVel) ? desVel : vb.s.maxVel;
+                const double maxVel = (vb.safetyBounds[1].x>=vb.s.maxVel) ? desVel : vb.safetyBounds[1].x;// vb.s.maxVel;
                 a.x = std::clamp(a.x, vb.safetyBounds[0].x, maxVel);
                 a.y = std::clamp(a.y, vb.safetyBounds[0].y, vb.safetyBounds[1].y);
                 return a;

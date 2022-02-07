@@ -140,7 +140,7 @@ extern "C"{
                 std::copy(vTypesArr[t].pBounds[1].size,vTypesArr[t].pBounds[1].size+3,maxSize.begin());
                 Simulation::VehicleType vType{vTypesArr[t].amount,
                                                 {model, policy, vTypesArr[t].cfg.L, vTypesArr[t].cfg.N_OV, vTypesArr[t].cfg.D_MAX, convertSafetyConfig(vTypesArr[t].cfg.safety)},
-                                                {{{minSize, vTypesArr[t].pBounds[0].mass},{maxSize, vTypesArr[t].pBounds[1].mass}}}, {0.7, 1}};
+                                                {{{minSize, vTypesArr[t].pBounds[0].mass},{maxSize, vTypesArr[t].pBounds[1].mass}}}, {vTypesArr[t].pBounds[0].vel, vTypesArr[t].pBounds[1].vel}};
                 vehicleTypes.push_back(vType);
             }
             #ifndef NDEBUG

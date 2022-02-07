@@ -1,6 +1,9 @@
 import numpy as np
 import pyvista as pv
-import vtk
+from vtkmodules.vtkChartsCore import vtkAxis, vtkChart, vtkChartXY
+from vtkmodules.vtkRenderingContext2D import vtkContextActor, vtkContextScene, vtkPen
+from vtkmodules.vtkRenderingCore import vtkFollower, vtkPolyDataMapper
+from vtkmodules.vtkRenderingFreeType import vtkVectorText
 import time
 import timeit
 import pathlib
@@ -68,7 +71,7 @@ def _polygonalMesh(left,right):
 def _transformPoints(points,C=None,S=None,A=None):
     """
     Transforms the given points (Px3) by rotating them by the angles supplied in
-    A (yaw,pitch and roll ; following the x-y-z Tait-Bryan convention), scaling them by
+    A (yaw,pitch and roll ; following the Tait-Bryan convention), scaling them by
     S and translating them by C.
     """
     if C is None:
@@ -125,11 +128,11 @@ def _stippledTexture(pixels_on,pixels_off):
     return pv.Texture(texture)
 
 def _textFollower(text, pos=None, camera=None):
-    vText = vtk.vtkVectorText()
+    vText = vtkVectorText()
     vText.SetText(text)
-    mapper = vtk.vtkPolyDataMapper()
+    mapper = vtkPolyDataMapper()
     mapper.SetInputConnection(vText.GetOutputPort())
-    vFollower = vtk.vtkFollower()
+    vFollower = vtkFollower()
     vFollower.SetMapper(mapper)
     if pos is not None:
         vFollower.SetPosition(pos)
@@ -139,9 +142,11 @@ def _textFollower(text, pos=None, camera=None):
 
 class CyclicBuffer(object):
 
-    def __init__(self, size, fill_value=0, dtype=np.float64):
+    def __init__(self, size, fill_value=0, shape=None, dtype=np.float64):
+        if shape is None:
+            shape = np.array(fill_value).shape if isinstance(fill_value, collections.Sequence) else (1,)
         self._size = size
-        self._buffer = np.full(2*size, fill_value, dtype=dtype)
+        self._buffer = np.full([2*size,*shape], fill_value, dtype=dtype)
         self._k = 0 # Pointer to slice of active memory slice
 
     def store(self, val):
@@ -154,14 +159,14 @@ class CyclicBuffer(object):
         # Puts the given value at the given location in the buffer. This does not
         # cycle the buffer
         k = (self._k + idx) % self._size
-        self._buffer[k] = val
-        self._buffer[k + self._size] = val
+        self._buffer[k,:] = val
+        self._buffer[k + self._size,:] = val
 
     def __getitem__(self, idx):
-        return self._buffer[(self._k + idx) % self._size]
+        return self._buffer[(self._k + idx) % self._size,:]
 
     def view(self):
-        return self._buffer[self._k:self._k+self._size]
+        return self._buffer[self._k:self._k+self._size,:]
 
 #endregion
 
@@ -272,7 +277,7 @@ class ScenarioPlot(object):
         (s,l) on the given pv plot.
         """
         assert(s.size==l.size)
-        ELEVATION = 0 # 0.001
+        ELEVATION = 0.001
 
         ts = (s-s[0])/(road._LANE_MARKING_SIZE[0]+road._LANE_MARKING_SKIP)
         if width is None:
@@ -284,13 +289,13 @@ class ScenarioPlot(object):
             line = _polygonalMesh(pts_left,pts_right)
             # Texture coordinates:
             tx,ty = np.meshgrid(ts,np.array([0,0]))
-            line.t_coords = np.stack((tx.ravel(),ty.ravel()),axis=1)
+            line.active_t_coords = np.stack((tx.ravel(),ty.ravel()),axis=1)
         else:
             # Draw line as mesh with scaled pixel width
             pts = road._road2glob(s,l)
             line = pv.lines_from_points(pts)
             # Texture coordinates:
-            line.t_coords = np.stack((ts,np.zeros(s.size)),axis=1)
+            line.active_t_coords = np.stack((ts,np.zeros(s.size)),axis=1)
 
         # Create texture:
         if stippled:
@@ -307,7 +312,7 @@ class SimulationPlot(_PlotterView):
     all vehicles in the simulation from a fixed camera position.
     """
 
-    def __init__(self,p,scale_markings=False,vehicle_type="cuboid3D",show_marker=False,show_ids=False,coloring=None):
+    def __init__(self,p,scale_markings=False,vehicle_type="cuboid3D",show_marker=False,show_ids=False,show_floor=True,coloring=None):
         super().__init__(p)
 
         # Plot the scenario:
@@ -344,6 +349,11 @@ class SimulationPlot(_PlotterView):
             M, marker_base = p._register_mesh('cuboid2D','D_MAX',self.V)
             self._marker = {"M": M, "mesh": marker_base}
             p.add_mesh(self._marker["mesh"],style="wireframe",color=[0.8,0.2,0.0],line_width=6)
+        # Background and floor colors:
+        if show_floor:
+            self._r.background_color = [0.7, 0.9, 1.0]  # Blue 'sky'
+            p.add_floor('-z', color=[0.3,0.6,0.3], pad=3)  # Green 'grass' floor
+        # Camera:
         p.view_xy()
         pos = np.array(self._r.camera_position.position)
         focus = np.array(self._r.camera_position.focal_point)
@@ -465,6 +475,8 @@ class BirdsEyePlot(SimulationPlot):
         ang = self._sim.vehicles[self.V].x["ang"]
         points = _transformPoints(self._camera_cfg,A=ang) # Convert camera configuration to real coordinates
         self._r.camera_position = (pos+points[0,:],pos+points[1,:],points[2,:]) # Set position, focus and viewup
+        cr = self._r.camera.clipping_range # Clipping range is automatically reset after setting camera_position
+        self._r.camera.clipping_range = (1, cr[1]) # However, for some reason the front plane is too far sometimes, so manually set it to a lower value
 
     def _handle_V_change(self,oldV):
         super()._handle_V_change(oldV)
@@ -475,14 +487,14 @@ class TimeChartPlot(_PlotterView):
     """
     Base class for all 2D time chart plots.
     """
+    MEMORY_SIZE = 10000  # Should be large enough to fit most simulations (otherwise dashed lines will start 'moving')
 
-    def __init__(self,p,lines=None,patches=None,value_cb=None,ylabel="",zoom=1.0,cached_vehicles=None,mem_size=1000):
+    def __init__(self,p,lines=None,patches=None,value_cb=None,ylabel="",yrange=None,t_hist=30,cached_vehicles=None):
         super().__init__(p)
         # This view will keep track of the last data for all vehicles in the simulation
         # such that we can switch the active vehicle at a later point without information
         # loss.
         # TODO: now that we have replays, the buffering is no longer really necessary? Maybe add a toggle and default off
-        self._MEMORY_SIZE = mem_size
         if lines is None:
             lines = {}
         self._lines = lines
@@ -490,121 +502,89 @@ class TimeChartPlot(_PlotterView):
             patches = {}
         self._patches = patches
         self._values = value_cb if value_cb is not None else lambda veh: {}
-        self.zoom = zoom
         if cached_vehicles is None:
             cached_vehicles = [p.V]
         self._cvIds = cached_vehicles
 
         self._memory = []
         for i in range(len(self._sim.vehicles)):
-            veh_memory = {
-                "lines": {},
-                "patches": {}
-            }
+            veh_memory = {}
             for field in self._lines.keys():
-                veh_memory["lines"][field] = {
-                    "data": CyclicBuffer(self._MEMORY_SIZE,0), # np.nan is replaced by 0 until https://gitlab.kitware.com/vtk/vtk/-/issues/18019 is fixed (and included in pypi package)
-                    "length": CyclicBuffer(self._MEMORY_SIZE)
-                }
+                veh_memory[f"lines/{field}/data"] = CyclicBuffer(self.MEMORY_SIZE, np.nan)
             for field in self._patches.keys():
-                veh_memory["patches"][field] = {
-                    "upper": CyclicBuffer(self._MEMORY_SIZE,0), # np.nan
-                    "lower": CyclicBuffer(self._MEMORY_SIZE,0) # np.nan
-                }
+                veh_memory[f"patches/{field}/upper"] = CyclicBuffer(self.MEMORY_SIZE, np.nan)
+                veh_memory[f"patches/{field}/lower"] = CyclicBuffer(self.MEMORY_SIZE, np.nan)
             self._memory.append(veh_memory)
-        self._time = CyclicBuffer(self._MEMORY_SIZE,0) # np.nan
+        self._time = CyclicBuffer(self.MEMORY_SIZE, np.nan)
+        self._t_hist = t_hist
+        self._table = pv.Table()  # vtkTable storing the 'visible' memory elements (attached to the vtkChartPlots)
         self._updateMemory()
-        for i in self._cvIds:
-            for field in self._lines.keys():
-                # Fix nan length after first update:
-                self._memory[i]["lines"][field]["length"][-1] = 0
 
-        p.enable_parallel_projection()
-        # Create patch meshes:
+        self._chart = vtkChartXY()
+        chart_scene = vtkContextScene()
+        chart_scene.SetRenderer(self._r)
+        chart_scene.AddItem(self._chart)
+        chart_actor = vtkContextActor()
+        chart_actor.SetScene(chart_scene)
+        self._r.AddActor(chart_actor)
+        self._r.background_color = [0.85,0.85,0.85]  # Light gray
+        # Create patches:
         for field, patch in self._patches.items():
-            upper = np.zeros((self._MEMORY_SIZE,3))
-            lower = np.zeros((self._MEMORY_SIZE,3))
-            patch["mesh"] = _polygonalMesh(upper,lower)
-            p.add_mesh(patch["mesh"],color=patch["color"])
-        # Create line actors:
+            plot = self._chart.AddPlot(vtkChart.AREA)
+            plot.SetInputData(self._table)
+            plot.SetInputArray(0, "time") # Column used for x values
+            plot.SetInputArray(1, f"patches/{field}/lower") # Column used for ymin values
+            plot.SetInputArray(2, f"patches/{field}/upper") # Column used for ymax values
+            plot.SetColor(*[int(255*c + 0.5) for c in pv.parse_color(patch.get("color", None), 1.0)])
+            plot.SetLabel(field)
+        # Create lines:
         for field, line in self._lines.items():
-            points = np.zeros((self._MEMORY_SIZE,3))
-            line["mesh"] = pv.lines_from_points(points)
-            line["mesh"].t_coords = np.zeros((self._MEMORY_SIZE,2))
-            texture = _stippledTexture(1,1) if "stippled" in line and line["stippled"] else None
-            p.add_mesh(line["mesh"],color=line["color"],line_width=3,texture=texture)
-
-        # Show axes and labels:
-        #self._bounds = p.show_bounds(show_zaxis=False,show_zlabels=False,xlabel="time (s)",ylabel=ylabel,use_2d=True) # Issue with subplots (see https://github.com/pyvista/pyvista/issues/513)
-        self._bounds = vtk.vtkCubeAxesActor2D()
-        self._bounds.SetBounds(p.renderer.bounds)
-        self._bounds.SetCamera(p.camera)
-        self._bounds.SetFlyModeToClosestTriad()
-        self._bounds.ZAxisVisibilityOff()
-        self._bounds.SetXLabel("time (s)")
-        self._bounds.SetYLabel("")
-        self._bounds.SetNumberOfLabels(int(self._MEMORY_SIZE*self._sim.dt/10)) # Label for every 10 seconds
-        self._bounds.SetFontFactor(2.0)
-        p.add_actor(self._bounds)
-        p.add_text(ylabel,position='upper_edge',font_size=8)
+            plot = self._chart.AddPlot(vtkChart.LINE)
+            plot.SetInputData(self._table, "time", f"lines/{field}/data") # Columns used for x and y values
+            plot.SetWidth(3)
+            plot.SetColor(*[int(255*c + 0.5) for c in pv.parse_color(line.get("color", None), 1.0)])
+            if line.get("stippled", False):
+                plot.GetPen().SetLineType(vtkPen.DASH_LINE)
+            plot.SetLabel(field)
+        self._chart.SetTitle(ylabel)
+        self._chart.GetTitleProperties().SetFontSize(28)
+        self._chart.x_axis = self._chart.GetAxis(1)
+        self._chart.y_axis = self._chart.GetAxis(0)
+        self._chart.x_axis.SetTitle("time (s)")
+        self._chart.x_axis.GetTitleProperties().SetFontSize(16)
+        self._chart.x_axis.SetGridVisible(False)
+        self._chart.x_axis.SetBehavior(vtkAxis.FIXED) # Manually set time axis ranges, to make updates more fluent
+        self._chart.y_axis.SetTitle("")
+        self._chart.y_axis.SetGridVisible(False)
+        if yrange is not None:
+            self._chart.y_axis.SetBehavior(vtkAxis.FIXED)
+            self._chart.y_axis.SetRange(*yrange)
+        # self._chart.ForceAxesToBoundsOn()  # More fluent update of axis ranges
 
     def _updateMemory(self):
-        dt = self._sim.k*self._sim.dt-self._time[-1]
         self._time.store(self._sim.k*self._sim.dt) # Current simulation time
         for V in self._cvIds:
             veh = self._sim.vehicles[V]
             values, bounds = self._values(veh)
             for field, line in self._lines.items():
-                newVal = values[field] if field in values else np.nan
-                dv = newVal-self._memory[V]["lines"][field]["data"][-1]
-                L = self._memory[V]["lines"][field]["length"][-1]
-                self._memory[V]["lines"][field]["data"].store(newVal) # Current value
-                self._memory[V]["lines"][field]["length"].store(L+np.sqrt(dt*dt+dv*dv))
+                newVal = values[field] if field in values else np.nan # Current value
+                self._memory[V][f"lines/{field}/data"].store(newVal)
             for field, patch in self._patches.items():
                 lower, upper = bounds[field] if field in bounds else (np.nan, np.nan) # Current upper and lower bounds
-                self._memory[V]["patches"][field]["upper"].store(upper)
-                self._memory[V]["patches"][field]["lower"].store(lower)
+                self._memory[V][f"patches/{field}/upper"].store(upper)
+                self._memory[V][f"patches/{field}/lower"].store(lower)
+        self._table.update({
+            "time": self._time.view(),
+            **{key: buf.view() for key, buf in self._memory[self.V].items()}
+        })
+        self._table.Modified()
 
     def plot(self):
         self._updateMemory()
-        for field, line in self._lines.items():
-            points = line["mesh"].points
-            points[:,0] = self._time.view()
-            points[:,1] = self._memory[self.V]["lines"][field]["data"].view()
-            t_coords = line["mesh"].t_coords
-            t_coords[:,0] = self._memory[self.V]["lines"][field]["length"].view() # TODO: incorporate screen size
-        for field, patch in self._patches.items():
-            # Lower points are in first half, upper points in second half:
-            points = patch["mesh"].points
-            points[:self._MEMORY_SIZE,0] = self._time.view()
-            points[:self._MEMORY_SIZE,1] = self._memory[self.V]["patches"][field]["lower"].view()
-            points[self._MEMORY_SIZE:,0] = self._time.view()
-            points[self._MEMORY_SIZE:,1] = self._memory[self.V]["patches"][field]["upper"].view()
-        data_bounds = np.array(self._r.bounds) # x_min,x_max,y_min,y_max,z_min,z_max
-        # TODO: x_min is always 0 instead of the minimum value in memory?
-        # TODO: zooming is wrong when render_height >> render_width?
-        data_bounds[0] = np.nanmin(self._time.view())
-        render_width, render_height = self._r.GetSize()
-        # Below code is same as
-        # self._r.set_scale(xscale=render_width/(data_bounds[1]-data_bounds[0]),
-        #                   yscale=render_height/(data_bounds[3]-data_bounds[2]),
-        #                   reset_camera=False)
-        # but without the call to parent.render(), which causes a large slowdown
-        self._r.scale[0] = render_width/(data_bounds[1]-data_bounds[0])
-        self._r.scale[1] = render_height/(data_bounds[3]-data_bounds[2])
-        transform = vtk.vtkTransform()
-        transform.Scale(*self._r.scale)
-        self._r.camera.SetModelTransformMatrix(transform.GetMatrix())
-        self._r.Modified()
-        # self._r.update_bounds_axes() # set_scale automatically calls update_bounds_axes if reset_camera==True
-        self._bounds.SetBounds(data_bounds)
-        # Custom self._r.view_xy() that is more 'zoomed in' without flashes:
-        focus = np.array(self._r.center)
-        viewup = [0,1,0]
-        pos = focus+[0,0,1]
-        self._r.camera_position = (pos,focus,viewup)
-        self._r.ResetCamera() # Zooms out to see all actors, but too much, so zoom back in a little
-        self._r.camera.Zoom(self.zoom)
+        self._chart.RecalculateBounds()
+        tmax = max(np.nanmax(self._table.get("time")), self._t_hist)
+        tmin = tmax - self._t_hist
+        self._chart.x_axis.SetRange(tmin, tmax)
 
     def _handle_V_change(self,oldV):
         super()._handle_V_change(oldV)
@@ -614,9 +594,15 @@ class TimeChartPlot(_PlotterView):
 
 class ActionsPlot(TimeChartPlot):
 
-    def __init__(self,p,actions=None,show_bounds=True,**kwargs):
+    def __init__(self,p,actions=None,show_bounds=True,yrange=None,**kwargs):
         lines, patches, value_cb, labels = self.get_config(actions, show_bounds)
-        super().__init__(p,lines=lines,patches=patches,value_cb=value_cb,ylabel=" ; ".join(labels),**kwargs)
+        if yrange is None:
+            # TODO: query active scenario for maximum velocity and offset
+            if "long" in actions:
+                yrange = (0,35)
+            elif "lat" in actions:
+                yrange = (0,10)
+        super().__init__(p,lines=lines,patches=patches,value_cb=value_cb,ylabel=" ; ".join(labels),yrange=yrange,**kwargs)
 
     @staticmethod
     def get_config(actions=None, show_bounds=True):
@@ -632,7 +618,7 @@ class ActionsPlot(TimeChartPlot):
                 "stippled": True
             }
             if show_bounds:
-                patches["long"] = {"color": [0.2,0.9,0.2,0.5]}
+                patches["long"] = {"color": [0.2,0.9,0.2,0.7]}
             labels.append("velocity (m/s)")
         if "lat" in actions:
             lines["lat"] = {"color": [0,0,1]}
@@ -641,7 +627,7 @@ class ActionsPlot(TimeChartPlot):
                 "stippled": True
             }
             if show_bounds:
-                patches["lat"] = {"color": [0.2,0.9,0.2,0.5]}
+                patches["lat"] = {"color": [0.2,0.9,0.2,0.7]}
             labels.append("offset (m)")
         return lines, patches, ActionsPlot.value_cb, labels
 
@@ -686,9 +672,9 @@ class ActionsPlot(TimeChartPlot):
 
 class InputsPlot(TimeChartPlot):
 
-    def __init__(self,p,inputs=None,show_bounds=True,**kwargs):
+    def __init__(self,p,inputs=None,show_bounds=True,yrange=None,**kwargs):
         lines, value_cb, labels = self.get_config(inputs, show_bounds)
-        super().__init__(p,lines=lines,value_cb=value_cb,ylabel=" ; ".join(labels),**kwargs)
+        super().__init__(p,lines=lines,value_cb=value_cb,ylabel=" ; ".join(labels),yrange=yrange,**kwargs)
 
     @staticmethod
     def get_config(inputs=None,show_bounds=True):
@@ -739,18 +725,40 @@ class InputsPlot(TimeChartPlot):
 
 class LabelPlot(_PlotterView):
 
-    def __init__(self, p, text_cb):
+    def __init__(self, p, plot_cb, max_comps=1, dx=10, dy=5):
         super().__init__(p)
-        self.text_cb = text_cb
-        self.label = p.add_text("", position=(0,0), font_size=8)
+        self.plot_cb = plot_cb
+        self.labels = tuple(p.add_text("", position=(0,0), font_size=8) for _ in range(max_comps))
+        self.dx = dx
+        self.dy = dy
 
     def plot(self):
-        txt = self.text_cb(self._sim.vehicles[self.V])
+        txt, color = self.plot_cb(self._sim.vehicles[self.V])
         if isinstance(txt, collections.Mapping):
             txt = [f"{key}: {val}" for (key, val) in txt.items()]
-        if isinstance(txt, collections.Sequence):
+        if isinstance(txt, collections.Sequence) and len(self.labels)==1:
             txt = " ; ".join(txt)
-        self.label.SetInput(txt)
+        if isinstance(txt, str):
+            txt = (txt,)
+        if color is None or not (color[0] is None or isinstance(color[0], collections.Sequence)):
+            color = tuple(color for _ in range(len(txt)))
+        pos = [np.infty, self._r.GetSize()[1]+self.dy-2]  # -2 to take default border (overlap of 1 pixel) and minimal margin (1 pixel) into account
+        size = [0, 0]
+        for i, (label, t, c) in enumerate(zip(self.labels, txt, color)):
+            label.SetInput(t)
+            label.GetSize(self._r, size)
+            if pos[0] > 0 and pos[0] + size[0] > self._r.GetSize()[0]:
+                # Wrap to 'next line'
+                pos[0] = 0
+                pos[1] -= size[1] + self.dy
+            label.SetPosition(pos)
+            pos[0] += size[0] + self.dx
+            label.VisibilityOn()
+            if c is not None:
+                label.GetTextProperty().SetColor(c)
+        for label in self.labels[i+1:]:
+            # Hide unused labels
+            label.VisibilityOff()
 
 #endregion
 
@@ -890,9 +898,9 @@ class Plotter(pv.Plotter):
         )
         renderer.set_background([0.7,0.7,0.7])
         renderer.disable()
-        self._active_renderer_index = len(self.renderers)
-        self.renderers.append(renderer)
-        self._background_renderers.append(None)
+        self.renderers._active_index = len(self.renderers)
+        self.renderers._renderers.append(renderer)
+        self.renderers._background_renderers.append(None)
         self.ren_win.AddRenderer(renderer)
 
     @property
