@@ -109,7 +109,7 @@ class Main(object):
 
             if episode_count % plot_freq == 0 and show_plots:
                 self.policy.agent.prev_epsilon = self.policy.agent.epsilon
-                self.simulate(self.training_param["sim_timesteps"])
+                self.simulate(self.training_param["sim_timesteps"], 1, 35)
                 self.policy.agent.epsilon = self.policy.agent.prev_epsilon
 
             self.episodeTimer.startTime()
@@ -166,7 +166,6 @@ class Main(object):
             # print(f"Time for episode = {time_taken_episode}")
             # Running reward smoothing effect
             running_reward = 0.05 * reward + (1 - 0.05) * running_reward
-
             if episode_count % 50 == 0 and trained:
                 if self.training_param["use_per"]:
                     print_template = "Running reward = {:.3f} ({:.3f}) at episode {}. Loss = {:.3f}. Epsilon = {:.3f}. Beta = {:.3f}. Episode timer = {:.3f}"
@@ -178,11 +177,6 @@ class Main(object):
                                                          time_taken_episode)
 
                 print(print_output)
-                # logging.critical(print_output)
-                # loss_list.append(loss)
-                # episode_list.append(episode_count)
-                # running_reward_list.append(running_reward)
-                # training_var = (episode_list, running_reward_list, loss_list)
 
             # Save episode training variables to tensorboard
             # TODO Variable to add logging of extended variables if needed
@@ -217,16 +211,11 @@ class Main(object):
             #                                  grads=grads,
             #                                  clipped_grads=clipped_grads)
 
-            # self.data_logger.save_xls("./models/training_variables.xls")
             if running_reward >= self.training_param["final_return"] \
                     or episode_count == self.training_param["max_episodes"]:
                 print_output = "Solved at episode {}!".format(episode_count)
                 print(print_output)
-                # logging.critical(print_output)
                 self.policy.agent.Q_actual_net.save_weights(self.model_param["weights_file_path"])
-                # pic.dump(training_var, open("./models/train_output", "wb"))
-                # self.data_logger.plot_training_data(plot_items)
-                # self.data_logger.save_training_data("./models/training_variables.p")
                 break
 
             episode_count += 1
@@ -235,7 +224,7 @@ class Main(object):
         self.policy.agent.training = False
         self.policy.agent.evaluation = True
 
-        episode = 1
+        episode = 0
         while episode < simulation_episodes:
             steps = 0
             print_counter = 0
@@ -244,34 +233,20 @@ class Main(object):
             mean_episode_reward = []
             mean_episode_speed = []
             with self.sim:
-                # self.create_plot()
+                self.create_plot()
                 while not self.sim.stopped and steps < simulation_timesteps:  # and not self.p.closed:
                     self.sim.step()
-                    # if print_counter % 10 == 0:
-                    #     print(self.policy.agent.epsilon)
-                    #     if self.policy.agent.latest_action == 0:
-                    #         print("0: Slowing down.")
-                    #     elif self.policy.agent.latest_action == 1:
-                    #         print("1: Constant speed.")
-                    #     elif self.policy.agent.latest_action == 2:
-                    #         print("2: Speeding up.")
-                    #     elif self.policy.agent.latest_action == 3:
-                    #         print("3: Turning left.")
-                    #     elif self.policy.agent.latest_action == 4:
-                    #         print("4: Turning right.")
                     episode_reward_list.append(self.policy.agent.latest_reward)
                     curr_veh_speed = self.sim.vehicles[0].s["vel"][0] * 3.6
                     vehicle_speeds.append(curr_veh_speed)
                     steps += 1
                     print_counter += 1
-                    # self.p.plot()
-                # self.p.close()
+                    self.p.plot() # Uncomment for visualisation of run
+                self.p.close() # Uncomment for visualisation of run
             episode += 1
             mean_episode_reward.append(np.mean(episode_reward_list))
             mean_episode_speed.append(np.mean(vehicle_speeds))
-            # self.tb_logger.save_variable("Episode reward", x=episode,
-            #                              y=mean_episode_reward[-1])
-            # self.tb_logger.save_variable("Episode vehicle speed", x=episode, y=mean_episode_speed[-1])
+
 
         mean_run_reward = np.mean(mean_episode_reward)
         mean_run_speed = np.mean(mean_episode_speed)
@@ -350,90 +325,44 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     config.scenarios_path = str(SC_PATH)
     # current_time = datetime.datetime.now().strftime("%Y-%m-%d-%Hh%Mm")
 
-    # Temporal Tuning:
-    if parameter == "Without state velocity":
-        REMOVE_STATE_VELOCITY = True
-        if value == "DDQN":
-            N_UNITS = (64, 32)
-            FILTERS = None  # Dimensionality of output space
-            KERNEL = None  # Convolution width
-            STRIDES = None  # Stride size
-            LSTM_UNITS = None
-            USE_TEMPORAL_CNN = False
-            USE_LSTM = False
-        elif value == "Temporal CNN":
-            N_UNITS = (48, 32)
-            FILTERS = (48, 86)  # Dimensionality of output space
-            KERNEL = ((4, 4), (2, 2))  # Convolution width
-            STRIDES = ((2, 2), (1, 1))  # Stride size
-            LSTM_UNITS = None
-            USE_TEMPORAL_CNN = True
-            USE_LSTM = False
-        elif value == "LSTM":
-            N_UNITS = (48, 32)
-            FILTERS = None  # Dimensionality of output space
-            KERNEL = None  # Convolution width
-            STRIDES = None  # Stride size
-            LSTM_UNITS = 64
-            USE_TEMPORAL_CNN = False
-            USE_LSTM = True
-        else:
-            print("value not set properly")
-            sys.exit()
-    elif parameter == "With state velocity":
-        REMOVE_STATE_VELOCITY = False
-        if value == "DDQN":
-            N_UNITS = (64, 32)
-            FILTERS = None  # Dimensionality of output space
-            KERNEL = None  # Convolution width
-            STRIDES = None  # Stride size
-            LSTM_UNITS = None
-            USE_TEMPORAL_CNN = False
-            USE_LSTM = False
-        elif value == "Temporal CNN":
-            N_UNITS = (48, 32)
-            FILTERS = (48, 86)  # Dimensionality of output space
-            KERNEL = ((4,4), (2,2))  # Convolution width
-            STRIDES = ((2,2), (1,1))  # Stride size
-            LSTM_UNITS = None
-            USE_TEMPORAL_CNN = True
-            USE_LSTM = False
-        elif value == "LSTM":
-            N_UNITS = (48, 32)
-            FILTERS = None  # Dimensionality of output space
-            KERNEL = None  # Convolution width
-            STRIDES = None  # Stride size
-            LSTM_UNITS = 64
-            USE_TEMPORAL_CNN = False
-            USE_LSTM = True
-        else:
-            print("value not set properly")
-            sys.exit()
+    if value == "DDQN":
+        USE_LSTM = False
+        USE_DEEPSET = False
+    elif value == "LSTM_Deepset":
+        USE_LSTM = True
+        USE_DEEPSET = True
+    elif value == "LSTM":
+        USE_LSTM = True
+        USE_DEEPSET = False
+    elif value == "Deepset":
+        USE_LSTM = False
+        USE_DEEPSET = True
     else:
-        print("parameter value not set properly")
+        print("value not set properly")
         sys.exit()
+
     """RUN PARAMETERS:"""
     SEED = seed
     RUN_TYPE = run_type  # "train"/test
     RUN_NAME = method
     # For sweeps
-    if "elu" in str(value):
-        if "relu" in str(value):
-            if "relu6" in str(value):
-                RUN_INFO = parameter + "=" + "Relu6"
-            elif "leaky_relu" in str(value):
-                RUN_INFO = parameter + '=' + "Leaky Relu"
-            else:
-                RUN_INFO = parameter + "=" + "Relu"
-        else:
-            RUN_INFO = parameter + "=" + "Elu"
-    elif "tanh" in str(value):
-        RUN_INFO = parameter + "=" + "Tanh"
-    else:
-        RUN_INFO = parameter + "=" + str(value)
+    # if "elu" in str(value):
+    #     if "relu" in str(value):
+    #         if "relu6" in str(value):
+    #             RUN_INFO = parameter + "=" + "Relu6"
+    #         elif "leaky_relu" in str(value):
+    #             RUN_INFO = parameter + '=' + "Leaky Relu"
+    #         else:
+    #             RUN_INFO = parameter + "=" + "Relu"
+    #     else:
+    #         RUN_INFO = parameter + "=" + "Elu"
+    # elif "tanh" in str(value):
+    #     RUN_INFO = parameter + "=" + "Tanh"
+    # else:
+    #     RUN_INFO = parameter + "=" + str(value)
 
     # For method comparison
-    # RUN_INFO = arg1 + "=" + str(arg3)
+    RUN_INFO = parameter + "=" + str(value)
 
     # total_vehicles = vehicles["slow"] + vehicles["medium"] + vehicles["fast"]
     total_vehicles = 0
@@ -458,8 +387,8 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
 
     """ BASE MODEL PARAMETERS:"""
     # Base parameters (DDQN):
-    # N_UNITS = (32, 32)
-    # REMOVE_STATE_VELOCITY = True
+    N_UNITS = (32, 32)
+    REMOVE_STATE_VELOCITY = False
     if REMOVE_STATE_VELOCITY == True:
         N_INPUTS = 31
     else:
@@ -475,9 +404,9 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     ACT_FUNC_PHI = tf.nn.relu
     ACT_FUNC_RHO = tf.nn.relu
     # For CNN's:
-    # FILTERS = (15, 15)  # Dimensionality of output space
-    # KERNEL = 4  # Convolution width
-    # STRIDES = (1, 1)  # Stride size
+    FILTERS = (15, 15)  # Dimensionality of output space
+    KERNEL = 4  # Convolution width
+    STRIDES = (1, 1)  # Stride size
     USE_POOLING = False
     TEMPORAL_CNN_TYPE = '2D'  # 3D or 2D
     NORMAL_CNN_TYPE = 1
@@ -485,27 +414,25 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     # 1=1D conv. on measurements dim-With pooling over vehicle dimension then renders it permutation invariant
     # 2=2D conv. on vehicle and measurements dimensions,
     # For LSTM:
-    # LSTM_UNITS = 32
+    LSTM_UNITS = 32
 
 
 
     if RUN_TYPE == "test":
         MODEL_FILE_PATH = "logfiles/" + RUN_NAME + "/" + "train" + "/Seed" + str(500) + "-Details=" + str(
             RUN_INFO) + "/"
+        TRAINABLE = False
     elif RUN_TYPE == "train":
         MODEL_FILE_PATH = "logfiles/" + RUN_NAME + "/" + "train" + "/Seed" + str(SEED) + "-Details=" + str(
             RUN_INFO) + "/"
-    if RUN_TYPE == "train":
         TRAINABLE = True
-    elif RUN_TYPE == "test":
-        TRAINABLE = False
     else:
         print("Run type not correctly specified!")
         sys.exit()
 
     model_param = {
         "n_units": N_UNITS,
-        "n_inputs": N_INPUTS,  # TODO change n_units when removing velocity from state measurement!
+        "n_inputs": N_INPUTS,
         "n_actions": N_ACTIONS,
         "activation_function": ACT_FUNC,
         "weights_file_path": MODEL_FILE_PATH,
@@ -544,7 +471,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     SHOW_TRAIN_PLOTS = False
     SAVE_TRAINING = True
     LOG_FREQ = 0
-    PLOT_FREQ = 50
+    PLOT_FREQ = 15
     SIM_TIMESTEPS = 5e3
     if RUN_TYPE == 'test':
         SIM_EPISODES = 50
@@ -560,7 +487,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     LEARN_RATE = 0.0001  # range: 1e-3 - 1e-4
     OPTIMISER = tf.optimizers.Adam(learning_rate=LEARN_RATE)
     LOSS_FUNC = tf.losses.Huber()  # tf.losses.Huber()  # PER loss function is MSE
-    GAMMA = 0.95  # range: 0.9 - 0.99
+    GAMMA = 0.98 # range: 0.9 - 0.99
     CLIP_GRADIENTS = False
     CLIP_NORM = 2
     # Reward weights = (rew_vel, rew_lat_lane_position, rew_fol_dist, staying_right, collision penalty)
@@ -573,12 +500,12 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     # Model types:
     USE_TARGET_NETWORK = True
     USE_DUELLING = False
-    USE_DEEPSET = False
+    # USE_DEEPSET = False
     USE_CNN = False
-    # USE_TEMPORAL_CNN = False
+    USE_TEMPORAL_CNN = False
     # USE_LSTM = False
     # REMOVE_STATE_VELOCITY  -- MOVED UP
-    ADD_NOISE = True
+    ADD_NOISE = False
 
     # RewardFunction().plot_reward_functions()
     training_param = {
@@ -650,6 +577,10 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     elif USE_LSTM:
         DQ_net = LSTM(model_param=model_param)
         DQ_target_net = LSTM(model_param=model_param)
+    elif USE_LSTM and USE_DEEPSET:
+        DQ_net = LstmDeepSetNetwork(model_param=model_param)
+        DQ_target_net = LstmDeepSetNetwork(model_param=model_param)
+        DQ_net.display_overview()
     else:
         # Final checks: To avoid mistakes in parallel runs
         assert not (USE_TEMPORAL_CNN and USE_LSTM)
@@ -702,7 +633,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
         main.simulate(simulation_timesteps=SIM_TIMESTEPS, simulation_episodes=SIM_EPISODES,
                       total_vehicles=total_vehicles)
     else:
-        main.train_policy()
+       main.train_policy()
 
     print(f"Number Veh={vehicles}; Method={method}; Parameter={parameter}; Value={value}")
 
@@ -742,25 +673,17 @@ if __name__ == "__main__":
         veh_9 = {"slow": 25, "medium": 55, "fast": 15}  # total = 95
         veh_10 = {"slow": 35, "medium": 70, "fast": 25}  # total = 130
 
+        # veh_many_fast = {"slow": 10, "medium": 10, "fast": 20, "im": 0, "step": 0, "sway": 0}  # total = 40
+        # veh_extended = {"slow": 8, "medium": 18, "fast": 8, "im": 2, "step": 3, "sway": 1}  # total = 40
+        # veh_stress = {"slow": 10, "medium": 15, "fast": 17, "im": 4, "step": 6, "sway": 2}  # total = 54
+
         run_type = "train"
-        veh_many_fast = {"slow": 10, "medium": 10, "fast": 20, "im": 0, "step": 0, "sway": 0}  # total = 40
-        veh_extended = {"slow": 8, "medium": 18, "fast": 8, "im": 2, "step": 3, "sway": 1}  # total = 40
-        veh_stress = {"slow": 10, "medium": 15, "fast": 17, "im": 4, "step": 6, "sway": 2}  # total = 54
-        method = "Report Test"
-        for vehicles in ("random", veh_5):
-            for parameter in ("With state velocity", "Without state velocity" ):
-                for seed in (100, 200, 300, 400, 500):
-                    if parameter == "With state velocity":
-                        for value in ("DDQN", "Temporal CNN", "LSTM"):
-
-                            yield run_type, vehicles, method, parameter, seed, value
-                    elif parameter == "Without state velocity":
-                        for value in ("DDQN", "Temporal CNN", "LSTM"):
-                            yield run_type, vehicles, method, parameter, seed, value
-                    else:
-                        print("Parameter naming error")
-                        sys.exit()
-
+        method = "LSTM_Deepset"
+        vehicles = veh_5
+        parameter = "Model"
+        for seed in (100,  300, 500):
+            for value in ("LSTM_Deepset", "LSTM", "Deepset", "DDQN"):
+                yield run_type, vehicles, method, parameter, seed, value
 
     if procs > 1:
         # Schedule all training runs in a parallel loop over multiple cores:

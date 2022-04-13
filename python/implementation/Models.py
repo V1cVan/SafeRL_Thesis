@@ -543,6 +543,116 @@ class DeepSetQNetwork(keras.Model):
                                to_file='./models/Deepset_Q_network.png')
 
 
+class LstmDeepSetNetwork(keras.Model):
+    """
+    Builds a deep Q-network using DeepSet permutation invariant model with temporal LSTM layer.
+    # TODO Check simplification of Deepset network above and test permuting inputs
+    """
+    def __init__(self, model_param):
+        super(LstmDeepSetNetwork, self).__init__()
+        self.model_param = model_param
+        tf.random.set_seed(model_param["seed"])
+        np.random.seed(model_param["seed"])
+        act_func = model_param["activation_function"]
+        act_func_phi = model_param['deepset_param']['act_func_phi']
+        act_func_rho = model_param['deepset_param']['act_func_rho']
+        self.n_units_lstm = model_param["LSTM_param"]["n_units"]
+        n_units = model_param["n_units"]
+        n_units_phi = model_param["deepset_param"]["n_units_phi"]
+        n_units_rho = model_param["deepset_param"]["n_units_rho"]
+        self.n_layers_rho = len(n_units_rho)
+        self.n_layers_phi = len(n_units_phi)
+        if self.n_layers_phi == 3:
+            self.phi_feature_size = self.model_param["deepset_param"]["n_units_phi"][-1]
+        else:
+            self.phi_feature_size = self.model_param["deepset_param"]["n_units_phi"][1]
+
+        self.is_batch_norm = model_param["batch_normalisation"]
+        n_inputs_static = 7
+        n_inputs_dynamic = 4
+        n_vehicles = 12  # Defined by default D_max size
+        n_actions = model_param["n_actions"]
+
+        self.phi_network = PhiNetwork(n_units_phi, act_func_phi, ("PhiLayer1", "PhiLayer2", "PhiLayer3"), model_param)
+        self.phi_network2 = PhiNetwork2(n_units_phi, act_func_phi, ("PhiLayer1", "PhiLayer2", "PhiLayer3"), model_param)
+
+        self.sum_layer = layers.Add(name="Summation_layer")
+        # self.sum_layer = layers.Lambda(lambda phi_out: tf.expand_dims(tf.reduce_sum(phi_out, axis=0), axis=0))
+
+        if self.n_layers_rho == 3:
+            self.rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func_rho, name="rhoLayer1")
+            self.rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func_rho, name="rhoLayer2")
+            self.rho_layer_3 = layers.Dense(n_units_rho[2], activation=act_func_rho, name="rhoLayer3")
+            if self.is_batch_norm:
+                self.batch_norm_layer = layers.BatchNormalization(name="batch_norm")
+                self.concat_layer = layers.Concatenate(name="ConcatenationLayer")
+            else:
+                self.concat_layer = layers.Concatenate(name="ConcatenationLayer")
+        else:  # 2 rho layers
+            self.rho_layer_1 = layers.Dense(n_units_rho[0], activation=act_func_rho, name="rhoLayer1")
+            self.rho_layer_2 = layers.Dense(n_units_rho[1], activation=act_func_rho, name="rhoLayer2")
+            if self.is_batch_norm:
+                self.batch_norm_layer = layers.BatchNormalization(name="batch_norm")
+                self.concat_layer = layers.Concatenate(name="ConcatenationLayer")
+            else:
+                self.concat_layer = layers.Concatenate(name="ConcatenationLayer")
+
+        self.LSTM = layers.LSTM(units=self.n_units_lstm,
+                                 name="LSTM")
+        self.Q_layer_1 = layers.Dense(n_units[0], activation=act_func, name="QLayer1")
+        self.Q_layer_2 = layers.Dense(n_units[1], activation=act_func, name="QLayer2")
+
+        self.output_layer = layers.Dense(n_actions)
+
+    @tf.function
+    def call(self, inputs: tf.Tensor):
+        """ Returns the output of the model given an input. """
+        dynamic_input = inputs[0]
+        static_input = inputs[1]
+
+        batch_size = tf.shape(dynamic_input)[0]
+
+        summation = tf.reduce_sum(
+            tf.where(tf.expand_dims(tf.not_equal(tf.reduce_sum(tf.abs(dynamic_input), axis=2), 0), axis=[-1]),
+                     self.phi_network2(dynamic_input, batch_size), 0), axis=1)
+        if self.n_layers_rho == 3:
+            rho_1_out = self.rho_layer_1(summation)
+            rho_2_out = self.rho_layer_2(rho_1_out)
+            rho_3_out = self.rho_layer_3(rho_2_out)
+            if self.is_batch_norm:
+                batch_norm_out = self.batch_norm_layer(rho_3_out)
+                concat = [batch_norm_out, static_input]
+                concat_out = self.concat_layer(concat)
+            else:
+                concat = [rho_3_out, static_input]
+                concat_out = self.concat_layer(concat)
+        else:
+            rho_1_out = self.rho_layer_1(summation)
+            rho_2_out = self.rho_layer_2(rho_1_out)
+            if self.is_batch_norm:
+                batch_norm_out = self.batch_norm_layer(rho_2_out)
+                concat = [batch_norm_out, static_input]
+                concat_out = self.concat_layer(concat)
+            else:
+                concat = [rho_2_out, static_input]
+                concat_out = self.concat_layer(concat)
+
+
+        q_1_out = self.LSTM(concat_out)
+        q_2_out = self.Q_layer_2(q_1_out)
+        output = self.output_layer(q_2_out)
+        return output
+
+
+    def display_overview(self):
+        """ Displays an overview of the model. """
+        # self.model.summary()
+        keras.utils.plot_model(self.model,
+                               show_shapes=True,
+                               show_layer_names=True,
+                               to_file='./models/LstmDeepSetNetwork.png')
+
+
 class OldDeepSetQNetwork(keras.Model):
     """
     Builds a deep Q-network using DeepSetQ approach incorporating permutation invariance.

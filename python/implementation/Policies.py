@@ -420,7 +420,7 @@ class RewardFunction(object):
         return reward_vel
 
     def _get_lane_centre_reward(self, lane_offset):
-        reward_offset = np.exp(-(lane_offset) ** 2 / 1.18)
+        reward_offset = np.exp(-(lane_offset) ** 2 / 1.18)-1
         return reward_offset
 
     def _get_follow_dist_reward(self, following_distance):
