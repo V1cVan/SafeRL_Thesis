@@ -1,6 +1,8 @@
-# Battleships Game in Java
-Simple object oriented implementation of the game Battleships in Java. 
+# Robust Deep Reinforcement Learning for Autonomous Vehicles in Dense Highway Traffic
+
+Exploration of neural network architectures to deal with
+dynamically sized and temporal sensor-based input data
 
 *Thesis paper:*
 
-![alt text](https://github.com/V1cVan/battleships_game_java/blob/main/gifs/menu.gif)
+![alt text]()

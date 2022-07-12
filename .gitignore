@@ -10,7 +10,7 @@ matlab
 scenarios
 tests
 CMakeLists.txt
-
+contributors.md
 python/examples/*
 python/hwsim/*
 python/implementation/logfiles
