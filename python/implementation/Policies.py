@@ -531,26 +531,26 @@ class DiscreteSingleActionPolicy(CustomPolicy):
         self.agent = agent  # agent = f(NN_model)
         self.STEP_TIME = self.agent.training_param["policy_rate"]
         self.rewards = RewardFunction()
-        # if self.agent.training_param['use_temporal_CNN'] or self.agent.training_param["use_LSTM"]:
-        #     self.stack_frames = True
-        #     if self.agent.training_param['use_temporal_CNN']:
-        #         self.stack_cnn_frames = True
-        #         self.stack_LSTM_frames = False
-        #     elif self.agent.training_param["use_LSTM"]:
-        #         self.stack_cnn_frames = False
-        #         self.stack_LSTM_frames = True
-        #     self.frame_stack_buffer = deque(maxlen=4)
-        # else:
-        #     self.stack_frames = False
-
-        self.stack_frames = True
-        if self.agent.training_param['use_temporal_CNN']:
-            self.stack_cnn_frames = True
-            self.stack_LSTM_frames = False
+        if self.agent.training_param['use_temporal_CNN'] or self.agent.training_param["use_LSTM"]:
+            self.stack_frames = True
+            if self.agent.training_param['use_temporal_CNN']:
+                self.stack_cnn_frames = True
+                self.stack_LSTM_frames = False
+            elif self.agent.training_param["use_LSTM"]:
+                self.stack_cnn_frames = False
+                self.stack_LSTM_frames = True
+            self.frame_stack_buffer = deque(maxlen=4)
         else:
-            self.stack_cnn_frames = False
-            self.stack_LSTM_frames = True
-        self.frame_stack_buffer = deque(maxlen=4)
+            self.stack_frames = False
+
+        # self.stack_frames = True
+        # if self.agent.training_param['use_temporal_CNN']:
+        #     self.stack_cnn_frames = True
+        #     self.stack_LSTM_frames = False
+        # else:
+        #     self.stack_cnn_frames = False
+        #     self.stack_LSTM_frames = True
+        # self.frame_stack_buffer = deque(maxlen=4)
 
         self.remove_velocity = self.agent.training_param["remove_state_vel"]
 

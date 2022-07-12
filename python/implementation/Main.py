@@ -325,47 +325,32 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     config.scenarios_path = str(SC_PATH)
     # current_time = datetime.datetime.now().strftime("%Y-%m-%d-%Hh%Mm")
 
-    if value == "DDQN":
-        USE_LSTM = False
-        USE_DEEPSET = False
-    elif value == "LSTM_Deepset":
-        USE_LSTM = True
-        USE_DEEPSET = True
-    elif value == "LSTM":
-        USE_LSTM = True
-        USE_DEEPSET = False
-    elif value == "Deepset":
-        USE_LSTM = False
-        USE_DEEPSET = True
-    else:
-        print("value not set properly")
-        sys.exit()
+    # if value == "DDQN":
+    #     USE_LSTM = False
+    #     USE_DEEPSET = False
+    # elif value == "LSTM_Deepset":
+    #     USE_LSTM = True
+    #     USE_DEEPSET = True
+    # elif value == "LSTM":
+    #     USE_LSTM = True
+    #     USE_DEEPSET = False
+    # elif value == "Deepset":
+    #     USE_LSTM = False
+    #     USE_DEEPSET = True
+    # else:
+    #     print("value not set properly")
+    #     sys.exit()
 
     """RUN PARAMETERS:"""
     SEED = seed
     RUN_TYPE = run_type  # "train"/test
     RUN_NAME = method
-    # For sweeps
-    # if "elu" in str(value):
-    #     if "relu" in str(value):
-    #         if "relu6" in str(value):
-    #             RUN_INFO = parameter + "=" + "Relu6"
-    #         elif "leaky_relu" in str(value):
-    #             RUN_INFO = parameter + '=' + "Leaky Relu"
-    #         else:
-    #             RUN_INFO = parameter + "=" + "Relu"
-    #     else:
-    #         RUN_INFO = parameter + "=" + "Elu"
-    # elif "tanh" in str(value):
-    #     RUN_INFO = parameter + "=" + "Tanh"
-    # else:
-    #     RUN_INFO = parameter + "=" + str(value)
 
     # For method comparison
     RUN_INFO = parameter + "=" + str(value)
 
-    # total_vehicles = vehicles["slow"] + vehicles["medium"] + vehicles["fast"]
-    total_vehicles = 0
+    total_vehicles = vehicles["slow"] + vehicles["medium"] + vehicles["fast"]
+
     if RUN_TYPE == "train":
         SAVE_DIRECTORY = "logfiles/" + RUN_NAME + "/" + RUN_TYPE + "/Seed" + str(
             SEED) + "-Details=" + str(RUN_INFO)
@@ -468,7 +453,7 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     MAX_TIMESTEPS = 5e3  # range: 5e3 - 10e3
     MAX_EPISODES = 800
     FINAL_RETURN = 1
-    SHOW_TRAIN_PLOTS = False
+    SHOW_TRAIN_PLOTS = True
     SAVE_TRAINING = True
     LOG_FREQ = 0
     PLOT_FREQ = 15
@@ -500,11 +485,11 @@ def start_run(run_type, vehicles, method, parameter, seed, value):
     # Model types:
     USE_TARGET_NETWORK = True
     USE_DUELLING = False
-    # USE_DEEPSET = False
+    USE_DEEPSET = False
     USE_CNN = False
     USE_TEMPORAL_CNN = False
-    # USE_LSTM = False
-    # REMOVE_STATE_VELOCITY  -- MOVED UP
+    USE_LSTM = False
+
     ADD_NOISE = False
 
     # RewardFunction().plot_reward_functions()
@@ -673,6 +658,7 @@ if __name__ == "__main__":
         veh_9 = {"slow": 25, "medium": 55, "fast": 15}  # total = 95
         veh_10 = {"slow": 35, "medium": 70, "fast": 25}  # total = 130
 
+        # Extreme vehicle simulation tests
         # veh_many_fast = {"slow": 10, "medium": 10, "fast": 20, "im": 0, "step": 0, "sway": 0}  # total = 40
         # veh_extended = {"slow": 8, "medium": 18, "fast": 8, "im": 2, "step": 3, "sway": 1}  # total = 40
         # veh_stress = {"slow": 10, "medium": 15, "fast": 17, "im": 4, "step": 6, "sway": 2}  # total = 54
@@ -681,9 +667,13 @@ if __name__ == "__main__":
         method = "LSTM_Deepset"
         vehicles = veh_5
         parameter = "Model"
-        for seed in (100,  300, 500):
-            for value in ("LSTM_Deepset", "LSTM", "Deepset", "DDQN"):
-                yield run_type, vehicles, method, parameter, seed, value
+        # Parameter sweep over multiple cores
+        # for seed in (100, 300, 500):
+        #     for value in ("LSTM_Deepset", "LSTM", "Deepset", "DDQN"):
+        #         yield run_type, vehicles, method, parameter, seed, value
+        seed = 100
+        value = 'DDQN'
+        yield run_type, vehicles, method, parameter, seed, value
 
     if procs > 1:
         # Schedule all training runs in a parallel loop over multiple cores:

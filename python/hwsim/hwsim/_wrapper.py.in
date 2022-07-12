@@ -1,0 +1,380 @@
+import pathlib
+import random
+import typing
+from ctypes import cdll, Structure, sizeof, c_void_p, c_char_p, POINTER, c_bool, c_uint8, c_ubyte, c_uint, c_int, c_double
+from numpy.ctypeslib import ndpointer
+import numpy as np
+from numpy.random import default_rng
+from hwsim.serialization import Serializable
+from hwsim._utils import timing
+import hwsim.utils
+
+# Load library and specify input and output types
+LIB_PATH = pathlib.Path(__file__).resolve().parent.joinpath("$<TARGET_FILE_NAME:libhwsim>")
+HWSIM_MAX_SERIALIZED_LENGTH = ${HWSIM_MAX_SERIALIZED_LENGTH}
+simLib = cdll.LoadLibrary(str(LIB_PATH))
+
+class BaseStructure(Structure):
+    _defaults_ = {}
+
+    def __init__(self, *args, **kwargs):
+        cfg = None
+        if len(args)==1 and len(kwargs)==0:
+            # Create new structure from existing one or its configuration dict
+            if isinstance(args[0], BaseStructure):
+                cfg = args[0].cfg
+            elif isinstance(args[0], typing.Mapping):
+                cfg = {**self._defaults_,**args[0]}
+            elif args[0] is None:
+                cfg = self._defaults_
+        if cfg is None:
+            # Create new structure from args and kwargs
+            args_cfg = {field: arg for (field, _), arg in zip(self._fields_, args)}
+            cfg = {**self._defaults_,**kwargs,**args_cfg}
+        super().__init__(**cfg)
+
+    @property
+    def cfg(self):
+        cfg = {field: getattr(self, field) for field, _ in self._fields_}
+        return cfg
+
+class SimConfig(BaseStructure):
+    _fields_ = [("dt",c_double),
+                ("output_log",c_char_p)]
+
+class VehSafety(BaseStructure):
+    _fields_ = [("Mvel",c_double),  # Extra safety margin for the longitudinal velocity bounds [m/s]
+                ("Moff",c_double),  # Extra safety margin for the lateral offset bounds [m]
+                ("Gth",c_double),   # Minimum enforced longitudinal gap between vehicles [m]
+                ("TL",c_double),    # Lookahead time [s]
+                ("Hvel",c_double)]  # Relative (multiplicative) longitudinal velocity for hidden vehicles. 0 for absolute safety (but conservative bounds), 1 for less conservatism [-]
+    _defaults_ = {"Mvel": 1.5, "Moff": 0.15, "Gth": 5.0, "TL": 0.2, "Hvel": 0.0}
+
+class VehConfig(Structure):
+    _fields_ = [("model",c_uint),
+                ("modelArgs",POINTER(c_ubyte)),
+                ("policy",c_uint),
+                ("policyArgs",POINTER(c_ubyte)),
+                ("L",c_uint),
+                ("N_OV",c_uint),
+                ("D_MAX",c_double),
+                ("safety",VehSafety)]
+
+    def __init__(self,model=None,policy=None,L=1,N_OV=2,D_MAX=150,safety=None):
+        self.model, self.modelArgs = self._fetch_blueprint(model)
+        self.policy, self.policyArgs = self._fetch_blueprint(policy)
+        self._model = model
+        self._policy = policy
+        assert L>0 and N_OV>0 and D_MAX>0
+        self.L = int(L)
+        self.N_OV = int(N_OV)
+        self.D_MAX = float(D_MAX)
+        self.safety = VehSafety(safety)
+
+    @staticmethod
+    def _fetch_blueprint(bp=None):
+        if bp is None:
+            return 0, (c_ubyte * HWSIM_MAX_SERIALIZED_LENGTH)()
+        elif bp.args is None:
+            return bp.id, None
+        else:
+            return bp.id, (c_ubyte * len(bp.args))(*bp.args)
+
+class VehProps(Structure):
+    _fields_ = [("size",c_double * 3),
+                ("vel",c_double),
+                ("mass",c_double)]
+
+    def __init__(self,size=None,vel=1,mass=1000):
+        if size is None:
+            size = [2,4,2]
+        assert len(size)==3
+        for dim in size:
+            assert dim>0
+        assert 0 <= vel <= 1
+        assert mass>0
+        self.size = (c_double * 3)(*size)
+        self.vel = vel
+        self.mass = mass
+
+class VehInitialState(BaseStructure):
+    _fields_ = [("R",c_uint),
+                ("s",c_double),
+                ("l",c_double),
+                ("gamma",c_double),
+                ("v",c_double)]
+    _defaults_ = {"R": 0, "s": 0, "l": 0, "gamma": 0, "v": 0}
+
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
+        assert self.R>=0 and self.v>=0
+
+class VehType(Structure):
+    _fields_ = [("amount",c_uint),
+                ("cfg",VehConfig),
+                ("pBounds",VehProps * 2)]
+
+class VehDef(Structure):
+    _fields_ = [("cfg",VehConfig),
+                ("props",VehProps),
+                ("init",VehInitialState)]
+
+class IDMConfig(BaseStructure):
+    _fields_ = [("s0",c_double), # Jam distance [m]
+                ("s1",c_double), # Jam distance [m]
+                ("a",c_double),  # Maximum acceleration [m/s^2]
+                ("b",c_double),  # Desired deceleration [m/s^2]
+                ("T",c_double),  # Safe time headway [s]
+                ("delta",c_int)] # Acceleration exponent [-]
+    _defaults_ = {"s0": 2, "s1": 0, "a": 2.5, "b": 1.8, "T": 1.6, "delta": 4}
+
+class MOBILConfig(BaseStructure):
+    _fields_ = [("p",c_double),      # Politeness factor [-]
+                ("b_safe",c_double), # Maximum safe deceleration [m/s^2]
+                ("a_th",c_double),   # Changing threshold [m/s^2]
+                ("a_bias",c_double), # Bias for right lane [m/s^2]
+                ("v_crit",c_double), # Critical velocity for congested traffic [m/s]
+                ("sym",c_bool)]      # True for symmetric passing rules, False for asymmetric (right priority) passing rules
+    _defaults_ = {"p": 0.4, "b_safe": 4, "a_th": 0.1, "a_bias": 0.3, "v_crit": 15, "sym": False}
+
+class VehRoadPos(Structure):
+    _fields_ = [("R",c_uint),
+                ("L",c_uint),
+                ("s",c_double),
+                ("l",c_double)]
+
+class Blueprint(Serializable):
+
+    def __init__(self,method_or_id,args=None):
+        super().__init__()
+        if isinstance(method_or_id, int):
+            # Id and args are given directly
+            self.id = method_or_id
+            self.args = args
+        else:
+            # Method with args is given
+            self.id = method_or_id.bp_id
+            args_buf = (c_ubyte * method_or_id.bp_sl)()
+            if args is None:
+                args = []
+            method_or_id(args_buf, *args)
+            self.args = args_buf
+
+class Configuration(object):
+
+    def __init__(self):
+        self._seed = None
+        self.seed = simLib.cfg_getSeed()
+        self.scenarios_path = "scenarios.h5"
+
+    @property
+    def seed(self):
+        return self._seed
+
+    @seed.setter
+    def seed(self,newSeed):
+        self._seed = newSeed # Save new seed
+        random.seed(newSeed) # Set global python seed (random module)
+        hwsim.utils.RNG = default_rng(newSeed) # Create new numpy generator based on the seed (numpy module)
+        simLib.cfg_setSeed(newSeed) # Set hwsim library seed (C++ backend)
+
+    @property
+    def scenarios_path(self):
+        return self._scenarios_path
+
+    @scenarios_path.setter
+    def scenarios_path(self,path):
+        self._scenarios_path = path
+        simLib.cfg_scenariosPath(path.encode("utf8"))
+
+
+# Configure methods:
+simLib.cfg_getSeed.argtypes = []
+simLib.cfg_getSeed.restype = c_uint
+
+simLib.cfg_setSeed.argtypes = [c_uint]
+simLib.cfg_setSeed.restype = None
+
+simLib.cfg_scenariosPath.argtypes = [c_char_p]
+simLib.cfg_scenariosPath.restype = None
+
+# Blueprint methods:
+simLib.mbp_kbm.argtypes = [POINTER(c_ubyte)]
+simLib.mbp_kbm.restype = c_void_p
+simLib.mbp_kbm.bp_id = 1
+simLib.mbp_kbm.bp_sl = 0
+
+simLib.pbp_custom.argtypes = [POINTER(c_ubyte),c_uint8,c_uint8]
+simLib.pbp_custom.restype = c_void_p
+simLib.pbp_custom.bp_id = 0
+simLib.pbp_custom.bp_sl = 2
+
+simLib.pbp_step.argtypes = [POINTER(c_ubyte),c_uint,c_double,c_double]
+simLib.pbp_step.restype = c_void_p
+simLib.pbp_step.bp_id = 1
+simLib.pbp_step.bp_sl = sizeof(c_uint) + 2*sizeof(c_double)
+
+simLib.pbp_basicT.argtypes = [POINTER(c_ubyte),c_uint8]
+simLib.pbp_basicT.restype = c_void_p
+simLib.pbp_basicT.bp_id = 2
+simLib.pbp_basicT.bp_sl = 3*sizeof(c_double)
+
+simLib.pbp_basicC.argtypes = [POINTER(c_ubyte),c_double,c_double,c_double]
+simLib.pbp_basicC.restype = c_void_p
+simLib.pbp_basicC.bp_id = 2
+simLib.pbp_basicC.bp_sl = 3*sizeof(c_double)
+
+simLib.pbp_im.argtypes = [POINTER(c_ubyte),POINTER(IDMConfig),POINTER(MOBILConfig)]
+simLib.pbp_im.restype = c_void_p
+simLib.pbp_im.bp_id = 3
+simLib.pbp_im.bp_sl = sizeof(IDMConfig)+sizeof(MOBILConfig)
+
+# Simulation methods:
+simLib.sim_from_types.argtypes = [POINTER(SimConfig),c_char_p,POINTER(VehType),c_uint]
+simLib.sim_from_types.restype = c_void_p
+
+simLib.sim_from_defs.argtypes = [POINTER(SimConfig),c_char_p,POINTER(VehDef),c_uint]
+simLib.sim_from_defs.restype = c_void_p
+
+simLib.sim_from_log.argtypes = [POINTER(SimConfig),c_char_p,c_uint,c_bool,c_bool]
+simLib.sim_from_log.restype = c_void_p
+
+simLib.sim_del.argtypes = [c_void_p]
+simLib.sim_del.restype = None
+
+simLib.sim_stepA.argtypes = [c_void_p]
+simLib.sim_stepA.restype = c_bool
+
+simLib.sim_stepB.argtypes = [c_void_p]
+simLib.sim_stepB.restype = c_bool
+
+simLib.sim_stepC.argtypes = [c_void_p]
+simLib.sim_stepC.restype = c_bool
+
+simLib.sim_stepD.argtypes = [c_void_p]
+simLib.sim_stepD.restype = c_bool
+
+simLib.sim_step.argtypes = [c_void_p]
+simLib.sim_step.restype = c_bool
+
+simLib.sim_getStep.argtypes = [c_void_p]
+simLib.sim_getStep.restype = c_uint
+
+simLib.sim_setStep.argtypes = [c_void_p,c_uint]
+simLib.sim_setStep.restype = None
+
+simLib.sim_getMode.argtypes = [c_void_p]
+simLib.sim_getMode.restype = c_uint8
+
+simLib.sim_setMode.argtypes = [c_void_p,c_uint8,c_uint]
+simLib.sim_setMode.restype = None
+
+simLib.sim_getScenario.argtypes = [c_void_p]
+simLib.sim_getScenario.restype = c_void_p
+
+simLib.sim_getNbVehicles.argtypes = [c_void_p]
+simLib.sim_getNbVehicles.restype = c_uint
+
+simLib.sim_getVehicle.argtypes = [c_void_p,c_uint]
+simLib.sim_getVehicle.restype = c_void_p
+
+# Scenario methods:
+simLib.sc_new.argtypes = [c_char_p]
+simLib.sc_new.restype = c_void_p
+
+simLib.sc_del.argtypes = [c_void_p]
+simLib.sc_del.restype = None
+
+simLib.sc_numRoads.argtypes = [c_void_p]
+simLib.sc_numRoads.restype = c_uint
+
+simLib.road_numLanes.argtypes = [c_void_p,c_uint]
+simLib.road_numLanes.restype = c_uint
+
+simLib.road_length.argtypes = [c_void_p,c_uint]
+simLib.road_length.restype = c_double
+
+simLib.road_CAGrid.argtypes = [c_void_p,c_uint,c_double,POINTER(c_double)]
+simLib.road_CAGrid.restype = c_uint
+
+simLib.lane_validity.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),POINTER(c_double)]
+simLib.lane_validity.restype = None
+
+simLib.lane_direction.argtypes = [c_void_p,c_uint,c_uint]
+simLib.lane_direction.restype = c_int
+
+simLib.lane_offset.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),c_uint,POINTER(c_double)]
+simLib.lane_offset.restype = None
+
+simLib.lane_width.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),c_uint,POINTER(c_double)]
+simLib.lane_width.restype = None
+
+simLib.lane_height.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),c_uint,POINTER(c_double)]
+simLib.lane_height.restype = None
+
+simLib.lane_speed.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),c_uint,POINTER(c_double)]
+simLib.lane_speed.restype = None
+
+simLib.lane_edge_offset.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),c_uint,POINTER(c_double),POINTER(c_double)]
+simLib.lane_edge_offset.restype = None
+
+simLib.lane_edge_type.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),c_uint,POINTER(c_int),POINTER(c_int)]
+simLib.lane_edge_type.restype = None
+
+simLib.lane_neighbours.argtypes = [c_void_p,c_uint,c_uint,POINTER(c_double),c_uint,POINTER(c_int),POINTER(c_int)]
+simLib.lane_neighbours.restype = None
+
+simLib.lane_merge.argtypes = [c_void_p,c_uint,c_uint]
+simLib.lane_merge.restype = c_int
+
+simLib.sc_road2glob.argtypes = [c_void_p,c_uint,POINTER(c_double),POINTER(c_double),c_uint,POINTER(c_double)]
+simLib.sc_road2glob.restype = None
+
+# Vehicle methods:
+simLib.veh_config.argtypes = [c_void_p,POINTER(VehConfig)]
+simLib.veh_config.restype = None
+
+simLib.veh_size.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_size.restype = None
+
+simLib.veh_cg.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_cg.restype = None
+
+simLib.veh_getModelState.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_getModelState.restype = None
+
+simLib.veh_getModelInput.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_getModelInput.restype = None
+
+simLib.veh_getPolicyState.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_getPolicyState.restype = None
+
+simLib.veh_getPolicyAction.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_getPolicyAction.restype = None
+
+simLib.veh_setPolicyAction.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_setPolicyAction.restype = None
+
+simLib.veh_getReducedState.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_getReducedState.restype = None
+
+simLib.veh_getSafetyBounds.argtypes = [c_void_p,POINTER(c_double)]
+simLib.veh_getSafetyBounds.restype = None
+
+simLib.veh_getColStatus.argtypes = [c_void_p]
+simLib.veh_getColStatus.restype = c_int
+
+simLib.veh_getRoadPos.argtypes = [c_void_p,POINTER(VehRoadPos)]
+simLib.veh_getRoadPos.restype = None
+
+# Plotting methods:
+simLib.utils_transformPoints.argtypes = [ndpointer(dtype=np.float64), ndpointer(dtype=np.float64), c_uint, ndpointer(dtype=np.float64,shape=(3,),flags='C_CONTIGUOUS'), ndpointer(dtype=np.float64,shape=(3,),flags='C_CONTIGUOUS'), ndpointer(dtype=np.float64,shape=(3,),flags='C_CONTIGUOUS')]
+simLib.utils_transformPoints.restype = None
+
+
+config = Configuration()
+
+simLib.sim_stepA = timing("Step A", False)(simLib.sim_stepA)
+simLib.sim_stepB = timing("Step B", False)(simLib.sim_stepB)
+simLib.sim_stepC = timing("Step C", False)(simLib.sim_stepC)
+simLib.sim_stepD = timing("Step D", False)(simLib.sim_stepD)

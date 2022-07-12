@@ -343,7 +343,6 @@ class PhiNetwork(layers.Layer):
             phi2 = self.phi_layer_2(phi1)
             return phi2
 
-
 class PhiNetwork2(layers.Layer):
     """
     Creates a phi network as a layer for the deepset network
@@ -542,7 +541,6 @@ class DeepSetQNetwork(keras.Model):
                                show_layer_names=True,
                                to_file='./models/Deepset_Q_network.png')
 
-
 class LstmDeepSetNetwork(keras.Model):
     """
     Builds a deep Q-network using DeepSet permutation invariant model with temporal LSTM layer.
@@ -604,7 +602,7 @@ class LstmDeepSetNetwork(keras.Model):
 
         self.output_layer = layers.Dense(n_actions)
 
-    @tf.function
+    #@tf.function
     def call(self, inputs: tf.Tensor):
         """ Returns the output of the model given an input. """
         dynamic_input = inputs[0]
@@ -778,7 +776,7 @@ class DeepQNetwork(keras.Model):
         n_inputs = model_param["n_inputs"]
         n_actions = model_param["n_actions"]
 
-        input_layer0 = layers.Input(shape=(4, n_inputs),
+        input_layer0 = layers.Input(shape=(n_inputs,),
                                    name="inputState")
         input_layer = layers.Flatten()(input_layer0)
         if len(n_units) == 2:
